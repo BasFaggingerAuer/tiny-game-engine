@@ -18,9 +18,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <exception>
 #include <string>
-#include <list>
+#include <map>
 
 #include <cassert>
+
+#include <draw/texture.h>
 
 namespace tiny
 {
@@ -60,8 +62,16 @@ typedef BoundUniform<GLint> IntUniform;
 
 struct BoundTexture
 {
+    BoundTexture(const std::string &a_name,
+                 const TextureInterface *a_texture) :
+        name(a_name),
+        texture(a_texture)
+    {
+
+    }
+    
     std::string name;
-    GLuint textureIndex;
+    const TextureInterface *texture;
 };
 
 }
@@ -75,9 +85,11 @@ class Renderable
         Renderable(const Renderable &a_renderable);
         virtual ~Renderable();
         
-        virtual std::string getVertexShaderCode() const;
+        virtual std::string getVertexShaderCode() const = 0;
         virtual std::string getGeometryShaderCode() const;
-        virtual std::string getFragmentShaderCode() const;
+        virtual std::string getFragmentShaderCode() const = 0;
+        
+        virtual void render(const ShaderProgram &) const = 0;
         
     protected:
         void setFloatUniform(const float &x, const std::string &name);
@@ -85,8 +97,15 @@ class Renderable
         void setVec3Uniform(const float &x, const float &y, const float &z, const std::string &name);
         void setVec4Uniform(const float &x, const float &y, const float &z, const float &w, const std::string &name);
         
+        template <typename TextureType>
+        void setTexture(const TextureType &texture, const std::string &name)
+        {
+            textures[name] = BoundTexture(name, &texture);
+        }
+        
     private:
-        std::list<FloatUniform> floatUniforms;
+        std::map<std::string, FloatUniform> floatUniforms;
+        std::map<std::string, BoundTexture> textures;
 };
 
 }

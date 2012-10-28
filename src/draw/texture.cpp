@@ -34,8 +34,7 @@ TextureInterface::TextureInterface(const GLenum &a_textureTarget,
     width(a_width),
     height(a_height),
     depth(a_depth),
-    textureIndex(0),
-    bindTarget(-1)
+    textureIndex(0)
 {
     createDeviceTexture();
 }
@@ -64,30 +63,16 @@ GLuint TextureInterface::getIndex() const
     return textureIndex;
 }
 
-void TextureInterface::bind(const int &a_bindTarget)
+void TextureInterface::bind(const int &bindTarget) const
 {
-    if (bindTarget >= 0)
-    {
-        std::cerr << "This texture was already bound to another target!" << std::endl;
-        return;
-    }
-    
-    bindTarget = a_bindTarget;
     glActiveTexture(GL_TEXTURE0 + bindTarget);
     glBindTexture(textureTarget, textureIndex);
 }
 
-void TextureInterface::unbind()
+void TextureInterface::unbind(const int &bindTarget) const
 {
-    if (bindTarget < 0)
-    {
-        std::cerr << "This texture has not been bound!" << std::endl;
-        return;
-    }
-
     glActiveTexture(GL_TEXTURE0 + bindTarget);
     glBindTexture(textureTarget, 0);
-    bindTarget = -1;
 }
 
 void TextureInterface::createDeviceTexture()

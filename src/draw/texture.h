@@ -39,8 +39,8 @@ class TextureInterface
         virtual ~TextureInterface();
         
         GLuint getIndex() const;
-        void bind(const int & = 0);
-        void unbind();
+        void bind(const int & = 0) const;
+        void unbind(const int & = 0) const;
         
     protected:
         void createDeviceTexture();
@@ -52,7 +52,6 @@ class TextureInterface
         const GLenum textureDataType;
         const size_t width, height, depth;
         GLuint textureIndex;
-        int bindTarget;
 };
 
 template<typename T, size_t Channels>

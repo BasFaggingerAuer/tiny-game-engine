@@ -35,8 +35,13 @@ Renderable::~Renderable()
 
 }
 
-void Renderable::addFloatVariable(const float &x, const std::string &name) {floatUniforms.push_back(FloatUniform(name, 1, x));}
-void Renderable::addVec2Variable(const float &x, const float &y, const std::string &name) {floatUniforms.push_back(FloatUniform(name, 2, x, y));}
-void Renderable::addVec3Variable(const float &x, const float &y, const float &z, const std::string &name) {floatUniforms.push_back(FloatUniform(name, 3, x, y, z));}
-void Renderable::addVec4Variable(const float &x, const float &y, const float &z, const float &w, const std::string &name) {floatUniforms.push_back(FloatUniform(name, 4, x, y, z, w));}
+std::string Renderable::getGeometryShaderCode() const
+{
+    return "";
+}
+
+void Renderable::setFloatVariable(const float &x, const std::string &name) {floatUniforms[name] = FloatUniform(name, 1, x);}
+void Renderable::setVec2Variable(const float &x, const float &y, const std::string &name) {floatUniforms[name] = FloatUniform(name, 2, x, y);}
+void Renderable::setVec3Variable(const float &x, const float &y, const float &z, const std::string &name) {floatUniforms[name] = FloatUniform(name, 3, x, y, z);}
+void Renderable::setVec4Variable(const float &x, const float &y, const float &z, const float &w, const std::string &name) {floatUniforms[name] = FloatUniform(name, 4, x, y, z, w);}
 
