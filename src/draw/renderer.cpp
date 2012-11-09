@@ -47,11 +47,13 @@ void Renderer::addRenderable(const Renderable *renderable)
 {
     assert(renderable);
     
+    //Create shaders.
     VertexShader *vertexShader = new VertexShader();
     GeometryShader *geometryShader = new GeometryShader();
     FragmentShader *fragmentShader = new FragmentShader();
     ShaderProgram *program = new ShaderProgram();
     
+    //Compile shaders.
     vertexShader->compile(renderable->getVertexShaderCode());
     
     if (renderable->getGeometryShaderCode().empty())
@@ -68,6 +70,7 @@ void Renderer::addRenderable(const Renderable *renderable)
     
     fragmentShader->compile(renderable->getFragmentShaderCode());
     
+    //Attach shaders.
     program->attach(*vertexShader);
     if (geometryShader) program->attach(*geometryShader);
     program->attach(*fragmentShader);
@@ -75,7 +78,8 @@ void Renderer::addRenderable(const Renderable *renderable)
     
     program->link();
     
-    //TODO: Bind uniforms and textures to program.
+    //Bind uniforms and textures to program.
+    renderable->setVariablesInProgram(*program);
     
     renderables.push_back(BoundRenderable(renderable, vertexShader, geometryShader, fragmentShader, program));
 }
@@ -87,7 +91,7 @@ void Renderer::renderToTarget(RenderTarget *target) const
     for (std::list<BoundRenderable>::const_iterator i = renderables.begin(); i != renderables.end(); ++i)
     {
         i->program->bind();
-        i->renderable->render(*i->program);
+        i->renderable->render();
         //i->program->unbind();
     }
     

@@ -89,7 +89,9 @@ class Renderable
         virtual std::string getGeometryShaderCode() const;
         virtual std::string getFragmentShaderCode() const = 0;
         
-        virtual void render(const ShaderProgram &) const = 0;
+        virtual void render() const = 0;
+        
+        void setVariablesInProgram(ShaderProgram &program) const;
         
     protected:
         void setFloatUniform(const float &x, const std::string &name);
