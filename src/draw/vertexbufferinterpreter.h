@@ -75,6 +75,7 @@ class VertexBufferInterpreter
         void bind(const ShaderProgram &, const size_t & = 0) const;
         void unbind(const ShaderProgram &) const;
         
+    protected:
         template<typename T> void addFloatAttribute(const VertexBuffer<T> &buffer, const size_t &offset, const std::string &name) {addAttribute(buffer.getIndex(), 1, GL_FLOAT, sizeof(T), offset, name);}
         template<typename T> void addVec2Attribute(const VertexBuffer<T> &buffer, const size_t &offset, const std::string &name) {addAttribute(buffer.getIndex(), 2, GL_FLOAT, sizeof(T), offset, name);}
         template<typename T> void addVec3Attribute(const VertexBuffer<T> &buffer, const size_t &offset, const std::string &name) {addAttribute(buffer.getIndex(), 3, GL_FLOAT, sizeof(T), offset, name);}

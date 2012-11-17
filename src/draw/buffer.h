@@ -113,6 +113,14 @@ class Buffer : public BufferInterface
             sendToDevice();
         }
         
+        template <class InputIterator>
+        void assign(InputIterator first, InputIterator last)
+        {
+            resizeDeviceBuffer((last - first)*sizeof(T));
+            hostData.assign(first, last);
+            sendToDevice();
+        }
+        
         T & operator [] (const size_t &a_index)
         {
             return hostData[a_index];

@@ -69,36 +69,29 @@ class Renderer
         
         void addRenderable(const Renderable *renderable);
         
-        void render() const;
-        
-    protected:
         template<typename T, size_t Channels>
         void setTextureTarget(const Texture2D<T, Channels> &texture, const std::string &name)
         {
-            createFrameBuffer();
-            glBindFrameBuffer(GL_FRAMEBUFFER, frameBufferIndex);
-            glFrameBufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + renderTargetNames.size(), GL_TEXTURE_2D, texture.getIndex(), 0);
-            glBindFrameBuffer(GL_FRAMEBUFFER, 0);
+            if (frameBufferIndex == 0) createFrameBuffer();
             
-            if (renderTargetNames.size() >= GL_MAX_DRAW_BUFFERS)
+            for (size_t i = 0; i < renderTargetNames.size(); ++i)
             {
-                std::cerr << "Warning: binding more than the maximum number (" << GL_MAX_DRAW_BUFFERS << ") of draw buffers!" << std::endl;
+                if (renderTargetNames[i] == name)
+                {
+                    glBindFrameBuffer(GL_FRAMEBUFFER, frameBufferIndex);
+                    glFrameBufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, texture.getIndex(), 0);
+                    glBindFrameBuffer(GL_FRAMEBUFFER, 0);
+                    return;
+                }
             }
             
-            renderTargetNames.push_back(name);
+            std::cerr << "Warning: render target '" << name << "' does not exist for this renderer!" << std::endl;
         }
         
-        void setColourTarget(const std::string &name)
-        {
-            if (frameBufferIndex != 0)
-            {
-                std::cerr << "Warning: destroying existing frame buffer!" << std::endl;
-            }
-            
-            destroyFrameBuffer();
-            renderTargetNames.clear();
-            renderTargetNames.push_back(name);
-        }
+        void render() const;
+        
+    protected:
+        void addRenderTarget(const std::string &name);
         
     private:
         void createFrameBuffer();

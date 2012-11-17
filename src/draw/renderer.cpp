@@ -111,15 +111,36 @@ void Renderer::addRenderable(const Renderable *renderable)
     renderables.push_back(BoundRenderable(renderable, vertexShader, geometryShader, fragmentShader, program));
 }
 
+void Renderer::addRenderTarget(const std::string &name)
+{
+    if (std::find(renderTargetNames.begin(), renderTargetNames.end()) != renderTargetNames.end())
+    {
+        std::cerr << "Warning: render target '" << name << "' already exists!" << std::endl;
+        return;
+    }
+    
+    renderTargetNames.push_back(name);
+    
+    //Create a frame buffer if we render to more than a single target.
+    if (renderTargetNames.size() >= 2 && frameBufferIndex == 0) createFrameBuffer();
+    
+    if (renderTargetNames.size() >= GL_MAX_DRAW_BUFFERS)
+    {
+        std::cerr << "Warning: binding more than the maximum number (" << GL_MAX_DRAW_BUFFERS << ") of draw buffers!" << std::endl;
+    }
+}
+
 void Renderer::render() const
 {
     glBindFrameBuffer(GL_FRAME_BUFFER, frameBufferIndex);
     
     for (std::list<BoundRenderable>::const_iterator i = renderables.begin(); i != renderables.end(); ++i)
     {
+        //TODO: Is this very inefficient? Should we let the rendererable decide whether or not to update the uniforms every frame?
+        //i->renderable->setVariablesInProgram(*i->program);
         i->program->bind();
         i->bindTextures();
-        i->renderable->render();
+        i->renderable->render(*i->program);
         i->unbindTextures();
         //i->program->unbind();
     }

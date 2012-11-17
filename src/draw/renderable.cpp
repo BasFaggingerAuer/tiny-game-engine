@@ -87,7 +87,9 @@ void Renderable::bindTextures() const
     
     for (map<std::string, BoundTexture>::const_iterator i = textures.begin(); i != textures.end(); ++i)
     {
-        i->second.texture->bind(textureBindPoint++);
+        if (i->second.texture) i->second.texture->bind(textureBindPoint);
+        
+        textureBindPoint++;
     }
 }
 
@@ -97,8 +99,21 @@ void Renderable::unbindTextures() const
     
     for (map<std::string, BoundTexture>::const_iterator i = textures.begin(); i != textures.end(); ++i)
     {
-        i->second.texture->unbind(textureBindPoint++);
+        if (i->second.texture) i->second.texture->unbind(textureBindPoint);
+        
+        textureBindPoint++;
     }
+}
+
+void Renderable::addTexture(const std::string &name)
+{
+    if (textures.find(name) != textures.end())
+    {
+        std::cerr << "Warning: texture '" << name << "' already exists!" << std::endl;
+        return;
+    }
+    
+    textures[name] = BoundTexture(name, 0);
 }
 
 void Renderable::setFloatVariable(const float &x, const std::string &name) {floatUniforms[name] = FloatUniform(name, 1, x);}

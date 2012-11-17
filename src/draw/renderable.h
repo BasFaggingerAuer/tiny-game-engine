@@ -23,6 +23,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cassert>
 
 #include <draw/texture.h>
+#include <draw/indexbuffer.h>
+#include <draw/detail/formats.h>
 
 namespace tiny
 {
@@ -62,6 +64,13 @@ typedef BoundUniform<GLint> IntUniform;
 
 struct BoundTexture
 {
+    BoundTexture() :
+        name(""),
+        texture(0)
+    {
+
+    }
+    
     BoundTexture(const std::string &a_name,
                  const TextureInterface *a_texture) :
         name(a_name),
@@ -89,25 +98,49 @@ class Renderable
         virtual std::string getGeometryShaderCode() const;
         virtual std::string getFragmentShaderCode() const = 0;
         
-        virtual void render() const = 0;
+        template <typename TextureType>
+        void setTexture(const TextureType &texture, const std::string &name)
+        {
+            if (textures.find(name) == textures.end())
+            {
+                std::cerr << "Warning: texture '" << name << "' does not exist in this renderable!" << std::endl;
+                return;
+            }
+            
+            textures[name].texture = &texture;
+        }
         
-        void setVariablesInProgram(ShaderProgram &program) const;
-        void bindTextures() const;
-        void unbindTextures() const;
-        
-    protected:
         void setFloatUniform(const float &x, const std::string &name);
         void setVec2Uniform(const float &x, const float &y, const std::string &name);
         void setVec3Uniform(const float &x, const float &y, const float &z, const std::string &name);
         void setVec4Uniform(const float &x, const float &y, const float &z, const float &w, const std::string &name);
         
-        template <typename TextureType>
-        void setTexture(const TextureType &texture, const std::string &name)
+    protected:
+        friend class Renderer;
+        
+        virtual void render(const ShaderProgram &) const = 0;
+        void addTexture(const std::string &name);
+        void setVariablesInProgram(ShaderProgram &program) const;
+        
+        void renderRangeAsTriangleStrip(const size_t &first, const size_t &last) const
         {
-            textures[name] = BoundTexture(name, &texture);
+            if (last > first) glDrawArrays(GL_TRIANGLE_STRIP, 0, last - first);
+        }
+        
+        template <typename T>
+        void renderIndicesAsTriangles(const IndexBuffer<T> &buffer) const
+        {
+            buffer.bind();
+            glDrawElements(GL_TRIANGLES, buffer.size(), detail::getOpenGLDataType<T>(), 0);
+            buffer.unbind();
         }
         
     private:
+        friend class Renderer;
+        
+        void bindTextures() const;
+        void unbindTextures() const;
+        
         std::map<std::string, FloatUniform> floatUniforms;
         std::map<std::string, BoundTexture> textures;
 };
