@@ -62,7 +62,43 @@ void Renderable::setVariablesInProgram(ShaderProgram &program) const
         else std::cerr << "Warning: uniform variable '" << uniform.name << "' has an invalid number of parameters (" << uniform.numParameters << ")!" << std::endl;
     }
     
+    int textureBindPoint = 0;
+    
+    for (map<std::string, BoundTexture>::const_iterator i = textures.begin(); i != textures.end(); ++i)
+    {
+        const BoundTexture uniform = i->second;
+        const GLint location = glGetUniformLocation(program.getIndex(), uniform.name.c_str());
+        
+        if (location < 0)
+        {
+            std::cerr << "Warning: texture '" << uniform.name << "' does not exist in the GLSL program!" << std::endl;
+            continue;
+        }
+        
+        glUniform1i(location, textureBindPoint++);
+    }
+    
     program.unbind();
+}
+
+void Renderable::bindTextures() const
+{
+    int textureBindPoint = 0;
+    
+    for (map<std::string, BoundTexture>::const_iterator i = textures.begin(); i != textures.end(); ++i)
+    {
+        i->second.texture->bind(textureBindPoint++);
+    }
+}
+
+void Renderable::unbindTextures() const
+{
+    int textureBindPoint = 0;
+    
+    for (map<std::string, BoundTexture>::const_iterator i = textures.begin(); i != textures.end(); ++i)
+    {
+        i->second.texture->unbind(textureBindPoint++);
+    }
 }
 
 void Renderable::setFloatVariable(const float &x, const std::string &name) {floatUniforms[name] = FloatUniform(name, 1, x);}

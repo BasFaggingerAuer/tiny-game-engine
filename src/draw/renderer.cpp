@@ -91,7 +91,9 @@ void Renderer::renderToTarget(RenderTarget *target) const
     for (std::list<BoundRenderable>::const_iterator i = renderables.begin(); i != renderables.end(); ++i)
     {
         i->program->bind();
+        i->bindTextures();
         i->renderable->render();
+        i->unbindTextures();
         //i->program->unbind();
     }
     

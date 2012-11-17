@@ -92,6 +92,8 @@ class Renderable
         virtual void render() const = 0;
         
         void setVariablesInProgram(ShaderProgram &program) const;
+        void bindTextures() const;
+        void unbindTextures() const;
         
     protected:
         void setFloatUniform(const float &x, const std::string &name);
