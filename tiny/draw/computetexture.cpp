@@ -22,16 +22,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using namespace tiny::draw;
 
 SquareVertexBuffer::SquareVertexBuffer() :
-    VertexBuffer<float>(16)
+    VertexBuffer<ScreenVertex>(4)
 {
-    const float squareData[16] = {
-        -1.0f,  1.0f, 0.0f, 1.0f,
-        -1.0f, -1.0f, 0.0f, 0.0f,
-         1.0f,  1.0f, 1.0f, 1.0f,
-         1.0f, -1.0f, 1.0f, 0.0f
-        };
+    hostData[0] = ScreenVertex(vec2(-1.0f, 1.0f), vec2(0.0f, 1.0f));
+    hostData[1] = ScreenVertex(vec2(-1.0f,-1.0f), vec2(0.0f, 0.0f));
+    hostData[2] = ScreenVertex(vec2( 1.0f, 1.0f), vec2(1.0f, 1.0f));
+    hostData[3] = ScreenVertex(vec2( 1.0f,-1.0f), vec2(1.0f, 0.0f));
     
-    assign(squareData, squareData + 16);
+    sendToDevice();
 }
 
 SquareVertexBuffer::~SquareVertexBuffer()
@@ -43,8 +41,8 @@ SquareVertexBufferInterpreter::SquareVertexBufferInterpreter() :
     VertexBufferInterpreter(),
     vertices()
 {
-    addVec2Attribute(vertices, 0, "vertex");
-    addVec2Attribute(vertices, 2*sizeof(float), "textureCoordinates");
+    addVec2Attribute(vertices, 0*sizeof(float), "vertex");
+    addVec2Attribute(vertices, 2*sizeof(float), "textureCoordinate");
 }
 
 SquareVertexBufferInterpreter::~SquareVertexBufferInterpreter()
@@ -93,7 +91,7 @@ std::string ComputeTextureInput::getFragmentShaderCode() const
 void ComputeTextureInput::render(const ShaderProgram &program) const
 {
     //Update input texture sizes.
-    setVariablesInProgram(program);
+    //setVariablesInProgram(program);
     
     //Draw screen-filling quad.
     square.bind(program);

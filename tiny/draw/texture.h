@@ -40,6 +40,9 @@ class TextureInterface
         virtual ~TextureInterface();
         
         GLuint getIndex() const;
+        size_t getWidth() const;
+        size_t getHeight() const;
+        size_t getDepth() const;
         void bind(const int & = 0) const;
         void unbind(const int & = 0) const;
         

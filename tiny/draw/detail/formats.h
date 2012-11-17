@@ -34,49 +34,49 @@ namespace detail
 {
 
 template<typename T>
-GLenum getOpenGLDataType() {return GL_UNSIGNED_BYTE;}
+inline GLenum getOpenGLDataType() {return GL_UNSIGNED_BYTE;}
 
 template<>
-GLenum getOpenGLDataType<float>() {return GL_FLOAT;}
+inline GLenum getOpenGLDataType<float>() {return GL_FLOAT;}
 template<>
-GLenum getOpenGLDataType<unsigned char>() {return GL_UNSIGNED_BYTE;}
+inline GLenum getOpenGLDataType<unsigned char>() {return GL_UNSIGNED_BYTE;}
 template<>
-GLenum getOpenGLDataType<int>() {return GL_INT;}
+inline GLenum getOpenGLDataType<int>() {return GL_INT;}
 template<>
-GLenum getOpenGLDataType<unsigned int>() {return GL_UNSIGNED_INT;}
+inline GLenum getOpenGLDataType<unsigned int>() {return GL_UNSIGNED_INT;}
 
 template<size_t T>
-GLenum getOpenGLChannelType() {return GL_RED;}
+inline GLenum getOpenGLChannelType() {return GL_RED;}
 
 template<>
-GLenum getOpenGLChannelType<1>() {return GL_RED;}
+inline GLenum getOpenGLChannelType<1>() {return GL_RED;}
 template<>
-GLenum getOpenGLChannelType<2>() {return GL_RG;}
+inline GLenum getOpenGLChannelType<2>() {return GL_RG;}
 template<>
-GLenum getOpenGLChannelType<3>() {return GL_RGB;}
+inline GLenum getOpenGLChannelType<3>() {return GL_RGB;}
 template<>
-GLenum getOpenGLChannelType<4>() {return GL_RGBA;}
+inline GLenum getOpenGLChannelType<4>() {return GL_RGBA;}
 
 template<size_t T, typename S>
-GLint getOpenGLTextureFormat() {return GL_R8;}
+inline GLint getOpenGLTextureFormat() {return GL_R8;}
 
 template<>
-GLint getOpenGLTextureFormat<1, unsigned char>() {return GL_R8;}
+inline GLint getOpenGLTextureFormat<1, unsigned char>() {return GL_R8;}
 template<>
-GLint getOpenGLTextureFormat<2, unsigned char>() {return GL_RG8;}
+inline GLint getOpenGLTextureFormat<2, unsigned char>() {return GL_RG8;}
 template<>
-GLint getOpenGLTextureFormat<3, unsigned char>() {return GL_RGB8;}
+inline GLint getOpenGLTextureFormat<3, unsigned char>() {return GL_RGB8;}
 template<>
-GLint getOpenGLTextureFormat<4, unsigned char>() {return GL_RGBA8;}
+inline GLint getOpenGLTextureFormat<4, unsigned char>() {return GL_RGBA8;}
 
 template<>
-GLint getOpenGLTextureFormat<1, float>() {return GL_R32F;}
+inline GLint getOpenGLTextureFormat<1, float>() {return GL_R32F;}
 template<>
-GLint getOpenGLTextureFormat<2, float>() {return GL_RG32F;}
+inline GLint getOpenGLTextureFormat<2, float>() {return GL_RG32F;}
 template<>
-GLint getOpenGLTextureFormat<3, float>() {return GL_RGB32F;}
+inline GLint getOpenGLTextureFormat<3, float>() {return GL_RGB32F;}
 template<>
-GLint getOpenGLTextureFormat<4, float>() {return GL_RGBA32F;}
+inline GLint getOpenGLTextureFormat<4, float>() {return GL_RGBA32F;}
 
 }
 

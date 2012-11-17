@@ -60,6 +60,21 @@ GLuint TextureInterface::getIndex() const
     return textureIndex;
 }
 
+size_t TextureInterface::getWidth() const
+{
+    return width;
+}
+
+size_t TextureInterface::getHeight() const
+{
+    return height;
+}
+
+size_t TextureInterface::getDepth() const
+{
+    return depth;
+}
+
 void TextureInterface::bind(const int &bindTarget) const
 {
     glActiveTexture(GL_TEXTURE0 + bindTarget);

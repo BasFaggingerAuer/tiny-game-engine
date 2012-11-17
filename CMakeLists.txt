@@ -21,6 +21,7 @@ find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(SDL REQUIRED)
 find_package(SDL_image REQUIRED)
+find_package(SDL_ttf REQUIRED)
 
 set(CMAKE_CXX_FLAGS "-O2 -g -Wall -Wextra -Wshadow -pedantic")
 #set(CMAKE_CXX_FLAGS "-O3 -Wall -DNDEBUG")
@@ -36,12 +37,15 @@ include_directories(${SDL_INCLUDE_DIR})
 link_directories(${SDL_LIBRARY_DIR})
 include_directories(${SDL_IMAGE_INCLUDE_DIR})
 link_directories(${SDL_IMAGE_LIBRARY_DIR})
+include_directories(${SDL_TTF_INCLUDE_DIR})
+link_directories(${SDL_TTF_LIBRARY_DIR})
 include_directories(${TINY_SOURCE_DIR})
 
 set(USED_LIBS ${OPENGL_LIBRARY}
               ${GLEW_LIBRARY}
               ${SDL_LIBRARY}
-              ${SDLIMAGE_LIBARARY}
+              ${SDLIMAGE_LIBRARY}
+              ${SDLTTF_LIBRARY}
               tinygame)
 
 add_executable(test_image src/test_image.cpp)

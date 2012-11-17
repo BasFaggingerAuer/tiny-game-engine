@@ -152,7 +152,7 @@ class Buffer : public BufferInterface
             return hostData.end();
         }
         
-    private:
+    protected:
         std::vector<T> hostData;
 };
 

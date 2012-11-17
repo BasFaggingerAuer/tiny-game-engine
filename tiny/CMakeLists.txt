@@ -1,9 +1,12 @@
 include_directories(${OPENGL_INCLUDE_DIR})
 include_directories(${GLEW_INCLUDE_DIR})
+include_directories(${SDL_INCLUDE_DIR})
 include_directories(${SDL_IMAGE_INCLUDE_DIR})
+include_directories(${SDL_TTF_INCLUDE_DIR})
 include_directories(${CMAKE_SOURCE_DIR})
 
 add_library(tinygame
+            math/vec.cpp
             draw/buffer.cpp
             draw/computetexture.cpp
             draw/renderable.cpp
@@ -11,5 +14,7 @@ add_library(tinygame
             draw/shader.cpp
             draw/shaderprogram.cpp
             draw/texture.cpp
-            draw/vertexbufferinterpreter.cpp)
+            draw/vertexbufferinterpreter.cpp
+            img/image.cpp
+            img/io/image.cpp)
 

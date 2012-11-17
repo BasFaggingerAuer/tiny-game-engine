@@ -43,8 +43,6 @@ std::string Renderable::getGeometryShaderCode() const
 
 void Renderable::setVariablesInProgram(const ShaderProgram &program) const
 {
-    program.bind();
-    
     for (std::map<std::string, detail::FloatUniform>::const_iterator i = floatUniforms.begin(); i != floatUniforms.end(); ++i)
     {
         const detail::FloatUniform uniform = i->second;
@@ -52,7 +50,9 @@ void Renderable::setVariablesInProgram(const ShaderProgram &program) const
         
         if (location < 0)
         {
-            std::cerr << "Warning: uniform variable '" << uniform.name << "' does not exist in the GLSL program!" << std::endl;
+#ifndef NDEBUG
+            std::cerr << "Warning: uniform variable '" << uniform.name << "' does not exist in the GLSL program " << program.getIndex() << "!" << std::endl;
+#endif
             continue;
         }
         
@@ -78,8 +78,6 @@ void Renderable::setVariablesInProgram(const ShaderProgram &program) const
         
         glUniform1i(location, textureBindPoint++);
     }
-    
-    program.unbind();
 }
 
 void Renderable::bindTextures() const

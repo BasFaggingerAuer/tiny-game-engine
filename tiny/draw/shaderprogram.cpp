@@ -73,6 +73,12 @@ void ShaderProgram::link()
         
         delete [] logText;
     }
+#ifndef NDEBUG
+    else
+    {
+        std::cerr << "Successfully linked shader program " << programIndex << "." << std::endl;
+    }
+#endif
 }
 
 GLuint ShaderProgram::getIndex() const

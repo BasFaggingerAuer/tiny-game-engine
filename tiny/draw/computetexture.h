@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cassert>
 
+#include <tiny/math/vec.h>
 #include <tiny/draw/texture.h>
 #include <tiny/draw/vertexbuffer.h>
 #include <tiny/draw/vertexbufferinterpreter.h>
@@ -35,7 +36,25 @@ namespace tiny
 namespace draw
 {
 
-class SquareVertexBuffer : public VertexBuffer<float>
+struct ScreenVertex
+{
+    ScreenVertex()
+    {
+
+    };
+    
+    ScreenVertex(const vec2 &a_pos, const vec2 &a_tex) :
+        pos(a_pos),
+        tex(a_tex)
+    {
+
+    };
+    
+    vec2 pos;
+    vec2 tex;
+};
+
+class SquareVertexBuffer : public VertexBuffer<ScreenVertex>
 {
     public:
         SquareVertexBuffer();
@@ -70,8 +89,8 @@ class ComputeTextureInput : public Renderable
                 return;
             }
             
-            inputSizes[name] = std::pair<size_t, size_t>(texture.width, texture.height);
-            setVec2Variable(1.0f/static_cast<float>(texture.width), 1.0f/static_cast<float>(texture.height), name + "InverseSize");
+            inputSizes[name] = std::pair<size_t, size_t>(texture.getWidth(), texture.getHeight());
+            setVec2Variable(1.0f/static_cast<float>(texture.getWidth()), 1.0f/static_cast<float>(texture.getHeight()), name + "InverseSize");
             setTexture(texture, name);
         }
     
