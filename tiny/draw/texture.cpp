@@ -14,6 +14,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include <iostream>
+
 #include <tiny/draw/texture.h>
 
 using namespace tiny::draw;
@@ -77,6 +79,7 @@ size_t TextureInterface::getDepth() const
 
 void TextureInterface::bind(const int &bindTarget) const
 {
+    //std::cerr << "Binding texture " << textureIndex << " to " << bindTarget << " on target " << textureTarget << " (GL_TEXTURE_2D = " << GL_TEXTURE_2D << ")." << std::endl;
     glActiveTexture(GL_TEXTURE0 + bindTarget);
     glBindTexture(textureTarget, textureIndex);
 }
@@ -95,6 +98,10 @@ void TextureInterface::createDeviceTexture()
         throw std::bad_alloc();
     
     glBindTexture(textureTarget, textureIndex);
+	glTexParameteri(textureTarget, GL_TEXTURE_WRAP_S, GL_CLAMP);
+	glTexParameteri(textureTarget, GL_TEXTURE_WRAP_T, GL_CLAMP);
+	glTexParameteri(textureTarget, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+	glTexParameteri(textureTarget, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
     
          if (textureTarget == GL_TEXTURE_1D) glTexImage1D(textureTarget, 0, textureFormat, width, 0, textureChannels, textureDataType, 0);
     else if (textureTarget == GL_TEXTURE_2D) glTexImage2D(textureTarget, 0, textureFormat, width, height, 0, textureChannels, textureDataType, 0);

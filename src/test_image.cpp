@@ -65,7 +65,7 @@ void setup()
 "\n"
 "void main(void)\n"
 "{\n"
-"   colour = texture(source, tex);\n"
+"   colour = vec4(texture(source, tex).xyz, 1.0f);\n"
 "}\n";
     
     inputTextures.push_back("source");
