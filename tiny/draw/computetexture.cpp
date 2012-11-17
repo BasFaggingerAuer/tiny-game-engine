@@ -120,9 +120,9 @@ ComputeTextureOutput::~ComputeTextureOutput()
 
 }
 
-ComputeTexture::ComputeTexture(const size_t &a_nrInputs, const size_t &a_nrOutputs, const std::string &a_fragmentShaderCode) :
-    input(a_nrInputs, a_fragmentShaderCode),
-    output(a_nrOutputs)
+ComputeTexture::ComputeTexture(const std::vector<std::string> &inputNames, const std::vector<std::string> &outputNames, const std::string &fragmentShaderCode) :
+    input(inputNames, fragmentShaderCode),
+    output(outputNames)
 {
     output.addRenderable(&input);
 }
