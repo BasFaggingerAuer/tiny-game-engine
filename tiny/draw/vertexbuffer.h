@@ -16,9 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #pragma once
 
-#include <GL/gl.h>
-
-#include <draw/buffer.h>
+#include <tiny/draw/buffer.h>
 
 namespace tiny
 {
@@ -35,7 +33,7 @@ class VertexBuffer : public Buffer<T>
 {
     public:
         VertexBuffer(const size_t &a_size) :
-            Buffer<T>(size, GL_ARRAY_BUFFER, GL_STATIC_DRAW)
+            Buffer<T>(a_size, GL_ARRAY_BUFFER, GL_STATIC_DRAW)
         {
 
         }

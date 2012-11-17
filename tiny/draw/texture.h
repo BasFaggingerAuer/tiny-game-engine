@@ -21,9 +21,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cassert>
 
+#include <GL/glew.h>
 #include <GL/gl.h>
 
-#include <draw/detail/formats.h>
+#include <tiny/draw/detail/formats.h>
 
 namespace tiny
 {
@@ -65,7 +66,7 @@ class Texture : public TextureInterface
                              detail::getOpenGLDataType<T>(),
                              a_width,
                              a_height,
-                             a_depth);
+                             a_depth),
             hostData(a_width*a_height*a_depth*Channels)
         {
             if (hostData.empty())
@@ -74,7 +75,7 @@ class Texture : public TextureInterface
         
         Texture(const Texture<T, Channels> &a_texture) :
             TextureInterface(a_texture),
-            hostData(texture.hostData)
+            hostData(a_texture.hostData)
         {
             sendToDevice();
         }
@@ -100,7 +101,7 @@ class Texture : public TextureInterface
         
         bool empty() const
         {
-            return (hostData.empty() || sizeInBytes == 0);
+            return hostData.empty();
         }
         
         size_t size() const
@@ -113,27 +114,27 @@ class Texture : public TextureInterface
             return hostData[a_index];
         }
         
-        const T & operator [] (const size_t &a_index) const;
+        const T & operator [] (const size_t &a_index) const
         {
             return hostData[a_index];
         }
         
-        std::vector<T>::iterator begin()
+        typename std::vector<T>::iterator begin()
         {
             return hostData.begin();
         }
         
-        std::vector<T>::const_iterator begin() const
+        typename std::vector<T>::const_iterator begin() const
         {
             return hostData.begin();
         }
         
-        std::vector<T>::iterator end()
+        typename std::vector<T>::iterator end()
         {
             return hostData.end();
         }
         
-        std::vector<T>::const_iterator end() const
+        typename std::vector<T>::const_iterator end() const
         {
             return hostData.end();
         }

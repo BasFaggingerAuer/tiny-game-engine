@@ -23,11 +23,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cassert>
 
-#include <draw/texture.h>
-#include <draw/vertexbuffer.h>
-#include <draw/vertexbufferinterpreter.h>
-#include <draw/renderable.h>
-#include <draw/renderer.h>
+#include <tiny/draw/texture.h>
+#include <tiny/draw/vertexbuffer.h>
+#include <tiny/draw/vertexbufferinterpreter.h>
+#include <tiny/draw/renderable.h>
+#include <tiny/draw/renderer.h>
 
 namespace tiny
 {
@@ -71,6 +71,7 @@ class ComputeTextureInput : public Renderable
             }
             
             inputSizes[name] = std::pair<size_t, size_t>(texture.width, texture.height);
+            setVec2Uniform(1.0f/static_cast<float>(texture.width), 1.0f/static_cast<float>(texture.height), name + "InverseSize");
             setTexture(texture, name);
         }
     

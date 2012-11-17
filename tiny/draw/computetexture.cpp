@@ -17,7 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <sstream>
 
-#include <draw/computetexture.h>
+#include <tiny/draw/computetexture.h>
 
 using namespace tiny::draw;
 
@@ -47,7 +47,7 @@ SquareVertexBufferInterpreter::SquareVertexBufferInterpreter() :
     addVec2Attribute(vertices, 2*sizeof(float), "textureCoordinates");
 }
 
-SquareVertexBufferInterpreter::~SquareVertexInterpreter()
+SquareVertexBufferInterpreter::~SquareVertexBufferInterpreter()
 {
     
 }
@@ -68,7 +68,7 @@ ComputeTextureInput::~ComputeTextureInput()
 
 }
 
-std::string ComputeTextureInput::getVertexShaderCode()
+std::string ComputeTextureInput::getVertexShaderCode() const
 {
     return 
 "#version 150\n"
@@ -85,7 +85,7 @@ std::string ComputeTextureInput::getVertexShaderCode()
 "}\n\0";
 }
 
-std::string ComputeTextureInput::getFragmentShaderCode()
+std::string ComputeTextureInput::getFragmentShaderCode() const
 {
     return fragmentShaderCode;
 }
@@ -93,17 +93,12 @@ std::string ComputeTextureInput::getFragmentShaderCode()
 void ComputeTextureInput::render(const ShaderProgram &program) const
 {
     //Update input texture sizes.
-    for (std::map<std::string, std::pair<size_t, size_t> >::const_iterator i = inputSizes.begin(); i != inputSizes.end(); ++i)
-    {
-        setVec2Uniform(1.0f/static_cast<float>(i->second.first), 1.0f/static_cast<float>(i->second.second), i->first + "InverseSize");
-    }
-    
     setVariablesInProgram(program);
     
     //Draw screen-filling quad.
-    square.bind();
+    square.bind(program);
     renderRangeAsTriangleStrip(0, 4);
-    square.unbind();
+    square.unbind(program);
 }
 
 ComputeTextureOutput::ComputeTextureOutput(const std::vector<std::string> &outputNames) :

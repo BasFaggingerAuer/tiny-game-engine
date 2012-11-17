@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cassert>
 
+#include <GL/glew.h>
 #include <GL/gl.h>
 
 namespace tiny
@@ -32,6 +33,9 @@ namespace draw
 namespace detail
 {
 
+template<typename T>
+GLenum getOpenGLDataType() {return GL_UNSIGNED_BYTE;}
+
 template<>
 GLenum getOpenGLDataType<float>() {return GL_FLOAT;}
 template<>
@@ -41,6 +45,9 @@ GLenum getOpenGLDataType<int>() {return GL_INT;}
 template<>
 GLenum getOpenGLDataType<unsigned int>() {return GL_UNSIGNED_INT;}
 
+template<size_t T>
+GLenum getOpenGLChannelType() {return GL_RED;}
+
 template<>
 GLenum getOpenGLChannelType<1>() {return GL_RED;}
 template<>
@@ -49,6 +56,9 @@ template<>
 GLenum getOpenGLChannelType<3>() {return GL_RGB;}
 template<>
 GLenum getOpenGLChannelType<4>() {return GL_RGBA;}
+
+template<size_t T, typename S>
+GLint getOpenGLTextureFormat() {return GL_R8;}
 
 template<>
 GLint getOpenGLTextureFormat<1, unsigned char>() {return GL_R8;}

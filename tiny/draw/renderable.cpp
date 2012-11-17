@@ -16,7 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <algorithm>
 
-#include <draw/renderable.h>
+#include <tiny/draw/renderable.h>
 
 using namespace tiny::draw;
 
@@ -40,7 +40,7 @@ std::string Renderable::getGeometryShaderCode() const
     return "";
 }
 
-void Renderable::setVariablesInProgram(ShaderProgram &program) const
+void Renderable::setVariablesInProgram(const ShaderProgram &program) const
 {
     program.bind();
     

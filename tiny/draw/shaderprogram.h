@@ -21,9 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cassert>
 
-#include <GL/gl.h>
-
-#include <draw/shader.h>
+#include <tiny/draw/shader.h>
 
 namespace tiny
 {
@@ -53,6 +51,8 @@ class ShaderProgram
 
         void link();
         GLuint getIndex() const;
+        void bind() const;
+        void unbind() const;
         
     private:
         ShaderProgram(const ShaderProgram &);

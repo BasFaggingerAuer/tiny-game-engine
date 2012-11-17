@@ -21,9 +21,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cassert>
 
-#include <draw/renderable.h>
-#include <draw/shader.h>
-#include <draw/shaderprogram.h>
+#include <tiny/draw/renderable.h>
+#include <tiny/draw/shader.h>
+#include <tiny/draw/shaderprogram.h>
+#include <tiny/draw/texture2d.h>
 
 namespace tiny
 {
@@ -39,7 +40,7 @@ struct BoundRenderable
     BoundRenderable(Renderable *a_renderable,
                     VertexShader *a_vertexShader,
                     GeometryShader *a_geometryShader,
-                    FragmentShader *a_FragmentShader,
+                    FragmentShader *a_fragmentShader,
                     ShaderProgram *a_program) :
         renderable(a_renderable),
         vertexShader(a_vertexShader),
@@ -78,9 +79,9 @@ class Renderer
             {
                 if (renderTargetNames[i] == name)
                 {
-                    glBindFrameBuffer(GL_FRAMEBUFFER, frameBufferIndex);
+                    glBindFramebuffer(GL_FRAMEBUFFER, frameBufferIndex);
                     glFrameBufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, texture.getIndex(), 0);
-                    glBindFrameBuffer(GL_FRAMEBUFFER, 0);
+                    glBindFramebuffer(GL_FRAMEBUFFER, 0);
                     return;
                 }
             }
@@ -100,7 +101,7 @@ class Renderer
         //This class should not be copied.
         Renderer(const Renderer &renderer);
         
-        std::list<BoundRenderable> renderables;
+        std::list<detail::BoundRenderable> renderables;
         GLuint frameBufferIndex;
         std::vector<std::string> renderTargetNames;
 };

@@ -14,7 +14,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <draw/shaderprogram.h>
+#include <tiny/draw/shaderprogram.h>
 
 using namespace tiny::draw;
 
@@ -76,5 +76,15 @@ void ShaderProgram::link()
 GLuint ShaderProgram::getIndex() const
 {
     return programIndex;
+}
+
+void ShaderProgram::bind() const
+{
+    glUseProgram(programIndex);
+}
+
+void ShaderProgram::unbind() const
+{
+    glUseProgram(0);
 }
 

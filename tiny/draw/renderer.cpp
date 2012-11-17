@@ -16,7 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <algorithm>
 
-#include <draw/renderer.h>
+#include <tiny/draw/renderer.h>
 
 using namespace tiny::draw;
 

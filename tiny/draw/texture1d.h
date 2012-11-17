@@ -16,7 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #pragma once
 
-#include <texture.h>
+#include <tiny/draw/texture.h>
 
 namespace tiny
 {
@@ -47,12 +47,12 @@ class Texture1D : public Texture<T, Channels>
         
         T & operator () (const size_t &a_x)
         {
-            return hostData[a_x];
+            return this->hostData[a_x];
         }
         
         const T & operator () (const size_t &a_x) const
         {
-            return hostData[a_x];
+            return this->hostData[a_x];
         }
 };
 

@@ -22,9 +22,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cassert>
 
-#include <draw/texture.h>
-#include <draw/indexbuffer.h>
-#include <draw/detail/formats.h>
+#include <tiny/draw/texture.h>
+#include <tiny/draw/indexbuffer.h>
+#include <tiny/draw/shader.h>
+#include <tiny/draw/shaderprogram.h>
+#include <tiny/draw/detail/formats.h>
 
 namespace tiny
 {
@@ -120,7 +122,7 @@ class Renderable
         
         virtual void render(const ShaderProgram &) const = 0;
         void addTexture(const std::string &name);
-        void setVariablesInProgram(ShaderProgram &program) const;
+        void setVariablesInProgram(const ShaderProgram &program) const;
         
         void renderRangeAsTriangleStrip(const size_t &first, const size_t &last) const
         {
@@ -136,13 +138,11 @@ class Renderable
         }
         
     private:
-        friend class Renderer;
-        
         void bindTextures() const;
         void unbindTextures() const;
         
-        std::map<std::string, FloatUniform> floatUniforms;
-        std::map<std::string, BoundTexture> textures;
+        std::map<std::string, detail::FloatUniform> floatUniforms;
+        std::map<std::string, detail::BoundTexture> textures;
 };
 
 }

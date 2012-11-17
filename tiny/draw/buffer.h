@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cassert>
 
+#include <GL/glew.h>
 #include <GL/gl.h>
 
 namespace tiny
@@ -126,27 +127,27 @@ class Buffer : public BufferInterface
             return hostData[a_index];
         }
         
-        const T & operator [] (const size_t &a_index) const;
+        const T & operator [] (const size_t &a_index) const
         {
             return hostData[a_index];
         }
         
-        std::vector<T>::iterator begin()
+        typename std::vector<T>::iterator begin()
         {
             return hostData.begin();
         }
         
-        std::vector<T>::const_iterator begin() const
+        typename std::vector<T>::const_iterator begin() const
         {
             return hostData.begin();
         }
         
-        std::vector<T>::iterator end()
+        typename std::vector<T>::iterator end()
         {
             return hostData.end();
         }
         
-        std::vector<T>::const_iterator end() const
+        typename std::vector<T>::const_iterator end() const
         {
             return hostData.end();
         }

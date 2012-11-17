@@ -16,11 +16,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #pragma once
 
+#include <iostream>
 #include <exception>
 #include <vector>
 
 #include <cassert>
 
+#include <GL/glew.h>
 #include <GL/gl.h>
 
 namespace tiny
@@ -56,11 +58,11 @@ class Shader
         {
             const char *code = a_code.c_str();
             GLint length = a_code.size();
-            GLint result = GL_FALSE;
+            GLint results = GL_FALSE;
             
-            glShaderSource(shaderIndex, 1, (const GLChar **)(&code), &length);
+            glShaderSource(shaderIndex, 1, (const GLchar **)(&code), &length);
             glCompileShader(shaderIndex);
-            glGetShaderiv(shaderIndex, GL_COMPILE_STATUS, &result);
+            glGetShaderiv(shaderIndex, GL_COMPILE_STATUS, &results);
             
             if (results != GL_TRUE)
             {
@@ -76,10 +78,10 @@ class Shader
                 
                 GLchar *logText = new GLchar [logLength + 1];
                 
-                getShaderInfoLog(shaderIndex, logLength, 0, logText);
+                glGetShaderInfoLog(shaderIndex, logLength, 0, logText);
                 logText[logLength] = 0;
                 
-                std::cerr << "Unable to compile shader:" << std::endl << a_code << std::endl << "Shader log:" << std::endl << buffer << std::endl;
+                std::cerr << "Unable to compile shader:" << std::endl << a_code << std::endl << "Shader log:" << std::endl << logText << std::endl;
                 
                 delete [] logText;
             }

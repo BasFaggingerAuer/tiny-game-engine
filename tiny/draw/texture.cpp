@@ -16,7 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #pragma once
 
-#include <draw/texture.h>
+#include <tiny/draw/texture.h>
 
 using namespace tiny::draw;
 
