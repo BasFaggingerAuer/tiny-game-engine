@@ -14,8 +14,6 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#pragma once
-
 #include <tiny/draw/texture.h>
 
 using namespace tiny::draw;
@@ -47,8 +45,7 @@ TextureInterface::TextureInterface(const TextureInterface &a_texture) :
     width(a_texture.width),
     height(a_texture.height),
     depth(a_texture.depth),
-    textureIndex(0),
-    bindTarget(-1)
+    textureIndex(0)
 {
     createDeviceTexture();
 }

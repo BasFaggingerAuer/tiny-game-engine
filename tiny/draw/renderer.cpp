@@ -27,21 +27,23 @@ Renderer::Renderer() :
     
 }
 
-Renderer::Renderer(const Renderer &renderer)
+Renderer::Renderer(const Renderer &)
 {
-    destroyFrameBuffer();
+    
 }
 
 Renderer::~Renderer()
 {
     //Free allocated renderable programs.
-    for (std::list<BoundRenderable>::iterator i = renderables.begin(); i != renderables.end(); ++i)
+    for (std::list<detail::BoundRenderable>::iterator i = renderables.begin(); i != renderables.end(); ++i)
     {
         delete i->vertexShader;
         if (i->geometryShader) delete i->geometryShader;
         delete i->fragmentShader;
         delete i->program;
     }
+    
+    destroyFrameBuffer();
 }
 
 void Renderer::createFrameBuffer()
@@ -49,7 +51,7 @@ void Renderer::createFrameBuffer()
     //Do not create the frame buffer if it already exists.
     if (frameBufferIndex != 0) return;
     
-    glGenFrameBuffers(1, &frameBufferIndex);
+    glGenFramebuffers(1, &frameBufferIndex);
     
     if (frameBufferIndex == 0)
         throw std::bad_alloc();
@@ -60,12 +62,12 @@ void Renderer::destroyFrameBuffer()
     renderTargetNames.clear();
     
     if (frameBufferIndex != 0)
-        glDeleteFrameBuffers(1, &frameBufferIndex);
+        glDeleteFramebuffers(1, &frameBufferIndex);
     
     frameBufferIndex = 0;
 }
 
-void Renderer::addRenderable(const Renderable *renderable)
+void Renderer::addRenderable(Renderable *renderable)
 {
     assert(renderable);
     
@@ -108,12 +110,12 @@ void Renderer::addRenderable(const Renderable *renderable)
     //Bind uniforms and textures to program.
     renderable->setVariablesInProgram(*program);
     
-    renderables.push_back(BoundRenderable(renderable, vertexShader, geometryShader, fragmentShader, program));
+    renderables.push_back(detail::BoundRenderable(renderable, vertexShader, geometryShader, fragmentShader, program));
 }
 
 void Renderer::addRenderTarget(const std::string &name)
 {
-    if (std::find(renderTargetNames.begin(), renderTargetNames.end()) != renderTargetNames.end())
+    if (std::find(renderTargetNames.begin(), renderTargetNames.end(), name) != renderTargetNames.end())
     {
         std::cerr << "Warning: render target '" << name << "' already exists!" << std::endl;
         return;
@@ -132,19 +134,19 @@ void Renderer::addRenderTarget(const std::string &name)
 
 void Renderer::render() const
 {
-    glBindFrameBuffer(GL_FRAME_BUFFER, frameBufferIndex);
+    glBindFramebuffer(GL_FRAMEBUFFER, frameBufferIndex);
     
-    for (std::list<BoundRenderable>::const_iterator i = renderables.begin(); i != renderables.end(); ++i)
+    for (std::list<detail::BoundRenderable>::const_iterator i = renderables.begin(); i != renderables.end(); ++i)
     {
         //TODO: Is this very inefficient? Should we let the rendererable decide whether or not to update the uniforms every frame?
         //i->renderable->setVariablesInProgram(*i->program);
         i->program->bind();
-        i->bindTextures();
+        i->renderable->bindTextures();
         i->renderable->render(*i->program);
-        i->unbindTextures();
+        i->renderable->unbindTextures();
         //i->program->unbind();
     }
     
-    glBindFrameBuffer(GL_FRAME_BUFFER, 0);
+    glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }
 

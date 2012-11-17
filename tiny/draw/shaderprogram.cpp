@@ -14,6 +14,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include <iostream>
+
 #include <tiny/draw/shaderprogram.h>
 
 using namespace tiny::draw;
@@ -64,10 +66,10 @@ void ShaderProgram::link()
         
         GLchar *logText = new GLchar [logLength + 1];
         
-        getProgramInfoLog(programIndex, logLength, 0, logText);
+        glGetProgramInfoLog(programIndex, logLength, 0, logText);
         logText[logLength] = 0;
         
-        std::cerr << "Unable to link program!" << std::endl << "Program log:" << std::endl << buffer << std::endl;
+        std::cerr << "Unable to link program!" << std::endl << "Program log:" << std::endl << logText << std::endl;
         
         delete [] logText;
     }

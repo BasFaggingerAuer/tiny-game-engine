@@ -71,7 +71,7 @@ class ComputeTextureInput : public Renderable
             }
             
             inputSizes[name] = std::pair<size_t, size_t>(texture.width, texture.height);
-            setVec2Uniform(1.0f/static_cast<float>(texture.width), 1.0f/static_cast<float>(texture.height), name + "InverseSize");
+            setVec2Variable(1.0f/static_cast<float>(texture.width), 1.0f/static_cast<float>(texture.height), name + "InverseSize");
             setTexture(texture, name);
         }
     

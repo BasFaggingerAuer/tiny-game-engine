@@ -30,19 +30,19 @@ VertexBufferInterpreter::~VertexBufferInterpreter()
 
 void VertexBufferInterpreter::bind(const ShaderProgram &program, const size_t &divisor) const
 {
-    for (std::list<detail::AttributePointerData>::const_iterator i = attributes.begin(); i != attributes.end() && !found; ++i)
+    for (std::list<detail::AttributePointerData>::const_iterator i = attributes.begin(); i != attributes.end(); ++i)
     {
-        const GLint attributeLocation = glGetAttribLocation(program.getIndex(), i->name);
+        const GLint attributeLocation = glGetAttribLocation(program.getIndex(), i->name.c_str());
         
         if (attributeLocation < 0)
         {
-            std::cerr << "Attribute '" << name << "' could not be found in the shader program!" << std::endl;
+            std::cerr << "Attribute '" << i->name << "' could not be found in the shader program!" << std::endl;
         }
         else
         {
             glBindBuffer(GL_ARRAY_BUFFER, i->bufferIndex);
             glEnableVertexAttribArray(attributeLocation);
-            glVertexAttributePointer(attributeLocation, i->numComponents, i->type, GL_FALSE, i->stride, (GLvoid *)(i->offset));
+            glVertexAttribPointer(attributeLocation, i->numComponents, i->type, GL_FALSE, i->stride, (GLvoid *)(i->offset));
             
             //Enable instanced data if required.
             if (divisor > 0) glVertexAttribDivisorARB(attributeLocation, divisor);
@@ -54,9 +54,9 @@ void VertexBufferInterpreter::bind(const ShaderProgram &program, const size_t &d
 
 void VertexBufferInterpreter::unbind(const ShaderProgram &program) const
 {
-    for (std::list<detail::AttributePointerData>::const_iterator i = attributes.begin(); i != attributes.end() && !found; ++i)
+    for (std::list<detail::AttributePointerData>::const_iterator i = attributes.begin(); i != attributes.end(); ++i)
     {
-        const GLint attributeLocation = glGetAttribLocation(program.getIndex(), i->name);
+        const GLint attributeLocation = glGetAttribLocation(program.getIndex(), i->name.c_str());
         
         if (attributeLocation >= 0)
         {
@@ -65,7 +65,7 @@ void VertexBufferInterpreter::unbind(const ShaderProgram &program) const
     }
 }
 
-VertexBufferInterpreter::addAttribute(const GLuint &bufferIndex, const size_t &numComponents, const GLenum &type, const size_t &stride, const size_t &offset, const std::string &name)
+void VertexBufferInterpreter::addAttribute(const GLuint &bufferIndex, const size_t &numComponents, const GLenum &type, const size_t &stride, const size_t &offset, const std::string &name)
 {
     bool found = false;
     
@@ -80,6 +80,6 @@ VertexBufferInterpreter::addAttribute(const GLuint &bufferIndex, const size_t &n
         return;
     }
     
-    attributes.push_back(AttributePointerData(name, bufferIndex, numComponents, type, stride, offset));
+    attributes.push_back(detail::AttributePointerData(name, bufferIndex, numComponents, type, stride, offset));
 }
 

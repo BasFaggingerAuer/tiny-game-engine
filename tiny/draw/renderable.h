@@ -16,6 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #pragma once
 
+#include <iostream>
 #include <exception>
 #include <string>
 #include <map>
@@ -40,6 +41,17 @@ namespace detail
 template<typename T>
 struct BoundUniform
 {
+    BoundUniform() :
+        name(""),
+        numParameters(0),
+        x(0),
+        y(0),
+        z(0),
+        w(0)
+    {
+
+    }
+    
     BoundUniform(const std::string &a_name,
                  const size_t &a_numParameters,
                  const T &a_x,
@@ -112,10 +124,10 @@ class Renderable
             textures[name].texture = &texture;
         }
         
-        void setFloatUniform(const float &x, const std::string &name);
-        void setVec2Uniform(const float &x, const float &y, const std::string &name);
-        void setVec3Uniform(const float &x, const float &y, const float &z, const std::string &name);
-        void setVec4Uniform(const float &x, const float &y, const float &z, const float &w, const std::string &name);
+        void setFloatVariable(const float &x, const std::string &name);
+        void setVec2Variable(const float &x, const float &y, const std::string &name);
+        void setVec3Variable(const float &x, const float &y, const float &z, const std::string &name);
+        void setVec4Variable(const float &x, const float &y, const float &z, const float &w, const std::string &name);
         
     protected:
         friend class Renderer;

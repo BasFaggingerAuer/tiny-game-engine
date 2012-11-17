@@ -14,6 +14,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include <map>
 #include <algorithm>
 
 #include <tiny/draw/renderable.h>
@@ -25,7 +26,7 @@ Renderable::Renderable()
 
 }
 
-Renderable::Renderable(const Renderable &a_renderable)
+Renderable::Renderable(const Renderable &)
 {
     //TODO.
 }
@@ -44,9 +45,9 @@ void Renderable::setVariablesInProgram(const ShaderProgram &program) const
 {
     program.bind();
     
-    for (map<std::string, FloatUniform>::const_iterator i = floatUniforms.begin(); i != floatUniforms.end(); ++i)
+    for (std::map<std::string, detail::FloatUniform>::const_iterator i = floatUniforms.begin(); i != floatUniforms.end(); ++i)
     {
-        const BoundUniform uniform = i->second;
+        const detail::FloatUniform uniform = i->second;
         const GLint location = glGetUniformLocation(program.getIndex(), uniform.name.c_str());
         
         if (location < 0)
@@ -64,9 +65,9 @@ void Renderable::setVariablesInProgram(const ShaderProgram &program) const
     
     int textureBindPoint = 0;
     
-    for (map<std::string, BoundTexture>::const_iterator i = textures.begin(); i != textures.end(); ++i)
+    for (std::map<std::string, detail::BoundTexture>::const_iterator i = textures.begin(); i != textures.end(); ++i)
     {
-        const BoundTexture uniform = i->second;
+        const detail::BoundTexture uniform = i->second;
         const GLint location = glGetUniformLocation(program.getIndex(), uniform.name.c_str());
         
         if (location < 0)
@@ -85,7 +86,7 @@ void Renderable::bindTextures() const
 {
     int textureBindPoint = 0;
     
-    for (map<std::string, BoundTexture>::const_iterator i = textures.begin(); i != textures.end(); ++i)
+    for (std::map<std::string, detail::BoundTexture>::const_iterator i = textures.begin(); i != textures.end(); ++i)
     {
         if (i->second.texture) i->second.texture->bind(textureBindPoint);
         
@@ -97,7 +98,7 @@ void Renderable::unbindTextures() const
 {
     int textureBindPoint = 0;
     
-    for (map<std::string, BoundTexture>::const_iterator i = textures.begin(); i != textures.end(); ++i)
+    for (std::map<std::string, detail::BoundTexture>::const_iterator i = textures.begin(); i != textures.end(); ++i)
     {
         if (i->second.texture) i->second.texture->unbind(textureBindPoint);
         
@@ -113,11 +114,11 @@ void Renderable::addTexture(const std::string &name)
         return;
     }
     
-    textures[name] = BoundTexture(name, 0);
+    textures[name] = detail::BoundTexture(name, 0);
 }
 
-void Renderable::setFloatVariable(const float &x, const std::string &name) {floatUniforms[name] = FloatUniform(name, 1, x);}
-void Renderable::setVec2Variable(const float &x, const float &y, const std::string &name) {floatUniforms[name] = FloatUniform(name, 2, x, y);}
-void Renderable::setVec3Variable(const float &x, const float &y, const float &z, const std::string &name) {floatUniforms[name] = FloatUniform(name, 3, x, y, z);}
-void Renderable::setVec4Variable(const float &x, const float &y, const float &z, const float &w, const std::string &name) {floatUniforms[name] = FloatUniform(name, 4, x, y, z, w);}
+void Renderable::setFloatVariable(const float &x, const std::string &name) {floatUniforms[name] = detail::FloatUniform(name, 1, x);}
+void Renderable::setVec2Variable(const float &x, const float &y, const std::string &name) {floatUniforms[name] = detail::FloatUniform(name, 2, x, y);}
+void Renderable::setVec3Variable(const float &x, const float &y, const float &z, const std::string &name) {floatUniforms[name] = detail::FloatUniform(name, 3, x, y, z);}
+void Renderable::setVec4Variable(const float &x, const float &y, const float &z, const float &w, const std::string &name) {floatUniforms[name] = detail::FloatUniform(name, 4, x, y, z, w);}
 

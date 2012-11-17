@@ -16,6 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #pragma once
 
+#include <iostream>
 #include <exception>
 #include <list>
 
@@ -68,7 +69,7 @@ class Renderer
         Renderer();
         virtual ~Renderer();
         
-        void addRenderable(const Renderable *renderable);
+        void addRenderable(Renderable *renderable);
         
         template<typename T, size_t Channels>
         void setTextureTarget(const Texture2D<T, Channels> &texture, const std::string &name)

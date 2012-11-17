@@ -16,6 +16,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <tiny/draw/shader.h>
 
+using namespace tiny::draw;
+
 VertexShader::VertexShader() :
     Shader<GL_VERTEX_SHADER>()
 {
