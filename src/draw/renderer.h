@@ -22,7 +22,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cassert>
 
 #include <draw/renderable.h>
-#include <draw/target.h>
 #include <draw/shader.h>
 #include <draw/shaderprogram.h>
 
@@ -70,17 +69,47 @@ class Renderer
         
         void addRenderable(const Renderable *renderable);
         
-        void renderToTarget(RenderTarget *target) const;
+        void render() const;
         
     protected:
-        virtual std::string getFragmentShaderCode() const = 0;
+        template<typename T, size_t Channels>
+        void setTextureTarget(const Texture2D<T, Channels> &texture, const std::string &name)
+        {
+            createFrameBuffer();
+            glBindFrameBuffer(GL_FRAMEBUFFER, frameBufferIndex);
+            glFrameBufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + renderTargetNames.size(), GL_TEXTURE_2D, texture.getIndex(), 0);
+            glBindFrameBuffer(GL_FRAMEBUFFER, 0);
+            
+            if (renderTargetNames.size() >= GL_MAX_DRAW_BUFFERS)
+            {
+                std::cerr << "Warning: binding more than the maximum number (" << GL_MAX_DRAW_BUFFERS << ") of draw buffers!" << std::endl;
+            }
+            
+            renderTargetNames.push_back(name);
+        }
+        
+        void setColourTarget(const std::string &name)
+        {
+            if (frameBufferIndex != 0)
+            {
+                std::cerr << "Warning: destroying existing frame buffer!" << std::endl;
+            }
+            
+            destroyFrameBuffer();
+            renderTargetNames.clear();
+            renderTargetNames.push_back(name);
+        }
         
     private:
+        void createFrameBuffer();
+        void destroyFrameBuffer();
+        
         //This class should not be copied.
         Renderer(const Renderer &renderer);
         
-        FragmentShader baseFragmentShader;
         std::list<BoundRenderable> renderables;
+        GLuint frameBufferIndex;
+        std::vector<std::string> renderTargetNames;
 };
 
 }

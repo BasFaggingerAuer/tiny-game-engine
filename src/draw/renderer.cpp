@@ -20,15 +20,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using namespace tiny::draw;
 
-Renderer::Renderer()
+Renderer::Renderer() :
+    frameBufferIndex(0),
+    renderTargetNames()
 {
-    //Compile the renderer's own part of the vertex shader.
-    baseFragmentShader.compile(getFragmentShaderCode());
+    
 }
 
 Renderer::Renderer(const Renderer &renderer)
 {
-
+    destroyFrameBuffer();
 }
 
 Renderer::~Renderer()
@@ -41,6 +42,27 @@ Renderer::~Renderer()
         delete i->fragmentShader;
         delete i->program;
     }
+}
+
+void Renderer::createFrameBuffer()
+{
+    //Do not create the frame buffer if it already exists.
+    if (frameBufferIndex != 0) return;
+    
+    glGenFrameBuffers(1, &frameBufferIndex);
+    
+    if (frameBufferIndex == 0)
+        throw std::bad_alloc();
+}
+
+void Renderer::destroyFrameBuffer()
+{
+    renderTargetNames.clear();
+    
+    if (frameBufferIndex != 0)
+        glDeleteFrameBuffers(1, &frameBufferIndex);
+    
+    frameBufferIndex = 0;
 }
 
 void Renderer::addRenderable(const Renderable *renderable)
@@ -74,7 +96,12 @@ void Renderer::addRenderable(const Renderable *renderable)
     program->attach(*vertexShader);
     if (geometryShader) program->attach(*geometryShader);
     program->attach(*fragmentShader);
-    program->attach(baseFragmentShader);
+    
+    //Set program outputs.
+    for (size_t i = 0; i < renderTargetNames.size(); ++i)
+    {
+        glBindFragDataLocation(program->getIndex(), i, renderTargetNames[i].c_str());
+    }
     
     program->link();
     
@@ -84,9 +111,9 @@ void Renderer::addRenderable(const Renderable *renderable)
     renderables.push_back(BoundRenderable(renderable, vertexShader, geometryShader, fragmentShader, program));
 }
 
-void Renderer::renderToTarget(RenderTarget *target) const
+void Renderer::render() const
 {
-    target->bind();
+    glBindFrameBuffer(GL_FRAME_BUFFER, frameBufferIndex);
     
     for (std::list<BoundRenderable>::const_iterator i = renderables.begin(); i != renderables.end(); ++i)
     {
@@ -97,6 +124,6 @@ void Renderer::renderToTarget(RenderTarget *target) const
         //i->program->unbind();
     }
     
-    target->unbind();
+    glBindFrameBuffer(GL_FRAME_BUFFER, 0);
 }
 
