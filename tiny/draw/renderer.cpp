@@ -107,8 +107,13 @@ void Renderer::addRenderable(Renderable *renderable)
     
     program->link();
     
+    //Lock texture uniforms to prevent the bindings from changing.
+    uniformMap.lockTextures();
+    renderable->uniformMap.lockTextures();
+    
     //Bind uniforms and textures to program.
-    renderable->uniformMap.setUniformsAndTexturesInProgram(*program);
+    uniformMap.setUniformsAndTexturesInProgram(*program);
+    renderable->uniformMap.setUniformsAndTexturesInProgram(*program, uniformMap.getNrTextures());
     
     renderables.push_back(detail::BoundRenderable(renderable, vertexShader, geometryShader, fragmentShader, program));
 }
@@ -136,16 +141,21 @@ void Renderer::render() const
 {
     glBindFramebuffer(GL_FRAMEBUFFER, frameBufferIndex);
     
+    uniformMap.bindTextures();
+    
     for (std::list<detail::BoundRenderable>::const_iterator i = renderables.begin(); i != renderables.end(); ++i)
     {
         //TODO: Is this very inefficient? Should we let the rendererable decide whether or not to update the uniforms every frame?
+        uniformMap.setUniformsAndTexturesInProgram(*i->program);
         //i->renderable->setVariablesInProgram(*i->program);
         i->program->bind();
-        i->renderable->uniformMap.bindTextures();
+        i->renderable->uniformMap.bindTextures(uniformMap.getNrTextures());
         i->renderable->render(*i->program);
-        i->renderable->uniformMap.unbindTextures();
+        i->renderable->uniformMap.unbindTextures(uniformMap.getNrTextures());
         //i->program->unbind();
     }
+    
+    uniformMap.unbindTextures();
     
     glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }

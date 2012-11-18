@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/draw/shader.h>
 #include <tiny/draw/shaderprogram.h>
 #include <tiny/draw/texture2d.h>
+#include <tiny/draw/uniformmap.h>
 
 namespace tiny
 {
@@ -95,6 +96,8 @@ class Renderer
     protected:
         void addRenderTarget(const std::string &name);
         
+        UniformMap uniformMap;
+
     private:
         void createFrameBuffer();
         void destroyFrameBuffer();

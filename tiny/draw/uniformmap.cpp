@@ -21,7 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using namespace tiny::draw;
 
-UniformMap::UniformMap()
+UniformMap::UniformMap() :
+    texturesAreLocked(false)
 {
 
 }
@@ -33,7 +34,7 @@ UniformMap::~UniformMap()
 
 size_t UniformMap::getNrUniforms() const
 {
-    return floatUniforms.size();
+    return floatUniforms.size() + matrixUniforms.size();
 }
 
 size_t UniformMap::getNrTextures() const
@@ -43,6 +44,12 @@ size_t UniformMap::getNrTextures() const
 
 void UniformMap::addTexture(const std::string &name)
 {
+    if (texturesAreLocked)
+    {
+        std::cerr << "Warning: attempting to add texture '" << name << "' to a locked uniform map!" << std::endl;
+        return;
+    }
+    
     if (textures.find(name) != textures.end())
     {
         std::cerr << "Warning: texture '" << name << "' already exists!" << std::endl;
@@ -52,10 +59,20 @@ void UniformMap::addTexture(const std::string &name)
     textures[name] = detail::BoundTexture(name, 0);
 }
 
+void UniformMap::lockTextures()
+{
+    texturesAreLocked = true;
+}
+
 void UniformMap::setFloatUniform(const float &x, const std::string &name) {floatUniforms[name] = detail::FloatUniform(name, 1, x);}
 void UniformMap::setVec2Uniform(const float &x, const float &y, const std::string &name) {floatUniforms[name] = detail::FloatUniform(name, 2, x, y);}
 void UniformMap::setVec3Uniform(const float &x, const float &y, const float &z, const std::string &name) {floatUniforms[name] = detail::FloatUniform(name, 3, x, y, z);}
 void UniformMap::setVec4Uniform(const float &x, const float &y, const float &z, const float &w, const std::string &name) {floatUniforms[name] = detail::FloatUniform(name, 4, x, y, z, w);}
+
+void UniformMap::setVec2Uniform(const vec2 &v, const std::string &name) {floatUniforms[name] = detail::FloatUniform(name, 2, v.x, v.y);}
+void UniformMap::setVec3Uniform(const vec3 &v, const std::string &name) {floatUniforms[name] = detail::FloatUniform(name, 3, v.x, v.y, v.z);}
+void UniformMap::setVec4Uniform(const vec4 &v, const std::string &name) {floatUniforms[name] = detail::FloatUniform(name, 4, v.x, v.y, v.z, v.w);}
+void UniformMap::setMat4Uniform(const mat4 &m, const std::string &name) {matrixUniforms[name] = detail::MatrixUniform(name, m);}
 
 void UniformMap::setUniformsAndTexturesInProgram(const ShaderProgram &program, const int &textureOffset) const
 {
@@ -77,6 +94,24 @@ void UniformMap::setUniformsAndTexturesInProgram(const ShaderProgram &program, c
         else if (uniform.numParameters == 3) glUniform3f(location, uniform.x, uniform.y, uniform.z);
         else if (uniform.numParameters == 4) glUniform4f(location, uniform.x, uniform.y, uniform.z, uniform.w);
         else std::cerr << "Warning: uniform variable '" << uniform.name << "' has an invalid number of parameters (" << uniform.numParameters << ")!" << std::endl;
+    }
+    
+    for (std::map<std::string, detail::MatrixUniform>::const_iterator i = matrixUniforms.begin(); i != matrixUniforms.end(); ++i)
+    {
+        const detail::MatrixUniform uniform = i->second;
+        const GLint location = glGetUniformLocation(program.getIndex(), uniform.name.c_str());
+        GLfloat data[16]; 
+        
+        if (location < 0)
+        {
+#ifndef NDEBUG
+            std::cerr << "Warning: uniform matrix variable '" << uniform.name << "' does not exist in the GLSL program " << program.getIndex() << "!" << std::endl;
+#endif
+            continue;
+        }
+        
+        uniform.m.toOpenGL(data);
+        glUniformMatrix4fv(location, 1, GL_FALSE, data);
     }
     
     int textureBindPoint = textureOffset;

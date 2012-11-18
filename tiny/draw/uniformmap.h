@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/draw/shader.h>
 #include <tiny/draw/shaderprogram.h>
 #include <tiny/draw/detail/formats.h>
+#include <tiny/math/vec.h>
 
 namespace tiny
 {
@@ -73,6 +74,27 @@ struct BoundUniform
     T x, y, z, w;
 };
 
+struct MatrixUniform
+{
+    MatrixUniform() :
+        name(""),
+        m(mat4::identityMatrix())
+    {
+
+    }
+    
+    MatrixUniform(const std::string &a_name,
+                 const mat4 &a_m) :
+        name(a_name),
+        m(a_m)
+    {
+
+    }
+    
+    std::string name;
+    mat4 m;
+};
+
 typedef BoundUniform<GLfloat> FloatUniform;
 typedef BoundUniform<GLint> IntUniform;
 
@@ -109,6 +131,7 @@ class UniformMap
         size_t getNrTextures() const;
         
         void addTexture(const std::string &name);
+        void lockTextures();
         
         template <typename TextureType>
         void setTexture(const TextureType &texture, const std::string &name)
@@ -127,12 +150,20 @@ class UniformMap
         void setVec3Uniform(const float &x, const float &y, const float &z, const std::string &name);
         void setVec4Uniform(const float &x, const float &y, const float &z, const float &w, const std::string &name);
         
+        void setVec2Uniform(const vec2 &v, const std::string &name);
+        void setVec3Uniform(const vec3 &v, const std::string &name);
+        void setVec4Uniform(const vec4 &v, const std::string &name);
+        void setMat4Uniform(const mat4 &m, const std::string &name);
+        
         void setUniformsAndTexturesInProgram(const ShaderProgram &, const int & = 0) const;
         void bindTextures(const int & = 0) const;
         void unbindTextures(const int & = 0) const;
         
     private:
+        bool texturesAreLocked;
+        
         std::map<std::string, detail::FloatUniform> floatUniforms;
+        std::map<std::string, detail::MatrixUniform> matrixUniforms;
         std::map<std::string, detail::BoundTexture> textures;
 };
 

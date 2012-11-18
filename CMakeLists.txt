@@ -41,12 +41,12 @@ include_directories(${SDL_TTF_INCLUDE_DIR})
 link_directories(${SDL_TTF_LIBRARY_DIR})
 include_directories(${TINY_SOURCE_DIR})
 
-set(USED_LIBS ${OPENGL_LIBRARY}
+set(USED_LIBS tinygame
+              ${OPENGL_LIBRARY}
               ${GLEW_LIBRARY}
               ${SDL_LIBRARY}
               ${SDLIMAGE_LIBRARY}
-              ${SDLTTF_LIBRARY}
-              tinygame)
+              ${SDLTTF_LIBRARY})
 
 add_executable(test_image src/test_image.cpp)
 target_link_libraries(test_image ${USED_LIBS})

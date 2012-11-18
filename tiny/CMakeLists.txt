@@ -16,6 +16,9 @@ add_library(tinygame
             draw/shaderprogram.cpp
             draw/texture.cpp
             draw/vertexbufferinterpreter.cpp
+            draw/worldrenderer.cpp
             img/image.cpp
-            img/io/image.cpp)
+            img/io/image.cpp
+            os/application.cpp
+            os/sdlapplication.cpp)
 

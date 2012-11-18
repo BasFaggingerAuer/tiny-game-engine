@@ -211,22 +211,22 @@ class mat4
         {};
         
         inline mat4(const vec4 &a, const vec3 &b = vec3(0.0f, 0.0f, 0.0f)) :
-            v00(1.0 - 2.0*(a.y*a.y + a.z*a.z)),
-            v10(2.0*(a.x*a.y - a.w*a.z)),
-            v20(2.0*(a.x*a.z + a.w*a.y)),
-            v30(0.0),
-            v01(2.0*(a.x*a.y + a.w*a.z)),
-            v11(1.0 - 2.0*(a.x*a.x + a.z*a.z)),
-            v21(2.0*(a.y*a.z - a.w*a.x)),
-            v31(0.0),
-            v02(2.0*(a.x*a.z - a.w*a.y)),
-            v12(2.0*(a.y*a.z + a.w*a.x)),
-            v22(1.0 - 2.0*(a.x*a.x + a.y*a.y)),
-            v32(0.0),
+            v00(1.0f - 2.0f*(a.y*a.y + a.z*a.z)),
+            v10(2.0f*(a.x*a.y - a.w*a.z)),
+            v20(2.0f*(a.x*a.z + a.w*a.y)),
+            v30(0.0f),
+            v01(2.0f*(a.x*a.y + a.w*a.z)),
+            v11(1.0f - 2.0f*(a.x*a.x + a.z*a.z)),
+            v21(2.0f*(a.y*a.z - a.w*a.x)),
+            v31(0.0f),
+            v02(2.0f*(a.x*a.z - a.w*a.y)),
+            v12(2.0f*(a.y*a.z + a.w*a.x)),
+            v22(1.0f - 2.0f*(a.x*a.x + a.y*a.y)),
+            v32(0.0f),
             v03(b.x),
             v13(b.y),
             v23(b.z),
-            v33(1.0)
+            v33(1.0f)
         {};
         inline ~mat4() {};
 
@@ -284,13 +284,13 @@ class mat4
 
         inline mat4 inverted() const
         {
-            return mat4(v00, v01, v02, 0.0,
-                v10, v11, v12, 0.0,
-                v20, v21, v22, 0.0,
+            return mat4(v00, v01, v02, 0.0f,
+                v10, v11, v12, 0.0f,
+                v20, v21, v22, 0.0f,
                 -(v00*v03 + v10*v13 + v20*v23),
                 -(v01*v03 + v11*v13 + v21*v23),
                 -(v02*v03 + v12*v13 + v22*v23),
-                1.0);
+                1.0f);
         };
 
         inline mat4 &setTranslation(const vec3 &a)
@@ -301,7 +301,15 @@ class mat4
             
             return *this;
         };
-
+        
+        static mat4 identityMatrix()
+        {
+            return mat4(1.0, 0.0, 0.0, 0.0,
+                        0.0, 1.0, 0.0, 0.0,
+                        0.0, 0.0, 1.0, 0.0,
+                        0.0, 0.0, 0.0, 1.0);
+        };
+        
         static mat4 frustumMatrix(const vec3 &a, const vec3 &b)
         {
             const vec3 c = vec3(1.0/(b.x - a.x), 1.0/(b.y - a.y), 1.0/(b.z - a.z));
