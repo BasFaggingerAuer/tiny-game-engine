@@ -19,7 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using namespace tiny;
 
 //Quaternion specific operations.
-vec4 quatmul(const vec4 &a, const vec4 &b)
+vec4 tiny::quatmul(const vec4 &a, const vec4 &b)
 {
     return vec4(a.w*b.x + b.w*a.x + a.y*b.z - a.z*b.y,
         a.w*b.y + b.w*a.y + a.z*b.x - a.x*b.z,
@@ -27,26 +27,26 @@ vec4 quatmul(const vec4 &a, const vec4 &b)
         a.w*b.w - (a.x*b.x + a.y*b.y + a.z*b.z));
 }
 
-vec4 quatconj(const vec4 &a)
+vec4 tiny::quatconj(const vec4 &a)
 {
     return vec4(-a.x, -a.y, -a.z, a.w);
 }
 
-void quatnormalize(vec4 &a)
+void tiny::quatnormalize(vec4 &a)
 {
     const float l = 1.0/sqrt(a.x*a.x + a.y*a.y + a.z*a.z + a.w*a.w);
     
     a.x *= l; a.y *= l; a.z *= l; a.w *= l;
 }
 
-vec4 quatrot(const float &alpha, const vec3 &a)
+vec4 tiny::quatrot(const float &alpha, const vec3 &a)
 {
     const float s = sin(0.5*alpha);
     
     return vec4(s*a.x, s*a.y, s*a.z, cos(0.5*alpha));
 }
 
-vec4 quatmatrix(const mat4 &a)
+vec4 tiny::quatmatrix(const mat4 &a)
 {
     //From http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/index.htm.
     const float t = a.v00 + a.v11 + a.v22;

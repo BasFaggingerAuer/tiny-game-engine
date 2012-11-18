@@ -25,7 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using namespace tiny::img;
 
-Image io::readImage(const std::string &fileName)
+Image tiny::img::io::readImage(const std::string &fileName)
 {
     //Read image from disk.
     Image image;
@@ -93,7 +93,7 @@ Image io::readImage(const std::string &fileName)
     return image;
 }
 
-std::vector<Image> io::readFont(const std::string &fileName, const int &fontSize)
+std::vector<Image> tiny::img::io::readFont(const std::string &fileName, const int &fontSize)
 {
     std::vector<Image> images;
     TTF_Font *font = TTF_OpenFont(fileName.c_str(), fontSize);

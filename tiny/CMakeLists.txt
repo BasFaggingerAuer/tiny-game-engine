@@ -7,6 +7,10 @@ include_directories(${CMAKE_SOURCE_DIR})
 
 add_library(tinygame
             math/vec.cpp
+            img/image.cpp
+            img/io/image.cpp
+            mesh/staticmesh.cpp
+            mesh/io/staticmesh.cpp
             draw/buffer.cpp
             draw/computetexture.cpp
             draw/uniformmap.cpp
@@ -17,8 +21,6 @@ add_library(tinygame
             draw/texture.cpp
             draw/vertexbufferinterpreter.cpp
             draw/worldrenderer.cpp
-            img/image.cpp
-            img/io/image.cpp
             os/application.cpp
             os/sdlapplication.cpp)
 

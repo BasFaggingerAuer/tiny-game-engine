@@ -51,3 +51,6 @@ set(USED_LIBS tinygame
 add_executable(test_image src/test_image.cpp)
 target_link_libraries(test_image ${USED_LIBS})
 
+add_executable(test_world src/test_world.cpp)
+target_link_libraries(test_world ${USED_LIBS})
+
