@@ -29,6 +29,7 @@ WorldRenderer::WorldRenderer() :
     addRenderTarget("diffuse");
     addRenderTarget("worldNormal");
     addRenderTarget("worldPosition");
+    updateUniforms();
 }
 
 WorldRenderer::~WorldRenderer()
@@ -39,21 +40,20 @@ WorldRenderer::~WorldRenderer()
 void WorldRenderer::setProjectionMatrix(const mat4 &matrix)
 {
     cameraToScreen = matrix;
-    worldToScreen = cameraToScreen*worldToCamera;
     updateUniforms();
 }
 
 void WorldRenderer::setCamera(const vec3 &position, const vec4 &orientation)
 {
-    worldToCamera = mat4(orientation, position);
-    worldToScreen = cameraToScreen*worldToCamera;
+    worldToCamera = mat4(orientation, position).inverted();
     cameraPosition = position;
     updateUniforms();
 }
 
 void WorldRenderer::updateUniforms()
 {
-    uniformMap.setVec3Uniform(cameraPosition, "cameraPosition");
+    worldToScreen = cameraToScreen*worldToCamera;
+    //uniformMap.setVec3Uniform(cameraPosition, "cameraPosition");
     uniformMap.setMat4Uniform(worldToScreen, "worldToScreen");
 }
 

@@ -34,6 +34,8 @@ StaticMeshVertexBufferInterpreter::~StaticMeshVertexBufferInterpreter()
 
 StaticMesh::StaticMesh(const tiny::mesh::StaticMesh &mesh) :
     Renderable(),
+    nrVertices(mesh.vertices.size()),
+    nrIndices(mesh.indices.size()),
     indices(mesh.indices.begin(), mesh.indices.end()),
     vertices(mesh)
 {
@@ -93,9 +95,9 @@ std::string StaticMesh::getFragmentShaderCode() const
 "\n"
 "void main(void)\n"
 "{\n"
-"   diffuse = vec4(1.0f, 0.0f, 0.0f, 1.0f) + texture(diffuseTexture, tex);\n"
-"   worldNormal = vec4(f_worldNormal, 0.0f);\n"
-"   worldPosition = vec4(f_worldPosition, 0.0f);\n"
+"   diffuse = texture(diffuseTexture, tex);\n"
+"   worldNormal = vec4(normalize(f_worldNormal), 0.0f);\n"
+"   worldPosition = vec4(f_worldPosition, cameraDepth);\n"
 "   \n"
 "   gl_FragDepth = (log(C*cameraDepth + E) / log(C*D + E));\n"
 "}\n\0";
@@ -104,6 +106,7 @@ std::string StaticMesh::getFragmentShaderCode() const
 void StaticMesh::render(const ShaderProgram &program) const
 {
     vertices.bind(program);
+    //renderRangeAsPoints(0, nrVertices);
     renderIndicesAsTriangles(indices);
     vertices.unbind(program);
 }

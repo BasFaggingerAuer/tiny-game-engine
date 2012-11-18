@@ -90,9 +90,6 @@ std::string ComputeTextureInput::getFragmentShaderCode() const
 
 void ComputeTextureInput::render(const ShaderProgram &program) const
 {
-    //Update input texture sizes.
-    //setVariablesInProgram(program);
-    
     //Draw screen-filling quad.
     square.bind(program);
     renderRangeAsTriangleStrip(0, 4);

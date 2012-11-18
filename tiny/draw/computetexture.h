@@ -119,12 +119,14 @@ class ComputeTexture
         template <typename TextureType>
         void setInput(const TextureType &texture, const std::string &name)
         {
+            std::cerr << "Binding texture " << texture.getIndex() << " as input '" << name << "' for the compute shader." << std::endl;
             input.setInput(texture, name);
         }
 
         template <typename TextureType>
         void setOutput(const TextureType &texture, const std::string &name)
         {
+            std::cerr << "Binding texture " << texture.getIndex() << " as output '" << name << "' for the compute shader." << std::endl;
             output.setTextureTarget(texture, name);
         }
         

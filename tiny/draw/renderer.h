@@ -81,6 +81,7 @@ class Renderer
             {
                 if (renderTargetNames[i] == name)
                 {
+                    std::cerr << "Binding texture " << texture.getIndex() << " as rendering target '" << name << "'." << std::endl;
                     glBindFramebuffer(GL_FRAMEBUFFER, frameBufferIndex);
                     glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, texture.getIndex(), 0);
                     glBindFramebuffer(GL_FRAMEBUFFER, 0);

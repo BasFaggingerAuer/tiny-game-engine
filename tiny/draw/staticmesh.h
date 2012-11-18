@@ -51,6 +51,12 @@ class StaticMesh : public Renderable
         StaticMesh(const tiny::mesh::StaticMesh &);
         ~StaticMesh();
         
+        template <typename TextureType>
+        void setDiffuseTexture(const TextureType &texture)
+        {
+            uniformMap.setTexture(texture, "diffuseTexture");
+        }
+        
         std::string getVertexShaderCode() const;
         std::string getFragmentShaderCode() const;
         
@@ -58,6 +64,9 @@ class StaticMesh : public Renderable
         void render(const ShaderProgram &) const;
         
     private:
+        const size_t nrVertices;
+        const size_t nrIndices;
+        
         IndexBuffer<unsigned int> indices;
         StaticMeshVertexBufferInterpreter vertices;
 };

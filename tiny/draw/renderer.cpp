@@ -146,14 +146,15 @@ void Renderer::render() const
     for (std::list<detail::BoundRenderable>::const_iterator i = renderables.begin(); i != renderables.end(); ++i)
     {
         //TODO: Is this very inefficient? Should we let the rendererable decide whether or not to update the uniforms every frame?
-        uniformMap.setUniformsAndTexturesInProgram(*i->program);
         //i->renderable->setVariablesInProgram(*i->program);
         i->program->bind();
+        uniformMap.setUniformsAndTexturesInProgram(*i->program);
         i->renderable->uniformMap.bindTextures(uniformMap.getNrTextures());
         i->renderable->render(*i->program);
         i->renderable->uniformMap.unbindTextures(uniformMap.getNrTextures());
-        //i->program->unbind();
     }
+    
+    glUseProgram(0);
     
     uniformMap.unbindTextures();
     

@@ -59,6 +59,11 @@ class Renderable
             if (last > first) glDrawArrays(GL_TRIANGLE_STRIP, 0, last - first);
         }
         
+        void renderRangeAsPoints(const size_t &first, const size_t &last) const
+        {
+            if (last > first) glDrawArrays(GL_POINTS, 0, last - first);
+        }
+        
         template <typename T>
         void renderIndicesAsTriangles(const IndexBuffer<T> &buffer) const
         {

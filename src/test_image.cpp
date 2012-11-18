@@ -79,7 +79,7 @@ int main(int, char **)
 {
     try
     {
-        application = new tiny::os::SDLApplication(800, 600);
+        application = new tiny::os::SDLApplication(1024, 768);
         setup();
     }
     catch (std::exception &e)

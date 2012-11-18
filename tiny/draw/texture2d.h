@@ -72,6 +72,7 @@ class Texture2D : public Texture<T, Channels>
 };
 
 typedef Texture2D<float, 1> FloatTexture2D;
+typedef Texture2D<float, 3> Vec3Texture2D;
 typedef Texture2D<float, 4> Vec4Texture2D;
 typedef Texture2D<unsigned char, 3> RGBTexture2D;
 typedef Texture2D<unsigned char, 4> RGBATexture2D;
