@@ -9,6 +9,7 @@ add_library(tinygame
             math/vec.cpp
             draw/buffer.cpp
             draw/computetexture.cpp
+            draw/uniformmap.cpp
             draw/renderable.cpp
             draw/renderer.cpp
             draw/shader.cpp

@@ -108,7 +108,7 @@ void Renderer::addRenderable(Renderable *renderable)
     program->link();
     
     //Bind uniforms and textures to program.
-    renderable->setVariablesInProgram(*program);
+    renderable->uniformMap.setUniformsAndTexturesInProgram(*program);
     
     renderables.push_back(detail::BoundRenderable(renderable, vertexShader, geometryShader, fragmentShader, program));
 }
@@ -141,9 +141,9 @@ void Renderer::render() const
         //TODO: Is this very inefficient? Should we let the rendererable decide whether or not to update the uniforms every frame?
         //i->renderable->setVariablesInProgram(*i->program);
         i->program->bind();
-        i->renderable->bindTextures();
+        i->renderable->uniformMap.bindTextures();
         i->renderable->render(*i->program);
-        i->renderable->unbindTextures();
+        i->renderable->uniformMap.unbindTextures();
         //i->program->unbind();
     }
     

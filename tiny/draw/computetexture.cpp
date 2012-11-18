@@ -56,7 +56,7 @@ ComputeTextureInput::ComputeTextureInput(const std::vector<std::string> &inputNa
 {
     for (std::vector<std::string>::const_iterator i = inputNames.begin(); i != inputNames.end(); ++i)
     {
-        addTexture(*i);
+        uniformMap.addTexture(*i);
         inputSizes[*i] = std::pair<size_t, size_t>(1, 1);
     }
 }
