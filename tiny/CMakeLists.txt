@@ -21,6 +21,7 @@ add_library(tinygame
             draw/texture.cpp
             draw/vertexbufferinterpreter.cpp
             draw/worldrenderer.cpp
+            draw/staticmesh.cpp
             os/application.cpp
             os/sdlapplication.cpp)
 

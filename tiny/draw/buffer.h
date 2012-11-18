@@ -75,6 +75,14 @@ class Buffer : public BufferInterface
             sendToDevice();
         }
         
+        template<typename Iterator>
+        Buffer(Iterator first, Iterator last, const GLenum &a_target, const GLenum &a_usage) :
+            BufferInterface((last - first)*sizeof(T), a_target, a_usage),
+            hostData(first, last)
+        {
+            sendToDevice();
+        }
+        
         virtual ~Buffer()
         {
             

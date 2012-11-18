@@ -44,6 +44,13 @@ class VertexBuffer : public Buffer<T>
 
         }
         
+        template <typename Iterator>
+        VertexBuffer(Iterator first, Iterator last) :
+            Buffer<T>(first, last, GL_ARRAY_BUFFER, GL_STATIC_DRAW)
+        {
+
+        }
+        
         virtual ~VertexBuffer()
         {
 

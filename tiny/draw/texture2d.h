@@ -29,8 +29,8 @@ template<typename T, size_t Channels>
 class Texture2D : public Texture<T, Channels>
 {
     public:
-        Texture2D(const size_t &width, const size_t &height) :
-            Texture<T, Channels>(GL_TEXTURE_2D, width, height)
+        Texture2D(const size_t &a_width, const size_t &a_height) :
+            Texture<T, Channels>(GL_TEXTURE_2D, a_width, a_height)
         {
             
         }

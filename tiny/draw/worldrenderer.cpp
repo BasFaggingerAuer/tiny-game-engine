@@ -26,9 +26,9 @@ WorldRenderer::WorldRenderer() :
     worldToScreen(mat4::identityMatrix()),
     cameraPosition(0.0f, 0.0f, 0.0f)
 {
-    addRenderTarget("worldPosition");
-    addRenderTarget("worldNormal");
     addRenderTarget("diffuse");
+    addRenderTarget("worldNormal");
+    addRenderTarget("worldPosition");
 }
 
 WorldRenderer::~WorldRenderer()

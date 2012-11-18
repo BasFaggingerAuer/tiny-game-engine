@@ -42,7 +42,7 @@ struct compareivec3
 	};
 };
 
-StaticMesh tiny::mesh::io::readStaticMeshObj(const std::string &fileName)
+StaticMesh tiny::mesh::io::readStaticMeshOBJ(const std::string &fileName)
 {
     std::ifstream file(fileName.c_str());
     StaticMesh mesh;
@@ -54,6 +54,7 @@ StaticMesh tiny::mesh::io::readStaticMeshObj(const std::string &fileName)
     }
     
     //Read Wavefront OBJ mesh file data.
+    bool recalculatedNormals = false;
     std::vector<vec2> texCoords;
     std::vector<vec3> normals;
     std::vector<vec3> vertices;
@@ -102,6 +103,8 @@ StaticMesh tiny::mesh::io::readStaticMeshObj(const std::string &fileName)
         }
         else if (tag == "f")
         {
+            int newNormal = -1;
+            
             for (int i = 0; i < 3; ++i)
             {
                 std::string idxLine;
@@ -119,15 +122,43 @@ StaticMesh tiny::mesh::io::readStaticMeshObj(const std::string &fileName)
                 
                 v -= ivec3(1, 1, 1);
                 
+                //Has a normal vector been specified?
+                if (v.z < 0)
+                {
+                    if (newNormal < 0)
+                    {
+                        newNormal = normals.size();
+                        normals.push_back(vec3(0.0f, 0.0f, 1.0f));
+                    }
+                    
+                    v.z = newNormal;
+                }
+                
                 if (v.x < 0 || v.y < 0 || v.z < 0 || v.x >= (int)vertices.size() || v.y >= (int)texCoords.size() || v.z >= (int)normals.size())
                 {
-                    std::cerr << "Invalid triangle indices " << v << "!" << std::endl;
+                    std::cerr << "Invalid triangle indices " << v << " (" << line << ", " << idxLine << ")!" << std::endl;
                     throw std::exception();
                 }
                 
                 indices.push_back(v);
             }
+            
+            //Do we need to recalculate the normal vector?
+            if (newNormal >= 0)
+            {
+                const vec3 a = vertices[indices[indices.size() - 3].x];
+                const vec3 b = vertices[indices[indices.size() - 2].x];
+                const vec3 c = vertices[indices[indices.size() - 1].x];
+                
+                recalculatedNormals = true;
+                normals[newNormal] = normalize(cross(b - a, c - a));
+            }
         }
+    }
+    
+    if (recalculatedNormals)
+    {
+        std::cerr << "Normal vectors have been recalculated!" << std::endl;
     }
     
     if (vertices.empty() || texCoords.empty() || normals.empty() || indices.empty())

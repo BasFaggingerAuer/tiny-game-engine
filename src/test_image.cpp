@@ -19,9 +19,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <exception>
 
+#include <config.h>
+
 #include <tiny/os/application.h>
 #include <tiny/os/sdlapplication.h>
+
 #include <tiny/img/io/image.h>
+
 #include <tiny/draw/computetexture.h>
 
 tiny::os::Application *application = 0;
@@ -54,7 +58,7 @@ void setup()
     outputTextures.push_back("colour");
     
     computeTexture = new tiny::draw::ComputeTexture(inputTextures, outputTextures, fragmentShader);
-    testTexture = new tiny::draw::RGBATexture2D(tiny::img::io::readImage("../test.png"));
+    testTexture = new tiny::draw::RGBATexture2D(tiny::img::io::readImage(DATA_DIRECTORY + "img/test.png"));
     computeTexture->setInput(*testTexture, "source");
 }
 

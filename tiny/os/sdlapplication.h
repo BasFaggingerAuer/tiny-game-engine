@@ -34,6 +34,8 @@ class SDLApplication : public Application
         
         double pollEvents();
         void paint();
+        int getScreenWidth() const;
+        int getScreenHeight() const;
         
     private:
         void initOpenGL();

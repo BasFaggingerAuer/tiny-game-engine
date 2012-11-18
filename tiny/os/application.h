@@ -30,6 +30,8 @@ class Application
         
         virtual double pollEvents() = 0;
         virtual void paint() = 0;
+        virtual int getScreenWidth() const = 0;
+        virtual int getScreenHeight() const = 0;
         
         bool isRunning() const;
         bool isKeyPressed(const int &) const;

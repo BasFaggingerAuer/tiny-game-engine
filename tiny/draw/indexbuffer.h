@@ -44,6 +44,13 @@ class IndexBuffer : public Buffer<T>
 
         }
         
+        template <typename Iterator>
+        IndexBuffer(Iterator first, Iterator last) :
+            Buffer<T>(first, last, GL_ELEMENT_ARRAY_BUFFER, GL_STATIC_DRAW)
+        {
+
+        }
+        
         virtual ~IndexBuffer()
         {
 

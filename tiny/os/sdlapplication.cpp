@@ -248,3 +248,13 @@ void SDLApplication::paint()
     SDL_Delay(10);
 }
 
+int SDLApplication::getScreenWidth() const
+{
+    return screenWidth;
+}
+
+int SDLApplication::getScreenHeight() const
+{
+    return screenHeight;
+}
+
