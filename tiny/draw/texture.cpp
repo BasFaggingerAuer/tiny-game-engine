@@ -80,40 +80,40 @@ size_t TextureInterface::getDepth() const
 void TextureInterface::bind(const int &bindTarget) const
 {
     //std::cerr << "Binding texture " << textureIndex << " to " << bindTarget << " on target " << textureTarget << " (GL_TEXTURE_2D = " << GL_TEXTURE_2D << ")." << std::endl;
-    glActiveTexture(GL_TEXTURE0 + bindTarget);
-    glBindTexture(textureTarget, textureIndex);
+    GL_CHECK(glActiveTexture(GL_TEXTURE0 + bindTarget));
+    GL_CHECK(glBindTexture(textureTarget, textureIndex));
 }
 
 void TextureInterface::unbind(const int &bindTarget) const
 {
-    glActiveTexture(GL_TEXTURE0 + bindTarget);
-    glBindTexture(textureTarget, 0);
+    GL_CHECK(glActiveTexture(GL_TEXTURE0 + bindTarget));
+    GL_CHECK(glBindTexture(textureTarget, 0));
 }
 
 void TextureInterface::createDeviceTexture()
 {
-    glGenTextures(1, &textureIndex);
+    GL_CHECK(glGenTextures(1, &textureIndex));
     
     if (textureIndex == 0)
         throw std::bad_alloc();
     
-    glBindTexture(textureTarget, textureIndex);
-	glTexParameteri(textureTarget, GL_TEXTURE_WRAP_S, GL_CLAMP);
-	glTexParameteri(textureTarget, GL_TEXTURE_WRAP_T, GL_CLAMP);
-	glTexParameteri(textureTarget, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-	glTexParameteri(textureTarget, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    GL_CHECK(glBindTexture(textureTarget, textureIndex));
+	GL_CHECK(glTexParameteri(textureTarget, GL_TEXTURE_WRAP_S, GL_CLAMP));
+	GL_CHECK(glTexParameteri(textureTarget, GL_TEXTURE_WRAP_T, GL_CLAMP));
+	GL_CHECK(glTexParameteri(textureTarget, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+	GL_CHECK(glTexParameteri(textureTarget, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
     
-         if (textureTarget == GL_TEXTURE_1D) glTexImage1D(textureTarget, 0, textureFormat, width, 0, textureChannels, textureDataType, 0);
-    else if (textureTarget == GL_TEXTURE_2D) glTexImage2D(textureTarget, 0, textureFormat, width, height, 0, textureChannels, textureDataType, 0);
-    else if (textureTarget == GL_TEXTURE_3D) glTexImage3D(textureTarget, 0, textureFormat, width, height, depth, 0, textureChannels, textureDataType, 0);
+         if (textureTarget == GL_TEXTURE_1D) GL_CHECK(glTexImage1D(textureTarget, 0, textureFormat, width, 0, textureChannels, textureDataType, 0));
+    else if (textureTarget == GL_TEXTURE_2D) GL_CHECK(glTexImage2D(textureTarget, 0, textureFormat, width, height, 0, textureChannels, textureDataType, 0));
+    else if (textureTarget == GL_TEXTURE_3D) GL_CHECK(glTexImage3D(textureTarget, 0, textureFormat, width, height, depth, 0, textureChannels, textureDataType, 0));
     else throw std::exception();
     
-    glBindTexture(textureTarget, 0);
+    GL_CHECK(glBindTexture(textureTarget, 0));
 }
 
 void TextureInterface::destroyDeviceTexture()
 {
-    if (textureIndex != 0) glDeleteTextures(1, &textureIndex);
+    if (textureIndex != 0) GL_CHECK(glDeleteTextures(1, &textureIndex));
     
     textureIndex = 0;
 }

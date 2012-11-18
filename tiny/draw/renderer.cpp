@@ -51,7 +51,7 @@ void Renderer::createFrameBuffer()
     //Do not create the frame buffer if it already exists.
     if (frameBufferIndex != 0) return;
     
-    glGenFramebuffers(1, &frameBufferIndex);
+    GL_CHECK(glGenFramebuffers(1, &frameBufferIndex));
     
     if (frameBufferIndex == 0)
         throw std::bad_alloc();
@@ -62,7 +62,7 @@ void Renderer::destroyFrameBuffer()
     renderTargetNames.clear();
     
     if (frameBufferIndex != 0)
-        glDeleteFramebuffers(1, &frameBufferIndex);
+        GL_CHECK(glDeleteFramebuffers(1, &frameBufferIndex));
     
     frameBufferIndex = 0;
 }
@@ -102,7 +102,8 @@ void Renderer::addRenderable(Renderable *renderable)
     //Set program outputs.
     for (size_t i = 0; i < renderTargetNames.size(); ++i)
     {
-        glBindFragDataLocation(program->getIndex(), i, renderTargetNames[i].c_str());
+        std::cerr << "Bound '" << renderTargetNames[i].c_str() << "' to colour number " << i << " for program " << program->getIndex() << "." << std::endl;
+        GL_CHECK(glBindFragDataLocation(program->getIndex(), i, renderTargetNames[i].c_str()));
     }
     
     program->link();
@@ -112,8 +113,10 @@ void Renderer::addRenderable(Renderable *renderable)
     renderable->uniformMap.lockTextures();
     
     //Bind uniforms and textures to program.
+    program->bind();
     uniformMap.setUniformsAndTexturesInProgram(*program);
     renderable->uniformMap.setUniformsAndTexturesInProgram(*program, uniformMap.getNrTextures());
+    program->unbind();
     
     renderables.push_back(detail::BoundRenderable(renderable, vertexShader, geometryShader, fragmentShader, program));
 }
@@ -129,7 +132,21 @@ void Renderer::addRenderTarget(const std::string &name)
     renderTargetNames.push_back(name);
     
     //Create a frame buffer if we render to more than a single target.
-    if (renderTargetNames.size() >= 2 && frameBufferIndex == 0) createFrameBuffer();
+    if (renderTargetNames.size() >= 2 && frameBufferIndex == 0)
+    {
+        createFrameBuffer();
+    }
+    
+    if (frameBufferIndex != 0)
+    {
+        std::vector<GLenum> drawBuffers(renderTargetNames.size());
+        
+        for (size_t i = 0; i < drawBuffers.size(); ++i) drawBuffers[i] = GL_COLOR_ATTACHMENT0 + i;
+        
+        GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, frameBufferIndex));
+        GL_CHECK(glDrawBuffers(drawBuffers.size(), &drawBuffers[0]));
+        GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+    }
     
     if (renderTargetNames.size() >= GL_MAX_DRAW_BUFFERS)
     {
@@ -139,7 +156,7 @@ void Renderer::addRenderTarget(const std::string &name)
 
 void Renderer::render() const
 {
-    glBindFramebuffer(GL_FRAMEBUFFER, frameBufferIndex);
+    GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, frameBufferIndex));
     
     uniformMap.bindTextures();
     
@@ -154,10 +171,10 @@ void Renderer::render() const
         i->renderable->uniformMap.unbindTextures(uniformMap.getNrTextures());
     }
     
-    glUseProgram(0);
+    GL_CHECK(glUseProgram(0));
     
     uniformMap.unbindTextures();
     
-    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+    GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, 0));
 }
 

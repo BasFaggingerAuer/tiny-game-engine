@@ -89,17 +89,20 @@ std::string StaticMesh::getFragmentShaderCode() const
 "in vec3 f_worldPosition;\n"
 "in float cameraDepth;\n"
 "\n"
+"out vec4 diffuse;\n"
 "out vec4 worldNormal;\n"
 "out vec4 worldPosition;\n"
-"out vec4 diffuse;\n"
 "\n"
 "void main(void)\n"
 "{\n"
 "   diffuse = texture(diffuseTexture, tex);\n"
 "   worldNormal = vec4(normalize(f_worldNormal), 0.0f);\n"
 "   worldPosition = vec4(f_worldPosition, cameraDepth);\n"
+"   //diffuse = vec4(1.0f, 0.0f, 0.0f, 1.0f);\n"
+"   //worldNormal = vec4(0.0f, 1.0f, 0.0f, 1.0f);\n"
+"   //worldPosition = vec4(0.0f, 0.0f, 1.0f, 1.0f);\n"
 "   \n"
-"   gl_FragDepth = (log(C*cameraDepth + E) / log(C*D + E));\n"
+"   //gl_FragDepth = (log(C*cameraDepth + E) / log(C*D + E));\n"
 "}\n\0";
 }
 

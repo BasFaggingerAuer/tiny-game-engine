@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <GL/glew.h>
 #include <GL/gl.h>
 
+#include <tiny/draw/glcheck.h>
 #include <tiny/draw/detail/formats.h>
 
 namespace tiny
@@ -92,14 +93,14 @@ class Texture : public TextureInterface
         {
             if (hostData.empty()) return;
             
-            glBindTexture(textureTarget, textureIndex);
+            GL_CHECK(glBindTexture(textureTarget, textureIndex));
             
-                 if (textureTarget == GL_TEXTURE_1D) glTexSubImage1D(textureTarget, 0, 0, width, textureChannels, textureDataType, &hostData[0]);
-            else if (textureTarget == GL_TEXTURE_2D) glTexSubImage2D(textureTarget, 0, 0, 0, width, height, textureChannels, textureDataType, &hostData[0]);
-            else if (textureTarget == GL_TEXTURE_3D) glTexSubImage3D(textureTarget, 0, 0, 0, 0, width, height, depth, textureChannels, textureDataType, &hostData[0]);
+                 if (textureTarget == GL_TEXTURE_1D) GL_CHECK(glTexSubImage1D(textureTarget, 0, 0, width, textureChannels, textureDataType, &hostData[0]));
+            else if (textureTarget == GL_TEXTURE_2D) GL_CHECK(glTexSubImage2D(textureTarget, 0, 0, 0, width, height, textureChannels, textureDataType, &hostData[0]));
+            else if (textureTarget == GL_TEXTURE_3D) GL_CHECK(glTexSubImage3D(textureTarget, 0, 0, 0, 0, width, height, depth, textureChannels, textureDataType, &hostData[0]));
             else throw std::exception();
             
-            glBindTexture(textureTarget, 0);
+            GL_CHECK(glBindTexture(textureTarget, 0));
         }
         
         bool empty() const

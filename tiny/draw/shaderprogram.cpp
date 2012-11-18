@@ -36,27 +36,27 @@ ShaderProgram::ShaderProgram(const ShaderProgram &)
 ShaderProgram::~ShaderProgram()
 {
     assert(programIndex != 0);
-    glDeleteProgram(programIndex);
+    GL_CHECK(glDeleteProgram(programIndex));
 }
 
 void ShaderProgram::link()
 {
     GLint result = GL_FALSE;
     
-    glLinkProgram(programIndex);
-    glGetProgramiv(programIndex, GL_LINK_STATUS, &result);
+    GL_CHECK(glLinkProgram(programIndex));
+    GL_CHECK(glGetProgramiv(programIndex, GL_LINK_STATUS, &result));
     
     if (result == GL_TRUE)
     {
-        glValidateProgram(programIndex);
-        glGetProgramiv(programIndex, GL_VALIDATE_STATUS, &result);
+        GL_CHECK(glValidateProgram(programIndex));
+        GL_CHECK(glGetProgramiv(programIndex, GL_VALIDATE_STATUS, &result));
     }
     
     if (result != GL_TRUE)
     {
         GLint logLength = 0;
         
-        glGetProgramiv(programIndex, GL_INFO_LOG_LENGTH, &logLength);
+        GL_CHECK(glGetProgramiv(programIndex, GL_INFO_LOG_LENGTH, &logLength));
         
         if (logLength <= 0)
         {
@@ -66,7 +66,7 @@ void ShaderProgram::link()
         
         GLchar *logText = new GLchar [logLength + 1];
         
-        glGetProgramInfoLog(programIndex, logLength, 0, logText);
+        GL_CHECK(glGetProgramInfoLog(programIndex, logLength, 0, logText));
         logText[logLength] = 0;
         
         std::cerr << "Unable to link program!" << std::endl << "Program log:" << std::endl << logText << std::endl;
@@ -88,11 +88,11 @@ GLuint ShaderProgram::getIndex() const
 
 void ShaderProgram::bind() const
 {
-    glUseProgram(programIndex);
+    GL_CHECK(glUseProgram(programIndex));
 }
 
 void ShaderProgram::unbind() const
 {
-    glUseProgram(0);
+    GL_CHECK(glUseProgram(0));
 }
 

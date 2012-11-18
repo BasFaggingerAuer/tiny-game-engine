@@ -53,7 +53,6 @@ void setup()
 {
     testMesh = new draw::StaticMesh(mesh::io::readStaticMeshOBJ(DATA_DIRECTORY + "mesh/sponza/sponza.obj"));
     testDiffuseTexture = new tiny::draw::RGBATexture2D(tiny::img::io::readImage(DATA_DIRECTORY + "img/test.png"));
-    
     testMesh->setDiffuseTexture(*testDiffuseTexture);
     
     diffuseTexture = new draw::RGBATexture2D(application->getScreenWidth(), application->getScreenHeight());
@@ -73,27 +72,33 @@ void setup()
 "\n"
 "precision highp float;\n"
 "\n"
-"uniform sampler2D diffuse;\n"
-"uniform sampler2D worldNormal;\n"
-"uniform sampler2D worldPosition;\n"
+"uniform sampler2D diffuseTexture;\n"
+"uniform sampler2D worldNormalTexture;\n"
+"uniform sampler2D worldPositionTexture;\n"
 "\n"
 "in vec2 tex;\n"
 "out vec4 colour;\n"
 "\n"
 "void main(void)\n"
 "{\n"
-"   colour = vec4(texture(diffuse, tex).xyz*exp(-texture(worldPosition, tex).w), 1.0f);\n"
+"   vec4 diffuse = texture(diffuseTexture, tex);\n"
+"   vec4 worldNormal = texture(worldNormalTexture, tex);\n"
+"   vec4 worldPosition = texture(worldPositionTexture, tex);\n"
+"   float depth = worldPosition.w;\n"
+"   //colour = vec4(diffuse.xyz, 1.0f);\n"
+"   //colour = vec4(worldNormal.xyz, 1.0f);\n"
+"   colour = vec4(worldPosition.xyz, 1.0f);\n"
 "}\n";
     
-    inputTextures.push_back("diffuse");
-    inputTextures.push_back("worldNormal");
-    inputTextures.push_back("worldPosition");
+    inputTextures.push_back("diffuseTexture");
+    inputTextures.push_back("worldNormalTexture");
+    inputTextures.push_back("worldPositionTexture");
     outputTextures.push_back("colour");
     
     screenRenderEffect = new tiny::draw::ComputeTexture(inputTextures, outputTextures, fragmentShader);
-    screenRenderEffect->setInput(*diffuseTexture, "diffuse");
-    screenRenderEffect->setInput(*worldNormalTexture, "worldNormal");
-    screenRenderEffect->setInput(*worldPositionTexture, "worldPosition");
+    screenRenderEffect->setInput(*diffuseTexture, "diffuseTexture");
+    screenRenderEffect->setInput(*worldNormalTexture, "worldNormalTexture");
+    screenRenderEffect->setInput(*worldPositionTexture, "worldPositionTexture");
 }
 
 void cleanup()
@@ -136,9 +141,12 @@ void update(const double &dt)
 
 void render()
 {
+    glEnable(GL_DEPTH_TEST);
+    glDepthMask(GL_TRUE);
     glClear(GL_DEPTH_BUFFER_BIT);
-    
     renderer->render();
+    glDisable(GL_DEPTH_TEST);
+    glDepthMask(GL_FALSE);
     screenRenderEffect->compute();
 }
 

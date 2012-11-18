@@ -14,6 +14,7 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include <tiny/draw/glcheck.h>
 #include <tiny/draw/vertexbufferinterpreter.h>
 
 using namespace tiny::draw;
@@ -40,16 +41,16 @@ void VertexBufferInterpreter::bind(const ShaderProgram &program, const size_t &d
         }
         else
         {
-            glBindBuffer(GL_ARRAY_BUFFER, i->bufferIndex);
-            glEnableVertexAttribArray(attributeLocation);
-            glVertexAttribPointer(attributeLocation, i->numComponents, i->type, GL_FALSE, i->stride, (GLvoid *)(i->offset));
+            GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, i->bufferIndex));
+            GL_CHECK(glEnableVertexAttribArray(attributeLocation));
+            GL_CHECK(glVertexAttribPointer(attributeLocation, i->numComponents, i->type, GL_FALSE, i->stride, (GLvoid *)(i->offset)));
             
             //Enable instanced data if required.
-            if (divisor > 0) glVertexAttribDivisorARB(attributeLocation, divisor);
+            if (divisor > 0) GL_CHECK(glVertexAttribDivisorARB(attributeLocation, divisor));
         }
     }
     
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
+    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, 0));
 }
 
 void VertexBufferInterpreter::unbind(const ShaderProgram &program) const
@@ -60,7 +61,7 @@ void VertexBufferInterpreter::unbind(const ShaderProgram &program) const
         
         if (attributeLocation >= 0)
         {
-            glDisableVertexAttribArray(attributeLocation);
+            GL_CHECK(glDisableVertexAttribArray(attributeLocation));
         }
     }
 }

@@ -48,17 +48,17 @@ GLuint BufferInterface::getIndex() const
 
 void BufferInterface::bind() const
 {
-    glBindBuffer(target, bufferIndex);
+    GL_CHECK(glBindBuffer(target, bufferIndex));
 }
 
 void BufferInterface::unbind() const
 {
-    glBindBuffer(target, 0);
+    GL_CHECK(glBindBuffer(target, 0));
 }
 
 void BufferInterface::createDeviceBuffer()
 {
-    glGenBuffers(1, &bufferIndex);
+    GL_CHECK(glGenBuffers(1, &bufferIndex));
     
     if (bufferIndex == 0)
         throw std::bad_alloc();
@@ -67,7 +67,7 @@ void BufferInterface::createDeviceBuffer()
 void BufferInterface::destroyDeviceBuffer()
 {
     //Frees all data bound to this class on the device.
-    if (bufferIndex != 0) glDeleteBuffers(1, &bufferIndex);
+    if (bufferIndex != 0) GL_CHECK(glDeleteBuffers(1, &bufferIndex));
     
     sizeInBytes = 0;
     bufferIndex = 0;
@@ -91,8 +91,8 @@ void BufferInterface::resizeDeviceBuffer(const size_t &a_sizeInBytes)
     if (bufferIndex == 0) createDeviceBuffer();
     
     //Resize buffer.
-    glBindBuffer(target, bufferIndex);
-    glBufferData(target, sizeInBytes, 0, usage);
-    glBindBuffer(target, 0);
+    GL_CHECK(glBindBuffer(target, bufferIndex));
+    GL_CHECK(glBufferData(target, sizeInBytes, 0, usage));
+    GL_CHECK(glBindBuffer(target, 0));
 }
 

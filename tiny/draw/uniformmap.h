@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cassert>
 
+#include <tiny/draw/glcheck.h>
 #include <tiny/draw/texture.h>
 #include <tiny/draw/indexbuffer.h>
 #include <tiny/draw/shader.h>

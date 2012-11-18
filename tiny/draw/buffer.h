@@ -25,6 +25,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <GL/glew.h>
 #include <GL/gl.h>
 
+#include <tiny/draw/glcheck.h>
+
 namespace tiny
 {
 
@@ -95,9 +97,9 @@ class Buffer : public BufferInterface
             
             if (hostData.empty()) return;
             
-            glBindBuffer(target, bufferIndex);
-            glBufferSubData(target, 0, sizeInBytes, &hostData[0]);
-            glBindBuffer(target, 0);
+            GL_CHECK(glBindBuffer(target, bufferIndex));
+            GL_CHECK(glBufferSubData(target, 0, sizeInBytes, &hostData[0]));
+            GL_CHECK(glBindBuffer(target, 0));
         }
         
         bool empty() const

@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using namespace tiny::draw;
 
 WorldRenderer::WorldRenderer() :
-    cameraToScreen(mat4::frustumMatrix(vec3(-0.07, -0.07, 0.10), vec3(0.07, 0.07, 1.0e6))),
+    cameraToScreen(mat4::frustumMatrix(vec3(-0.07, -0.07, 1.0e-1), vec3(0.07, 0.07, 1.0e3))),
     worldToCamera(mat4::identityMatrix()),
     worldToScreen(mat4::identityMatrix()),
     cameraPosition(0.0f, 0.0f, 0.0f)

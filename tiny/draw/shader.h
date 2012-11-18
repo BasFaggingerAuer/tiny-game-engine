@@ -25,6 +25,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <GL/glew.h>
 #include <GL/gl.h>
 
+#include <tiny/draw/glcheck.h>
+
 namespace tiny
 {
 
@@ -46,7 +48,7 @@ class Shader
         virtual ~Shader()
         {
             assert(shaderIndex != 0);
-            glDeleteShader(shaderIndex);
+            GL_CHECK(glDeleteShader(shaderIndex));
         }
         
         GLuint getIndex() const
@@ -60,15 +62,15 @@ class Shader
             GLint length = a_code.size();
             GLint results = GL_FALSE;
             
-            glShaderSource(shaderIndex, 1, (const GLchar **)(&code), &length);
-            glCompileShader(shaderIndex);
-            glGetShaderiv(shaderIndex, GL_COMPILE_STATUS, &results);
+            GL_CHECK(glShaderSource(shaderIndex, 1, (const GLchar **)(&code), &length));
+            GL_CHECK(glCompileShader(shaderIndex));
+            GL_CHECK(glGetShaderiv(shaderIndex, GL_COMPILE_STATUS, &results));
             
             if (results != GL_TRUE)
             {
                 GLint logLength = 0;
                 
-                glGetShaderiv(shaderIndex, GL_INFO_LOG_LENGTH, &logLength);
+                GL_CHECK(glGetShaderiv(shaderIndex, GL_INFO_LOG_LENGTH, &logLength));
                 
                 if (logLength <= 0)
                 {
@@ -78,7 +80,7 @@ class Shader
                 
                 GLchar *logText = new GLchar [logLength + 1];
                 
-                glGetShaderInfoLog(shaderIndex, logLength, 0, logText);
+                GL_CHECK(glGetShaderInfoLog(shaderIndex, logLength, 0, logText));
                 logText[logLength] = 0;
                 
                 std::cerr << "Unable to compile shader:" << std::endl << a_code << std::endl << "Shader log:" << std::endl << logText << std::endl;

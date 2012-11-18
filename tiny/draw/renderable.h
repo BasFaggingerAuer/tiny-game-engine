@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cassert>
 
+#include <tiny/draw/glcheck.h>
 #include <tiny/draw/texture.h>
 #include <tiny/draw/indexbuffer.h>
 #include <tiny/draw/shader.h>
@@ -56,19 +57,19 @@ class Renderable
         
         void renderRangeAsTriangleStrip(const size_t &first, const size_t &last) const
         {
-            if (last > first) glDrawArrays(GL_TRIANGLE_STRIP, 0, last - first);
+            if (last > first) GL_CHECK(glDrawArrays(GL_TRIANGLE_STRIP, 0, last - first));
         }
         
         void renderRangeAsPoints(const size_t &first, const size_t &last) const
         {
-            if (last > first) glDrawArrays(GL_POINTS, 0, last - first);
+            if (last > first) GL_CHECK(glDrawArrays(GL_POINTS, 0, last - first));
         }
         
         template <typename T>
         void renderIndicesAsTriangles(const IndexBuffer<T> &buffer) const
         {
             buffer.bind();
-            glDrawElements(GL_TRIANGLES, buffer.size(), detail::getOpenGLDataType<T>(), 0);
+            GL_CHECK(glDrawElements(GL_TRIANGLES, buffer.size(), detail::getOpenGLDataType<T>(), 0));
             buffer.unbind();
         }
         

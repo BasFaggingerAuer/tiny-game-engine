@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cassert>
 
+#include <tiny/draw/glcheck.h>
 #include <tiny/draw/renderable.h>
 #include <tiny/draw/shader.h>
 #include <tiny/draw/shaderprogram.h>
@@ -81,10 +82,10 @@ class Renderer
             {
                 if (renderTargetNames[i] == name)
                 {
-                    std::cerr << "Binding texture " << texture.getIndex() << " as rendering target '" << name << "'." << std::endl;
-                    glBindFramebuffer(GL_FRAMEBUFFER, frameBufferIndex);
-                    glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, texture.getIndex(), 0);
-                    glBindFramebuffer(GL_FRAMEBUFFER, 0);
+                    std::cerr << "Binding texture " << texture.getIndex() << " as rendering target '" << name << "' for frame buffer " << frameBufferIndex << "." << std::endl;
+                    GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, frameBufferIndex));
+                    GL_CHECK(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, texture.getIndex(), 0));
+                    GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, 0));
                     return;
                 }
             }

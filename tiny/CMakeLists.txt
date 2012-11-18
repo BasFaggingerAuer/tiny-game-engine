@@ -11,6 +11,7 @@ add_library(tinygame
             img/io/image.cpp
             mesh/staticmesh.cpp
             mesh/io/staticmesh.cpp
+            draw/glcheck.cpp
             draw/buffer.cpp
             draw/computetexture.cpp
             draw/uniformmap.cpp

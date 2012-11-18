@@ -89,10 +89,10 @@ void UniformMap::setUniformsAndTexturesInProgram(const ShaderProgram &program, c
             continue;
         }
         
-             if (uniform.numParameters == 1) glUniform1f(location, uniform.x);
-        else if (uniform.numParameters == 2) glUniform2f(location, uniform.x, uniform.y);
-        else if (uniform.numParameters == 3) glUniform3f(location, uniform.x, uniform.y, uniform.z);
-        else if (uniform.numParameters == 4) glUniform4f(location, uniform.x, uniform.y, uniform.z, uniform.w);
+             if (uniform.numParameters == 1) GL_CHECK(glUniform1f(location, uniform.x));
+        else if (uniform.numParameters == 2) GL_CHECK(glUniform2f(location, uniform.x, uniform.y));
+        else if (uniform.numParameters == 3) GL_CHECK(glUniform3f(location, uniform.x, uniform.y, uniform.z));
+        else if (uniform.numParameters == 4) GL_CHECK(glUniform4f(location, uniform.x, uniform.y, uniform.z, uniform.w));
         else std::cerr << "Warning: uniform variable '" << uniform.name << "' has an invalid number of parameters (" << uniform.numParameters << ")!" << std::endl;
     }
     
@@ -111,7 +111,7 @@ void UniformMap::setUniformsAndTexturesInProgram(const ShaderProgram &program, c
         }
         
         uniform.m.toOpenGL(data);
-        glUniformMatrix4fv(location, 1, GL_FALSE, data);
+        GL_CHECK(glUniformMatrix4fv(location, 1, GL_FALSE, data));
     }
     
     int textureBindPoint = textureOffset;
@@ -127,7 +127,7 @@ void UniformMap::setUniformsAndTexturesInProgram(const ShaderProgram &program, c
             continue;
         }
         
-        glUniform1i(location, textureBindPoint++);
+        GL_CHECK(glUniform1i(location, textureBindPoint++));
     }
 }
 
