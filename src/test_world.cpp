@@ -45,6 +45,7 @@ draw::ComputeTexture *screenRenderEffect = 0;
 draw::RGBATexture2D *diffuseTexture = 0;
 draw::Vec4Texture2D *worldNormalTexture = 0;
 draw::Vec4Texture2D *worldPositionTexture = 0;
+draw::DepthTexture2D *depthTexture = 0;
 
 vec3 cameraPosition = vec3(0.0f, 0.0f, 0.0f);
 vec4 cameraOrientation = vec4(0.0f, 0.0f, 0.0f, 1.0f);
@@ -58,12 +59,14 @@ void setup()
     diffuseTexture = new draw::RGBATexture2D(application->getScreenWidth(), application->getScreenHeight());
     worldNormalTexture = new draw::Vec4Texture2D(application->getScreenWidth(), application->getScreenHeight());
     worldPositionTexture = new draw::Vec4Texture2D(application->getScreenWidth(), application->getScreenHeight());
+    depthTexture = new draw::DepthTexture2D(application->getScreenWidth(), application->getScreenHeight());
     
     renderer = new draw::WorldRenderer();
     renderer->addRenderable(testMesh);
     renderer->setTextureTarget(*diffuseTexture, "diffuse");
     renderer->setTextureTarget(*worldNormalTexture, "worldNormal");
     renderer->setTextureTarget(*worldPositionTexture, "worldPosition");
+    renderer->setDepthTextureTarget(*depthTexture);
     
     vector<string> inputTextures;
     vector<string> outputTextures;
@@ -87,7 +90,8 @@ void setup()
 "   float depth = worldPosition.w;\n"
 "   //colour = vec4(diffuse.xyz, 1.0f);\n"
 "   //colour = vec4(worldNormal.xyz, 1.0f);\n"
-"   colour = vec4(worldPosition.xyz, 1.0f);\n"
+"   //colour = vec4(worldPosition.xyz, 1.0f);\n"
+"   colour = vec4(vec3(depth, diffuse.x, worldNormal.x), 1.0f);\n"
 "}\n";
     
     inputTextures.push_back("diffuseTexture");
@@ -107,6 +111,7 @@ void cleanup()
     
     delete renderer;
     
+    delete depthTexture;
     delete worldPositionTexture;
     delete worldNormalTexture;
     delete diffuseTexture;
@@ -141,12 +146,7 @@ void update(const double &dt)
 
 void render()
 {
-    glEnable(GL_DEPTH_TEST);
-    glDepthMask(GL_TRUE);
-    glClear(GL_DEPTH_BUFFER_BIT);
-    renderer->render();
-    glDisable(GL_DEPTH_TEST);
-    glDepthMask(GL_FALSE);
+    renderer->render(true);
     screenRenderEffect->compute();
 }
 

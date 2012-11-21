@@ -25,6 +25,27 @@ namespace tiny
 namespace draw
 {
 
+class DepthTexture2D : public TextureInterface
+{
+    public:
+        DepthTexture2D(const size_t &a_width, const size_t &a_height) :
+            TextureInterface(GL_TEXTURE_2D,
+                             GL_DEPTH_COMPONENT24,
+                             GL_DEPTH_COMPONENT,
+                             GL_UNSIGNED_BYTE,
+                             a_width,
+                             a_height,
+                             1)
+        {
+            
+        }
+            
+        ~DepthTexture2D()
+        {
+
+        }
+};
+
 template<typename T, size_t Channels>
 class Texture2D : public Texture<T, Channels>
 {

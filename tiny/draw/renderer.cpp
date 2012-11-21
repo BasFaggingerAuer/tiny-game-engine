@@ -20,14 +20,24 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using namespace tiny::draw;
 
-Renderer::Renderer() :
+Renderer::Renderer(const bool &a_readFromDepthMap, const bool &a_writeToDepthMap) :
     frameBufferIndex(0),
-    renderTargetNames()
+    renderTargetNames(),
+    renderTargetTextures(),
+    depthTargetTexture(0),
+    readFromDepthMap(a_readFromDepthMap),
+    writeToDepthMap(a_writeToDepthMap)
 {
     
 }
 
-Renderer::Renderer(const Renderer &)
+Renderer::Renderer(const Renderer &a) :
+    frameBufferIndex(0),
+    renderTargetNames(),
+    renderTargetTextures(),
+    depthTargetTexture(0),
+    readFromDepthMap(a.readFromDepthMap),
+    writeToDepthMap(a.writeToDepthMap)
 {
     
 }
@@ -60,6 +70,7 @@ void Renderer::createFrameBuffer()
 void Renderer::destroyFrameBuffer()
 {
     renderTargetNames.clear();
+    renderTargetTextures.clear();
     
     if (frameBufferIndex != 0)
         GL_CHECK(glDeleteFramebuffers(1, &frameBufferIndex));
@@ -130,22 +141,12 @@ void Renderer::addRenderTarget(const std::string &name)
     }
     
     renderTargetNames.push_back(name);
+    renderTargetTextures.push_back(0);
     
     //Create a frame buffer if we render to more than a single target.
     if (renderTargetNames.size() >= 2 && frameBufferIndex == 0)
     {
         createFrameBuffer();
-    }
-    
-    if (frameBufferIndex != 0)
-    {
-        std::vector<GLenum> drawBuffers(renderTargetNames.size());
-        
-        for (size_t i = 0; i < drawBuffers.size(); ++i) drawBuffers[i] = GL_COLOR_ATTACHMENT0 + i;
-        
-        GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, frameBufferIndex));
-        GL_CHECK(glDrawBuffers(drawBuffers.size(), &drawBuffers[0]));
-        GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, 0));
     }
     
     if (renderTargetNames.size() >= GL_MAX_DRAW_BUFFERS)
@@ -154,9 +155,58 @@ void Renderer::addRenderTarget(const std::string &name)
     }
 }
 
-void Renderer::render() const
+void Renderer::render(const bool &clearRenderTarget) const
 {
-    GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, frameBufferIndex));
+    //TODO: This should be moved to a separate setup function.
+    if (frameBufferIndex != 0)
+    {
+        GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, frameBufferIndex));
+    
+        std::vector<GLenum> drawBuffers;
+        
+        drawBuffers.reserve(renderTargetTextures.size() + 1);
+        
+        for (size_t i = 0; i < renderTargetTextures.size(); ++i)
+        {
+            if (renderTargetTextures[i] != 0)
+            {
+                GL_CHECK(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, renderTargetTextures[i], 0));
+                drawBuffers.push_back(GL_COLOR_ATTACHMENT0 + i);
+            }
+        }
+        
+        GL_CHECK(glDrawBuffers(drawBuffers.size(), &drawBuffers[0]));
+        
+        if (depthTargetTexture != 0)
+        {
+            GL_CHECK(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTargetTexture, 0));
+        }
+        /*
+        We will not use render buffers.
+        else if (readFromDepthMap || writeToDepthMap)
+        {
+            GL_CHECK(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, 0)); 
+        }
+        */
+    }
+    
+    if (clearRenderTarget)
+    {
+        GL_CHECK(glClear(writeToDepthMap ? GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT : GL_COLOR_BUFFER_BIT));
+    }
+    
+    if (readFromDepthMap) GL_CHECK(glEnable(GL_DEPTH_TEST));
+    else GL_CHECK(glDisable(GL_DEPTH_TEST));
+    
+    GL_CHECK(glDepthMask(writeToDepthMap ? GL_TRUE : GL_FALSE));
+
+#ifndef NDEBUG    
+    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    {
+        std::cerr << "Warning: frame buffer " << frameBufferIndex << " is incomplete: " << glCheckFramebufferStatus(GL_FRAMEBUFFER) << " (incomplete = " << GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT << ", wrong dimensions = " << GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT << ", missing attachment = " << GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT << ", unsupported = " << GL_FRAMEBUFFER_UNSUPPORTED << ")." << std::endl;
+        assert(false);
+    }
+#endif
     
     uniformMap.bindTextures();
     
@@ -175,6 +225,24 @@ void Renderer::render() const
     
     uniformMap.unbindTextures();
     
-    GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+    if (frameBufferIndex != 0)
+    {
+        //TODO: Is this necessary?
+        if (depthTargetTexture != 0)
+        {
+            GL_CHECK(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, 0, 0));
+        }
+        
+        //TODO: Is this necessary?
+        for (size_t i = 0; i < renderTargetTextures.size(); ++i)
+        {
+            if (renderTargetTextures[i] != 0)
+            {
+                GL_CHECK(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, 0, 0));
+            }
+        }
+
+        GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+    }
 }
 

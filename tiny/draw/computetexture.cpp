@@ -91,13 +91,19 @@ std::string ComputeTextureInput::getFragmentShaderCode() const
 void ComputeTextureInput::render(const ShaderProgram &program) const
 {
     //Draw screen-filling quad.
+    GL_CHECK(glDisable(GL_DEPTH_TEST));
+    GL_CHECK(glDepthMask(GL_FALSE));
+    
     square.bind(program);
     renderRangeAsTriangleStrip(0, 4);
     square.unbind(program);
+    
+    GL_CHECK(glDepthMask(GL_TRUE));
+    GL_CHECK(glEnable(GL_DEPTH_TEST));
 }
 
 ComputeTextureOutput::ComputeTextureOutput(const std::vector<std::string> &outputNames) :
-    Renderer()
+    Renderer(false, false)
 {
     for (std::vector<std::string>::const_iterator i = outputNames.begin(); i != outputNames.end(); ++i)
     {
@@ -124,6 +130,6 @@ ComputeTexture::~ComputeTexture()
 
 void ComputeTexture::compute() const
 {
-    output.render();
+    output.render(true);
 }
 

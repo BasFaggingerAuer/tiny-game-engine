@@ -68,24 +68,32 @@ struct BoundRenderable
 class Renderer
 {
     public:
-        Renderer();
+        Renderer(const bool &, const bool &);
         virtual ~Renderer();
         
         void addRenderable(Renderable *renderable);
+        
+        void setDepthTextureTarget(const DepthTexture2D &texture)
+        {
+            if (frameBufferIndex == 0) createFrameBuffer();
+            
+            std::cerr << "Binding texture " << texture.getIndex() << " as depth rendering target for frame buffer " << frameBufferIndex << "." << std::endl;
+            depthTargetTexture = texture.getIndex();
+        }
         
         template<typename T, size_t Channels>
         void setTextureTarget(const Texture2D<T, Channels> &texture, const std::string &name)
         {
             if (frameBufferIndex == 0) createFrameBuffer();
             
+            assert(renderTargetTextures.size() == renderTargetNames.size());
+            
             for (size_t i = 0; i < renderTargetNames.size(); ++i)
             {
                 if (renderTargetNames[i] == name)
                 {
                     std::cerr << "Binding texture " << texture.getIndex() << " as rendering target '" << name << "' for frame buffer " << frameBufferIndex << "." << std::endl;
-                    GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, frameBufferIndex));
-                    GL_CHECK(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, texture.getIndex(), 0));
-                    GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+                    renderTargetTextures[i] = texture.getIndex();
                     return;
                 }
             }
@@ -93,7 +101,7 @@ class Renderer
             std::cerr << "Warning: render target '" << name << "' does not exist for this renderer!" << std::endl;
         }
         
-        void render() const;
+        void render(const bool &) const;
         
     protected:
         void addRenderTarget(const std::string &name);
@@ -110,6 +118,10 @@ class Renderer
         std::list<detail::BoundRenderable> renderables;
         GLuint frameBufferIndex;
         std::vector<std::string> renderTargetNames;
+        std::vector<GLuint> renderTargetTextures;
+        GLuint depthTargetTexture;
+        const bool readFromDepthMap;
+        const bool writeToDepthMap;
 };
 
 }

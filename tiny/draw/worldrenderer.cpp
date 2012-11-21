@@ -21,14 +21,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using namespace tiny::draw;
 
 WorldRenderer::WorldRenderer() :
+    Renderer(true, true),
     cameraToScreen(mat4::frustumMatrix(vec3(-0.07, -0.07, 1.0e-1), vec3(0.07, 0.07, 1.0e3))),
     worldToCamera(mat4::identityMatrix()),
     worldToScreen(mat4::identityMatrix()),
     cameraPosition(0.0f, 0.0f, 0.0f)
 {
     addRenderTarget("diffuse");
-    addRenderTarget("worldNormal");
-    addRenderTarget("worldPosition");
+    //addRenderTarget("worldNormal");
+    //addRenderTarget("worldPosition");
     updateUniforms();
 }
 

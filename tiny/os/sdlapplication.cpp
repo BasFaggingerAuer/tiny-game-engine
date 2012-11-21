@@ -157,7 +157,7 @@ void SDLApplication::initOpenGL()
     glDepthMask(GL_TRUE);
     
     glCullFace(GL_BACK);
-    glEnable(GL_CULL_FACE);
+    glDisable(GL_CULL_FACE);
 
     glEnable(GL_PRIMITIVE_RESTART);
     glPrimitiveRestartIndexNV(UINT_MAX);
