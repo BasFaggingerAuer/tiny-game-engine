@@ -146,7 +146,6 @@ void update(const double &dt)
     cameraPosition += ds*normalize(vel);
     
     renderer->setCamera(cameraPosition, cameraOrientation);
-    //cout << cameraPosition << " -- " << cameraOrientation << endl;
 }
 
 void render()
@@ -159,7 +158,7 @@ int main(int, char **)
 {
     try
     {
-        application = new os::SDLApplication(1024, 768);
+        application = new os::SDLApplication(1280, 800);
         setup();
     }
     catch (std::exception &e)

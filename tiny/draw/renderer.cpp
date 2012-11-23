@@ -143,52 +143,45 @@ void Renderer::addRenderTarget(const std::string &name)
     renderTargetNames.push_back(name);
     renderTargetTextures.push_back(0);
     
-    //Create a frame buffer if we render to more than a single target.
-    if (renderTargetNames.size() >= 2 && frameBufferIndex == 0)
-    {
-        createFrameBuffer();
-    }
-    
     if (renderTargetNames.size() >= GL_MAX_DRAW_BUFFERS)
     {
         std::cerr << "Warning: binding more than the maximum number (" << GL_MAX_DRAW_BUFFERS << ") of draw buffers!" << std::endl;
     }
 }
 
+void Renderer::updateRenderTargets()
+{
+    if (frameBufferIndex == 0)
+        createFrameBuffer();
+    
+    std::vector<GLenum> drawBuffers;
+    
+    drawBuffers.reserve(renderTargetTextures.size() + 1);
+    
+    GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, frameBufferIndex));
+    
+    for (size_t i = 0; i < renderTargetTextures.size(); ++i)
+    {
+        if (renderTargetTextures[i] != 0)
+        {
+            GL_CHECK(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, renderTargetTextures[i], 0));
+            drawBuffers.push_back(GL_COLOR_ATTACHMENT0 + i);
+        }
+    }
+    
+    GL_CHECK(glDrawBuffers(drawBuffers.size(), &drawBuffers[0]));
+    
+    if (depthTargetTexture != 0)
+    {
+        GL_CHECK(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTargetTexture, 0));
+    }
+    
+    GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+}
+
 void Renderer::render(const bool &clearRenderTarget) const
 {
-    //TODO: This should be moved to a separate setup function.
-    if (frameBufferIndex != 0)
-    {
-        GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, frameBufferIndex));
-    
-        std::vector<GLenum> drawBuffers;
-        
-        drawBuffers.reserve(renderTargetTextures.size() + 1);
-        
-        for (size_t i = 0; i < renderTargetTextures.size(); ++i)
-        {
-            if (renderTargetTextures[i] != 0)
-            {
-                GL_CHECK(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, renderTargetTextures[i], 0));
-                drawBuffers.push_back(GL_COLOR_ATTACHMENT0 + i);
-            }
-        }
-        
-        GL_CHECK(glDrawBuffers(drawBuffers.size(), &drawBuffers[0]));
-        
-        if (depthTargetTexture != 0)
-        {
-            GL_CHECK(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTargetTexture, 0));
-        }
-        /*
-        We will not use render buffers.
-        else if (readFromDepthMap || writeToDepthMap)
-        {
-            GL_CHECK(glFramebufferRenderbuffer(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_RENDERBUFFER, 0)); 
-        }
-        */
-    }
+    GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, frameBufferIndex));
     
     if (clearRenderTarget)
     {
@@ -225,24 +218,6 @@ void Renderer::render(const bool &clearRenderTarget) const
     
     uniformMap.unbindTextures();
     
-    if (frameBufferIndex != 0)
-    {
-        //TODO: Is this necessary?
-        if (depthTargetTexture != 0)
-        {
-            GL_CHECK(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, 0, 0));
-        }
-        
-        //TODO: Is this necessary?
-        for (size_t i = 0; i < renderTargetTextures.size(); ++i)
-        {
-            if (renderTargetTextures[i] != 0)
-            {
-                GL_CHECK(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, 0, 0));
-            }
-        }
-
-        GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, 0));
-    }
+    GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, 0));
 }
 

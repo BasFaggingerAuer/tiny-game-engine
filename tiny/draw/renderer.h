@@ -75,17 +75,14 @@ class Renderer
         
         void setDepthTextureTarget(const DepthTexture2D &texture)
         {
-            if (frameBufferIndex == 0) createFrameBuffer();
-            
             std::cerr << "Binding texture " << texture.getIndex() << " as depth rendering target for frame buffer " << frameBufferIndex << "." << std::endl;
             depthTargetTexture = texture.getIndex();
+            updateRenderTargets();
         }
         
         template<typename T, size_t Channels>
         void setTextureTarget(const Texture2D<T, Channels> &texture, const std::string &name)
         {
-            if (frameBufferIndex == 0) createFrameBuffer();
-            
             assert(renderTargetTextures.size() == renderTargetNames.size());
             
             for (size_t i = 0; i < renderTargetNames.size(); ++i)
@@ -94,6 +91,7 @@ class Renderer
                 {
                     std::cerr << "Binding texture " << texture.getIndex() << " as rendering target '" << name << "' for frame buffer " << frameBufferIndex << "." << std::endl;
                     renderTargetTextures[i] = texture.getIndex();
+                    updateRenderTargets();
                     return;
                 }
             }
@@ -111,6 +109,7 @@ class Renderer
     private:
         void createFrameBuffer();
         void destroyFrameBuffer();
+        void updateRenderTargets();
         
         //This class should not be copied.
         Renderer(const Renderer &renderer);
