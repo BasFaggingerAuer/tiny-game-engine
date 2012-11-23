@@ -90,7 +90,7 @@ class Shader
 #ifndef NDEBUG
             else
             {
-                std::cerr << "Successfully compiled shader " << shaderIndex << ":" << std::endl << a_code << std::endl;
+                //std::cerr << "Successfully compiled shader " << shaderIndex << ":" << std::endl << a_code << std::endl;
             }
 #endif
         }

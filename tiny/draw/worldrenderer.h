@@ -34,7 +34,7 @@ namespace draw
 class WorldRenderer : public Renderer
 {
     public:
-        WorldRenderer();
+        WorldRenderer(const float &);
         virtual ~WorldRenderer();
         
         void setProjectionMatrix(const mat4 &);

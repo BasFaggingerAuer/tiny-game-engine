@@ -37,6 +37,7 @@ using namespace tiny;
 
 os::Application *application = 0;
 
+double aspectRatio = 1.0;
 draw::WorldRenderer *renderer = 0;
 draw::StaticMesh *testMesh = 0;
 draw::RGBATexture2D *testDiffuseTexture = 0;
@@ -52,8 +53,9 @@ vec4 cameraOrientation = vec4(0.0f, 0.0f, 0.0f, 1.0f);
 
 void setup()
 {
-    testMesh = new draw::StaticMesh(mesh::io::readStaticMeshOBJ(DATA_DIRECTORY + "mesh/sponza/sponza.obj"));
-    testDiffuseTexture = new tiny::draw::RGBATexture2D(tiny::img::io::readImage(DATA_DIRECTORY + "img/test.png"));
+    //testMesh = new draw::StaticMesh(mesh::io::readStaticMeshOBJ(DATA_DIRECTORY + "mesh/sponza/sponza_triangles.obj"));
+    testMesh = new draw::StaticMesh(mesh::io::readStaticMeshOBJ(DATA_DIRECTORY + "mesh/sibenik/sibenik_triangles.obj"));
+    testDiffuseTexture = new tiny::draw::RGBATexture2D(tiny::img::io::readImage(DATA_DIRECTORY + "img/default.png"));
     testMesh->setDiffuseTexture(*testDiffuseTexture);
     
     diffuseTexture = new draw::RGBATexture2D(application->getScreenWidth(), application->getScreenHeight());
@@ -61,7 +63,9 @@ void setup()
     worldPositionTexture = new draw::Vec4Texture2D(application->getScreenWidth(), application->getScreenHeight());
     depthTexture = new draw::DepthTexture2D(application->getScreenWidth(), application->getScreenHeight());
     
-    renderer = new draw::WorldRenderer();
+    aspectRatio = static_cast<double>(application->getScreenWidth())/static_cast<double>(application->getScreenHeight());
+    
+    renderer = new draw::WorldRenderer(aspectRatio);
     renderer->addRenderable(testMesh);
     renderer->setTextureTarget(*diffuseTexture, "diffuse");
     renderer->setTextureTarget(*worldNormalTexture, "worldNormal");
@@ -91,7 +95,8 @@ void setup()
 "   //colour = vec4(diffuse.xyz, 1.0f);\n"
 "   //colour = vec4(worldNormal.xyz, 1.0f);\n"
 "   //colour = vec4(worldPosition.xyz, 1.0f);\n"
-"   colour = vec4(vec3(depth, diffuse.x, worldNormal.x), 1.0f);\n"
+"   //colour = vec4(vec3(depth, diffuse.x, worldNormal.x), 1.0f);\n"
+"   colour = vec4(worldNormal.xyz + diffuse.xyz, 1.0f);\n"
 "}\n";
     
     inputTextures.push_back("diffuseTexture");
