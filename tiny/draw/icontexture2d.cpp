@@ -219,3 +219,9 @@ vec4 IconTexture2D::getIcon(const int &index) const
                 (float)subImages[index].w/(float)height);
 }
 
+vec2 IconTexture2D::getMaxIconDimensions() const
+{
+    return vec2((float)maxSubImageDimensions.x/(float)width,
+                (float)maxSubImageDimensions.y/(float)height);
+}
+

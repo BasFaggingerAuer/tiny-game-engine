@@ -40,6 +40,7 @@ class IconTexture2D : public Texture2D<unsigned char, 4>
 		vec4 packIcon(const img::Image &);
 		void packIcons(const std::vector<img::Image> &);
 		vec4 getIcon(const int &) const;
+        vec2 getMaxIconDimensions() const;
         
 	private:
 		vec4 addSingleIcon(const img::Image &);

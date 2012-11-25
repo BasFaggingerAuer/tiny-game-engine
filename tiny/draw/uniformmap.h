@@ -156,6 +156,7 @@ class UniformMap
         void setVec4Uniform(const vec4 &v, const std::string &name);
         void setMat4Uniform(const mat4 &m, const std::string &name);
         
+        void setUniformsInProgram(const ShaderProgram &) const;
         void setUniformsAndTexturesInProgram(const ShaderProgram &, const int & = 0) const;
         void bindTextures(const int & = 0) const;
         void unbindTextures(const int & = 0) const;

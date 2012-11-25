@@ -74,7 +74,7 @@ void UniformMap::setVec3Uniform(const vec3 &v, const std::string &name) {floatUn
 void UniformMap::setVec4Uniform(const vec4 &v, const std::string &name) {floatUniforms[name] = detail::FloatUniform(name, 4, v.x, v.y, v.z, v.w);}
 void UniformMap::setMat4Uniform(const mat4 &m, const std::string &name) {matrixUniforms[name] = detail::MatrixUniform(name, m);}
 
-void UniformMap::setUniformsAndTexturesInProgram(const ShaderProgram &program, const int &textureOffset) const
+void UniformMap::setUniformsInProgram(const ShaderProgram &program) const
 {
     for (std::map<std::string, detail::FloatUniform>::const_iterator i = floatUniforms.begin(); i != floatUniforms.end(); ++i)
     {
@@ -113,6 +113,11 @@ void UniformMap::setUniformsAndTexturesInProgram(const ShaderProgram &program, c
         uniform.m.toOpenGL(data);
         GL_CHECK(glUniformMatrix4fv(location, 1, GL_FALSE, data));
     }
+}
+
+void UniformMap::setUniformsAndTexturesInProgram(const ShaderProgram &program, const int &textureOffset) const
+{
+    setUniformsInProgram(program);
     
     int textureBindPoint = textureOffset;
     

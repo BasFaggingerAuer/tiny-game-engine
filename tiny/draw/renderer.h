@@ -35,6 +35,13 @@ namespace tiny
 namespace draw
 {
 
+enum BlendMode
+{
+    BlendReplace,
+    BlendAdd,
+    BlendMix
+};
+
 namespace detail
 {
 
@@ -44,12 +51,14 @@ struct BoundRenderable
                     VertexShader *a_vertexShader,
                     GeometryShader *a_geometryShader,
                     FragmentShader *a_fragmentShader,
-                    ShaderProgram *a_program) :
+                    ShaderProgram *a_program,
+                    const BlendMode &a_blendMode) :
         renderable(a_renderable),
         vertexShader(a_vertexShader),
         geometryShader(a_geometryShader),
         fragmentShader(a_fragmentShader),
-        program(a_program)
+        program(a_program),
+        blendMode(a_blendMode)
     {
 
     }
@@ -59,6 +68,7 @@ struct BoundRenderable
     GeometryShader *geometryShader;
     FragmentShader *fragmentShader;
     ShaderProgram *program;
+    BlendMode blendMode;
 };
 
 }
@@ -71,7 +81,7 @@ class Renderer
         Renderer(const bool &, const bool &);
         virtual ~Renderer();
         
-        void addRenderable(Renderable *renderable);
+        void addRenderable(Renderable *, const BlendMode & = BlendReplace);
         
         void setDepthTextureTarget(const DepthTexture2D &texture)
         {

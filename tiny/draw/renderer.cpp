@@ -78,7 +78,7 @@ void Renderer::destroyFrameBuffer()
     frameBufferIndex = 0;
 }
 
-void Renderer::addRenderable(Renderable *renderable)
+void Renderer::addRenderable(Renderable *renderable, const BlendMode &blendMode)
 {
     assert(renderable);
     
@@ -129,7 +129,7 @@ void Renderer::addRenderable(Renderable *renderable)
     renderable->uniformMap.setUniformsAndTexturesInProgram(*program, uniformMap.getNrTextures());
     program->unbind();
     
-    renderables.push_back(detail::BoundRenderable(renderable, vertexShader, geometryShader, fragmentShader, program));
+    renderables.push_back(detail::BoundRenderable(renderable, vertexShader, geometryShader, fragmentShader, program, blendMode));
 }
 
 void Renderer::addRenderTarget(const std::string &name)
@@ -208,10 +208,23 @@ void Renderer::render() const
     
     for (std::list<detail::BoundRenderable>::const_iterator i = renderables.begin(); i != renderables.end(); ++i)
     {
+        if (i->blendMode == BlendReplace)
+        {
+            GL_CHECK(glDisable(GL_BLEND));
+        }
+        else
+        {
+            GL_CHECK(glEnable(GL_BLEND));
+            
+                 if (i->blendMode == BlendAdd) GL_CHECK(glBlendFunc(GL_SRC_ALPHA, GL_ONE));
+            else if (i->blendMode == BlendMix) GL_CHECK(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+        }
+        
         //TODO: Is this very inefficient? Should we let the rendererable decide whether or not to update the uniforms every frame?
         i->program->bind();
-        uniformMap.setUniformsAndTexturesInProgram(*i->program);
-        i->renderable->uniformMap.setUniformsAndTexturesInProgram(*i->program);
+        uniformMap.setUniformsInProgram(*i->program);
+        i->renderable->uniformMap.setUniformsInProgram(*i->program);
+        
         i->renderable->uniformMap.bindTextures(uniformMap.getNrTextures());
         i->renderable->render(*i->program);
         i->renderable->uniformMap.unbindTextures(uniformMap.getNrTextures());

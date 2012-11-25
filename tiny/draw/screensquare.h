@@ -41,14 +41,14 @@ struct ScreenVertex
     ScreenVertex()
     {
 
-    };
+    }
     
     ScreenVertex(const vec2 &a_pos, const vec2 &a_tex) :
         pos(a_pos),
         tex(a_tex)
     {
 
-    };
+    }
     
     vec2 pos;
     vec2 tex;

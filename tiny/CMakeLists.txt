@@ -26,6 +26,7 @@ add_library(tinygame
             draw/worldeffectrenderer.cpp
             draw/staticmesh.cpp
             draw/icontexture2d.cpp
+            draw/iconhorde.cpp
             os/application.cpp
             os/sdlapplication.cpp)
 

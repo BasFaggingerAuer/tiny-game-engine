@@ -33,6 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/draw/staticmesh.h>
 #include <tiny/draw/texture2d.h>
 #include <tiny/draw/icontexture2d.h>
+#include <tiny/draw/iconhorde.h>
 
 using namespace std;
 using namespace tiny;
@@ -51,6 +52,7 @@ draw::Vec4Texture2D *worldNormalTexture = 0;
 draw::Vec4Texture2D *worldPositionTexture = 0;
 draw::DepthTexture2D *depthTexture = 0;
 
+draw::ScreenIconHorde *font = 0;
 draw::IconTexture2D *fontTexture = 0;
 
 vec3 cameraPosition = vec3(0.0f, 0.0f, 0.0f);
@@ -129,13 +131,19 @@ SimpleFogEffect *fogEffect = 0;
 
 void setup()
 {
+    aspectRatio = static_cast<double>(application->getScreenWidth())/static_cast<double>(application->getScreenHeight());
+    
     //testMesh = new draw::StaticMesh(mesh::io::readStaticMeshOBJ(DATA_DIRECTORY + "mesh/sponza/sponza_triangles.obj"));
     testMesh = new draw::StaticMesh(mesh::io::readStaticMeshOBJ(DATA_DIRECTORY + "mesh/sibenik/sibenik_triangles.obj"));
     testDiffuseTexture = new draw::RGBATexture2D(img::io::readImage(DATA_DIRECTORY + "img/default.png"));
     testMesh->setDiffuseTexture(*testDiffuseTexture);
     
-    fontTexture = new draw::IconTexture2D(1024, 1024);
-    fontTexture->packIcons(img::io::readFont(DATA_DIRECTORY + "font/diablo.ttf", 48));
+    font = new draw::ScreenIconHorde(1024);
+    fontTexture = new draw::IconTexture2D(512, 512);
+    fontTexture->packIcons(img::io::readFont(DATA_DIRECTORY + "font/OpenBaskerville-0.0.75.ttf", 48));
+    font->setIconTexture(*fontTexture);
+    
+    font->setText(-1.0, -1.0, 0.1, aspectRatio, "The \\rtiny\\w-\\ggame\\w-\\bengine\\w.\nA model rendering example.", *fontTexture);
     
     fogEffect = new SimpleFogEffect();
     
@@ -144,7 +152,6 @@ void setup()
     worldPositionTexture = new draw::Vec4Texture2D(application->getScreenWidth(), application->getScreenHeight());
     depthTexture = new draw::DepthTexture2D(application->getScreenWidth(), application->getScreenHeight());
     
-    aspectRatio = static_cast<double>(application->getScreenWidth())/static_cast<double>(application->getScreenHeight());
     worldRenderer = new draw::WorldRenderer(aspectRatio);
     worldRenderer->addRenderable(testMesh);
     worldRenderer->setDiffuseTarget(*diffuseTexture);
@@ -154,6 +161,7 @@ void setup()
     
     effectRenderer = new draw::WorldEffectRenderer();
     effectRenderer->addRenderable(fogEffect);
+    effectRenderer->addRenderable(font, draw::BlendMix);
     effectRenderer->setDiffuseSource(*diffuseTexture);
     effectRenderer->setNormalsSource(*worldNormalTexture);
     effectRenderer->setPositionsSource(*worldPositionTexture);
@@ -171,6 +179,7 @@ void cleanup()
     
     delete fogEffect;
     
+    delete font;
     delete fontTexture;
     
     delete testMesh;
