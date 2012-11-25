@@ -32,6 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/draw/screensquare.h>
 #include <tiny/draw/staticmesh.h>
 #include <tiny/draw/texture2d.h>
+#include <tiny/draw/icontexture2d.h>
 
 using namespace std;
 using namespace tiny;
@@ -49,6 +50,8 @@ draw::RGBATexture2D *diffuseTexture = 0;
 draw::Vec4Texture2D *worldNormalTexture = 0;
 draw::Vec4Texture2D *worldPositionTexture = 0;
 draw::DepthTexture2D *depthTexture = 0;
+
+draw::IconTexture2D *fontTexture = 0;
 
 vec3 cameraPosition = vec3(0.0f, 0.0f, 0.0f);
 vec4 cameraOrientation = vec4(0.0f, 0.0f, 0.0f, 1.0f);
@@ -128,8 +131,11 @@ void setup()
 {
     //testMesh = new draw::StaticMesh(mesh::io::readStaticMeshOBJ(DATA_DIRECTORY + "mesh/sponza/sponza_triangles.obj"));
     testMesh = new draw::StaticMesh(mesh::io::readStaticMeshOBJ(DATA_DIRECTORY + "mesh/sibenik/sibenik_triangles.obj"));
-    testDiffuseTexture = new tiny::draw::RGBATexture2D(tiny::img::io::readImage(DATA_DIRECTORY + "img/default.png"));
+    testDiffuseTexture = new draw::RGBATexture2D(img::io::readImage(DATA_DIRECTORY + "img/default.png"));
     testMesh->setDiffuseTexture(*testDiffuseTexture);
+    
+    fontTexture = new draw::IconTexture2D(1024, 1024);
+    fontTexture->packIcons(img::io::readFont(DATA_DIRECTORY + "font/diablo.ttf", 48));
     
     fogEffect = new SimpleFogEffect();
     
@@ -164,6 +170,8 @@ void cleanup()
     delete diffuseTexture;
     
     delete fogEffect;
+    
+    delete fontTexture;
     
     delete testMesh;
     delete testDiffuseTexture;

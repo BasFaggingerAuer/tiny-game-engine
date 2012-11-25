@@ -176,6 +176,7 @@ inline ivec2 operator >> (const ivec2 &a, const ivec2 &b) {return ivec2(a.x >> b
 inline ivec2 operator >> (const ivec2 &a, const int &b) {return ivec2(a.x >> b, a.y >> b);}
 inline ivec2 operator << (const ivec2 &a, const ivec2 &b) {return ivec2(a.x << b.x, a.y << b.y);}
 inline ivec2 operator << (const ivec2 &a, const int &b) {return ivec2(a.x << b, a.y << b);}
+inline bool operator < (const ivec2 &a, const ivec2 &b) {return (a.x == b.x ? a.y < b.y : a.x < b.x);}
 
 class mat4
 {
