@@ -176,23 +176,6 @@ void Renderer::updateRenderTargets()
         GL_CHECK(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTargetTexture, 0));
     }
     
-    GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, 0));
-}
-
-void Renderer::render(const bool &clearRenderTarget) const
-{
-    GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, frameBufferIndex));
-    
-    if (clearRenderTarget)
-    {
-        GL_CHECK(glClear(writeToDepthMap ? GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT : GL_COLOR_BUFFER_BIT));
-    }
-    
-    if (readFromDepthMap) GL_CHECK(glEnable(GL_DEPTH_TEST));
-    else GL_CHECK(glDisable(GL_DEPTH_TEST));
-    
-    GL_CHECK(glDepthMask(writeToDepthMap ? GL_TRUE : GL_FALSE));
-
 #ifndef NDEBUG    
     if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
@@ -201,14 +184,34 @@ void Renderer::render(const bool &clearRenderTarget) const
     }
 #endif
     
+    GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+}
+
+void Renderer::clearTargets() const
+{
+    GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, frameBufferIndex));
+    GL_CHECK(glDepthMask(writeToDepthMap ? GL_TRUE : GL_FALSE));
+    GL_CHECK(glClear(writeToDepthMap ? GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT : GL_COLOR_BUFFER_BIT));
+    GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+}
+
+void Renderer::render() const
+{
+    GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, frameBufferIndex));
+    
+    if (readFromDepthMap) GL_CHECK(glEnable(GL_DEPTH_TEST));
+    else GL_CHECK(glDisable(GL_DEPTH_TEST));
+    
+    GL_CHECK(glDepthMask(writeToDepthMap ? GL_TRUE : GL_FALSE));
+
     uniformMap.bindTextures();
     
     for (std::list<detail::BoundRenderable>::const_iterator i = renderables.begin(); i != renderables.end(); ++i)
     {
         //TODO: Is this very inefficient? Should we let the rendererable decide whether or not to update the uniforms every frame?
-        //i->renderable->setVariablesInProgram(*i->program);
         i->program->bind();
         uniformMap.setUniformsAndTexturesInProgram(*i->program);
+        i->renderable->uniformMap.setUniformsAndTexturesInProgram(*i->program);
         i->renderable->uniformMap.bindTextures(uniformMap.getNrTextures());
         i->renderable->render(*i->program);
         i->renderable->uniformMap.unbindTextures(uniformMap.getNrTextures());

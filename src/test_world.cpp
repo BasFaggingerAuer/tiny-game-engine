@@ -28,7 +28,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/mesh/io/staticmesh.h>
 
 #include <tiny/draw/worldrenderer.h>
-#include <tiny/draw/computetexture.h>
+#include <tiny/draw/worldeffectrenderer.h>
+#include <tiny/draw/screensquare.h>
 #include <tiny/draw/staticmesh.h>
 #include <tiny/draw/texture2d.h>
 
@@ -38,10 +39,11 @@ using namespace tiny;
 os::Application *application = 0;
 
 double aspectRatio = 1.0;
-draw::WorldRenderer *renderer = 0;
+draw::WorldRenderer *worldRenderer = 0;
+draw::WorldEffectRenderer *effectRenderer = 0;
+
 draw::StaticMesh *testMesh = 0;
 draw::RGBATexture2D *testDiffuseTexture = 0;
-draw::ComputeTexture *screenRenderEffect = 0;
 
 draw::RGBATexture2D *diffuseTexture = 0;
 draw::Vec4Texture2D *worldNormalTexture = 0;
@@ -51,30 +53,35 @@ draw::DepthTexture2D *depthTexture = 0;
 vec3 cameraPosition = vec3(0.0f, 0.0f, 0.0f);
 vec4 cameraOrientation = vec4(0.0f, 0.0f, 0.0f, 1.0f);
 
-void setup()
+double globalTime = 0.0;
+
+class SimpleFogEffect : public tiny::draw::ScreenFillingSquare
 {
-    //testMesh = new draw::StaticMesh(mesh::io::readStaticMeshOBJ(DATA_DIRECTORY + "mesh/sponza/sponza_triangles.obj"));
-    testMesh = new draw::StaticMesh(mesh::io::readStaticMeshOBJ(DATA_DIRECTORY + "mesh/sibenik/sibenik_triangles.obj"));
-    testDiffuseTexture = new tiny::draw::RGBATexture2D(tiny::img::io::readImage(DATA_DIRECTORY + "img/default.png"));
-    testMesh->setDiffuseTexture(*testDiffuseTexture);
-    
-    diffuseTexture = new draw::RGBATexture2D(application->getScreenWidth(), application->getScreenHeight());
-    worldNormalTexture = new draw::Vec4Texture2D(application->getScreenWidth(), application->getScreenHeight());
-    worldPositionTexture = new draw::Vec4Texture2D(application->getScreenWidth(), application->getScreenHeight());
-    depthTexture = new draw::DepthTexture2D(application->getScreenWidth(), application->getScreenHeight());
-    
-    aspectRatio = static_cast<double>(application->getScreenWidth())/static_cast<double>(application->getScreenHeight());
-    
-    renderer = new draw::WorldRenderer(aspectRatio);
-    renderer->addRenderable(testMesh);
-    renderer->setTextureTarget(*diffuseTexture, "diffuse");
-    renderer->setTextureTarget(*worldNormalTexture, "worldNormal");
-    renderer->setTextureTarget(*worldPositionTexture, "worldPosition");
-    renderer->setDepthTextureTarget(*depthTexture);
-    
-    vector<string> inputTextures;
-    vector<string> outputTextures;
-    const string fragmentShader =
+    public:
+        SimpleFogEffect();
+        ~SimpleFogEffect();
+        
+        std::string getFragmentShaderCode() const;
+        
+        void setSun(const vec3 &);
+        void setFog(const float &);
+};
+
+SimpleFogEffect::SimpleFogEffect() :
+    ScreenFillingSquare()
+{
+    setSun(vec3(0.7f, 0.7f, 0.0f));
+    setFog(256.0f);
+}
+
+SimpleFogEffect::~SimpleFogEffect()
+{
+
+}
+
+std::string SimpleFogEffect::getFragmentShaderCode() const
+{
+    return std::string(
 "#version 150\n"
 "\n"
 "precision highp float;\n"
@@ -82,6 +89,9 @@ void setup()
 "uniform sampler2D diffuseTexture;\n"
 "uniform sampler2D worldNormalTexture;\n"
 "uniform sampler2D worldPositionTexture;\n"
+"\n"
+"uniform vec3 sun;\n"
+"uniform vec3 fogFalloff;\n"
 "\n"
 "in vec2 tex;\n"
 "out vec4 colour;\n"
@@ -91,35 +101,69 @@ void setup()
 "   vec4 diffuse = texture(diffuseTexture, tex);\n"
 "   vec4 worldNormal = texture(worldNormalTexture, tex);\n"
 "   vec4 worldPosition = texture(worldPositionTexture, tex);\n"
+"   \n"
 "   float depth = worldPosition.w;\n"
+"   float directLight = 0.5f + 0.5f*max(dot(worldNormal.xyz, sun), 0.0f);\n"
+"   vec3 decay = vec3(exp(depth*fogFalloff));\n"
+"   \n"
+"   colour = vec4(diffuse.xyz*directLight*decay + (vec3(1.0f) - decay)*vec3(1.0f), 1.0f);\n"
 "   //colour = vec4(diffuse.xyz, 1.0f);\n"
-"   //colour = vec4(worldNormal.xyz, 1.0f);\n"
-"   //colour = vec4(worldPosition.xyz, 1.0f);\n"
-"   //colour = vec4(vec3(depth, diffuse.x, worldNormal.x), 1.0f);\n"
-"   colour = vec4(worldNormal.xyz + diffuse.xyz, 1.0f);\n"
-"}\n";
+"   //colour = vec4(1.0f, 0.0f, 0.0f, 1.0f);\n"
+"}\n");
+}
+
+void SimpleFogEffect::setSun(const vec3 &sun)
+{
+    uniformMap.setVec3Uniform(normalize(sun), "sun");
+}
+
+void SimpleFogEffect::setFog(const float &fogIntensity)
+{
+    uniformMap.setVec3Uniform(-fogIntensity*vec3(5.8e-6 + 2.0e-5, 13.5e-6 + 2.0e-5, 33.1e-6 + 2.0e-5), "fogFalloff");
+}
+
+SimpleFogEffect *fogEffect = 0;
+
+void setup()
+{
+    //testMesh = new draw::StaticMesh(mesh::io::readStaticMeshOBJ(DATA_DIRECTORY + "mesh/sponza/sponza_triangles.obj"));
+    testMesh = new draw::StaticMesh(mesh::io::readStaticMeshOBJ(DATA_DIRECTORY + "mesh/sibenik/sibenik_triangles.obj"));
+    testDiffuseTexture = new tiny::draw::RGBATexture2D(tiny::img::io::readImage(DATA_DIRECTORY + "img/default.png"));
+    testMesh->setDiffuseTexture(*testDiffuseTexture);
     
-    inputTextures.push_back("diffuseTexture");
-    inputTextures.push_back("worldNormalTexture");
-    inputTextures.push_back("worldPositionTexture");
-    outputTextures.push_back("colour");
+    fogEffect = new SimpleFogEffect();
     
-    screenRenderEffect = new tiny::draw::ComputeTexture(inputTextures, outputTextures, fragmentShader);
-    screenRenderEffect->setInput(*diffuseTexture, "diffuseTexture");
-    screenRenderEffect->setInput(*worldNormalTexture, "worldNormalTexture");
-    screenRenderEffect->setInput(*worldPositionTexture, "worldPositionTexture");
+    diffuseTexture = new draw::RGBATexture2D(application->getScreenWidth(), application->getScreenHeight());
+    worldNormalTexture = new draw::Vec4Texture2D(application->getScreenWidth(), application->getScreenHeight());
+    worldPositionTexture = new draw::Vec4Texture2D(application->getScreenWidth(), application->getScreenHeight());
+    depthTexture = new draw::DepthTexture2D(application->getScreenWidth(), application->getScreenHeight());
+    
+    aspectRatio = static_cast<double>(application->getScreenWidth())/static_cast<double>(application->getScreenHeight());
+    worldRenderer = new draw::WorldRenderer(aspectRatio);
+    worldRenderer->addRenderable(testMesh);
+    worldRenderer->setDiffuseTarget(*diffuseTexture);
+    worldRenderer->setNormalsTarget(*worldNormalTexture);
+    worldRenderer->setPositionsTarget(*worldPositionTexture);
+    worldRenderer->setDepthTextureTarget(*depthTexture);
+    
+    effectRenderer = new draw::WorldEffectRenderer();
+    effectRenderer->addRenderable(fogEffect);
+    effectRenderer->setDiffuseSource(*diffuseTexture);
+    effectRenderer->setNormalsSource(*worldNormalTexture);
+    effectRenderer->setPositionsSource(*worldPositionTexture);
 }
 
 void cleanup()
 {
-    delete screenRenderEffect;
-    
-    delete renderer;
+    delete effectRenderer;
+    delete worldRenderer;
     
     delete depthTexture;
     delete worldPositionTexture;
     delete worldNormalTexture;
     delete diffuseTexture;
+    
+    delete fogEffect;
     
     delete testMesh;
     delete testDiffuseTexture;
@@ -145,13 +189,19 @@ void update(const double &dt)
     
     cameraPosition += ds*normalize(vel);
     
-    renderer->setCamera(cameraPosition, cameraOrientation);
+    worldRenderer->setCamera(cameraPosition, cameraOrientation);
+    
+    fogEffect->setSun(vec3(cos(0.5*globalTime), 0.0, sin(0.5*globalTime)));
+    fogEffect->setFog(1024.0 + 1024.0*sin(0.7*globalTime));
+    globalTime += dt;
 }
 
 void render()
 {
-    renderer->render(true);
-    screenRenderEffect->compute();
+    worldRenderer->clearTargets();
+    worldRenderer->render();
+    effectRenderer->clearTargets();
+    effectRenderer->render();
 }
 
 int main(int, char **)

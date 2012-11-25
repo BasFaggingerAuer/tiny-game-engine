@@ -31,40 +31,29 @@ namespace tiny
 namespace draw
 {
 
-class WorldRenderer : public Renderer
+class WorldEffectRenderer : public Renderer
 {
     public:
-        WorldRenderer(const float &);
-        virtual ~WorldRenderer();
+        WorldEffectRenderer();
+        virtual ~WorldEffectRenderer();
         
-        void setProjectionMatrix(const mat4 &);
-        void setCamera(const vec3 &, const vec4 &);
-        
-        template<typename T, size_t Channels>
-        void setDiffuseTarget(const Texture2D<T, Channels> &texture)
+        template <typename TextureType>
+        void setDiffuseSource(const TextureType &texture)
         {
-            setTextureTarget(texture, "diffuse");
+            uniformMap.setTexture(texture, "diffuseTexture");
         }
         
-        template<typename T, size_t Channels>
-        void setNormalsTarget(const Texture2D<T, Channels> &texture)
+        template <typename TextureType>
+        void setNormalsSource(const TextureType &texture)
         {
-            setTextureTarget(texture, "worldNormal");
+            uniformMap.setTexture(texture, "worldNormalTexture");
         }
         
-        template<typename T, size_t Channels>
-        void setPositionsTarget(const Texture2D<T, Channels> &texture)
+        template <typename TextureType>
+        void setPositionsSource(const TextureType &texture)
         {
-            setTextureTarget(texture, "worldPosition");
+            uniformMap.setTexture(texture, "worldPositionTexture");
         }
-        
-    private:
-        void updateUniforms();
-        
-        mat4 cameraToScreen;
-        mat4 worldToCamera;
-        mat4 worldToScreen;
-        vec3 cameraPosition;
 };
 
 }

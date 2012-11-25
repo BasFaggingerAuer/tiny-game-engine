@@ -99,7 +99,8 @@ class Renderer
             std::cerr << "Warning: render target '" << name << "' does not exist for this renderer!" << std::endl;
         }
         
-        void render(const bool &) const;
+        void clearTargets() const;
+        void render() const;
         
     protected:
         void addRenderTarget(const std::string &name);

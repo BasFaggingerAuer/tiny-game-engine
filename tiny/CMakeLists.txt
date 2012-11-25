@@ -13,7 +13,6 @@ add_library(tinygame
             mesh/io/staticmesh.cpp
             draw/glcheck.cpp
             draw/buffer.cpp
-            draw/computetexture.cpp
             draw/uniformmap.cpp
             draw/renderable.cpp
             draw/renderer.cpp
@@ -21,7 +20,10 @@ add_library(tinygame
             draw/shaderprogram.cpp
             draw/texture.cpp
             draw/vertexbufferinterpreter.cpp
+            draw/computetexture.cpp
+            draw/screensquare.cpp
             draw/worldrenderer.cpp
+            draw/worldeffectrenderer.cpp
             draw/staticmesh.cpp
             os/application.cpp
             os/sdlapplication.cpp)

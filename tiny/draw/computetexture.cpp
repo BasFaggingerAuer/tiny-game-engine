@@ -130,6 +130,6 @@ ComputeTexture::~ComputeTexture()
 
 void ComputeTexture::compute() const
 {
-    output.render(true);
+    output.render();
 }
 
