@@ -84,7 +84,7 @@ void UniformMap::setUniformsInProgram(const ShaderProgram &program) const
         if (location < 0)
         {
 #ifndef NDEBUG
-            std::cerr << "Warning: uniform variable '" << uniform.name << "' does not exist in the GLSL program " << program.getIndex() << "!" << std::endl;
+            //std::cerr << "Warning: uniform variable '" << uniform.name << "' does not exist in the GLSL program " << program.getIndex() << "!" << std::endl;
 #endif
             continue;
         }
@@ -105,7 +105,7 @@ void UniformMap::setUniformsInProgram(const ShaderProgram &program) const
         if (location < 0)
         {
 #ifndef NDEBUG
-            std::cerr << "Warning: uniform matrix variable '" << uniform.name << "' does not exist in the GLSL program " << program.getIndex() << "!" << std::endl;
+            //std::cerr << "Warning: uniform matrix variable '" << uniform.name << "' does not exist in the GLSL program " << program.getIndex() << "!" << std::endl;
 #endif
             continue;
         }

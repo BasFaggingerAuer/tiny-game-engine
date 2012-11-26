@@ -14,22 +14,42 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <algorithm>
+#pragma once
 
-#include <tiny/draw/worldrenderer.h>
+#include <iostream>
+#include <exception>
+#include <list>
 
-using namespace tiny::draw;
+#include <cassert>
 
-WorldRenderer::WorldRenderer(const float &aspectRatio) :
-    CameraRenderer(aspectRatio)
+#include <tiny/math/vec.h>
+#include <tiny/draw/renderer.h>
+
+namespace tiny
 {
-    addRenderTarget("diffuse");
-    addRenderTarget("worldNormal");
-    addRenderTarget("worldPosition");
+
+namespace draw
+{
+
+class CameraRenderer : public Renderer
+{
+    public:
+        CameraRenderer(const float &);
+        virtual ~CameraRenderer();
+        
+        void setProjectionMatrix(const mat4 &);
+        void setCamera(const vec3 &, const vec4 &);
+        
+    private:
+        void updateCameraUniforms();
+        
+        mat4 cameraToScreen;
+        mat4 worldToCamera;
+        mat4 worldToScreen;
+        vec3 cameraPosition;
+};
+
 }
-
-WorldRenderer::~WorldRenderer()
-{
 
 }
 

@@ -22,11 +22,13 @@ add_library(tinygame
             draw/vertexbufferinterpreter.cpp
             draw/computetexture.cpp
             draw/screensquare.cpp
+            draw/camerarenderer.cpp
             draw/worldrenderer.cpp
             draw/worldeffectrenderer.cpp
             draw/staticmesh.cpp
             draw/icontexture2d.cpp
             draw/iconhorde.cpp
+            draw/lighthorde.cpp
             os/application.cpp
             os/sdlapplication.cpp)
 

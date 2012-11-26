@@ -22,8 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cassert>
 
-#include <tiny/draw/renderer.h>
 #include <tiny/math/vec.h>
+#include <tiny/draw/camerarenderer.h>
 
 namespace tiny
 {
@@ -31,14 +31,11 @@ namespace tiny
 namespace draw
 {
 
-class WorldRenderer : public Renderer
+class WorldRenderer : public CameraRenderer
 {
     public:
         WorldRenderer(const float &);
         virtual ~WorldRenderer();
-        
-        void setProjectionMatrix(const mat4 &);
-        void setCamera(const vec3 &, const vec4 &);
         
         template<typename T, size_t Channels>
         void setDiffuseTarget(const Texture2D<T, Channels> &texture)
@@ -57,14 +54,6 @@ class WorldRenderer : public Renderer
         {
             setTextureTarget(texture, "worldPosition");
         }
-        
-    private:
-        void updateUniforms();
-        
-        mat4 cameraToScreen;
-        mat4 worldToCamera;
-        mat4 worldToScreen;
-        vec3 cameraPosition;
 };
 
 }

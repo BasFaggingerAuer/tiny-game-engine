@@ -103,7 +103,7 @@ void ComputeTextureInput::render(const ShaderProgram &program) const
 }
 
 ComputeTextureOutput::ComputeTextureOutput(const std::vector<std::string> &outputNames) :
-    Renderer(false, false)
+    Renderer()
 {
     for (std::vector<std::string>::const_iterator i = outputNames.begin(); i != outputNames.end(); ++i)
     {

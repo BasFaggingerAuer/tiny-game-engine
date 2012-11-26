@@ -22,8 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cassert>
 
-#include <tiny/draw/renderer.h>
 #include <tiny/math/vec.h>
+#include <tiny/draw/camerarenderer.h>
 
 namespace tiny
 {
@@ -31,10 +31,10 @@ namespace tiny
 namespace draw
 {
 
-class WorldEffectRenderer : public Renderer
+class WorldEffectRenderer : public CameraRenderer
 {
     public:
-        WorldEffectRenderer();
+        WorldEffectRenderer(const float &);
         virtual ~WorldEffectRenderer();
         
         template <typename TextureType>

@@ -34,6 +34,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/draw/texture2d.h>
 #include <tiny/draw/icontexture2d.h>
 #include <tiny/draw/iconhorde.h>
+#include <tiny/draw/lighthorde.h>
 
 using namespace std;
 using namespace tiny;
@@ -46,6 +47,9 @@ draw::WorldEffectRenderer *effectRenderer = 0;
 
 draw::StaticMesh *testMesh = 0;
 draw::RGBATexture2D *testDiffuseTexture = 0;
+
+std::vector<draw::PointLightInstance> pointLightInstances;
+draw::PointLightHorde *pointLights = 0;
 
 draw::RGBATexture2D *diffuseTexture = 0;
 draw::Vec4Texture2D *worldNormalTexture = 0;
@@ -138,6 +142,9 @@ void setup()
     testDiffuseTexture = new draw::RGBATexture2D(img::io::readImage(DATA_DIRECTORY + "img/default.png"));
     testMesh->setDiffuseTexture(*testDiffuseTexture);
     
+    pointLights = new draw::PointLightHorde(256);
+    pointLightInstances.push_back(draw::PointLightInstance(vec4(0.0f, 1.0f, 0.0f, 16.0f), vec4(1.0f, 1.0f, 0.8f, 1.0f)));
+    
     font = new draw::ScreenIconHorde(1024);
     fontTexture = new draw::IconTexture2D(512, 512);
     fontTexture->packIcons(img::io::readFont(DATA_DIRECTORY + "font/OpenBaskerville-0.0.75.ttf", 48));
@@ -153,18 +160,22 @@ void setup()
     depthTexture = new draw::DepthTexture2D(application->getScreenWidth(), application->getScreenHeight());
     
     worldRenderer = new draw::WorldRenderer(aspectRatio);
-    worldRenderer->addRenderable(testMesh);
     worldRenderer->setDiffuseTarget(*diffuseTexture);
     worldRenderer->setNormalsTarget(*worldNormalTexture);
     worldRenderer->setPositionsTarget(*worldPositionTexture);
     worldRenderer->setDepthTextureTarget(*depthTexture);
     
-    effectRenderer = new draw::WorldEffectRenderer();
-    effectRenderer->addRenderable(fogEffect);
-    effectRenderer->addRenderable(font, draw::BlendMix);
+    effectRenderer = new draw::WorldEffectRenderer(aspectRatio);
     effectRenderer->setDiffuseSource(*diffuseTexture);
     effectRenderer->setNormalsSource(*worldNormalTexture);
     effectRenderer->setPositionsSource(*worldPositionTexture);
+    
+    //FIXME: Why do I need to disable the Z-buffer?
+    worldRenderer->addRenderable(testMesh, false, false);
+    
+    effectRenderer->addRenderable(fogEffect, false, false);
+    effectRenderer->addRenderable(pointLights, false, false, draw::BlendAdd);
+    effectRenderer->addRenderable(font, false, false, draw::BlendMix);
 }
 
 void cleanup()
@@ -181,6 +192,8 @@ void cleanup()
     
     delete font;
     delete fontTexture;
+    
+    delete pointLights;
     
     delete testMesh;
     delete testDiffuseTexture;
@@ -210,6 +223,9 @@ void update(const double &dt)
     
     fogEffect->setSun(vec3(cos(0.5*globalTime), 0.0, sin(0.5*globalTime)));
     fogEffect->setFog(1024.0 + 1024.0*sin(0.7*globalTime));
+    
+    pointLights->setLights(pointLightInstances.begin(), pointLightInstances.end());
+    
     globalTime += dt;
 }
 
@@ -225,7 +241,7 @@ int main(int, char **)
 {
     try
     {
-        application = new os::SDLApplication(1280, 800);
+        application = new os::SDLApplication(1280, 600);
         setup();
     }
     catch (std::exception &e)

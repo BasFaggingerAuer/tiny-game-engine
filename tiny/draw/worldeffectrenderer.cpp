@@ -20,8 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using namespace tiny::draw;
 
-WorldEffectRenderer::WorldEffectRenderer() :
-    Renderer(false, false)
+WorldEffectRenderer::WorldEffectRenderer(const float &aspectRatio) :
+    CameraRenderer(aspectRatio)
 {
     addRenderTarget("colour");
     uniformMap.addTexture("diffuseTexture");

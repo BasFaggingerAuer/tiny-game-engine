@@ -20,24 +20,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using namespace tiny::draw;
 
-Renderer::Renderer(const bool &a_readFromDepthMap, const bool &a_writeToDepthMap) :
+Renderer::Renderer() :
     frameBufferIndex(0),
     renderTargetNames(),
     renderTargetTextures(),
-    depthTargetTexture(0),
-    readFromDepthMap(a_readFromDepthMap),
-    writeToDepthMap(a_writeToDepthMap)
+    depthTargetTexture(0)
 {
     
 }
 
-Renderer::Renderer(const Renderer &a) :
+Renderer::Renderer(const Renderer &) :
     frameBufferIndex(0),
     renderTargetNames(),
     renderTargetTextures(),
-    depthTargetTexture(0),
-    readFromDepthMap(a.readFromDepthMap),
-    writeToDepthMap(a.writeToDepthMap)
+    depthTargetTexture(0)
 {
     
 }
@@ -78,7 +74,7 @@ void Renderer::destroyFrameBuffer()
     frameBufferIndex = 0;
 }
 
-void Renderer::addRenderable(Renderable *renderable, const BlendMode &blendMode)
+void Renderer::addRenderable(Renderable *renderable, const bool &readFromDepthTexture, const bool &writeToDepthTexture, const BlendMode &blendMode)
 {
     assert(renderable);
     
@@ -129,7 +125,7 @@ void Renderer::addRenderable(Renderable *renderable, const BlendMode &blendMode)
     renderable->uniformMap.setUniformsAndTexturesInProgram(*program, uniformMap.getNrTextures());
     program->unbind();
     
-    renderables.push_back(detail::BoundRenderable(renderable, vertexShader, geometryShader, fragmentShader, program, blendMode));
+    renderables.push_back(detail::BoundRenderable(renderable, vertexShader, geometryShader, fragmentShader, program, readFromDepthTexture, writeToDepthTexture, blendMode));
 }
 
 void Renderer::addRenderTarget(const std::string &name)
@@ -190,8 +186,7 @@ void Renderer::updateRenderTargets()
 void Renderer::clearTargets() const
 {
     GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, frameBufferIndex));
-    GL_CHECK(glDepthMask(writeToDepthMap ? GL_TRUE : GL_FALSE));
-    GL_CHECK(glClear(writeToDepthMap ? GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT : GL_COLOR_BUFFER_BIT));
+    GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
     GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, 0));
 }
 
@@ -199,15 +194,15 @@ void Renderer::render() const
 {
     GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, frameBufferIndex));
     
-    if (readFromDepthMap) GL_CHECK(glEnable(GL_DEPTH_TEST));
-    else GL_CHECK(glDisable(GL_DEPTH_TEST));
-    
-    GL_CHECK(glDepthMask(writeToDepthMap ? GL_TRUE : GL_FALSE));
-
     uniformMap.bindTextures();
     
     for (std::list<detail::BoundRenderable>::const_iterator i = renderables.begin(); i != renderables.end(); ++i)
     {
+        if (i->readFromDepthTexture) GL_CHECK(glEnable(GL_DEPTH_TEST));
+        else GL_CHECK(glDisable(GL_DEPTH_TEST));
+        
+        GL_CHECK(glDepthMask(i->writeToDepthTexture ? GL_TRUE : GL_FALSE));
+
         if (i->blendMode == BlendReplace)
         {
             GL_CHECK(glDisable(GL_BLEND));

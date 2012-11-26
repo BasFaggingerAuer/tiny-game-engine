@@ -52,12 +52,16 @@ struct BoundRenderable
                     GeometryShader *a_geometryShader,
                     FragmentShader *a_fragmentShader,
                     ShaderProgram *a_program,
+                    const bool &a_readFromDepthTexture,
+                    const bool &a_writeToDepthTexture,
                     const BlendMode &a_blendMode) :
         renderable(a_renderable),
         vertexShader(a_vertexShader),
         geometryShader(a_geometryShader),
         fragmentShader(a_fragmentShader),
         program(a_program),
+        readFromDepthTexture(a_readFromDepthTexture),
+        writeToDepthTexture(a_writeToDepthTexture),
         blendMode(a_blendMode)
     {
 
@@ -68,6 +72,8 @@ struct BoundRenderable
     GeometryShader *geometryShader;
     FragmentShader *fragmentShader;
     ShaderProgram *program;
+    bool readFromDepthTexture;
+    bool writeToDepthTexture;
     BlendMode blendMode;
 };
 
@@ -78,10 +84,10 @@ struct BoundRenderable
 class Renderer
 {
     public:
-        Renderer(const bool &, const bool &);
+        Renderer();
         virtual ~Renderer();
         
-        void addRenderable(Renderable *, const BlendMode & = BlendReplace);
+        void addRenderable(Renderable *, const bool & = true, const bool & = true, const BlendMode & = BlendReplace);
         
         void setDepthTextureTarget(const DepthTexture2D &texture)
         {
@@ -89,6 +95,12 @@ class Renderer
             depthTargetTexture = texture.getIndex();
             updateRenderTargets();
         }
+        
+        void clearTargets() const;
+        void render() const;
+        
+    protected:
+        void addRenderTarget(const std::string &name);
         
         template<typename T, size_t Channels>
         void setTextureTarget(const Texture2D<T, Channels> &texture, const std::string &name)
@@ -109,11 +121,6 @@ class Renderer
             std::cerr << "Warning: render target '" << name << "' does not exist for this renderer!" << std::endl;
         }
         
-        void clearTargets() const;
-        void render() const;
-        
-    protected:
-        void addRenderTarget(const std::string &name);
         
         UniformMap uniformMap;
 
@@ -130,8 +137,6 @@ class Renderer
         std::vector<std::string> renderTargetNames;
         std::vector<GLuint> renderTargetTextures;
         GLuint depthTargetTexture;
-        const bool readFromDepthMap;
-        const bool writeToDepthMap;
 };
 
 }
