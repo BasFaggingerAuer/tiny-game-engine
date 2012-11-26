@@ -143,7 +143,16 @@ void setup()
     testMesh->setDiffuseTexture(*testDiffuseTexture);
     
     pointLights = new draw::PointLightHorde(256);
-    pointLightInstances.push_back(draw::PointLightInstance(vec4(0.0f, 1.0f, 0.0f, 16.0f), vec4(1.0f, 1.0f, 0.8f, 1.0f)));
+    
+    const double lightSpacing = 32.0;
+    
+    for (int i = -4; i <= 4; ++i)
+    {
+        for (int j = -4; j <= 4; ++j)
+        {
+            pointLightInstances.push_back(draw::PointLightInstance(vec4(lightSpacing*i, lightSpacing*j, 0.0f, 1.0f), vec4(1.0f, 1.0f, 0.1f, 0.25*lightSpacing)));
+        }
+    }
     
     font = new draw::ScreenIconHorde(1024);
     fontTexture = new draw::IconTexture2D(512, 512);
@@ -170,8 +179,7 @@ void setup()
     effectRenderer->setNormalsSource(*worldNormalTexture);
     effectRenderer->setPositionsSource(*worldPositionTexture);
     
-    //FIXME: Why do I need to disable the Z-buffer?
-    worldRenderer->addRenderable(testMesh, false, false);
+    worldRenderer->addRenderable(testMesh);
     
     effectRenderer->addRenderable(fogEffect, false, false);
     effectRenderer->addRenderable(pointLights, false, false, draw::BlendAdd);
@@ -220,9 +228,10 @@ void update(const double &dt)
     cameraPosition += ds*normalize(vel);
     
     worldRenderer->setCamera(cameraPosition, cameraOrientation);
+    effectRenderer->setCamera(cameraPosition, cameraOrientation);
     
-    fogEffect->setSun(vec3(cos(0.5*globalTime), 0.0, sin(0.5*globalTime)));
-    fogEffect->setFog(1024.0 + 1024.0*sin(0.7*globalTime));
+    //fogEffect->setSun(vec3(cos(0.5*globalTime), 0.0, sin(0.5*globalTime)));
+    //fogEffect->setFog(1024.0 + 1024.0*sin(0.7*globalTime));
     
     pointLights->setLights(pointLightInstances.begin(), pointLightInstances.end());
     
@@ -233,7 +242,7 @@ void render()
 {
     worldRenderer->clearTargets();
     worldRenderer->render();
-    effectRenderer->clearTargets();
+    //effectRenderer->clearTargets();
     effectRenderer->render();
 }
 
@@ -241,7 +250,7 @@ int main(int, char **)
 {
     try
     {
-        application = new os::SDLApplication(1280, 600);
+        application = new os::SDLApplication(1280, 800);
         setup();
     }
     catch (std::exception &e)

@@ -35,15 +35,15 @@ struct PointLightInstance
 
     }
     
-    PointLightInstance(const vec4 &a_positionAndSize,
+    PointLightInstance(const vec4 &a_position,
                        const vec4 &a_colour) :
-        positionAndSize(a_positionAndSize),
+        position(a_position),
         colour(a_colour)
     {
 
     }
     
-    vec4 positionAndSize;
+    vec4 position;
     vec4 colour;
 };
 
@@ -71,7 +71,7 @@ class PointLightHorde : public Renderable
         {
             nrLights = 0;
             
-            for (Iterator i = first; i != last; ++i)
+            for (Iterator i = first; i != last && nrLights < maxNrLights; ++i)
             {
                 lights.instances[nrLights++] = *i;
             }

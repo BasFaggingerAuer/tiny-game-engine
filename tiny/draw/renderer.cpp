@@ -186,6 +186,7 @@ void Renderer::updateRenderTargets()
 void Renderer::clearTargets() const
 {
     GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, frameBufferIndex));
+    GL_CHECK(glDepthMask(GL_TRUE));
     GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
     GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, 0));
 }

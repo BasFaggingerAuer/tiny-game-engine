@@ -44,6 +44,7 @@ class CameraRenderer : public Renderer
         void updateCameraUniforms();
         
         mat4 cameraToScreen;
+        mat4 cameraToWorld;
         mat4 worldToCamera;
         mat4 worldToScreen;
         vec3 cameraPosition;
