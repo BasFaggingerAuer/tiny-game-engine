@@ -41,6 +41,9 @@ class WorldEffectRenderer : public CameraRenderer
         void setDiffuseSource(const TextureType &texture)
         {
             uniformMap.setTexture(texture, "diffuseTexture");
+            uniformMap.setVec2Uniform(vec2(1.0f/static_cast<float>(texture.getWidth()),
+                                           1.0f/static_cast<float>(texture.getHeight())),
+                                      "inverseScreenSize");
         }
         
         template <typename TextureType>

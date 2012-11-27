@@ -36,25 +36,7 @@ namespace tiny
 namespace draw
 {
 
-struct ScreenVertex
-{
-    ScreenVertex()
-    {
-
-    }
-    
-    ScreenVertex(const vec2 &a_pos, const vec2 &a_tex) :
-        pos(a_pos),
-        tex(a_tex)
-    {
-
-    }
-    
-    vec2 pos;
-    vec2 tex;
-};
-
-class ScreenFillingSquareVertexBuffer : public VertexBuffer<ScreenVertex>
+class ScreenFillingSquareVertexBuffer : public VertexBuffer<vec2>
 {
     public:
         ScreenFillingSquareVertexBuffer();

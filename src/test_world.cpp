@@ -101,18 +101,19 @@ std::string SimpleFogEffect::getFragmentShaderCode() const
 "\n"
 "uniform vec3 sun;\n"
 "uniform vec3 fogFalloff;\n"
+"uniform vec2 inverseScreenSize;\n"
 "\n"
-"in vec2 tex;\n"
 "out vec4 colour;\n"
 "\n"
 "void main(void)\n"
 "{\n"
+"   vec2 tex = gl_FragCoord.xy*inverseScreenSize;\n"
 "   vec4 diffuse = texture(diffuseTexture, tex);\n"
 "   vec4 worldNormal = texture(worldNormalTexture, tex);\n"
 "   vec4 worldPosition = texture(worldPositionTexture, tex);\n"
 "   \n"
 "   float depth = worldPosition.w;\n"
-"   float directLight = 0.5f + 0.5f*max(dot(worldNormal.xyz, sun), 0.0f);\n"
+"   float directLight = 0.5f*max(dot(worldNormal.xyz, sun), 0.0f);\n"
 "   vec3 decay = vec3(exp(depth*fogFalloff));\n"
 "   \n"
 "   colour = vec4(diffuse.xyz*directLight*decay + (vec3(1.0f) - decay)*vec3(1.0f), 1.0f);\n"
@@ -144,13 +145,13 @@ void setup()
     
     pointLights = new draw::PointLightHorde(256);
     
-    const double lightSpacing = 32.0;
+    const float lightSpacing = 4.0f;
     
     for (int i = -4; i <= 4; ++i)
     {
         for (int j = -4; j <= 4; ++j)
         {
-            pointLightInstances.push_back(draw::PointLightInstance(vec4(lightSpacing*i, lightSpacing*j, 0.0f, 1.0f), vec4(1.0f, 1.0f, 0.1f, 0.25*lightSpacing)));
+            pointLightInstances.push_back(draw::PointLightInstance(vec4(lightSpacing*i, 0.0f, lightSpacing*j, 1.0f), vec4(1.0f, 1.0f, 0.1f, 0.5f*lightSpacing)));
         }
     }
     

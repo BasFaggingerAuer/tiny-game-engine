@@ -22,12 +22,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using namespace tiny::draw;
 
 ScreenFillingSquareVertexBuffer::ScreenFillingSquareVertexBuffer() :
-    VertexBuffer<ScreenVertex>(4)
+    VertexBuffer<vec2>(4)
 {
-    hostData[0] = ScreenVertex(vec2(-1.0f, 1.0f), vec2(0.0f, 1.0f));
-    hostData[1] = ScreenVertex(vec2(-1.0f,-1.0f), vec2(0.0f, 0.0f));
-    hostData[2] = ScreenVertex(vec2( 1.0f, 1.0f), vec2(1.0f, 1.0f));
-    hostData[3] = ScreenVertex(vec2( 1.0f,-1.0f), vec2(1.0f, 0.0f));
+    hostData[0] = vec2(-1.0f, 1.0f);
+    hostData[1] = vec2(-1.0f,-1.0f);
+    hostData[2] = vec2( 1.0f, 1.0f);
+    hostData[3] = vec2( 1.0f,-1.0f);
     
     sendToDevice();
 }
@@ -42,7 +42,6 @@ ScreenFillingSquareVertexBufferInterpreter::ScreenFillingSquareVertexBufferInter
     vertices()
 {
     addVec2Attribute(vertices, 0*sizeof(float), "vertex");
-    addVec2Attribute(vertices, 2*sizeof(float), "textureCoordinate");
 }
 
 ScreenFillingSquareVertexBufferInterpreter::~ScreenFillingSquareVertexBufferInterpreter()
@@ -67,14 +66,10 @@ std::string ScreenFillingSquare::getVertexShaderCode() const
 "#version 150\n"
 "\n"
 "in vec2 vertex;\n"
-"in vec2 textureCoordinate;\n"
-"\n"
-"out vec2 tex;\n"
 "\n"
 "void main(void)\n"
 "{\n"
 "	gl_Position = vec4(vertex.x, vertex.y, 0.0f, 1.0f);\n"
-"	tex = textureCoordinate;\n"
 "}\n\0";
 }
 
