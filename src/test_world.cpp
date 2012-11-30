@@ -143,17 +143,17 @@ void setup()
     testDiffuseTexture = new draw::RGBATexture2D(img::io::readImage(DATA_DIRECTORY + "img/default.png"));
     testMesh->setDiffuseTexture(*testDiffuseTexture);
     
-    pointLights = new draw::PointLightHorde(256);
-    
     const float lightSpacing = 4.0f;
     
     for (int i = -4; i <= 4; ++i)
     {
-        for (int j = -4; j <= 4; ++j)
+        for (int j = -1; j <= 1; ++j)
         {
-            pointLightInstances.push_back(draw::PointLightInstance(vec4(lightSpacing*i, 0.0f, lightSpacing*j, 1.0f), vec4(1.0f, 1.0f, 0.1f, 0.5f*lightSpacing)));
+            pointLightInstances.push_back(draw::PointLightInstance(vec4(lightSpacing*i, 0.0f, lightSpacing*j, 1.0f), vec4(1.0f, 0.9f, 0.3f, lightSpacing)));
         }
     }
+    
+    pointLights = new draw::PointLightHorde(pointLightInstances.size());
     
     font = new draw::ScreenIconHorde(1024);
     fontTexture = new draw::IconTexture2D(512, 512);
@@ -233,6 +233,11 @@ void update(const double &dt)
     
     //fogEffect->setSun(vec3(cos(0.5*globalTime), 0.0, sin(0.5*globalTime)));
     //fogEffect->setFog(1024.0 + 1024.0*sin(0.7*globalTime));
+    
+    for (std::vector<draw::PointLightInstance>::iterator i = pointLightInstances.begin(); i != pointLightInstances.end(); ++i)
+    {
+        i->position += randomVec4(2.0f*dt);
+    }
     
     pointLights->setLights(pointLightInstances.begin(), pointLightInstances.end());
     

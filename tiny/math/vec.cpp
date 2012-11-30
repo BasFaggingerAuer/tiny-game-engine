@@ -14,6 +14,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include <cstdlib>
+
 #include <tiny/math/vec.h>
 
 using namespace tiny;
@@ -81,5 +83,20 @@ vec4 tiny::quatmatrix(const mat4 &a)
     }
     
     return normalize(q);
+}
+
+vec3 tiny::randomVec3(const float &s)
+{
+    return vec3(2.0f*s*static_cast<float>(rand())/static_cast<float>(RAND_MAX) - s,
+                2.0f*s*static_cast<float>(rand())/static_cast<float>(RAND_MAX) - s,
+                2.0f*s*static_cast<float>(rand())/static_cast<float>(RAND_MAX) - s);
+}
+
+vec4 tiny::randomVec4(const float &s)
+{
+    return vec4(2.0f*s*static_cast<float>(rand())/static_cast<float>(RAND_MAX) - s,
+                2.0f*s*static_cast<float>(rand())/static_cast<float>(RAND_MAX) - s,
+                2.0f*s*static_cast<float>(rand())/static_cast<float>(RAND_MAX) - s,
+                2.0f*s*static_cast<float>(rand())/static_cast<float>(RAND_MAX) - s);
 }
 
