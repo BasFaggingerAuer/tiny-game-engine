@@ -33,6 +33,7 @@ PointLightVertexBufferInterpreter::~PointLightVertexBufferInterpreter()
 }
 
 PointLightHorde::PointLightHorde(const size_t &a_maxNrLights) :
+    Renderable(),
     maxNrLights(a_maxNrLights),
     nrLights(0),
     lights(a_maxNrLights)
@@ -88,6 +89,7 @@ std::string PointLightHorde::getGeometryShaderCode() const
 "    \n"
 "    f_position = gl_PositionIn[0];\n"
 "    f_colour = g_colour[0];\n"
+"    f_colour.w *= f_colour.w;\n"
 "    \n"
 "    gl_Position = worldToScreen*(gl_PositionIn[0] - w - h);\n"
 "    EmitVertex();\n"
@@ -107,7 +109,7 @@ std::string PointLightHorde::getGeometryShaderCode() const
 
 std::string PointLightHorde::getFragmentShaderCode() const
 {
-    return
+    return std::string(
 "#version 150\n"
 "\n"
 "precision highp float;\n"
@@ -130,15 +132,13 @@ std::string PointLightHorde::getFragmentShaderCode() const
 "   vec4 worldNormal = texture(worldNormalTexture, tex);\n"
 "   vec4 worldPosition = texture(worldPositionTexture, tex);\n"
 "   \n"
+"   float depth = worldPosition.w;\n"
 "   vec3 delta = f_position.xyz - worldPosition.xyz;\n"
-"   float fallOff = max(0.0f, 1.0f - (dot(delta, delta)/f_colour.w));\n"
+"   float decay = max(1.0f - dot(delta, delta)/f_colour.w, 0.0f);\n"
+"   float directLight = max(dot(worldNormal.xyz, normalize(delta)), 0.0f);\n"
 "   \n"
-"   //delta = normalize(delta);\n"
-"   \n"
-"   //colour = vec4(f_colour.xyz*vec3(fallOff, 1.0f, 1.0f), 1.0f);\n"
-"   //colour = vec4(f_colour.xyz*diffuse.xyz*max(0.0f, dot(worldNormal.xyz, delta)), 1.0f);\n"
-"   colour = vec4(vec3(0.5f) + 0.5f*worldNormal.xyz, 1.0f);\n"
-"}\n\0";
+"   colour = vec4(diffuse.xyz*f_colour.xyz*directLight*decay, 1.0f);\n"
+"}\n");
 }
 
 void PointLightHorde::render(const ShaderProgram &program) const
