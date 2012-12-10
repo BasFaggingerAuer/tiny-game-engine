@@ -21,9 +21,9 @@ using namespace tiny::draw;
 StaticMeshVertexBufferInterpreter::StaticMeshVertexBufferInterpreter(const tiny::mesh::StaticMesh &mesh) :
     VertexBufferInterpreter<tiny::mesh::StaticMeshVertex>(mesh.vertices.begin(), mesh.vertices.end())
 {
-    addVec2Attribute(0*sizeof(float), "textureCoordinate");
-    addVec3Attribute(2*sizeof(float), "normal");
-    addVec3Attribute(5*sizeof(float), "position");
+    addVec2Attribute(0*sizeof(float), "v_textureCoordinate");
+    addVec3Attribute(2*sizeof(float), "v_normal");
+    addVec3Attribute(5*sizeof(float), "v_position");
 }
 
 StaticMeshVertexBufferInterpreter::~StaticMeshVertexBufferInterpreter()
@@ -53,22 +53,22 @@ std::string StaticMesh::getVertexShaderCode() const
 "\n"
 "uniform mat4 worldToScreen;\n"
 "\n"
-"in vec2 textureCoordinate;\n"
-"in vec3 normal;\n"
-"in vec3 position;\n"
+"in vec2 v_textureCoordinate;\n"
+"in vec3 v_normal;\n"
+"in vec3 v_position;\n"
 "\n"
-"out vec2 tex;\n"
+"out vec2 f_tex;\n"
 "out vec3 f_worldNormal;\n"
 "out vec3 f_worldPosition;\n"
-"out float cameraDepth;\n"
+"out float f_cameraDepth;\n"
 "\n"
 "void main(void)\n"
 "{\n"
-"   tex = textureCoordinate;\n"
-"   f_worldNormal = normal;\n"
-"   f_worldPosition = position;\n"
-"   gl_Position = worldToScreen*vec4(position, 1.0f);\n"
-"   cameraDepth = gl_Position.z;\n"
+"   f_tex = v_textureCoordinate;\n"
+"   f_worldNormal = v_normal;\n"
+"   f_worldPosition = v_position;\n"
+"   gl_Position = worldToScreen*vec4(v_position, 1.0f);\n"
+"   f_cameraDepth = gl_Position.z;\n"
 "}\n\0";
 }
 
@@ -83,10 +83,10 @@ std::string StaticMesh::getFragmentShaderCode() const
 "\n"
 "const float C = 1.0f, D = 1.0e6, E = 1.0f;\n"
 "\n"
-"in vec2 tex;\n"
+"in vec2 f_tex;\n"
 "in vec3 f_worldNormal;\n"
 "in vec3 f_worldPosition;\n"
-"in float cameraDepth;\n"
+"in float f_cameraDepth;\n"
 "\n"
 "out vec4 diffuse;\n"
 "out vec4 worldNormal;\n"
@@ -94,11 +94,11 @@ std::string StaticMesh::getFragmentShaderCode() const
 "\n"
 "void main(void)\n"
 "{\n"
-"   diffuse = texture(diffuseTexture, tex);\n"
+"   diffuse = texture(diffuseTexture, f_tex);\n"
 "   worldNormal = vec4(normalize(f_worldNormal), 0.0f);\n"
-"   worldPosition = vec4(f_worldPosition, cameraDepth);\n"
+"   worldPosition = vec4(f_worldPosition, f_cameraDepth);\n"
 "   \n"
-"   gl_FragDepth = (log(C*cameraDepth + E) / log(C*D + E));\n"
+"   gl_FragDepth = (log(C*f_cameraDepth + E) / log(C*D + E));\n"
 "}\n\0";
 }
 

@@ -35,6 +35,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/draw/icontexture2d.h>
 #include <tiny/draw/iconhorde.h>
 #include <tiny/draw/lighthorde.h>
+#include <tiny/draw/terrain.h>
 
 using namespace std;
 using namespace tiny;
@@ -47,6 +48,8 @@ draw::WorldEffectRenderer *effectRenderer = 0;
 
 draw::StaticMesh *testMesh = 0;
 draw::RGBATexture2D *testDiffuseTexture = 0;
+
+draw::Terrain *terrain = 0;
 
 std::vector<draw::PointLightInstance> pointLightInstances;
 draw::PointLightHorde *pointLights = 0;
@@ -143,6 +146,8 @@ void setup()
     testDiffuseTexture = new draw::RGBATexture2D(img::io::readImage(DATA_DIRECTORY + "img/default.png"));
     testMesh->setDiffuseTexture(*testDiffuseTexture);
     
+    terrain = new draw::Terrain(4, 4);
+    
     const float lightSpacing = 4.0f;
     
     for (int i = -4; i <= 4; ++i)
@@ -181,6 +186,7 @@ void setup()
     effectRenderer->setPositionsSource(*worldPositionTexture);
     
     worldRenderer->addRenderable(testMesh);
+    worldRenderer->addRenderable(terrain);
     
     effectRenderer->addRenderable(fogEffect, false, false);
     effectRenderer->addRenderable(pointLights, false, false, draw::BlendAdd);
@@ -204,6 +210,7 @@ void cleanup()
     
     delete pointLights;
     
+    delete terrain;
     delete testMesh;
     delete testDiffuseTexture;
 }

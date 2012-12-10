@@ -31,7 +31,7 @@ namespace draw
 class Terrain : public Renderable
 {
     public:
-        Terrain();
+        Terrain(const int &, const int &);
         ~Terrain();
         
         template <typename TextureType>
@@ -43,15 +43,18 @@ class Terrain : public Renderable
         std::string getVertexShaderCode() const;
         std::string getFragmentShaderCode() const;
         
+        void setCameraPosition(const vec3 &);
+        
     protected:
         void render(const ShaderProgram &) const;
         
     private:
         int minLevel;
-        int maxLevel;
+        const int maxLevel;
+        const size_t blockSize;
+        const size_t superBlockSize;
         vec3 scale;
         ivec2 bitShifts;
-        ivec2 heightMapSize;
         std::vector<ivec2> blockTranslations;
         
         detail::TerrainBlock smallBlock;

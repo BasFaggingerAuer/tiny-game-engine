@@ -31,13 +31,25 @@ namespace detail
 
 struct TerrainBlockInstance
 {
+    TerrainBlockInstance() :
+        scaleAndTranslate(vec4(1.0f, 1.0f, 0.0f, 0.0f))
+    {
+
+    }
+
+    TerrainBlockInstance(const vec4 &a_scaleAndTranslate) :
+        scaleAndTranslate(a_scaleAndTranslate)
+    {
+
+    }
+    
     vec4 scaleAndTranslate;
 };
 
 class TerrainBlockVertexBufferInterpreter : public VertexBufferInterpreter<vec2>
 {
     public:
-        TerrainBlockVertexBufferInterpreter(const size_t &);
+        TerrainBlockVertexBufferInterpreter(const size_t &, const size_t &);
         ~TerrainBlockVertexBufferInterpreter();
 };
 
@@ -51,14 +63,14 @@ class TerrainBlockInstanceBufferInterpreter : public VertexBufferInterpreter<Ter
 class TerrainBlockIndexBuffer : public IndexBuffer<unsigned int>
 {
     public:
-        TerrainBlockIndexBuffer(const size_t &);
+        TerrainBlockIndexBuffer(const size_t &, const size_t &);
         ~TerrainBlockIndexBuffer();
 };
 
 class TerrainBlock
 {
     public:
-        TerrainBlock(const size_t &, const size_t &);
+        TerrainBlock(const size_t &, const size_t &, const size_t &);
         ~TerrainBlock();
         
         TerrainBlockInstance & operator [] (const size_t &);
