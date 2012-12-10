@@ -75,6 +75,19 @@ class ScreenIconHorde : public Renderable
             uniformMap.setTexture(texture, "iconTexture");
         }
         
+        template <typename Iterator>
+        void setIcons(Iterator first, Iterator last)
+        {
+            nrIcons = 0;
+            
+            for (Iterator i = first; i != last && nrIcons < maxNrIcons; ++i)
+            {
+                icons.instances[nrIcons++] = *i;
+            }
+            
+            icons.instances.sendToDevice();
+        }
+        
         void setText(const float &, const float &, const float &, const float &, const std::string &, const IconTexture2D &);
         
     protected:

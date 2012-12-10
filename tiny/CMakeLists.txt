@@ -29,6 +29,7 @@ add_library(tinygame
             draw/icontexture2d.cpp
             draw/iconhorde.cpp
             draw/lighthorde.cpp
+            draw/terrain.cpp
             os/application.cpp
             os/sdlapplication.cpp)
 

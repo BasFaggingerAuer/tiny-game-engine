@@ -64,14 +64,57 @@ struct AttributePointerData
 
 /*! \p VertexBufferInterpreter : provides interpretation of vertex buffer data to OpenGL.
  */
-class VertexBufferInterpreter
+template <typename T>
+class VertexBufferInterpreter : public VertexBuffer
 {
     public:
-        VertexBufferInterpreter();
-        ~VertexBufferInterpreter();
+        VertexBufferInterpreter(const size_t &a_size) :
+            VertexBuffer<T>(a_size)
+        {
+
+        }
         
-        void bind(const ShaderProgram &, const size_t & = 0) const;
-        void unbind(const ShaderProgram &) const;
+        ~VertexBufferInterpreter()
+        {
+
+        }
+        
+        void VertexBufferInterpreter::bind(const ShaderProgram &program, const size_t &divisor = 0) const
+        {
+            for (std::list<detail::AttributePointerData>::const_iterator i = attributes.begin(); i != attributes.end(); ++i)
+            {
+                const GLint attributeLocation = glGetAttribLocation(program.getIndex(), i->name.c_str());
+                
+                if (attributeLocation < 0)
+                {
+                    std::cerr << "Attribute '" << i->name << "' could not be found in the shader program!" << std::endl;
+                }
+                else
+                {
+                    GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, i->bufferIndex));
+                    GL_CHECK(glEnableVertexAttribArray(attributeLocation));
+                    GL_CHECK(glVertexAttribPointer(attributeLocation, i->numComponents, i->type, GL_FALSE, i->stride, (GLvoid *)(i->offset)));
+                    
+                    //Enable instanced data if required.
+                    if (divisor > 0) GL_CHECK(glVertexAttribDivisorARB(attributeLocation, divisor));
+                }
+            }
+            
+            GL_CHECK(glBindBuffer(GL_ARRAY_BUFFER, 0));
+        }
+
+        void VertexBufferInterpreter::unbind(const ShaderProgram &program) const
+        {
+            for (std::list<detail::AttributePointerData>::const_iterator i = attributes.begin(); i != attributes.end(); ++i)
+            {
+                const GLint attributeLocation = glGetAttribLocation(program.getIndex(), i->name.c_str());
+                
+                if (attributeLocation >= 0)
+                {
+                    GL_CHECK(glDisableVertexAttribArray(attributeLocation));
+                }
+            }
+        }
         
     protected:
         template<typename T> void addFloatAttribute(const VertexBuffer<T> &buffer, const size_t &offset, const std::string &name) {addAttribute(buffer.getIndex(), 1, GL_FLOAT, sizeof(T), offset, name);}
@@ -80,7 +123,23 @@ class VertexBufferInterpreter
         template<typename T> void addVec4Attribute(const VertexBuffer<T> &buffer, const size_t &offset, const std::string &name) {addAttribute(buffer.getIndex(), 4, GL_FLOAT, sizeof(T), offset, name);}
         
     private:
-        void addAttribute(const GLuint &, const size_t &, const GLenum &, const size_t &, const size_t &, const std::string &);
+        void addAttribute(const GLuint &bufferIndex, const size_t &numComponents, const GLenum &type, const size_t &stride, const size_t &offset, const std::string &name)
+        {
+            bool found = false;
+            
+            for (std::list<detail::AttributePointerData>::const_iterator i = attributes.begin(); i != attributes.end() && !found; ++i)
+            {
+                if (i->name == name) found = true;
+            }
+            
+            if (found || name.empty())
+            {
+                std::cerr << "Attribute '" << name << "' already exists!" << std::endl;
+                return;
+            }
+            
+            attributes.push_back(detail::AttributePointerData(name, bufferIndex, numComponents, type, stride, offset));
+        }
         
         std::list<detail::AttributePointerData> attributes;
 };
