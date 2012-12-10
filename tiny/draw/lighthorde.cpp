@@ -20,11 +20,10 @@ using namespace tiny;
 using namespace tiny::draw;
 
 PointLightVertexBufferInterpreter::PointLightVertexBufferInterpreter(const size_t &nrLights) :
-    VertexBufferInterpreter(),
-    instances(nrLights)
+    VertexBufferInterpreter<PointLightInstance>(nrLights)
 {
-    addVec4Attribute(instances, 0*sizeof(float), "v_position");
-    addVec4Attribute(instances, 4*sizeof(float), "v_colour");
+    addVec4Attribute(0*sizeof(float), "v_position");
+    addVec4Attribute(4*sizeof(float), "v_colour");
 }
 
 PointLightVertexBufferInterpreter::~PointLightVertexBufferInterpreter()

@@ -19,7 +19,6 @@ add_library(tinygame
             draw/shader.cpp
             draw/shaderprogram.cpp
             draw/texture.cpp
-            draw/vertexbufferinterpreter.cpp
             draw/computetexture.cpp
             draw/screensquare.cpp
             draw/camerarenderer.cpp

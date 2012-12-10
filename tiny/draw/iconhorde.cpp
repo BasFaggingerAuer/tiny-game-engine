@@ -20,12 +20,11 @@ using namespace tiny;
 using namespace tiny::draw;
 
 ScreenIconVertexBufferInterpreter::ScreenIconVertexBufferInterpreter(const size_t &nrIcons) :
-    VertexBufferInterpreter(),
-    instances(nrIcons)
+    VertexBufferInterpreter<ScreenIconInstance>(nrIcons)
 {
-    addVec4Attribute(instances, 0*sizeof(float), "v_positionAndSize");
-    addVec4Attribute(instances, 4*sizeof(float), "v_icon");
-    addVec4Attribute(instances, 8*sizeof(float), "v_colour");
+    addVec4Attribute(0*sizeof(float), "v_positionAndSize");
+    addVec4Attribute(4*sizeof(float), "v_icon");
+    addVec4Attribute(8*sizeof(float), "v_colour");
 }
 
 ScreenIconVertexBufferInterpreter::~ScreenIconVertexBufferInterpreter()
@@ -184,7 +183,7 @@ void ScreenIconHorde::setText(const float &x, const float &y, const float &size,
                     
                     pos.w = sizeScale*icon.w;
                     pos.z = pos.w*(icon.z/icon.w)/aspectRatio;
-                    icons.instances[nrIcons++] = ScreenIconInstance(pos, icon, intensity*colour);
+                    icons[nrIcons++] = ScreenIconInstance(pos, icon, intensity*colour);
                     pos.x += pos.z;
                 }
             }
@@ -200,12 +199,12 @@ void ScreenIconHorde::setText(const float &x, const float &y, const float &size,
             
             pos.w = sizeScale*icon.w;
             pos.z = pos.w*(icon.z/icon.w)/aspectRatio;
-            icons.instances[nrIcons++] = ScreenIconInstance(pos, icon, intensity*colour);
+            icons[nrIcons++] = ScreenIconInstance(pos, icon, intensity*colour);
             pos.x += pos.z;
         }
     }
     
     //Update buffer.
-    icons.instances.sendToDevice();
+    icons.sendToDevice();
 }
 

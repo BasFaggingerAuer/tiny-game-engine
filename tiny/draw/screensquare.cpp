@@ -21,8 +21,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using namespace tiny::draw;
 
-ScreenFillingSquareVertexBuffer::ScreenFillingSquareVertexBuffer() :
-    VertexBuffer<vec2>(4)
+ScreenFillingSquareVertexBufferInterpreter::ScreenFillingSquareVertexBufferInterpreter() :
+    VertexBufferInterpreter<vec2>(4)
 {
     hostData[0] = vec2(-1.0f, 1.0f);
     hostData[1] = vec2(-1.0f,-1.0f);
@@ -30,18 +30,8 @@ ScreenFillingSquareVertexBuffer::ScreenFillingSquareVertexBuffer() :
     hostData[3] = vec2( 1.0f,-1.0f);
     
     sendToDevice();
-}
-
-ScreenFillingSquareVertexBuffer::~ScreenFillingSquareVertexBuffer()
-{
-
-}
-
-ScreenFillingSquareVertexBufferInterpreter::ScreenFillingSquareVertexBufferInterpreter() :
-    VertexBufferInterpreter(),
-    vertices()
-{
-    addVec2Attribute(vertices, 0*sizeof(float), "vertex");
+    
+    addVec2Attribute(0*sizeof(float), "vertex");
 }
 
 ScreenFillingSquareVertexBufferInterpreter::~ScreenFillingSquareVertexBufferInterpreter()

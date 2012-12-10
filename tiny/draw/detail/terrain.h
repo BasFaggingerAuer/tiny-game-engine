@@ -34,24 +34,18 @@ struct TerrainBlockInstance
     vec4 scaleAndTranslate;
 };
 
-class TerrainBlockVertexBuffer : public VertexBuffer<vec2>
+class TerrainBlockVertexBufferInterpreter : public VertexBufferInterpreter<vec2>
 {
     public:
-        TerrainBlockVertexBuffer(const size_t &);
-        ~TerrainBlockVertexBuffer();
+        TerrainBlockVertexBufferInterpreter(const size_t &);
+        ~TerrainBlockVertexBufferInterpreter();
 };
 
-class TerrainBlockVertexBufferInterpreter : public VertexBufferInterpreter
+class TerrainBlockInstanceBufferInterpreter : public VertexBufferInterpreter<TerrainBlockInstance>
 {
     public:
-        TerrainBlockVertexBufferInterpreter(const size_t &, const size_t &);
-        ~TerrainBlockVertexBufferInterpreter();
-        
-    private:
-        friend class TerrainBlock;
-        
-        TerrainBlockVertexBuffer vertices;
-        VertexBuffer<TerrainBlockInstance> instances;
+        TerrainBlockInstanceBufferInterpreter(const size_t &);
+        ~TerrainBlockInstanceBufferInterpreter();
 };
 
 class TerrainBlockIndexBuffer : public IndexBuffer<unsigned int>
@@ -74,32 +68,8 @@ class TerrainBlock
         void unbind(const ShaderProgram &) const;
         
         TerrainBlockVertexBufferInterpreter vertices;
+        TerrainBlockInstanceBufferInterpreter instances;
         TerrainBlockIndexBuffer indices;
-};
-
-class TerrainStitchVertexBuffer : public VertexBuffer<vec2>
-{
-    public:
-        TerrainStitchVertexBuffer(const size_t &);
-        ~TerrainStitchVertexBuffer();
-};
-
-class TerrainStitchIndexBuffer : public IndexBuffer<unsigned int>
-{
-    public:
-        TerrainStitchIndexBuffer(const size_t &);
-        ~TerrainStitchIndexBuffer();
-};
-
-class TerrainStitchVertexBufferInterpreter : public VertexBufferInterpreter
-{
-    public:
-        TerrainStitchVertexBufferInterpreter(const size_t &, const size_t &);
-        ~TerrainStitchVertexBufferInterpreter();
-        
-    private:
-        TerrainStitchVertexBuffer vertices;
-        VertexBuffer<TerrainBlockInstance> instances;
 };
 
 }

@@ -36,21 +36,11 @@ namespace tiny
 namespace draw
 {
 
-class ScreenFillingSquareVertexBuffer : public VertexBuffer<vec2>
-{
-    public:
-        ScreenFillingSquareVertexBuffer();
-        ~ScreenFillingSquareVertexBuffer();
-};
-
-class ScreenFillingSquareVertexBufferInterpreter : public VertexBufferInterpreter
+class ScreenFillingSquareVertexBufferInterpreter : public VertexBufferInterpreter<vec2>
 {
     public:
         ScreenFillingSquareVertexBufferInterpreter();
         ~ScreenFillingSquareVertexBufferInterpreter();
-        
-    private:
-        ScreenFillingSquareVertexBuffer vertices;
 };
 
 class ScreenFillingSquare : public Renderable

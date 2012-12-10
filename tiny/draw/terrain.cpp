@@ -22,8 +22,8 @@ using namespace tiny;
 using namespace tiny::draw;
 using namespace tiny::draw::detail;
 
-TerrainBlockVertexBuffer::TerrainBlockVertexBuffer(const size_t &n) :
-    VertexBuffer<vec2>(n*n)
+TerrainBlockVertexBufferInterpreter::TerrainBlockVertexBufferInterpreter(const size_t &n) :
+    VertexBufferInterpreter<vec2>(n*n)
 {
     for (size_t i = 0; i < n; ++i)
     {
@@ -34,11 +34,24 @@ TerrainBlockVertexBuffer::TerrainBlockVertexBuffer(const size_t &n) :
     }
     
     sendToDevice();
+    
+    addVec2Attribute(0, "v_vertex");
 }
 
-TerrainBlockVertexBuffer::~TerrainBlockVertexBuffer()
+TerrainBlockVertexBufferInterpreter::~TerrainBlockVertexBufferInterpreter()
 {
     
+}
+
+TerrainBlockInstanceBufferInterpreter::TerrainBlockInstanceBufferInterpreter(const size_t &maxNrInstances) :
+    VertexBufferInterpreter<TerrainBlockInstance>(maxNrInstances)
+{
+    addVec4Attribute(0*sizeof(float), "v_scaleAndTranslate");
+}
+
+TerrainBlockInstanceBufferInterpreter::~TerrainBlockInstanceBufferInterpreter()
+{
+
 }
 
 TerrainBlockIndexBuffer::TerrainBlockIndexBuffer(const size_t &n) :
@@ -60,21 +73,9 @@ TerrainBlockIndexBuffer::TerrainBlockIndexBuffer(const size_t &n) :
     sendToDevice();
 }
 
-TerrainBlockVertexBufferInterpreter::TerrainBlockVertexBufferInterpreter(const size_t &n, const size_t &maxNrInstances) :
-    VertexBufferInterpreter(),
-    vertices(n),
-    instances(maxNrInstances)
-{
-    addVec4Attribute(instances, 0*sizeof(float), "scaleAndTranslate");
-}
-
-TerrainBlockVertexBufferInterpreter::~TerrainBlockVertexBufferInterpreter()
-{
-
-}
-
 TerrainBlock::TerrainBlock(const size_t &n, const size_t &maxNrInstances) :
-    vertices(n, maxNrInstances),
+    vertices(n),
+    instances(maxNrInstances),
     indices(n)
 {
 
@@ -87,22 +88,25 @@ TerrainBlock::~TerrainBlock()
 
 TerrainBlockInstance &TerrainBlock::operator [] (const size_t &index)
 {
-    return vertices.instances[index];
+    return instances[index];
 }
 
 const TerrainBlockInstance &TerrainBlock::operator [] (const size_t &index) const
 {
-    return vertices.instances[index];
+    return instances[index];
 }
 
 void TerrainBlock::bind(const ShaderProgram &program) const
 {
-    
+    vertices.bind(program);
+    instances.bind(program, 1);
+    indices.bind(); 
 }
 
 void TerrainBlock::unbind(const ShaderProgram &program) const
 {
-
+    indices.unbind();
+    instances.unbind(program);
+    vertices.unbind(program);
 }
-
 

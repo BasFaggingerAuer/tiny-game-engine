@@ -54,21 +54,11 @@ struct ScreenVertex
     vec2 tex;
 };
 
-class SquareVertexBuffer : public VertexBuffer<ScreenVertex>
-{
-    public:
-        SquareVertexBuffer();
-        ~SquareVertexBuffer();
-};
-
-class SquareVertexBufferInterpreter : public VertexBufferInterpreter
+class SquareVertexBufferInterpreter : public VertexBufferInterpreter<ScreenVertex>
 {
     public:
         SquareVertexBufferInterpreter();
         ~SquareVertexBufferInterpreter();
-        
-    private:
-        SquareVertexBuffer vertices;
 };
 
 class ComputeTextureInput : public Renderable

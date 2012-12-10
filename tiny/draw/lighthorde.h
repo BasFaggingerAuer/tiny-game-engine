@@ -47,13 +47,11 @@ struct PointLightInstance
     vec4 colour;
 };
 
-class PointLightVertexBufferInterpreter : public VertexBufferInterpreter
+class PointLightVertexBufferInterpreter : public VertexBufferInterpreter<PointLightInstance>
 {
     public:
         PointLightVertexBufferInterpreter(const size_t &);
         ~PointLightVertexBufferInterpreter();
-        
-        VertexBuffer<PointLightInstance> instances;
 };
 
 class PointLightHorde : public Renderable
@@ -73,10 +71,10 @@ class PointLightHorde : public Renderable
             
             for (Iterator i = first; i != last && nrLights < maxNrLights; ++i)
             {
-                lights.instances[nrLights++] = *i;
+                lights[nrLights++] = *i;
             }
             
-            lights.instances.sendToDevice();
+            lights.sendToDevice();
         }
         
     protected:

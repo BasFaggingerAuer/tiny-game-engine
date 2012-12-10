@@ -19,12 +19,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using namespace tiny::draw;
 
 StaticMeshVertexBufferInterpreter::StaticMeshVertexBufferInterpreter(const tiny::mesh::StaticMesh &mesh) :
-    VertexBufferInterpreter(),
-    vertices(mesh.vertices.begin(), mesh.vertices.end())
+    VertexBufferInterpreter<tiny::mesh::StaticMeshVertex>(mesh.vertices.begin(), mesh.vertices.end())
 {
-    addVec2Attribute(vertices, 0*sizeof(float), "textureCoordinate");
-    addVec3Attribute(vertices, 2*sizeof(float), "normal");
-    addVec3Attribute(vertices, 5*sizeof(float), "position");
+    addVec2Attribute(0*sizeof(float), "textureCoordinate");
+    addVec3Attribute(2*sizeof(float), "normal");
+    addVec3Attribute(5*sizeof(float), "position");
 }
 
 StaticMeshVertexBufferInterpreter::~StaticMeshVertexBufferInterpreter()

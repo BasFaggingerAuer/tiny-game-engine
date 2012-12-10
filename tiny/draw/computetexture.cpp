@@ -21,28 +21,17 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using namespace tiny::draw;
 
-SquareVertexBuffer::SquareVertexBuffer() :
-    VertexBuffer<ScreenVertex>(4)
+SquareVertexBufferInterpreter::SquareVertexBufferInterpreter() :
+    VertexBufferInterpreter<ScreenVertex>(4)
 {
     hostData[0] = ScreenVertex(vec2(-1.0f, 1.0f), vec2(0.0f, 1.0f));
     hostData[1] = ScreenVertex(vec2(-1.0f,-1.0f), vec2(0.0f, 0.0f));
     hostData[2] = ScreenVertex(vec2( 1.0f, 1.0f), vec2(1.0f, 1.0f));
     hostData[3] = ScreenVertex(vec2( 1.0f,-1.0f), vec2(1.0f, 0.0f));
-    
     sendToDevice();
-}
-
-SquareVertexBuffer::~SquareVertexBuffer()
-{
-
-}
-
-SquareVertexBufferInterpreter::SquareVertexBufferInterpreter() :
-    VertexBufferInterpreter(),
-    vertices()
-{
-    addVec2Attribute(vertices, 0*sizeof(float), "vertex");
-    addVec2Attribute(vertices, 2*sizeof(float), "textureCoordinate");
+    
+    addVec2Attribute(0*sizeof(float), "vertex");
+    addVec2Attribute(2*sizeof(float), "textureCoordinate");
 }
 
 SquareVertexBufferInterpreter::~SquareVertexBufferInterpreter()

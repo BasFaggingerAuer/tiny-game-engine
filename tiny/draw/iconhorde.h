@@ -50,13 +50,11 @@ struct ScreenIconInstance
     vec4 colour;
 };
 
-class ScreenIconVertexBufferInterpreter : public VertexBufferInterpreter
+class ScreenIconVertexBufferInterpreter : public VertexBufferInterpreter<ScreenIconInstance>
 {
     public:
         ScreenIconVertexBufferInterpreter(const size_t &);
         ~ScreenIconVertexBufferInterpreter();
-        
-        VertexBuffer<ScreenIconInstance> instances;
 };
 
 class ScreenIconHorde : public Renderable
@@ -82,10 +80,10 @@ class ScreenIconHorde : public Renderable
             
             for (Iterator i = first; i != last && nrIcons < maxNrIcons; ++i)
             {
-                icons.instances[nrIcons++] = *i;
+                icons[nrIcons++] = *i;
             }
             
-            icons.instances.sendToDevice();
+            icons.sendToDevice();
         }
         
         void setText(const float &, const float &, const float &, const float &, const std::string &, const IconTexture2D &);

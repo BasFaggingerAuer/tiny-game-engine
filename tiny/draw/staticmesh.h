@@ -35,14 +35,11 @@ namespace tiny
 namespace draw
 {
 
-class StaticMeshVertexBufferInterpreter : public VertexBufferInterpreter
+class StaticMeshVertexBufferInterpreter : public VertexBufferInterpreter<tiny::mesh::StaticMeshVertex>
 {
     public:
         StaticMeshVertexBufferInterpreter(const tiny::mesh::StaticMesh &);
         ~StaticMeshVertexBufferInterpreter();
-        
-    private:
-        VertexBuffer<tiny::mesh::StaticMeshVertex> vertices;
 };
 
 class StaticMesh : public Renderable
