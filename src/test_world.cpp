@@ -146,7 +146,7 @@ void setup()
     testDiffuseTexture = new draw::RGBATexture2D(img::io::readImage(DATA_DIRECTORY + "img/default.png"));
     testMesh->setDiffuseTexture(*testDiffuseTexture);
     
-    terrain = new draw::Terrain(4, 4);
+    terrain = new draw::Terrain(4, 8);
     
     const float lightSpacing = 4.0f;
     
@@ -235,6 +235,7 @@ void update(const double &dt)
     
     cameraPosition += ds*normalize(vel);
     
+    terrain->setCameraPosition(cameraPosition);
     worldRenderer->setCamera(cameraPosition, cameraOrientation);
     effectRenderer->setCamera(cameraPosition, cameraOrientation);
     

@@ -48,18 +48,18 @@ struct TerrainBlockInstance
     vec4 scaleAndTranslate;
 };
 
-class TerrainBlockVertexBufferInterpreter : public VertexBufferInterpreter<vec2>
-{
-    public:
-        TerrainBlockVertexBufferInterpreter(const size_t &, const size_t &);
-        ~TerrainBlockVertexBufferInterpreter();
-};
-
 class TerrainBlockInstanceBufferInterpreter : public VertexBufferInterpreter<TerrainBlockInstance>
 {
     public:
         TerrainBlockInstanceBufferInterpreter(const size_t &);
         ~TerrainBlockInstanceBufferInterpreter();
+};
+
+class TerrainBlockVertexBufferInterpreter : public VertexBufferInterpreter<vec2>
+{
+    public:
+        TerrainBlockVertexBufferInterpreter(const size_t &, const size_t &);
+        ~TerrainBlockVertexBufferInterpreter();
 };
 
 class TerrainBlockIndexBuffer : public IndexBuffer<unsigned int>
@@ -77,6 +77,7 @@ class TerrainBlock
         
         TerrainBlockInstance & operator [] (const size_t &);
         const TerrainBlockInstance & operator [] (const size_t &) const;
+        void sendToDevice() const;
         
         void bind(const ShaderProgram &) const;
         void unbind(const ShaderProgram &) const;
@@ -84,6 +85,38 @@ class TerrainBlock
         TerrainBlockVertexBufferInterpreter vertices;
         TerrainBlockInstanceBufferInterpreter instances;
         TerrainBlockIndexBuffer indices;
+};
+
+class TerrainStitchVertexBufferInterpreter : public VertexBufferInterpreter<vec2>
+{
+    public:
+        TerrainStitchVertexBufferInterpreter(const size_t &);
+        ~TerrainStitchVertexBufferInterpreter();
+};
+
+class TerrainStitchIndexBuffer : public IndexBuffer<unsigned int>
+{
+    public:
+        TerrainStitchIndexBuffer(const size_t &);
+        ~TerrainStitchIndexBuffer();
+};
+
+class TerrainStitch
+{
+    public:
+        TerrainStitch(const size_t &, const size_t &);
+        ~TerrainStitch();
+        
+        TerrainBlockInstance & operator [] (const size_t &);
+        const TerrainBlockInstance & operator [] (const size_t &) const;
+        void sendToDevice() const;
+        
+        void bind(const ShaderProgram &) const;
+        void unbind(const ShaderProgram &) const;
+        
+        TerrainStitchVertexBufferInterpreter vertices;
+        TerrainBlockInstanceBufferInterpreter instances;
+        TerrainStitchIndexBuffer indices;
 };
 
 }
@@ -109,7 +142,7 @@ class Terrain : public Renderable
         void render(const ShaderProgram &) const;
         
     private:
-        void updateBlockTranslations(const vec2 &);
+        bool updateBlockTranslations(const vec2 &);
         
         int minLevel;
         const int maxLevel;
@@ -125,6 +158,13 @@ class Terrain : public Renderable
         detail::TerrainBlock crossBlockY;
         detail::TerrainBlock ellBlockX;
         detail::TerrainBlock ellBlockY;
+        detail::TerrainStitch stitch;
+        
+        size_t nrSmallBlocks;
+        size_t nrCrossBlocks;
+        size_t nrLargeBlocks;
+        size_t nrEllBlocks;
+        size_t nrStitch;
 };
 
 }

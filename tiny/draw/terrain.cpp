@@ -22,6 +22,17 @@ using namespace tiny;
 using namespace tiny::draw;
 using namespace tiny::draw::detail;
 
+TerrainBlockInstanceBufferInterpreter::TerrainBlockInstanceBufferInterpreter(const size_t &maxNrInstances) :
+    VertexBufferInterpreter<TerrainBlockInstance>(maxNrInstances)
+{
+    addVec4Attribute(0*sizeof(float), "v_scaleAndTranslate");
+}
+
+TerrainBlockInstanceBufferInterpreter::~TerrainBlockInstanceBufferInterpreter()
+{
+
+}
+
 TerrainBlockVertexBufferInterpreter::TerrainBlockVertexBufferInterpreter(const size_t &width, const size_t &height) :
     VertexBufferInterpreter<vec2>(width*height)
 {
@@ -41,17 +52,6 @@ TerrainBlockVertexBufferInterpreter::TerrainBlockVertexBufferInterpreter(const s
 TerrainBlockVertexBufferInterpreter::~TerrainBlockVertexBufferInterpreter()
 {
     
-}
-
-TerrainBlockInstanceBufferInterpreter::TerrainBlockInstanceBufferInterpreter(const size_t &maxNrInstances) :
-    VertexBufferInterpreter<TerrainBlockInstance>(maxNrInstances)
-{
-    addVec4Attribute(0*sizeof(float), "v_scaleAndTranslate");
-}
-
-TerrainBlockInstanceBufferInterpreter::~TerrainBlockInstanceBufferInterpreter()
-{
-
 }
 
 TerrainBlockIndexBuffer::TerrainBlockIndexBuffer(const size_t &width, const size_t &height) :
@@ -101,6 +101,11 @@ const TerrainBlockInstance &TerrainBlock::operator [] (const size_t &index) cons
     return instances[index];
 }
 
+void TerrainBlock::sendToDevice() const
+{
+    instances.sendToDevice();
+}
+
 void TerrainBlock::bind(const ShaderProgram &program) const
 {
     vertices.bind(program);
@@ -108,6 +113,109 @@ void TerrainBlock::bind(const ShaderProgram &program) const
 }
 
 void TerrainBlock::unbind(const ShaderProgram &program) const
+{
+    instances.unbind(program);
+    vertices.unbind(program);
+}
+
+TerrainStitchVertexBufferInterpreter::TerrainStitchVertexBufferInterpreter(const size_t &width) :
+    VertexBufferInterpreter<vec2>(4*3*(width - 1))
+{
+    size_t count = 0;
+    
+    for (size_t i = 0; i < width;       ++i) hostData[count++] = vec2(2*i, 0);
+    for (size_t i = 0; i < 2*width - 3; ++i) hostData[count++] = vec2(1 + i, 1);
+    
+    for (size_t i = 0; i < width;       ++i) hostData[count++] = vec2(0, 2*(width - 1 - i));
+    for (size_t i = 0; i < 2*width - 3; ++i) hostData[count++] = vec2(1, 1 + 2*width - 4 - i);
+    
+    for (size_t i = 0; i < width;       ++i) hostData[count++] = vec2(2*(width - 1 - i), 2*width - 2);
+    for (size_t i = 0; i < 2*width - 3; ++i) hostData[count++] = vec2(1 + 2*width - 4 - i, 2*width - 3);
+    
+    for (size_t i = 0; i < width;       ++i) hostData[count++] = vec2(2*width - 2, 2*i);
+    for (size_t i = 0; i < 2*width - 3; ++i) hostData[count++] = vec2(2*width - 3, 1 + i);
+    
+    sendToDevice();
+    
+    addVec2Attribute(0, "v_vertex");
+}
+
+TerrainStitchVertexBufferInterpreter::~TerrainStitchVertexBufferInterpreter()
+{
+    
+}
+
+TerrainStitchIndexBuffer::TerrainStitchIndexBuffer(const size_t &width) :
+    IndexBuffer<unsigned int>(4*(8 + 4*(width - 3)))
+{
+    size_t count = 0;
+    
+    for (size_t i = 0; i < 4; ++i)
+    {
+        const size_t offset = 3*i*(width - 1);
+        
+        hostData[count++] = offset;
+        hostData[count++] = offset + width;
+        
+        for (size_t j = 0; j < width - 3; ++j)
+        {
+            hostData[count++] = offset + 1 + j;
+            hostData[count++] = offset + width + 1 + 2*j;
+            hostData[count++] = offset + 1 + j;
+            hostData[count++] = offset + width + 2 + 2*j;
+        }
+        
+        hostData[count++] = offset + width - 2;
+        hostData[count++] = offset + 3*width - 5;
+        hostData[count++] = offset + width - 2;
+        hostData[count++] = offset + 3*width - 4;
+        hostData[count++] = offset + width - 1;
+        hostData[count++] = UINT_MAX;
+    }
+    
+    sendToDevice();
+}
+
+TerrainStitchIndexBuffer::~TerrainStitchIndexBuffer()
+{
+
+}
+
+TerrainStitch::TerrainStitch(const size_t &size, const size_t &maxNrInstances) :
+    vertices(size),
+    instances(maxNrInstances),
+    indices(size)
+{
+
+}
+
+TerrainStitch::~TerrainStitch()
+{
+
+}
+
+TerrainBlockInstance &TerrainStitch::operator [] (const size_t &index)
+{
+    return instances[index];
+}
+
+const TerrainBlockInstance &TerrainStitch::operator [] (const size_t &index) const
+{
+    return instances[index];
+}
+
+void TerrainStitch::sendToDevice() const
+{
+    instances.sendToDevice();
+}
+
+void TerrainStitch::bind(const ShaderProgram &program) const
+{
+    vertices.bind(program);
+    instances.bind(program, 1);
+}
+
+void TerrainStitch::unbind(const ShaderProgram &program) const
 {
     instances.unbind(program);
     vertices.unbind(program);
@@ -125,9 +233,15 @@ Terrain::Terrain(const int &a_shiftBlockSize, const int &a_maxLevel) :
     smallBlock(blockSize, blockSize, 12*maxLevel),
     largeBlock(2*blockSize + 3, 2*blockSize + 3, maxLevel),
     crossBlockX(blockSize, 5, 2*maxLevel),
-    crossBlockY(blockSize, 5, 2*maxLevel),
+    crossBlockY(5, blockSize, 2*maxLevel),
     ellBlockX(2*blockSize + 3, 2, maxLevel),
-    ellBlockY(2, 2*blockSize + 3, maxLevel)
+    ellBlockY(2, 2*blockSize + 3, maxLevel),
+    stitch(2*blockSize + 2, maxLevel),
+    nrSmallBlocks(0),
+    nrCrossBlocks(0),
+    nrLargeBlocks(0),
+    nrEllBlocks(0),
+    nrStitch(0)
 {
     //Setup initial blockTranslations.
     blockTranslations[maxLevel - 1] = ivec2(-(superBlockSize << (maxLevel - 2)));
@@ -161,6 +275,7 @@ std::string Terrain::getVertexShaderCode() const
 "void main(void)\n"
 "{\n"
 "   f_worldPosition = vec3(v_scaleAndTranslate.xy*v_vertex + v_scaleAndTranslate.zw, 0.0f).xzy;\n"
+"   f_worldPosition.y = 16.0f*sin(0.1f*f_worldPosition.x)*sin(0.1f*f_worldPosition.z);\n"
 "   gl_Position = worldToScreen*vec4(f_worldPosition, 1.0f);\n"
 "   f_cameraDepth = gl_Position.z;\n"
 "}\n\0");
@@ -194,7 +309,7 @@ std::string Terrain::getFragmentShaderCode() const
 "}\n\0");
 }
 
-void Terrain::updateBlockTranslations(const vec2 &viewer)
+bool Terrain::updateBlockTranslations(const vec2 &viewer)
 {
     ivec2 dir = ivec2(0, 0);
     
@@ -233,7 +348,7 @@ void Terrain::updateBlockTranslations(const vec2 &viewer)
         }
         
         //If we are in the centre, do not update.
-        if (!outOfBounds) return;
+        if (!outOfBounds) return false;
         
         minLevel = i + 1;
     }
@@ -306,22 +421,111 @@ void Terrain::updateBlockTranslations(const vec2 &viewer)
         
         andMask >>= 1;
     }
+    
+    return true;
 }
 
 void Terrain::setCameraPosition(const vec3 &a_position)
 {
     //Updates shifts and blockTranslations to re-centre the map at the player's position.
-    updateBlockTranslations(vec2(a_position.x/scale.x, a_position.z/scale.z));
+    //Do not update display lists if the camera's position has not changed.
+    if (!updateBlockTranslations(vec2(a_position.x/scale.x, a_position.z/scale.z))) return;
     
     //Create new instance buffers.
-    smallBlock.instances[0] = TerrainBlockInstance(vec4(1.0f, 1.0f, 0.0f, 0.0f));
-    smallBlock.instances.sendToDevice();
+    nrSmallBlocks = 0;
+    nrCrossBlocks = 0;
+    nrLargeBlocks = 0;
+    nrEllBlocks = 0;
+    nrStitch = 0;
+    
+    for (int i = minLevel; i < maxLevel; ++i)
+    {
+        //Calculate scale factor and set up translations.
+        const vec2 r = (float)(1 << i)*vec2(scale.x, scale.z);
+        const vec2 s = (float)(4 << i)*vec2(scale.x, scale.z);
+        const vec2 bs = (float)((blockSize - 1) << i)*vec2(scale.x, scale.z);
+        const vec2 t = vec2(blockTranslations[i].x*scale.x, blockTranslations[i].y*scale.z);
+        
+        //Draw blocks.
+        smallBlock[nrSmallBlocks++] = TerrainBlockInstance(vec4(r.x, r.y, t.x + s.x + 3.0f*bs.x, t.y + s.y + 2.0f*bs.y));
+        smallBlock[nrSmallBlocks++] = TerrainBlockInstance(vec4(r.x, r.y, t.x + s.x + 3.0f*bs.x, t.y + s.y + 3.0f*bs.y));
+        smallBlock[nrSmallBlocks++] = TerrainBlockInstance(vec4(r.x, r.y, t.x + s.x + 2.0f*bs.x, t.y + s.y + 3.0f*bs.y));
+
+        smallBlock[nrSmallBlocks++] = TerrainBlockInstance(vec4(r.x, r.y, t.x + 1.0f*bs.x, t.y + s.y + 3.0f*bs.y));
+        smallBlock[nrSmallBlocks++] = TerrainBlockInstance(vec4(r.x, r.y, t.x + 0.0f*bs.x, t.y + s.y + 3.0f*bs.y));
+        smallBlock[nrSmallBlocks++] = TerrainBlockInstance(vec4(r.x, r.y, t.x + 0.0f*bs.x, t.y + s.y + 2.0f*bs.y));
+        
+        smallBlock[nrSmallBlocks++] = TerrainBlockInstance(vec4(r.x, r.y, t.x + 0.0f*bs.x, t.y + 1.0f*bs.y));
+        smallBlock[nrSmallBlocks++] = TerrainBlockInstance(vec4(r.x, r.y, t.x + 0.0f*bs.x, t.y + 0.0f*bs.y));
+        smallBlock[nrSmallBlocks++] = TerrainBlockInstance(vec4(r.x, r.y, t.x + 1.0f*bs.x, t.y + 0.0f*bs.y));
+        
+        smallBlock[nrSmallBlocks++] = TerrainBlockInstance(vec4(r.x, r.y, t.x + s.x + 2.0f*bs.x, t.y + 0.0f*bs.y));
+        smallBlock[nrSmallBlocks++] = TerrainBlockInstance(vec4(r.x, r.y, t.x + s.x + 3.0f*bs.x, t.y + 0.0f*bs.y));
+        smallBlock[nrSmallBlocks++] = TerrainBlockInstance(vec4(r.x, r.y, t.x + s.x + 3.0f*bs.x, t.y + 1.0f*bs.y));
+		
+        //Draw cross.
+        crossBlockX[nrCrossBlocks] = TerrainBlockInstance(vec4(r.x, r.y, t.x, t.y + 2.0f*bs.y));
+        crossBlockY[nrCrossBlocks] = TerrainBlockInstance(vec4(r.x, r.y, t.x + 2.0f*bs.x, t.y));
+        nrCrossBlocks++;
+        crossBlockX[nrCrossBlocks] = TerrainBlockInstance(vec4(r.x, r.y, t.x + s.x + 3.0f*bs.x, t.y + 2.0f*bs.y));
+        crossBlockY[nrCrossBlocks] = TerrainBlockInstance(vec4(r.x, r.y, t.x + 2.0f*bs.x, t.y + s.y + 3.0f*bs.y));
+        nrCrossBlocks++;
+        
+        if (i == minLevel)
+        {
+            //Draw big block in the centre.
+            largeBlock[nrLargeBlocks++] = TerrainBlockInstance(vec4(r.x, r.y, t.x + bs.x, t.y + bs.y));
+        }
+        else
+        {
+            //Draw L.
+            ellBlockX[nrEllBlocks] = TerrainBlockInstance(vec4(r.x, r.y, t.x + bs.x, t.y + bs.y + ((bitShifts.y & (1 << (i - 1))) != 0 ? 0.0f : 2.0f*bs.y + s.y - r.y)));
+            ellBlockY[nrEllBlocks] = TerrainBlockInstance(vec4(r.x, r.y, t.x + bs.x + ((bitShifts.x & (1 << (i - 1))) != 0 ? 0.0f : 2.0f*bs.x + s.x - r.x), t.y + bs.y + ((bitShifts.y & (1 << (i - 1))) != 0 ? r.y : 0.0f)));
+            nrEllBlocks++;
+        }
+        
+        //Draw stitch.
+        stitch[nrStitch++] = TerrainBlockInstance(vec4(r.x, r.y, t.x - r.x, t.y - r.y));
+    }
+    
+    //Update buffers on the GPU.
+    smallBlock.sendToDevice();
+    crossBlockX.sendToDevice();
+    crossBlockY.sendToDevice();
+    largeBlock.sendToDevice();
+    ellBlockX.sendToDevice();
+    ellBlockY.sendToDevice();
+    stitch.sendToDevice();
 }
 
 void Terrain::render(const ShaderProgram &program) const
 {
+    largeBlock.bind(program);
+    renderIndicesAsTriangleStripsInstanced(largeBlock.indices, nrLargeBlocks);
+    largeBlock.unbind(program);
+    
     smallBlock.bind(program);
-    renderIndicesAsTriangleStripsInstanced(smallBlock.indices, 1);
+    renderIndicesAsTriangleStripsInstanced(smallBlock.indices, nrSmallBlocks);
     smallBlock.unbind(program);
+    
+    crossBlockX.bind(program);
+    renderIndicesAsTriangleStripsInstanced(crossBlockX.indices, nrCrossBlocks);
+    crossBlockX.unbind(program);
+    
+    crossBlockY.bind(program);
+    renderIndicesAsTriangleStripsInstanced(crossBlockY.indices, nrCrossBlocks);
+    crossBlockY.unbind(program);
+    
+    ellBlockX.bind(program);
+    renderIndicesAsTriangleStripsInstanced(ellBlockX.indices, nrEllBlocks);
+    ellBlockX.unbind(program);
+    
+    ellBlockY.bind(program);
+    renderIndicesAsTriangleStripsInstanced(ellBlockY.indices, nrEllBlocks);
+    ellBlockY.unbind(program);
+    
+    stitch.bind(program);
+    renderIndicesAsTriangleStripsInstanced(stitch.indices, nrStitch);
+    stitch.unbind(program);
 }
 
