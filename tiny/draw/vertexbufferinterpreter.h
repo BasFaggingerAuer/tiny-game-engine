@@ -116,6 +116,7 @@ class VertexBufferInterpreter : public VertexBuffer<T>
                 
                 if (attributeLocation >= 0)
                 {
+                    GL_CHECK(glVertexAttribDivisorARB(attributeLocation, 0));
                     GL_CHECK(glDisableVertexAttribArray(attributeLocation));
                 }
             }

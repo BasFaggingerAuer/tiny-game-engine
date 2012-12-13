@@ -42,7 +42,7 @@ struct compareivec3
 	};
 };
 
-StaticMesh tiny::mesh::io::readStaticMeshOBJ(const std::string &fileName)
+StaticMesh tiny::mesh::io::readStaticMeshOBJ(const std::string &fileName, const bool &centreMesh)
 {
     std::ifstream file(fileName.c_str());
     StaticMesh mesh;
@@ -167,8 +167,8 @@ StaticMesh tiny::mesh::io::readStaticMeshOBJ(const std::string &fileName)
         throw std::exception();
     }
     
-    //Centre the model.
-    if (true)
+    //Centre the mesh.
+    if (centreMesh)
     {
         vec3 minVec = vertices[0], maxVec = vertices[0];
         

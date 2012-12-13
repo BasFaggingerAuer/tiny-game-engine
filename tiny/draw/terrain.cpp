@@ -194,10 +194,8 @@ std::string Terrain::getFragmentShaderCode() const
 "}\n\0");
 }
 
-void Terrain::setCameraPosition(const vec3 &a_position)
+void Terrain::updateBlockTranslations(const vec2 &viewer)
 {
-    //Updates shifts and blockTranslations to re-centre the map at the player's position.
-    const vec2 viewer = vec2(a_position.x/scale.x, a_position.z/scale.z);
     ivec2 dir = ivec2(0, 0);
     
     //Determine whether or not we need to shift the blocks to recentre at the viewer's position.
@@ -308,6 +306,12 @@ void Terrain::setCameraPosition(const vec3 &a_position)
         
         andMask >>= 1;
     }
+}
+
+void Terrain::setCameraPosition(const vec3 &a_position)
+{
+    //Updates shifts and blockTranslations to re-centre the map at the player's position.
+    updateBlockTranslations(vec2(a_position.x/scale.x, a_position.z/scale.z));
     
     //Create new instance buffers.
     smallBlock.instances[0] = TerrainBlockInstance(vec4(1.0f, 1.0f, 0.0f, 0.0f));
