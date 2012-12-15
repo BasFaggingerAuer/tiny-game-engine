@@ -97,6 +97,78 @@ class ScreenIconHorde : public Renderable
         ScreenIconVertexBufferInterpreter icons;
 };
 
+struct WorldIconInstance
+{
+    WorldIconInstance()
+    {
+
+    }
+    
+    WorldIconInstance(const vec4 &a_position,
+                      const vec2 &a_size,
+                      const vec4 &a_icon,
+                      const vec4 &a_colour) :
+        position(a_position),
+        size(a_size),
+        icon(a_icon),
+        colour(a_colour)
+    {
+
+    }
+    
+    vec4 position;
+    vec2 size;
+    vec4 icon;
+    vec4 colour;
+};
+
+class WorldIconVertexBufferInterpreter : public VertexBufferInterpreter<WorldIconInstance>
+{
+    public:
+        WorldIconVertexBufferInterpreter(const size_t &);
+        ~WorldIconVertexBufferInterpreter();
+};
+
+class WorldIconHorde : public Renderable
+{
+    public:
+        WorldIconHorde(const size_t &);
+        ~WorldIconHorde();
+        
+        std::string getVertexShaderCode() const;
+        std::string getGeometryShaderCode() const;
+        std::string getFragmentShaderCode() const;
+        
+        template <typename TextureType>
+        void setIconTexture(const TextureType &texture)
+        {
+            uniformMap.setTexture(texture, "iconTexture");
+        }
+        
+        template <typename Iterator>
+        void setIcons(Iterator first, Iterator last)
+        {
+            nrIcons = 0;
+            
+            for (Iterator i = first; i != last && nrIcons < maxNrIcons; ++i)
+            {
+                icons[nrIcons++] = *i;
+            }
+            
+            icons.sendToDevice();
+        }
+        
+        void setText(const float &, const float &, const float &, const std::string &, const IconTexture2D &);
+        
+    protected:
+        void render(const ShaderProgram &) const;
+        
+    private:
+        const size_t maxNrIcons;
+        size_t nrIcons;
+        WorldIconVertexBufferInterpreter icons;
+};
+
 }
 
 }

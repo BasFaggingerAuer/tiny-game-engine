@@ -42,6 +42,13 @@ class StaticMeshVertexBufferInterpreter : public VertexBufferInterpreter<tiny::m
         ~StaticMeshVertexBufferInterpreter();
 };
 
+class StaticMeshIndexBuffer : public IndexBuffer<unsigned int>
+{
+    public:
+        StaticMeshIndexBuffer(const tiny::mesh::StaticMesh &);
+        ~StaticMeshIndexBuffer();
+};
+
 class StaticMesh : public Renderable
 {
     public:
@@ -64,7 +71,7 @@ class StaticMesh : public Renderable
         const size_t nrVertices;
         const size_t nrIndices;
         
-        IndexBuffer<unsigned int> indices;
+        StaticMeshIndexBuffer indices;
         StaticMeshVertexBufferInterpreter vertices;
 };
 

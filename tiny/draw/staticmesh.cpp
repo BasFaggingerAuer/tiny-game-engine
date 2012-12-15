@@ -31,11 +31,22 @@ StaticMeshVertexBufferInterpreter::~StaticMeshVertexBufferInterpreter()
 
 }
 
+StaticMeshIndexBuffer::StaticMeshIndexBuffer(const tiny::mesh::StaticMesh &mesh) :
+    IndexBuffer<unsigned int>(mesh.indices.begin(), mesh.indices.end())
+{
+
+}
+
+StaticMeshIndexBuffer::~StaticMeshIndexBuffer()
+{
+
+}
+
 StaticMesh::StaticMesh(const tiny::mesh::StaticMesh &mesh) :
     Renderable(),
     nrVertices(mesh.vertices.size()),
     nrIndices(mesh.indices.size()),
-    indices(mesh.indices.begin(), mesh.indices.end()),
+    indices(mesh),
     vertices(mesh)
 {
     uniformMap.addTexture("diffuseTexture");

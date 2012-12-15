@@ -30,3 +30,82 @@ StaticMesh::~StaticMesh()
 
 }
 
+StaticMesh StaticMesh::createCubeMesh(const float &size)
+{
+    StaticMesh mesh;
+    
+    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 0.0f), vec3( 0.0f, 0.0f,-1.0f), vec3(-size, -size, -size)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 0.0f), vec3( 0.0f, 0.0f,-1.0f), vec3( size, -size, -size)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 1.0f), vec3( 0.0f, 0.0f,-1.0f), vec3(-size,  size, -size)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 1.0f), vec3( 0.0f, 0.0f,-1.0f), vec3( size,  size, -size)));
+    
+    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 0.0f), vec3( 0.0f, 0.0f, 1.0f), vec3(-size, -size,  size)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 0.0f), vec3( 0.0f, 0.0f, 1.0f), vec3( size, -size,  size)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 1.0f), vec3( 0.0f, 0.0f, 1.0f), vec3(-size,  size,  size)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 1.0f), vec3( 0.0f, 0.0f, 1.0f), vec3( size,  size,  size)));
+    
+    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 0.0f), vec3( 0.0f,-1.0f, 0.0f), vec3(-size, -size, -size)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 0.0f), vec3( 0.0f,-1.0f, 0.0f), vec3( size, -size, -size)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 1.0f), vec3( 0.0f,-1.0f, 0.0f), vec3(-size, -size,  size)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 1.0f), vec3( 0.0f,-1.0f, 0.0f), vec3( size, -size,  size)));
+    
+    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 0.0f), vec3( 0.0f, 1.0f, 0.0f), vec3(-size,  size, -size)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 0.0f), vec3( 0.0f, 1.0f, 0.0f), vec3( size,  size, -size)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 1.0f), vec3( 0.0f, 1.0f, 0.0f), vec3(-size,  size,  size)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 1.0f), vec3( 0.0f, 1.0f, 0.0f), vec3( size,  size,  size)));
+    
+    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 0.0f), vec3(-1.0f, 0.0f, 0.0f), vec3(-size, -size, -size)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 0.0f), vec3(-1.0f, 0.0f, 0.0f), vec3(-size,  size, -size)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 1.0f), vec3(-1.0f, 0.0f, 0.0f), vec3(-size, -size,  size)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 1.0f), vec3(-1.0f, 0.0f, 0.0f), vec3(-size,  size,  size)));
+    
+    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 0.0f), vec3( 1.0f, 0.0f, 0.0f), vec3( size, -size, -size)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 0.0f), vec3( 1.0f, 0.0f, 0.0f), vec3( size,  size, -size)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 1.0f), vec3( 1.0f, 0.0f, 0.0f), vec3( size, -size,  size)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 1.0f), vec3( 1.0f, 0.0f, 0.0f), vec3( size,  size,  size)));
+    
+    mesh.indices.push_back(0);
+    mesh.indices.push_back(3);
+    mesh.indices.push_back(1);
+    mesh.indices.push_back(0);
+    mesh.indices.push_back(2);
+    mesh.indices.push_back(3);
+    
+    mesh.indices.push_back(4);
+    mesh.indices.push_back(5);
+    mesh.indices.push_back(7);
+    mesh.indices.push_back(4);
+    mesh.indices.push_back(7);
+    mesh.indices.push_back(6);
+    
+    mesh.indices.push_back(8);
+    mesh.indices.push_back(9);
+    mesh.indices.push_back(11);
+    mesh.indices.push_back(8);
+    mesh.indices.push_back(11);
+    mesh.indices.push_back(10);
+    
+    mesh.indices.push_back(12);
+    mesh.indices.push_back(15);
+    mesh.indices.push_back(13);
+    mesh.indices.push_back(12);
+    mesh.indices.push_back(14);
+    mesh.indices.push_back(15);
+    
+    mesh.indices.push_back(16);
+    mesh.indices.push_back(19);
+    mesh.indices.push_back(17);
+    mesh.indices.push_back(16);
+    mesh.indices.push_back(18);
+    mesh.indices.push_back(19);
+    
+    mesh.indices.push_back(20);
+    mesh.indices.push_back(21);
+    mesh.indices.push_back(23);
+    mesh.indices.push_back(20);
+    mesh.indices.push_back(23);
+    mesh.indices.push_back(22);
+    
+    return mesh;
+}
+

@@ -275,7 +275,7 @@ std::string Terrain::getVertexShaderCode() const
 "void main(void)\n"
 "{\n"
 "   f_worldPosition = vec3(v_scaleAndTranslate.xy*v_vertex + v_scaleAndTranslate.zw, 0.0f).xzy;\n"
-"   f_worldPosition.y = 16.0f*sin(0.1f*f_worldPosition.x)*sin(0.1f*f_worldPosition.z);\n"
+"   f_worldPosition.y = 16.0f*sin(0.1f*f_worldPosition.x)*sin(0.1f*f_worldPosition.z)*(1.0f - exp(-0.01f*length(f_worldPosition.xz)));\n"
 "   gl_Position = worldToScreen*vec4(f_worldPosition, 1.0f);\n"
 "   f_cameraDepth = gl_Position.z;\n"
 "}\n\0");
@@ -301,7 +301,7 @@ std::string Terrain::getFragmentShaderCode() const
 "\n"
 "void main(void)\n"
 "{\n"
-"   diffuse = vec4(1.0f);\n"
+"   diffuse = vec4(0.5f, 0.5f, 0.5f, 1.0f);\n"
 "   worldNormal = vec4(0.0f, 1.0f, 0.0f, 0.0f);\n"
 "   worldPosition = vec4(f_worldPosition, f_cameraDepth);\n"
 "   \n"

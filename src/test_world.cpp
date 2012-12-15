@@ -61,6 +61,7 @@ draw::DepthTexture2D *depthTexture = 0;
 
 draw::ScreenIconHorde *font = 0;
 draw::IconTexture2D *fontTexture = 0;
+draw::WorldIconHorde *worldFont = 0;
 
 vec3 cameraPosition = vec3(0.0f, 0.0f, 0.0f);
 vec4 cameraOrientation = vec4(0.0f, 0.0f, 0.0f, 1.0f);
@@ -116,7 +117,7 @@ std::string SimpleFogEffect::getFragmentShaderCode() const
 "   vec4 worldPosition = texture(worldPositionTexture, tex);\n"
 "   \n"
 "   float depth = worldPosition.w;\n"
-"   float directLight = 0.5f*max(dot(worldNormal.xyz, sun), 0.0f);\n"
+"   float directLight = 0.5f + 0.5f*max(dot(worldNormal.xyz, sun), 0.0f);\n"
 "   vec3 decay = vec3(exp(depth*fogFalloff));\n"
 "   \n"
 "   colour = vec4(diffuse.xyz*directLight*decay + (vec3(1.0f) - decay)*vec3(1.0f), 1.0f);\n"
@@ -142,7 +143,8 @@ void setup()
     aspectRatio = static_cast<double>(application->getScreenWidth())/static_cast<double>(application->getScreenHeight());
     
     //testMesh = new draw::StaticMesh(mesh::io::readStaticMeshOBJ(DATA_DIRECTORY + "mesh/sponza/sponza_triangles.obj"));
-    testMesh = new draw::StaticMesh(mesh::io::readStaticMeshOBJ(DATA_DIRECTORY + "mesh/sibenik/sibenik_triangles.obj"));
+    //testMesh = new draw::StaticMesh(mesh::io::readStaticMeshOBJ(DATA_DIRECTORY + "mesh/sibenik/sibenik_triangles.obj"));
+    testMesh = new draw::StaticMesh(mesh::StaticMesh::createCubeMesh(4.0f));
     testDiffuseTexture = new draw::RGBATexture2D(img::io::readImage(DATA_DIRECTORY + "img/default.png"));
     testMesh->setDiffuseTexture(*testDiffuseTexture);
     
@@ -160,12 +162,16 @@ void setup()
     
     pointLights = new draw::PointLightHorde(pointLightInstances.size());
     
-    font = new draw::ScreenIconHorde(1024);
     fontTexture = new draw::IconTexture2D(512, 512);
     fontTexture->packIcons(img::io::readFont(DATA_DIRECTORY + "font/OpenBaskerville-0.0.75.ttf", 48));
-    font->setIconTexture(*fontTexture);
     
+    font = new draw::ScreenIconHorde(1024);
+    font->setIconTexture(*fontTexture);
     font->setText(-1.0, -1.0, 0.1, aspectRatio, "The \\rtiny\\w-\\ggame\\w-\\bengine\\w.\nA model rendering example.", *fontTexture);
+    
+    worldFont = new draw::WorldIconHorde(1024);
+    worldFont->setIconTexture(*fontTexture);
+    worldFont->setText(0.0, 0.0, 1.0, "The \\rtiny\\w-\\ggame\\w-\\bengine\\w.\nA model rendering example.", *fontTexture);
     
     fogEffect = new SimpleFogEffect();
     
@@ -187,6 +193,7 @@ void setup()
     
     worldRenderer->addRenderable(testMesh);
     worldRenderer->addRenderable(terrain);
+    worldRenderer->addRenderable(worldFont);
     
     effectRenderer->addRenderable(fogEffect, false, false);
     effectRenderer->addRenderable(pointLights, false, false, draw::BlendAdd);
@@ -205,6 +212,7 @@ void cleanup()
     
     delete fogEffect;
     
+    delete worldFont;
     delete font;
     delete fontTexture;
     
