@@ -52,6 +52,7 @@ class Renderable
         
     protected:
         friend class Renderer;
+        friend class ComputeTexture;
         
         virtual void render(const ShaderProgram &) const = 0;
         

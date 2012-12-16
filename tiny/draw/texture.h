@@ -89,6 +89,26 @@ class Texture : public TextureInterface
             
         }
         
+        template <typename T2>
+        void copyAndScale(const T2 &a_scale, Texture<T2, Channels> &a_texture)
+        {
+            if (a_texture.width != width || a_texture.height != height || a_texture.depth != depth || hostData.size() != a_texture.hostData.size())
+            {
+                std::cerr << "Unable to copy and scale texture: sizes are incompatible!" << std::endl;
+                return;
+            }
+            
+            typename std::vector<T>::const_iterator in = hostData.begin();
+            typename std::vector<T2>::iterator out = a_texture.hostData.begin();
+            
+            while (in != hostData.end())
+            {
+                *out++ = a_scale*static_cast<T2>(*in++);
+            }
+            
+            a_texture.sendToDevice();
+        }
+        
         void sendToDevice() const
         {
             if (hostData.empty()) return;

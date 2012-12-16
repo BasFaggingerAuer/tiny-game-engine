@@ -34,7 +34,7 @@ UniformMap::~UniformMap()
 
 size_t UniformMap::getNrUniforms() const
 {
-    return floatUniforms.size() + matrixUniforms.size();
+    return intUniforms.size() + floatUniforms.size() + matrixUniforms.size();
 }
 
 size_t UniformMap::getNrTextures() const
@@ -64,6 +64,8 @@ void UniformMap::lockTextures()
     texturesAreLocked = true;
 }
 
+void UniformMap::setIntUniform(const int &x, const std::string &name) {intUniforms[name] = detail::IntUniform(name, 1, x);}
+
 void UniformMap::setFloatUniform(const float &x, const std::string &name) {floatUniforms[name] = detail::FloatUniform(name, 1, x);}
 void UniformMap::setVec2Uniform(const float &x, const float &y, const std::string &name) {floatUniforms[name] = detail::FloatUniform(name, 2, x, y);}
 void UniformMap::setVec3Uniform(const float &x, const float &y, const float &z, const std::string &name) {floatUniforms[name] = detail::FloatUniform(name, 3, x, y, z);}
@@ -76,6 +78,26 @@ void UniformMap::setMat4Uniform(const mat4 &m, const std::string &name) {matrixU
 
 void UniformMap::setUniformsInProgram(const ShaderProgram &program) const
 {
+    for (std::map<std::string, detail::IntUniform>::const_iterator i = intUniforms.begin(); i != intUniforms.end(); ++i)
+    {
+        const detail::IntUniform uniform = i->second;
+        const GLint location = glGetUniformLocation(program.getIndex(), uniform.name.c_str());
+        
+        if (location < 0)
+        {
+#ifndef NDEBUG
+            //std::cerr << "Warning: uniform variable '" << uniform.name << "' does not exist in the GLSL program " << program.getIndex() << "!" << std::endl;
+#endif
+            continue;
+        }
+        
+             if (uniform.numParameters == 1) GL_CHECK(glUniform1i(location, uniform.x));
+        else if (uniform.numParameters == 2) GL_CHECK(glUniform2i(location, uniform.x, uniform.y));
+        else if (uniform.numParameters == 3) GL_CHECK(glUniform3i(location, uniform.x, uniform.y, uniform.z));
+        else if (uniform.numParameters == 4) GL_CHECK(glUniform4i(location, uniform.x, uniform.y, uniform.z, uniform.w));
+        else std::cerr << "Warning: uniform variable '" << uniform.name << "' has an invalid number of parameters (" << uniform.numParameters << ")!" << std::endl;
+    }
+    
     for (std::map<std::string, detail::FloatUniform>::const_iterator i = floatUniforms.begin(); i != floatUniforms.end(); ++i)
     {
         const detail::FloatUniform uniform = i->second;

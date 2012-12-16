@@ -121,6 +121,11 @@ class ComputeTexture
         }
         
         void compute() const;
+        UniformMap &uniformMap();
+        
+    protected:
+        void addInput(const std::string &);
+        void addOutput(const std::string &);
 
     private:
         ComputeTextureInput input;

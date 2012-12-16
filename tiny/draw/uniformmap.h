@@ -146,6 +146,8 @@ class UniformMap
             textures[name].texture = &texture;
         }
         
+        void setIntUniform(const int &x, const std::string &name);
+        
         void setFloatUniform(const float &x, const std::string &name);
         void setVec2Uniform(const float &x, const float &y, const std::string &name);
         void setVec3Uniform(const float &x, const float &y, const float &z, const std::string &name);
@@ -164,6 +166,7 @@ class UniformMap
     private:
         bool texturesAreLocked;
         
+        std::map<std::string, detail::IntUniform> intUniforms;
         std::map<std::string, detail::FloatUniform> floatUniforms;
         std::map<std::string, detail::MatrixUniform> matrixUniforms;
         std::map<std::string, detail::BoundTexture> textures;

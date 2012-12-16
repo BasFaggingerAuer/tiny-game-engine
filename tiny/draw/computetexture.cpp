@@ -80,15 +80,9 @@ std::string ComputeTextureInput::getFragmentShaderCode() const
 void ComputeTextureInput::render(const ShaderProgram &program) const
 {
     //Draw screen-filling quad.
-    GL_CHECK(glDisable(GL_DEPTH_TEST));
-    GL_CHECK(glDepthMask(GL_FALSE));
-    
     square.bind(program);
     renderRangeAsTriangleStrip(0, 4);
     square.unbind(program);
-    
-    GL_CHECK(glDepthMask(GL_TRUE));
-    GL_CHECK(glEnable(GL_DEPTH_TEST));
 }
 
 ComputeTextureOutput::ComputeTextureOutput(const std::vector<std::string> &outputNames) :
@@ -109,7 +103,7 @@ ComputeTexture::ComputeTexture(const std::vector<std::string> &inputNames, const
     input(inputNames, fragmentShaderCode),
     output(outputNames)
 {
-    output.addRenderable(&input);
+    output.addRenderable(&input, false, false);
 }
 
 ComputeTexture::~ComputeTexture()
@@ -120,5 +114,10 @@ ComputeTexture::~ComputeTexture()
 void ComputeTexture::compute() const
 {
     output.render();
+}
+
+UniformMap &ComputeTexture::uniformMap()
+{
+    return input.uniformMap;
 }
 

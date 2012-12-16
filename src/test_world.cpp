@@ -95,7 +95,7 @@ SimpleFogEffect::SimpleFogEffect() :
     uniformMap.addTexture("skyTexture");
     
     setSun(vec3(0.7f, 0.7f, 0.0f));
-    setFog(256.0f);
+    setFog(64.0f);
 }
 
 SimpleFogEffect::~SimpleFogEffect()
