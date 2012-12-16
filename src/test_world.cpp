@@ -49,6 +49,9 @@ draw::WorldEffectRenderer *effectRenderer = 0;
 draw::StaticMesh *testMesh = 0;
 draw::RGBATexture2D *testDiffuseTexture = 0;
 
+draw::StaticMesh *skyBox = 0;
+draw::RGBATexture2D *skyTexture = 0;
+
 draw::Terrain *terrain = 0;
 
 std::vector<draw::PointLightInstance> pointLightInstances;
@@ -74,6 +77,12 @@ class SimpleFogEffect : public tiny::draw::ScreenFillingSquare
         SimpleFogEffect();
         ~SimpleFogEffect();
         
+        template <typename TextureType>
+        void setSkyTexture(const TextureType &texture)
+        {
+            uniformMap.setTexture(texture, "skyTexture");
+        }
+        
         std::string getFragmentShaderCode() const;
         
         void setSun(const vec3 &);
@@ -83,6 +92,8 @@ class SimpleFogEffect : public tiny::draw::ScreenFillingSquare
 SimpleFogEffect::SimpleFogEffect() :
     ScreenFillingSquare()
 {
+    uniformMap.addTexture("skyTexture");
+    
     setSun(vec3(0.7f, 0.7f, 0.0f));
     setFog(256.0f);
 }
@@ -102,8 +113,10 @@ std::string SimpleFogEffect::getFragmentShaderCode() const
 "uniform sampler2D diffuseTexture;\n"
 "uniform sampler2D worldNormalTexture;\n"
 "uniform sampler2D worldPositionTexture;\n"
+"uniform sampler2D skyTexture;\n"
 "\n"
-"uniform vec3 sun;\n"
+"uniform vec3 cameraPosition;\n"
+"uniform vec3 sunDirection;\n"
 "uniform vec3 fogFalloff;\n"
 "uniform vec2 inverseScreenSize;\n"
 "\n"
@@ -116,19 +129,23 @@ std::string SimpleFogEffect::getFragmentShaderCode() const
 "   vec4 worldNormal = texture(worldNormalTexture, tex);\n"
 "   vec4 worldPosition = texture(worldPositionTexture, tex);\n"
 "   \n"
+"   vec3 relativePosition = normalize(worldPosition.xyz - cameraPosition);\n"
+"   vec4 skyColour = texture(skyTexture, vec2(0.5f - 0.5f*sunDirection.y, max(0.0f, 1.0f - relativePosition.y)));\n"
+"   vec3 sunContribution = max(0.0f, sunDirection.y)*vec3(800.0f, 500.0f, 0.0f)*max(0.0f, dot(relativePosition, sunDirection) - 0.999f);\n"
+"   \n"
 "   float depth = worldPosition.w;\n"
-"   float directLight = 0.5f + 0.5f*max(dot(worldNormal.xyz, sun), 0.0f);\n"
+"   float directLight = 0.25f + 0.75f*max(dot(worldNormal.xyz, sunDirection), 0.0f);\n"
 "   vec3 decay = vec3(exp(depth*fogFalloff));\n"
 "   \n"
-"   colour = vec4(diffuse.xyz*directLight*decay + (vec3(1.0f) - decay)*vec3(1.0f), 1.0f);\n"
+"   colour = vec4(diffuse.xyz*directLight*decay + (vec3(1.0f) - decay)*skyColour.xyz + sunContribution, 1.0f);\n"
 "   //colour = vec4(diffuse.xyz, 1.0f);\n"
 "   //colour = vec4(1.0f, 0.0f, 0.0f, 1.0f);\n"
 "}\n");
 }
 
-void SimpleFogEffect::setSun(const vec3 &sun)
+void SimpleFogEffect::setSun(const vec3 &sunDirection)
 {
-    uniformMap.setVec3Uniform(normalize(sun), "sun");
+    uniformMap.setVec3Uniform(normalize(sunDirection), "sunDirection");
 }
 
 void SimpleFogEffect::setFog(const float &fogIntensity)
@@ -144,10 +161,12 @@ void setup()
     
     //testMesh = new draw::StaticMesh(mesh::io::readStaticMeshOBJ(DATA_DIRECTORY + "mesh/sponza/sponza_triangles.obj"));
     //testMesh = new draw::StaticMesh(mesh::io::readStaticMeshOBJ(DATA_DIRECTORY + "mesh/sibenik/sibenik_triangles.obj"));
-    testMesh = new draw::StaticMesh(mesh::StaticMesh::createCubeMesh(4.0f));
+    testMesh = new draw::StaticMesh(mesh::StaticMesh::createCubeMesh(0.5f));
     testDiffuseTexture = new draw::RGBATexture2D(img::io::readImage(DATA_DIRECTORY + "img/default.png"));
     testMesh->setDiffuseTexture(*testDiffuseTexture);
     
+    skyBox = new draw::StaticMesh(mesh::StaticMesh::createCubeMesh(-1.0e5));
+    skyTexture = new draw::RGBATexture2D(img::io::readImage(DATA_DIRECTORY + "img/sky.png"));
     terrain = new draw::Terrain(4, 8);
     
     const float lightSpacing = 4.0f;
@@ -167,13 +186,14 @@ void setup()
     
     font = new draw::ScreenIconHorde(1024);
     font->setIconTexture(*fontTexture);
-    font->setText(-1.0, -1.0, 0.1, aspectRatio, "The \\rtiny\\w-\\ggame\\w-\\bengine\\w.\nA model rendering example.", *fontTexture);
+    font->setText(-1.0, -1.0, 0.1, aspectRatio, "The \\rtiny\\w-\\ggame\\w-\\bengine\\w.\nA world rendering example.", *fontTexture);
     
     worldFont = new draw::WorldIconHorde(1024);
     worldFont->setIconTexture(*fontTexture);
-    worldFont->setText(0.0, 0.0, 1.0, "The \\rtiny\\w-\\ggame\\w-\\bengine\\w.\nA model rendering example.", *fontTexture);
+    worldFont->setText(0.0, 0.0, 1.0, "The \\rtiny\\w-\\ggame\\w-\\bengine\\w.\nA world rendering example.", *fontTexture);
     
     fogEffect = new SimpleFogEffect();
+    fogEffect->setSkyTexture(*skyTexture);
     
     diffuseTexture = new draw::RGBATexture2D(application->getScreenWidth(), application->getScreenHeight());
     worldNormalTexture = new draw::Vec4Texture2D(application->getScreenWidth(), application->getScreenHeight());
@@ -191,6 +211,7 @@ void setup()
     effectRenderer->setNormalsSource(*worldNormalTexture);
     effectRenderer->setPositionsSource(*worldPositionTexture);
     
+    worldRenderer->addRenderable(skyBox);
     worldRenderer->addRenderable(testMesh);
     worldRenderer->addRenderable(terrain);
     worldRenderer->addRenderable(worldFont);
@@ -219,6 +240,9 @@ void cleanup()
     delete pointLights;
     
     delete terrain;
+    delete skyTexture;
+    delete skyBox;
+    
     delete testMesh;
     delete testDiffuseTexture;
 }
@@ -247,8 +271,7 @@ void update(const double &dt)
     worldRenderer->setCamera(cameraPosition, cameraOrientation);
     effectRenderer->setCamera(cameraPosition, cameraOrientation);
     
-    //fogEffect->setSun(vec3(cos(0.5*globalTime), 0.0, sin(0.5*globalTime)));
-    //fogEffect->setFog(1024.0 + 1024.0*sin(0.7*globalTime));
+    fogEffect->setSun(vec3(cos(0.5f*globalTime), sin(0.5f*globalTime), 0.0f));
     
     for (std::vector<draw::PointLightInstance>::iterator i = pointLightInstances.begin(); i != pointLightInstances.end(); ++i)
     {
