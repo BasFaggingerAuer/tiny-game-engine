@@ -81,16 +81,17 @@ class Texture2D : public Texture<T, Channels>
             
         }
         
-        T & operator () (const size_t &a_x, const size_t &a_y)
-        {
-            return this->hostData[Channels*(a_x + this->width*a_y)];
-        }
-        
-        const T & operator () (const size_t &a_x, const size_t &a_y) const
-        {
-            return this->hostData[Channels*(a_x + this->width*a_y)];
-        }
+        vec3 operator () (const size_t &, const size_t &) const;
 };
+
+//Functions to sample different types of textures.
+template <>
+inline vec3 Texture2D<unsigned char, 4>::operator () (const size_t &a_x, const size_t &a_y) const
+{
+    return vec3(static_cast<float>(this->hostData[4*(a_x + this->width*a_y) + 0])/255.0f,
+                static_cast<float>(this->hostData[4*(a_x + this->width*a_y) + 1])/255.0f,
+                static_cast<float>(this->hostData[4*(a_x + this->width*a_y) + 2])/255.0f);
+}
 
 typedef Texture2D<float, 1> FloatTexture2D;
 typedef Texture2D<float, 3> Vec3Texture2D;

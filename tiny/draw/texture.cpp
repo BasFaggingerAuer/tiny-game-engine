@@ -98,10 +98,10 @@ void TextureInterface::createDeviceTexture()
         throw std::bad_alloc();
     
     GL_CHECK(glBindTexture(textureTarget, textureIndex));
-	GL_CHECK(glTexParameteri(textureTarget, GL_TEXTURE_WRAP_S, GL_CLAMP));
-	GL_CHECK(glTexParameteri(textureTarget, GL_TEXTURE_WRAP_T, GL_CLAMP));
-	GL_CHECK(glTexParameteri(textureTarget, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
-	GL_CHECK(glTexParameteri(textureTarget, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
+    GL_CHECK(glTexParameteri(textureTarget, GL_TEXTURE_WRAP_S, GL_CLAMP));
+    GL_CHECK(glTexParameteri(textureTarget, GL_TEXTURE_WRAP_T, GL_CLAMP));
+    GL_CHECK(glTexParameteri(textureTarget, GL_TEXTURE_MAG_FILTER, GL_LINEAR));
+    GL_CHECK(glTexParameteri(textureTarget, GL_TEXTURE_MIN_FILTER, GL_LINEAR));
     
          if (textureTarget == GL_TEXTURE_1D) GL_CHECK(glTexImage1D(textureTarget, 0, textureFormat, width, 0, textureChannels, textureDataType, 0));
     else if (textureTarget == GL_TEXTURE_2D) GL_CHECK(glTexImage2D(textureTarget, 0, textureFormat, width, height, 0, textureChannels, textureDataType, 0));

@@ -80,20 +80,33 @@ class SimpleFogEffect : public tiny::draw::ScreenFillingSquare
         template <typename TextureType>
         void setSkyTexture(const TextureType &texture)
         {
-            uniformMap.setTexture(texture, "skyTexture");
+            const size_t width = texture.getWidth();
+                
+            if (width > 0)
+            {
+                skyColours.resize(width);
+                
+                for (size_t i = 0; i < width; ++i)
+                {
+                    skyColours[i] = texture(i, 0);
+                }
+            }
         }
         
         std::string getFragmentShaderCode() const;
         
         void setSun(const vec3 &);
         void setFog(const float &);
+        
+    private:
+        vec3 sun;
+        vector<vec3> skyColours;
 };
 
 SimpleFogEffect::SimpleFogEffect() :
     ScreenFillingSquare()
 {
-    uniformMap.addTexture("skyTexture");
-    
+    skyColours.push_back(vec3(1.0f, 1.0f, 1.0f));
     setSun(vec3(0.7f, 0.7f, 0.0f));
     setFog(64.0f);
 }
@@ -113,12 +126,12 @@ std::string SimpleFogEffect::getFragmentShaderCode() const
 "uniform sampler2D diffuseTexture;\n"
 "uniform sampler2D worldNormalTexture;\n"
 "uniform sampler2D worldPositionTexture;\n"
-"uniform sampler2D skyTexture;\n"
 "\n"
 "uniform vec3 cameraPosition;\n"
 "uniform vec3 sunDirection;\n"
 "uniform vec3 fogFalloff;\n"
 "uniform vec2 inverseScreenSize;\n"
+"uniform vec3 skyColour;\n"
 "\n"
 "out vec4 colour;\n"
 "\n"
@@ -130,14 +143,13 @@ std::string SimpleFogEffect::getFragmentShaderCode() const
 "   vec4 worldPosition = texture(worldPositionTexture, tex);\n"
 "   \n"
 "   vec3 relativePosition = normalize(worldPosition.xyz - cameraPosition);\n"
-"   vec4 skyColour = texture(skyTexture, vec2(0.5f - 0.5f*sunDirection.y, max(0.0f, 1.0f - relativePosition.y)));\n"
 "   vec3 sunContribution = max(0.0f, sunDirection.y)*vec3(800.0f, 500.0f, 0.0f)*max(0.0f, dot(relativePosition, sunDirection) - 0.999f);\n"
 "   \n"
 "   float depth = worldPosition.w;\n"
 "   float directLight = 0.25f + 0.75f*max(dot(worldNormal.xyz, sunDirection), 0.0f);\n"
 "   vec3 decay = vec3(exp(depth*fogFalloff));\n"
 "   \n"
-"   colour = vec4(diffuse.xyz*directLight*decay + (vec3(1.0f) - decay)*skyColour.xyz + sunContribution, 1.0f);\n"
+"   colour = vec4(diffuse.xyz*directLight*decay + (vec3(1.0f) - decay)*skyColour + sunContribution, 1.0f);\n"
 "   //colour = vec4(diffuse.xyz, 1.0f);\n"
 "   //colour = vec4(1.0f, 0.0f, 0.0f, 1.0f);\n"
 "}\n");
@@ -145,7 +157,10 @@ std::string SimpleFogEffect::getFragmentShaderCode() const
 
 void SimpleFogEffect::setSun(const vec3 &sunDirection)
 {
-    uniformMap.setVec3Uniform(normalize(sunDirection), "sunDirection");
+    sun = normalize(sunDirection);
+    uniformMap.setVec3Uniform(sun, "sunDirection");
+    
+    uniformMap.setVec3Uniform(skyColours[static_cast<size_t>(floor((0.5f - 0.49f*sun.y)*static_cast<float>(skyColours.size())))], "skyColour");
 }
 
 void SimpleFogEffect::setFog(const float &fogIntensity)
