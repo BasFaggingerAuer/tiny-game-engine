@@ -98,6 +98,12 @@ class ComputeTextureOutput : public Renderer
     public:
         ComputeTextureOutput(const std::vector<std::string> &outputNames);
         ~ComputeTextureOutput();
+        
+        template <typename TextureType>
+        void setOutput(const TextureType &texture, const std::string &name)
+        {
+            setTextureTarget(texture, name);
+        }
 };
 
 class ComputeTexture
@@ -117,7 +123,7 @@ class ComputeTexture
         void setOutput(const TextureType &texture, const std::string &name)
         {
             std::cerr << "Binding texture " << texture.getIndex() << " as output '" << name << "' for the compute shader." << std::endl;
-            output.setTextureTarget(texture, name);
+            output.setOutput(texture, name);
         }
         
         void compute() const;

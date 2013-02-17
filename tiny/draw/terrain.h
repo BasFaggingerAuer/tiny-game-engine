@@ -127,10 +127,15 @@ class Terrain : public Renderable
         Terrain(const int &, const int &);
         ~Terrain();
         
-        template <typename TextureType>
-        void setHeightTexture(const TextureType &texture)
+        template <typename TextureType1, typename TextureType2, typename TextureType3>
+        void setTextures(const TextureType1 &heightTexture, const TextureType2 &normalTexture, const TextureType3 &diffuseTexture, const vec3 &scale_)
         {
-            uniformMap.setTexture(texture, "heightTexture");
+            uniformMap.setTexture(heightTexture, "heightTexture");
+            uniformMap.setTexture(normalTexture, "normalTexture");
+            uniformMap.setTexture(diffuseTexture, "diffuseTexture");
+            
+            uniformMap.setVec2Uniform(1.0f/static_cast<float>(heightTexture.getWidth()), 1.0f/static_cast<float>(heightTexture.getHeight()), "inverseHeightTextureSize");
+            scale = scale_;
         }
         
         std::string getVertexShaderCode() const;

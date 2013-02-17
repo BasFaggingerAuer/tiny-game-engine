@@ -243,6 +243,11 @@ Terrain::Terrain(const int &a_shiftBlockSize, const int &a_maxLevel) :
     nrEllBlocks(0),
     nrStitch(0)
 {
+    //Setup textures.
+    uniformMap.addTexture("heightTexture");
+    uniformMap.addTexture("normalTexture");
+    uniformMap.addTexture("diffuseTexture");
+    
     //Setup initial blockTranslations.
     blockTranslations[maxLevel - 1] = ivec2(-(superBlockSize << (maxLevel - 2)));
     
@@ -265,17 +270,22 @@ std::string Terrain::getVertexShaderCode() const
 "#version 150\n"
 "\n"
 "uniform mat4 worldToScreen;\n"
+"uniform sampler2D heightTexture;\n"
+"uniform vec2 inverseHeightTextureSize;\n"
 "\n"
 "in vec2 v_vertex;\n"
 "in vec4 v_scaleAndTranslate;\n"
 "\n"
 "out vec3 f_worldPosition;\n"
+"out vec2 f_texturePosition;\n"
 "out float f_cameraDepth;\n"
 "\n"
 "void main(void)\n"
 "{\n"
 "   f_worldPosition = vec3(v_scaleAndTranslate.xy*v_vertex + v_scaleAndTranslate.zw, 0.0f).xzy;\n"
-"   f_worldPosition.y = 16.0f*sin(0.1f*f_worldPosition.x)*sin(0.1f*f_worldPosition.z)*(1.0f - exp(-0.01f*length(f_worldPosition.xz)));\n"
+"   f_texturePosition = f_worldPosition.xz*inverseHeightTextureSize;\n"
+"   f_worldPosition.y = texture(heightTexture, f_texturePosition).x;\n"
+"   //16.0f*sin(0.1f*f_worldPosition.x)*sin(0.1f*f_worldPosition.z)*(1.0f - exp(-0.01f*length(f_worldPosition.xz)));\n"
 "   gl_Position = worldToScreen*vec4(f_worldPosition, 1.0f);\n"
 "   f_cameraDepth = gl_Position.z;\n"
 "}\n\0");
@@ -289,10 +299,12 @@ std::string Terrain::getFragmentShaderCode() const
 "precision highp float;\n"
 "\n"
 "uniform sampler2D diffuseTexture;\n"
+"uniform sampler2D normalTexture;\n"
 "\n"
 "const float C = 1.0f, D = 1.0e6, E = 1.0f;\n"
 "\n"
 "in vec3 f_worldPosition;\n"
+"in vec2 f_texturePosition;\n"
 "in float f_cameraDepth;\n"
 "\n"
 "out vec4 diffuse;\n"
@@ -301,8 +313,8 @@ std::string Terrain::getFragmentShaderCode() const
 "\n"
 "void main(void)\n"
 "{\n"
-"   diffuse = vec4(0.5f, 0.5f, 0.5f, 1.0f);\n"
-"   worldNormal = vec4(0.0f, 1.0f, 0.0f, 0.0f);\n"
+"   diffuse = texture(diffuseTexture, f_texturePosition);\n"
+"   worldNormal = vec4(2.0f*texture(normalTexture, f_texturePosition).xyz - 1.0f, 0.0f);\n"
 "   worldPosition = vec4(f_worldPosition, f_cameraDepth);\n"
 "   \n"
 "   gl_FragDepth = (log(C*f_cameraDepth + E) / log(C*D + E));\n"

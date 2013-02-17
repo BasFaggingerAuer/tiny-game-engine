@@ -93,6 +93,10 @@ class Renderer
         {
             std::cerr << "Binding texture " << texture.getIndex() << " as depth rendering target for frame buffer " << frameBufferIndex << "." << std::endl;
             depthTargetTexture = texture.getIndex();
+            
+            if (static_cast<int>(texture.getWidth()) != viewportSize.x) viewportSize.x = texture.getWidth();
+            if (static_cast<int>(texture.getHeight()) != viewportSize.y) viewportSize.y = texture.getHeight();
+            
             updateRenderTargets();
         }
         
@@ -113,6 +117,10 @@ class Renderer
                 {
                     std::cerr << "Binding texture " << texture.getIndex() << " as rendering target '" << name << "' for frame buffer " << frameBufferIndex << "." << std::endl;
                     renderTargetTextures[i] = texture.getIndex();
+                    
+                    if (static_cast<int>(texture.getWidth()) != viewportSize.x) viewportSize.x = texture.getWidth();
+                    if (static_cast<int>(texture.getHeight()) != viewportSize.y) viewportSize.y = texture.getHeight();
+                    
                     updateRenderTargets();
                     return;
                 }
@@ -137,6 +145,7 @@ class Renderer
         std::vector<std::string> renderTargetNames;
         std::vector<GLuint> renderTargetTextures;
         GLuint depthTargetTexture;
+        ivec2 viewportSize;
 };
 
 }

@@ -37,6 +37,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/draw/lighthorde.h>
 #include <tiny/draw/terrain.h>
 
+#include <tiny/draw/heightmap/normalmap.h>
+
 using namespace std;
 using namespace tiny;
 
@@ -52,12 +54,16 @@ draw::RGBATexture2D *testDiffuseTexture = 0;
 draw::StaticMesh *skyBox = 0;
 draw::RGBATexture2D *skyTexture = 0;
 
+const vec3 terrainScale = vec3(4.0f, 4.0f, 4.0f);
+draw::FloatTexture2D *terrainHeightTexture = 0;
+draw::RGBTexture2D *terrainNormalTexture = 0;
+draw::RGBTexture2D *terrainDiffuseTexture = 0;
 draw::Terrain *terrain = 0;
 
 std::vector<draw::PointLightInstance> pointLightInstances;
 draw::PointLightHorde *pointLights = 0;
 
-draw::RGBATexture2D *diffuseTexture = 0;
+draw::RGBATexture2D *screenDiffuseTexture = 0;
 draw::Vec4Texture2D *worldNormalTexture = 0;
 draw::Vec4Texture2D *worldPositionTexture = 0;
 draw::DepthTexture2D *depthTexture = 0;
@@ -180,9 +186,18 @@ void setup()
     testDiffuseTexture = new draw::RGBATexture2D(img::io::readImage(DATA_DIRECTORY + "img/default.png"));
     testMesh->setDiffuseTexture(*testDiffuseTexture);
     
+    //Create sky.
     skyBox = new draw::StaticMesh(mesh::StaticMesh::createCubeMesh(-1.0e5));
     skyTexture = new draw::RGBATexture2D(img::io::readImage(DATA_DIRECTORY + "img/sky.png"));
+    
+    //Create terrain.
+    terrainHeightTexture = new draw::FloatTexture2D(img::io::readImage(DATA_DIRECTORY + "img/tasmania.png"));
+    terrainNormalTexture = new draw::RGBTexture2D(terrainHeightTexture->getWidth(), terrainHeightTexture->getHeight());
+    terrainDiffuseTexture = new draw::RGBTexture2D(img::io::readImage(DATA_DIRECTORY + "img/default.png"));
+    draw::computeNormalMap(*terrainHeightTexture, *terrainNormalTexture, terrainScale.x);
+    
     terrain = new draw::Terrain(4, 8);
+    terrain->setTextures(*terrainHeightTexture, *terrainNormalTexture, *terrainDiffuseTexture, terrainScale);
     
     const float lightSpacing = 4.0f;
     
@@ -210,19 +225,19 @@ void setup()
     fogEffect = new SimpleFogEffect();
     fogEffect->setSkyTexture(*skyTexture);
     
-    diffuseTexture = new draw::RGBATexture2D(application->getScreenWidth(), application->getScreenHeight());
+    screenDiffuseTexture = new draw::RGBATexture2D(application->getScreenWidth(), application->getScreenHeight());
     worldNormalTexture = new draw::Vec4Texture2D(application->getScreenWidth(), application->getScreenHeight());
     worldPositionTexture = new draw::Vec4Texture2D(application->getScreenWidth(), application->getScreenHeight());
     depthTexture = new draw::DepthTexture2D(application->getScreenWidth(), application->getScreenHeight());
     
     worldRenderer = new draw::WorldRenderer(aspectRatio);
-    worldRenderer->setDiffuseTarget(*diffuseTexture);
+    worldRenderer->setDiffuseTarget(*screenDiffuseTexture);
     worldRenderer->setNormalsTarget(*worldNormalTexture);
     worldRenderer->setPositionsTarget(*worldPositionTexture);
     worldRenderer->setDepthTextureTarget(*depthTexture);
     
     effectRenderer = new draw::WorldEffectRenderer(aspectRatio);
-    effectRenderer->setDiffuseSource(*diffuseTexture);
+    effectRenderer->setDiffuseSource(*screenDiffuseTexture);
     effectRenderer->setNormalsSource(*worldNormalTexture);
     effectRenderer->setPositionsSource(*worldPositionTexture);
     
@@ -244,7 +259,7 @@ void cleanup()
     delete depthTexture;
     delete worldPositionTexture;
     delete worldNormalTexture;
-    delete diffuseTexture;
+    delete screenDiffuseTexture;
     
     delete fogEffect;
     
@@ -255,6 +270,10 @@ void cleanup()
     delete pointLights;
     
     delete terrain;
+    delete terrainDiffuseTexture;
+    delete terrainNormalTexture;
+    delete terrainHeightTexture;
+    
     delete skyTexture;
     delete skyBox;
     

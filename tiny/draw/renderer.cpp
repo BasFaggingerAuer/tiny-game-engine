@@ -24,7 +24,8 @@ Renderer::Renderer() :
     frameBufferIndex(0),
     renderTargetNames(),
     renderTargetTextures(),
-    depthTargetTexture(0)
+    depthTargetTexture(0),
+    viewportSize(0, 0)
 {
     
 }
@@ -194,6 +195,12 @@ void Renderer::clearTargets() const
 void Renderer::render() const
 {
     GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, frameBufferIndex));
+    GL_CHECK(glPushAttrib(GL_VIEWPORT_BIT | GL_ENABLE_BIT));
+    
+    if (viewportSize.x > 0 && viewportSize.y > 0)
+    {
+        GL_CHECK(glViewport(0, 0, viewportSize.x, viewportSize.y));
+    }
     
     uniformMap.bindTextures();
     
@@ -230,6 +237,7 @@ void Renderer::render() const
     
     uniformMap.unbindTextures();
     
+    GL_CHECK(glPopAttrib());
     GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, 0));
 }
 
