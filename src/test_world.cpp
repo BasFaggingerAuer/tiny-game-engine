@@ -38,6 +38,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/draw/terrain.h>
 
 #include <tiny/draw/heightmap/normalmap.h>
+#include <tiny/draw/heightmap/scale.h>
+#include <tiny/draw/heightmap/resize.h>
+#include <tiny/draw/heightmap/diamondsquare.h>
 
 using namespace std;
 using namespace tiny;
@@ -55,7 +58,7 @@ draw::StaticMesh *skyBox = 0;
 draw::RGBATexture2D *skyTexture = 0;
 
 //const vec3 terrainScale = vec3(3.0e5, 2.0e3, 3.0e5);
-const vec3 terrainScale = vec3(4.0f, 4.0f, 4.0f);
+const vec3 terrainScale = vec3(4.0f, 1.0f, 4.0f);
 draw::FloatTexture2D *terrainHeightTexture = 0;
 draw::RGBTexture2D *terrainNormalTexture = 0;
 draw::RGBTexture2D *terrainDiffuseTexture = 0;
@@ -195,7 +198,9 @@ void setup()
     terrainHeightTexture = new draw::FloatTexture2D(img::io::readImage(DATA_DIRECTORY + "img/tasmania.png"));
     terrainNormalTexture = new draw::RGBTexture2D(terrainHeightTexture->getWidth(), terrainHeightTexture->getHeight());
     terrainDiffuseTexture = new draw::RGBTexture2D(img::io::readImage(DATA_DIRECTORY + "img/default.png"));
-    draw::computeNormalMap(*terrainHeightTexture, *terrainNormalTexture, terrainScale.x);
+    
+    draw::computeScaledTexture(*terrainHeightTexture, *terrainHeightTexture, vec4(1.0f/255.0f, 1.0f/255.0f, 1.0f/255.0f, 1.0f/255.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f));
+    draw::computeNormalMap(*terrainHeightTexture, *terrainNormalTexture, terrainScale.x/terrainScale.y);
     
     terrain = new draw::Terrain(6, 8);
     terrain->setTextures(*terrainHeightTexture, *terrainNormalTexture, *terrainDiffuseTexture, terrainScale);
@@ -306,7 +311,7 @@ void update(const double &dt)
     worldRenderer->setCamera(cameraPosition, cameraOrientation);
     effectRenderer->setCamera(cameraPosition, cameraOrientation);
     
-    //fogEffect->setSun(vec3(cos(0.5f*globalTime), sin(0.5f*globalTime), 0.0f));
+    fogEffect->setSun(vec3(cos(0.5f*globalTime), 1.0f, sin(0.5f*globalTime)));
     
     for (std::vector<draw::PointLightInstance>::iterator i = pointLightInstances.begin(); i != pointLightInstances.end(); ++i)
     {

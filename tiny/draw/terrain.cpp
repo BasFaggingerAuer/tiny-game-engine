@@ -228,6 +228,7 @@ Terrain::Terrain(const int &a_shiftBlockSize, const int &a_maxLevel) :
     blockSize(1 << a_shiftBlockSize),
     superBlockSize(4*blockSize + 2),
     scale(vec3(1.0f, 1.0f, 1.0f)),
+    farScale(ivec2(1, 1)),
     bitShifts(ivec2(0, 0)),
     blockTranslations(maxLevel, ivec2(0, 0)),
     smallBlock(blockSize, blockSize, 12*maxLevel),
@@ -245,7 +246,9 @@ Terrain::Terrain(const int &a_shiftBlockSize, const int &a_maxLevel) :
 {
     //Setup textures.
     uniformMap.addTexture("heightTexture");
+    uniformMap.addTexture("farHeightTexture");
     uniformMap.addTexture("normalTexture");
+    uniformMap.addTexture("farNormalTexture");
     uniformMap.addTexture("diffuseTexture");
     
     //Setup initial blockTranslations.
@@ -271,22 +274,33 @@ std::string Terrain::getVertexShaderCode() const
 "\n"
 "uniform mat4 worldToScreen;\n"
 "uniform sampler2D heightTexture;\n"
+"uniform sampler2D farHeightTexture;\n"
 "uniform vec3 worldScale;\n"
 "uniform vec2 inverseHeightTextureSize;\n"
 "uniform vec2 textureShift;\n"
+"uniform vec4 scaleAndTranslateFar;\n"
 "\n"
 "in vec2 v_vertex;\n"
 "in vec4 v_scaleAndTranslate;\n"
 "\n"
 "out vec3 f_worldPosition;\n"
-"out vec2 f_texturePosition;\n"
+"out vec4 f_texturePosition;\n"
+"out float f_farMorphFactor;\n"
 "out float f_cameraDepth;\n"
 "\n"
 "void main(void)\n"
 "{\n"
 "   f_worldPosition = vec3(v_scaleAndTranslate.xy*v_vertex + v_scaleAndTranslate.zw, 0.0f).xzy;\n"
-"   f_texturePosition = (textureShift + f_worldPosition.xz)*inverseHeightTextureSize;\n"
-"   f_worldPosition.y = texture(heightTexture, f_texturePosition).x;\n"
+"   \n"
+"   f_texturePosition.xy = (textureShift + f_worldPosition.xz)*inverseHeightTextureSize;\n"
+"   f_texturePosition.zw = (textureShift + (scaleAndTranslateFar.xy*f_worldPosition.xz + scaleAndTranslateFar.zw))*inverseHeightTextureSize;\n"
+"   \n"
+"   vec2 morph = clamp(f_texturePosition.xy, vec2(0.0f), vec2(1.0f));\n"
+"   \n"
+"   morph = max(vec2(1.0f) - 4.0f*morph, 4.0f*morph - vec2(3.0f));\n"
+"   f_farMorphFactor = 0.0f; //max(max(morph.x, morph.y), 0.0f);\n"
+"   \n"
+"   f_worldPosition.y = mix(texture(heightTexture, f_texturePosition.xy).x, texture(farHeightTexture, f_texturePosition.zw).x, f_farMorphFactor);\n"
 "   f_worldPosition *= worldScale;\n"
 "   gl_Position = worldToScreen*vec4(f_worldPosition, 1.0f);\n"
 "   f_cameraDepth = gl_Position.z;\n"
@@ -300,13 +314,15 @@ std::string Terrain::getFragmentShaderCode() const
 "\n"
 "precision highp float;\n"
 "\n"
-"uniform sampler2D diffuseTexture;\n"
 "uniform sampler2D normalTexture;\n"
+"uniform sampler2D farNormalTexture;\n"
+"uniform sampler2D diffuseTexture;\n"
 "\n"
 "const float C = 1.0f, D = 1.0e6, E = 1.0f;\n"
 "\n"
 "in vec3 f_worldPosition;\n"
-"in vec2 f_texturePosition;\n"
+"in vec4 f_texturePosition;\n"
+"in float f_farMorphFactor;\n"
 "in float f_cameraDepth;\n"
 "\n"
 "out vec4 diffuse;\n"
@@ -315,8 +331,8 @@ std::string Terrain::getFragmentShaderCode() const
 "\n"
 "void main(void)\n"
 "{\n"
-"   diffuse = texture(diffuseTexture, f_texturePosition);\n"
-"   worldNormal = vec4(2.0f*texture(normalTexture, f_texturePosition).xyz - 1.0f, 0.0f);\n"
+"   diffuse = texture(diffuseTexture, f_texturePosition.xy);\n"
+"   worldNormal = vec4(2.0f*texture(normalTexture, f_texturePosition.xy).xyz - 1.0f, 0.0f);\n"
 "   worldPosition = vec4(f_worldPosition, f_cameraDepth);\n"
 "   \n"
 "   gl_FragDepth = (log(C*f_cameraDepth + E) / log(C*D + E));\n"

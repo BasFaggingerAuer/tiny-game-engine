@@ -131,11 +131,35 @@ class Terrain : public Renderable
         void setTextures(const TextureType1 &heightTexture, const TextureType2 &normalTexture, const TextureType3 &diffuseTexture, const vec3 &scale_)
         {
             uniformMap.setTexture(heightTexture, "heightTexture");
+            uniformMap.setTexture(heightTexture, "farHeightTexture");
             uniformMap.setTexture(normalTexture, "normalTexture");
+            uniformMap.setTexture(normalTexture, "farNormalTexture");
             uniformMap.setTexture(diffuseTexture, "diffuseTexture");
             
             scale = scale_;
-            uniformMap.setVec3Uniform(scale.x, scale.y, scale.z, "worldScale");
+            farScale = ivec2(1, 1);
+            uniformMap.setVec3Uniform(scale, "worldScale");
+            uniformMap.setVec4Uniform(1.0f, 1.0f, 0.0f, 0.0f, "scaleAndTranslateFar");
+            uniformMap.setVec2Uniform(1.0f/static_cast<float>(heightTexture.getWidth()), 1.0f/static_cast<float>(heightTexture.getHeight()), "inverseHeightTextureSize");
+            uniformMap.setVec2Uniform(heightTexture.getWidth()/2, heightTexture.getHeight()/2, "textureShift");
+        }
+        
+        template <typename TextureType1, typename TextureType2, typename TextureType3>
+        void setFarTextures(const TextureType1 &heightTexture, const TextureType1 &farHeightTexture,
+                            const TextureType2 &normalTexture, const TextureType2 &farNormalTexture,
+                            const TextureType3 &diffuseTexture,
+                            const vec3 &scale_, const ivec2 &farScale_, const vec2 farOffset)
+        {
+            uniformMap.setTexture(heightTexture, "heightTexture");
+            uniformMap.setTexture(farHeightTexture, "farHeightTexture");
+            uniformMap.setTexture(normalTexture, "normalTexture");
+            uniformMap.setTexture(farNormalTexture, "farNormalTexture");
+            uniformMap.setTexture(diffuseTexture, "diffuseTexture");
+            
+            scale = scale_;
+            farScale = farScale_;
+            uniformMap.setVec3Uniform(scale, "worldScale");
+            uniformMap.setVec4Uniform(1.0f/static_cast<float>(farScale.x), 1.0f/static_cast<float>(farScale.y), farOffset.x*farHeightTexture.getWidth(), farOffset.y*farHeightTexture.getHeight(), "scaleAndTranslateFar");
             uniformMap.setVec2Uniform(1.0f/static_cast<float>(heightTexture.getWidth()), 1.0f/static_cast<float>(heightTexture.getHeight()), "inverseHeightTextureSize");
             uniformMap.setVec2Uniform(heightTexture.getWidth()/2, heightTexture.getHeight()/2, "textureShift");
         }
@@ -156,6 +180,7 @@ class Terrain : public Renderable
         const size_t blockSize;
         const size_t superBlockSize;
         vec3 scale;
+        ivec2 farScale;
         ivec2 bitShifts;
         std::vector<ivec2> blockTranslations;
         
