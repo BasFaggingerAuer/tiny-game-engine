@@ -57,7 +57,6 @@ draw::RGBATexture2D *testDiffuseTexture = 0;
 draw::StaticMesh *skyBox = 0;
 draw::RGBATexture2D *skyTexture = 0;
 
-//const vec3 terrainScale = vec3(3.0e5/2048.0, 2.0e3, 3.0e5/2048.0);
 const vec2 terrainScale = vec2(2.0f, 2.0f);
 const float terrainHeightScale = 2048.0f;
 const ivec2 terrainFarScale = ivec2(32, 32);
