@@ -57,10 +57,15 @@ draw::RGBATexture2D *testDiffuseTexture = 0;
 draw::StaticMesh *skyBox = 0;
 draw::RGBATexture2D *skyTexture = 0;
 
-//const vec3 terrainScale = vec3(3.0e5, 2.0e3, 3.0e5);
-const vec3 terrainScale = vec3(4.0f, 1.0f, 4.0f);
+//const vec3 terrainScale = vec3(3.0e5/2048.0, 2.0e3, 3.0e5/2048.0);
+const vec2 terrainScale = vec2(4.0f, 4.0f);
+const float terrainHeightScale = 128.0f;
+const ivec2 terrainFarScale = ivec2(16, 16);
+const vec2 terrainFarOffset = vec2(0.5f, 0.5f);
 draw::FloatTexture2D *terrainHeightTexture = 0;
+draw::FloatTexture2D *terrainFarHeightTexture = 0;
 draw::RGBTexture2D *terrainNormalTexture = 0;
+draw::RGBTexture2D *terrainFarNormalTexture = 0;
 draw::RGBTexture2D *terrainDiffuseTexture = 0;
 draw::Terrain *terrain = 0;
 
@@ -195,15 +200,24 @@ void setup()
     skyTexture = new draw::RGBATexture2D(img::io::readImage(DATA_DIRECTORY + "img/sky.png"));
     
     //Create terrain.
-    terrainHeightTexture = new draw::FloatTexture2D(img::io::readImage(DATA_DIRECTORY + "img/tasmania.png"));
-    terrainNormalTexture = new draw::RGBTexture2D(terrainHeightTexture->getWidth(), terrainHeightTexture->getHeight());
+    terrainFarHeightTexture = new draw::FloatTexture2D(img::io::readImage(DATA_DIRECTORY + "img/tasmania.png"));
+    terrainHeightTexture = new draw::FloatTexture2D(terrainFarHeightTexture->getWidth(), terrainFarHeightTexture->getHeight());
+    terrainFarNormalTexture = new draw::RGBTexture2D(terrainFarHeightTexture->getWidth(), terrainFarHeightTexture->getHeight());
+    terrainNormalTexture = new draw::RGBTexture2D(terrainFarHeightTexture->getWidth(), terrainFarHeightTexture->getHeight());
     terrainDiffuseTexture = new draw::RGBTexture2D(img::io::readImage(DATA_DIRECTORY + "img/default.png"));
     
-    draw::computeScaledTexture(*terrainHeightTexture, *terrainHeightTexture, vec4(1.0f/255.0f, 1.0f/255.0f, 1.0f/255.0f, 1.0f/255.0f), vec4(0.0f, 0.0f, 0.0f, 0.0f));
-    draw::computeNormalMap(*terrainHeightTexture, *terrainNormalTexture, terrainScale.x/terrainScale.y);
+    draw::computeScaledTexture(*terrainFarHeightTexture, *terrainFarHeightTexture, vec4(terrainHeightScale/255.0f), vec4(0.0f));
+    draw::computeNormalMap(*terrainFarHeightTexture, *terrainFarNormalTexture, terrainScale.x);
+    
+    //Create far-away terrain.
+    //draw::computeResizedTexture(terrainFarHeightTexture, terrainHeightTexture, vec2(1.0f/static_cast<float>(terrainFarScale.x), 1.0f/static_cast<float>(terrainFarScale.y)), terrainFarOffset);
     
     terrain = new draw::Terrain(6, 8);
-    terrain->setTextures(*terrainHeightTexture, *terrainNormalTexture, *terrainDiffuseTexture, terrainScale);
+    terrain->setTextures(*terrainFarHeightTexture, *terrainFarNormalTexture, *terrainDiffuseTexture, terrainScale);
+    //terrain->setFarTextures(*terrainHeightTexture, *terrainFarHeightTexture,
+    //                        *terrainNormalTexture, *terrainFarNormalTexture,
+    //                        *terrainDiffuseTexture,
+    //                        terrainScale);
     
     const float lightSpacing = 4.0f;
     
@@ -278,7 +292,9 @@ void cleanup()
     delete terrain;
     delete terrainDiffuseTexture;
     delete terrainNormalTexture;
+    delete terrainFarNormalTexture;
     delete terrainHeightTexture;
+    delete terrainFarHeightTexture;
     
     delete skyTexture;
     delete skyBox;

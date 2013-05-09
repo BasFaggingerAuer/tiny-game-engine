@@ -227,7 +227,7 @@ Terrain::Terrain(const int &a_shiftBlockSize, const int &a_maxLevel) :
     maxLevel(a_maxLevel > 2 ? a_maxLevel : 2),
     blockSize(1 << a_shiftBlockSize),
     superBlockSize(4*blockSize + 2),
-    scale(vec3(1.0f, 1.0f, 1.0f)),
+    scale(vec2(1.0f, 1.0f)),
     farScale(ivec2(1, 1)),
     bitShifts(ivec2(0, 0)),
     blockTranslations(maxLevel, ivec2(0, 0)),
@@ -272,10 +272,12 @@ std::string Terrain::getVertexShaderCode() const
     return std::string(
 "#version 150\n"
 "\n"
-"uniform mat4 worldToScreen;\n"
 "uniform sampler2D heightTexture;\n"
 "uniform sampler2D farHeightTexture;\n"
-"uniform vec3 worldScale;\n"
+"\n"
+"uniform mat4 worldToScreen;\n"
+"\n"
+"uniform vec2 worldScale;\n"
 "uniform vec2 inverseHeightTextureSize;\n"
 "uniform vec2 textureShift;\n"
 "uniform vec4 scaleAndTranslateFar;\n"
@@ -298,10 +300,13 @@ std::string Terrain::getVertexShaderCode() const
 "   vec2 morph = clamp(f_texturePosition.xy, vec2(0.0f), vec2(1.0f));\n"
 "   \n"
 "   morph = max(vec2(1.0f) - 4.0f*morph, 4.0f*morph - vec2(3.0f));\n"
-"   f_farMorphFactor = 0.0f; //max(max(morph.x, morph.y), 0.0f);\n"
+"   f_farMorphFactor = max(max(morph.x, morph.y), 0.0f);\n"
 "   \n"
-"   f_worldPosition.y = mix(texture(heightTexture, f_texturePosition.xy).x, texture(farHeightTexture, f_texturePosition.zw).x, f_farMorphFactor);\n"
-"   f_worldPosition *= worldScale;\n"
+"   float height1 = texture(heightTexture, f_texturePosition.xy).x;\n"
+"   float height2 = texture(farHeightTexture, f_texturePosition.zw).x;\n"
+"   \n"
+"   f_worldPosition.y = mix(height1, height2, f_farMorphFactor);\n"
+"   f_worldPosition.xz *= worldScale;\n"
 "   gl_Position = worldToScreen*vec4(f_worldPosition, 1.0f);\n"
 "   f_cameraDepth = gl_Position.z;\n"
 "}\n\0");
@@ -332,7 +337,11 @@ std::string Terrain::getFragmentShaderCode() const
 "void main(void)\n"
 "{\n"
 "   diffuse = texture(diffuseTexture, f_texturePosition.xy);\n"
-"   worldNormal = vec4(2.0f*texture(normalTexture, f_texturePosition.xy).xyz - 1.0f, 0.0f);\n"
+"   \n"
+"   vec3 normal1 = normalize(2.0f*texture(normalTexture, f_texturePosition.xy).xyz - 1.0f);\n"
+"   vec3 normal2 = normalize(2.0f*texture(farNormalTexture, f_texturePosition.zw).xyz - 1.0f);\n"
+"   \n"
+"   worldNormal = vec4(normalize(mix(normal1, normal2, f_farMorphFactor)), 0.0f);\n"
 "   worldPosition = vec4(f_worldPosition, f_cameraDepth);\n"
 "   \n"
 "   gl_FragDepth = (log(C*f_cameraDepth + E) / log(C*D + E));\n"
@@ -459,7 +468,7 @@ void Terrain::setCameraPosition(const vec3 &a_position)
 {
     //Updates shifts and blockTranslations to re-centre the map at the player's position.
     //Do not update display lists if the camera's position has not changed.
-    if (!updateBlockTranslations(vec2(a_position.x/scale.x, a_position.z/scale.z))) return;
+    if (!updateBlockTranslations(vec2(a_position.x/scale.x, a_position.z/scale.y))) return;
     
     //Create new instance buffers.
     nrSmallBlocks = 0;

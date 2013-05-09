@@ -28,7 +28,7 @@ namespace draw
 {
 
 template<typename TextureType1, typename TextureType2>
-void computeResizedTexture(const TextureType1 &source, TextureType2 &dest, const vec4 &scale, const vec4 &add)
+void computeResizedTexture(const TextureType1 &source, TextureType2 &dest, const vec2 &scale, const vec2 &add)
 {
     std::vector<std::string> inputTextures;
     std::vector<std::string> outputTextures;
@@ -38,8 +38,8 @@ void computeResizedTexture(const TextureType1 &source, TextureType2 &dest, const
 "precision highp float;\n"
 "\n"
 "uniform sampler2D source;\n"
-"uniform vec4 scaleVec;\n"
-"uniform vec4 addVec;\n"
+"uniform vec2 scaleVec;\n"
+"uniform vec2 addVec;\n"
 "\n"
 "in vec2 tex;\n"
 "out vec4 colour;\n"
@@ -54,8 +54,8 @@ void computeResizedTexture(const TextureType1 &source, TextureType2 &dest, const
 
     ComputeTexture *computeTexture = new ComputeTexture(inputTextures, outputTextures, fragmentShader);
     
-    computeTexture->uniformMap().setVec4Uniform(scale, "scaleVec");
-    computeTexture->uniformMap().setVec4Uniform(add, "addVec");
+    computeTexture->uniformMap().setVec2Uniform(scale, "scaleVec");
+    computeTexture->uniformMap().setVec2Uniform(add, "addVec");
     computeTexture->setInput(source, "source");
     computeTexture->setOutput(dest, "colour");
     computeTexture->compute();
