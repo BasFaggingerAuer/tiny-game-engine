@@ -25,7 +25,7 @@ find_package(SDL_ttf REQUIRED)
 
 configure_file(config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
 
-set(CMAKE_CXX_FLAGS "-O2 -g -Wall -Wextra -Wshadow -pedantic")
+set(CMAKE_CXX_FLAGS "-O2 -g -Wall -Wextra -Wshadow -ansi -pedantic")
 #set(CMAKE_CXX_FLAGS "-O3 -Wall -DNDEBUG")
 set(CMAKE_EXE_LINKER_FLAGS "-lrt")
 

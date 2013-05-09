@@ -271,7 +271,9 @@ std::string Terrain::getVertexShaderCode() const
 "\n"
 "uniform mat4 worldToScreen;\n"
 "uniform sampler2D heightTexture;\n"
+"uniform vec3 worldScale;\n"
 "uniform vec2 inverseHeightTextureSize;\n"
+"uniform vec2 textureShift;\n"
 "\n"
 "in vec2 v_vertex;\n"
 "in vec4 v_scaleAndTranslate;\n"
@@ -283,9 +285,9 @@ std::string Terrain::getVertexShaderCode() const
 "void main(void)\n"
 "{\n"
 "   f_worldPosition = vec3(v_scaleAndTranslate.xy*v_vertex + v_scaleAndTranslate.zw, 0.0f).xzy;\n"
-"   f_texturePosition = f_worldPosition.xz*inverseHeightTextureSize;\n"
+"   f_texturePosition = (textureShift + f_worldPosition.xz)*inverseHeightTextureSize;\n"
 "   f_worldPosition.y = texture(heightTexture, f_texturePosition).x;\n"
-"   //16.0f*sin(0.1f*f_worldPosition.x)*sin(0.1f*f_worldPosition.z)*(1.0f - exp(-0.01f*length(f_worldPosition.xz)));\n"
+"   f_worldPosition *= worldScale;\n"
 "   gl_Position = worldToScreen*vec4(f_worldPosition, 1.0f);\n"
 "   f_cameraDepth = gl_Position.z;\n"
 "}\n\0");
@@ -453,10 +455,10 @@ void Terrain::setCameraPosition(const vec3 &a_position)
     for (int i = minLevel; i < maxLevel; ++i)
     {
         //Calculate scale factor and set up translations.
-        const vec2 r = (float)(1 << i)*vec2(scale.x, scale.z);
-        const vec2 s = (float)(4 << i)*vec2(scale.x, scale.z);
-        const vec2 bs = (float)((blockSize - 1) << i)*vec2(scale.x, scale.z);
-        const vec2 t = vec2(blockTranslations[i].x*scale.x, blockTranslations[i].y*scale.z);
+        const vec2 r = vec2(1 << i, 1 << i);
+        const vec2 s = vec2(4 << i, 4 << i);
+        const vec2 bs = vec2((blockSize - 1) << i, (blockSize - 1) << i);
+        const vec2 t = vec2(blockTranslations[i].x, blockTranslations[i].y);
         
         //Draw blocks.
         smallBlock[nrSmallBlocks++] = TerrainBlockInstance(vec4(r.x, r.y, t.x + s.x + 3.0f*bs.x, t.y + s.y + 2.0f*bs.y));

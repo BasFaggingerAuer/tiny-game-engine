@@ -54,6 +54,7 @@ draw::RGBATexture2D *testDiffuseTexture = 0;
 draw::StaticMesh *skyBox = 0;
 draw::RGBATexture2D *skyTexture = 0;
 
+//const vec3 terrainScale = vec3(3.0e5, 2.0e3, 3.0e5);
 const vec3 terrainScale = vec3(4.0f, 4.0f, 4.0f);
 draw::FloatTexture2D *terrainHeightTexture = 0;
 draw::RGBTexture2D *terrainNormalTexture = 0;
@@ -114,7 +115,7 @@ SimpleFogEffect::SimpleFogEffect() :
 {
     skyColours.push_back(vec3(1.0f, 1.0f, 1.0f));
     setSun(vec3(0.7f, 0.7f, 0.0f));
-    setFog(64.0f);
+    setFog(8.0f);
 }
 
 SimpleFogEffect::~SimpleFogEffect()
@@ -196,7 +197,7 @@ void setup()
     terrainDiffuseTexture = new draw::RGBTexture2D(img::io::readImage(DATA_DIRECTORY + "img/default.png"));
     draw::computeNormalMap(*terrainHeightTexture, *terrainNormalTexture, terrainScale.x);
     
-    terrain = new draw::Terrain(4, 8);
+    terrain = new draw::Terrain(6, 8);
     terrain->setTextures(*terrainHeightTexture, *terrainNormalTexture, *terrainDiffuseTexture, terrainScale);
     
     const float lightSpacing = 4.0f;
@@ -305,7 +306,7 @@ void update(const double &dt)
     worldRenderer->setCamera(cameraPosition, cameraOrientation);
     effectRenderer->setCamera(cameraPosition, cameraOrientation);
     
-    fogEffect->setSun(vec3(cos(0.5f*globalTime), sin(0.5f*globalTime), 0.0f));
+    //fogEffect->setSun(vec3(cos(0.5f*globalTime), sin(0.5f*globalTime), 0.0f));
     
     for (std::vector<draw::PointLightInstance>::iterator i = pointLightInstances.begin(); i != pointLightInstances.end(); ++i)
     {

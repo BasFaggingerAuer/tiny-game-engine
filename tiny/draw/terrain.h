@@ -134,8 +134,10 @@ class Terrain : public Renderable
             uniformMap.setTexture(normalTexture, "normalTexture");
             uniformMap.setTexture(diffuseTexture, "diffuseTexture");
             
-            uniformMap.setVec2Uniform(1.0f/static_cast<float>(heightTexture.getWidth()), 1.0f/static_cast<float>(heightTexture.getHeight()), "inverseHeightTextureSize");
             scale = scale_;
+            uniformMap.setVec3Uniform(scale.x, scale.y, scale.z, "worldScale");
+            uniformMap.setVec2Uniform(1.0f/static_cast<float>(heightTexture.getWidth()), 1.0f/static_cast<float>(heightTexture.getHeight()), "inverseHeightTextureSize");
+            uniformMap.setVec2Uniform(heightTexture.getWidth()/2, heightTexture.getHeight()/2, "textureShift");
         }
         
         std::string getVertexShaderCode() const;
