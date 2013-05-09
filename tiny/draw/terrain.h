@@ -154,7 +154,7 @@ class Terrain : public Renderable
             scale = scale_;
             farScale = farScale_;
             uniformMap.setVec2Uniform(scale, "worldScale");
-            uniformMap.setVec4Uniform(1.0f/static_cast<float>(farScale.x), 1.0f/static_cast<float>(farScale.y), farOffset.x*farHeightTexture.getWidth(), farOffset.y*farHeightTexture.getHeight(), "scaleAndTranslateFar");
+            uniformMap.setVec4Uniform(1.0f/static_cast<float>(farScale.x), 1.0f/static_cast<float>(farScale.y), farOffset.x, farOffset.y, "scaleAndTranslateFar");
             uniformMap.setVec2Uniform(1.0f/static_cast<float>(heightTexture.getWidth()), 1.0f/static_cast<float>(heightTexture.getHeight()), "inverseHeightTextureSize");
             uniformMap.setVec2Uniform(heightTexture.getWidth()/2, heightTexture.getHeight()/2, "textureShift");
         }

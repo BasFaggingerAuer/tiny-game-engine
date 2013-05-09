@@ -142,11 +142,11 @@ void computeDiamondSquareRefinement(const TextureType &source, TextureType &dest
     ComputeTexture *squareComputeTexture = new ComputeTexture(inputTextures, outputTextures, squareFragmentShader);
     
     diamondComputeTexture->uniformMap().setVec2Uniform(source.getWidth(), source.getHeight(), "sourceSize");
-    diamondComputeTexture->setOutput(tmp[1], "colour");
+    diamondComputeTexture->setOutput(*tmp[1], "colour");
     
     squareComputeTexture->uniformMap().setVec2Uniform(source.getWidth(), source.getHeight(), "sourceSize");
-    squareComputeTexture->setInput(tmp[1], "source");
-    squareComputeTexture->setOutput(tmp[0], "colour");
+    squareComputeTexture->setInput(*tmp[1], "source");
+    squareComputeTexture->setOutput(*tmp[0], "colour");
     
     //Run diamond-square.
     for (size_t step = stepSize/2; step >= 1; step >>= 1)
@@ -163,7 +163,7 @@ void computeDiamondSquareRefinement(const TextureType &source, TextureType &dest
         }
         else
         {
-            diamondComputeTexture->setInput(tmp[0], "source");
+            diamondComputeTexture->setInput(*tmp[0], "source");
         }
         
         if (step == 1)
@@ -173,7 +173,7 @@ void computeDiamondSquareRefinement(const TextureType &source, TextureType &dest
         }
         else
         {
-            squareComputeTexture->setOutput(tmp[0], "colour");
+            squareComputeTexture->setOutput(*tmp[0], "colour");
         }
         
         diamondComputeTexture->compute();

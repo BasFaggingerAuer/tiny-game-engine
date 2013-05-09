@@ -58,9 +58,9 @@ draw::StaticMesh *skyBox = 0;
 draw::RGBATexture2D *skyTexture = 0;
 
 //const vec3 terrainScale = vec3(3.0e5/2048.0, 2.0e3, 3.0e5/2048.0);
-const vec2 terrainScale = vec2(64.0f, 64.0f);
+const vec2 terrainScale = vec2(2.0f, 2.0f);
 const float terrainHeightScale = 2048.0f;
-const ivec2 terrainFarScale = ivec2(16, 16);
+const ivec2 terrainFarScale = ivec2(32, 32);
 const vec2 terrainFarOffset = vec2(0.5f, 0.5f);
 draw::FloatTexture2D *terrainHeightTexture = 0;
 draw::FloatTexture2D *terrainFarHeightTexture = 0;
@@ -207,17 +207,25 @@ void setup()
     terrainDiffuseTexture = new draw::RGBTexture2D(img::io::readImage(DATA_DIRECTORY + "img/default.png"));
     
     draw::computeScaledTexture(*terrainHeightTexture, *terrainFarHeightTexture, vec4(terrainHeightScale/255.0f), vec4(0.0f));
-    draw::computeNormalMap(*terrainFarHeightTexture, *terrainFarNormalTexture, terrainScale.x);
-    
-    //Create far-away terrain.
-    //draw::computeResizedTexture(terrainFarHeightTexture, terrainHeightTexture, vec2(1.0f/static_cast<float>(terrainFarScale.x), 1.0f/static_cast<float>(terrainFarScale.y)), terrainFarOffset);
+    draw::computeNormalMap(*terrainFarHeightTexture, *terrainFarNormalTexture, terrainScale.x*terrainFarScale.x);
     
     terrain = new draw::Terrain(6, 8);
-    terrain->setTextures(*terrainFarHeightTexture, *terrainFarNormalTexture, *terrainDiffuseTexture, terrainScale);
-    //terrain->setFarTextures(*terrainHeightTexture, *terrainFarHeightTexture,
-    //                        *terrainNormalTexture, *terrainFarNormalTexture,
-    //                        *terrainDiffuseTexture,
-    //                        terrainScale);
+    
+    if (terrainFarScale.x > 1 || terrainFarScale.y > 1)
+    {
+        //Create far-away terrain.
+        draw::computeResizedTexture(*terrainFarHeightTexture, *terrainHeightTexture, vec2(1.0f/static_cast<float>(terrainFarScale.x), 1.0f/static_cast<float>(terrainFarScale.y)), terrainFarOffset);
+        draw::computeDiamondSquareRefinement(*terrainHeightTexture, *terrainHeightTexture, terrainFarScale.x);
+        draw::computeNormalMap(*terrainHeightTexture, *terrainNormalTexture, terrainScale.x);
+        terrain->setFarTextures(*terrainHeightTexture, *terrainFarHeightTexture,
+                                *terrainNormalTexture, *terrainFarNormalTexture,
+                                *terrainDiffuseTexture,
+                                terrainScale, terrainFarScale, terrainFarOffset);
+    }
+    else
+    {
+        terrain->setTextures(*terrainFarHeightTexture, *terrainFarNormalTexture, *terrainDiffuseTexture, terrainScale);
+    }
     
     const float lightSpacing = 4.0f;
     
