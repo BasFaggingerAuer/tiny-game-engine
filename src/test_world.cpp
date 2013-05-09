@@ -58,8 +58,8 @@ draw::StaticMesh *skyBox = 0;
 draw::RGBATexture2D *skyTexture = 0;
 
 //const vec3 terrainScale = vec3(3.0e5/2048.0, 2.0e3, 3.0e5/2048.0);
-const vec2 terrainScale = vec2(4.0f, 4.0f);
-const float terrainHeightScale = 128.0f;
+const vec2 terrainScale = vec2(64.0f, 64.0f);
+const float terrainHeightScale = 2048.0f;
 const ivec2 terrainFarScale = ivec2(16, 16);
 const vec2 terrainFarOffset = vec2(0.5f, 0.5f);
 draw::FloatTexture2D *terrainHeightTexture = 0;
@@ -200,13 +200,13 @@ void setup()
     skyTexture = new draw::RGBATexture2D(img::io::readImage(DATA_DIRECTORY + "img/sky.png"));
     
     //Create terrain.
-    terrainFarHeightTexture = new draw::FloatTexture2D(img::io::readImage(DATA_DIRECTORY + "img/tasmania.png"));
-    terrainHeightTexture = new draw::FloatTexture2D(terrainFarHeightTexture->getWidth(), terrainFarHeightTexture->getHeight());
-    terrainFarNormalTexture = new draw::RGBTexture2D(terrainFarHeightTexture->getWidth(), terrainFarHeightTexture->getHeight());
-    terrainNormalTexture = new draw::RGBTexture2D(terrainFarHeightTexture->getWidth(), terrainFarHeightTexture->getHeight());
+    terrainHeightTexture = new draw::FloatTexture2D(img::io::readImage(DATA_DIRECTORY + "img/tasmania.png"));
+    terrainFarHeightTexture = new draw::FloatTexture2D(terrainHeightTexture->getWidth(), terrainHeightTexture->getHeight());
+    terrainNormalTexture = new draw::RGBTexture2D(terrainHeightTexture->getWidth(), terrainHeightTexture->getHeight());
+    terrainFarNormalTexture = new draw::RGBTexture2D(terrainHeightTexture->getWidth(), terrainHeightTexture->getHeight());
     terrainDiffuseTexture = new draw::RGBTexture2D(img::io::readImage(DATA_DIRECTORY + "img/default.png"));
     
-    draw::computeScaledTexture(*terrainFarHeightTexture, *terrainFarHeightTexture, vec4(terrainHeightScale/255.0f), vec4(0.0f));
+    draw::computeScaledTexture(*terrainHeightTexture, *terrainFarHeightTexture, vec4(terrainHeightScale/255.0f), vec4(0.0f));
     draw::computeNormalMap(*terrainFarHeightTexture, *terrainFarNormalTexture, terrainScale.x);
     
     //Create far-away terrain.

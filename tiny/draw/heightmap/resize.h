@@ -50,7 +50,7 @@ void computeResizedTexture(const TextureType1 &source, TextureType2 &dest, const
 "}\n";
     
     inputTextures.push_back("source");
-    outputTextures.push_back("dest");
+    outputTextures.push_back("colour");
 
     ComputeTexture *computeTexture = new ComputeTexture(inputTextures, outputTextures, fragmentShader);
     
