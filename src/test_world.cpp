@@ -41,6 +41,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/draw/heightmap/scale.h>
 #include <tiny/draw/heightmap/resize.h>
 #include <tiny/draw/heightmap/diamondsquare.h>
+#include <tiny/draw/heightmap/heighttocolour.h>
 
 using namespace std;
 using namespace tiny;
@@ -57,9 +58,9 @@ draw::RGBATexture2D *testDiffuseTexture = 0;
 draw::StaticMesh *skyBox = 0;
 draw::RGBATexture2D *skyTexture = 0;
 
-const vec2 terrainScale = vec2(2.0f, 2.0f);
-const float terrainHeightScale = 2048.0f;
-const ivec2 terrainFarScale = ivec2(32, 32);
+const vec2 terrainScale = vec2(1.0f, 1.0f);
+const float terrainHeightScale = 512.0f;
+const ivec2 terrainFarScale = ivec2(16, 16);
 const vec2 terrainFarOffset = vec2(0.5f, 0.5f);
 draw::FloatTexture2D *terrainHeightTexture = 0;
 draw::FloatTexture2D *terrainFarHeightTexture = 0;
@@ -203,10 +204,12 @@ void setup()
     terrainFarHeightTexture = new draw::FloatTexture2D(terrainHeightTexture->getWidth(), terrainHeightTexture->getHeight());
     terrainNormalTexture = new draw::RGBTexture2D(terrainHeightTexture->getWidth(), terrainHeightTexture->getHeight());
     terrainFarNormalTexture = new draw::RGBTexture2D(terrainHeightTexture->getWidth(), terrainHeightTexture->getHeight());
-    terrainDiffuseTexture = new draw::RGBTexture2D(img::io::readImage(DATA_DIRECTORY + "img/default.png"));
+    //terrainDiffuseTexture = new draw::RGBTexture2D(img::io::readImage(DATA_DIRECTORY + "img/default.png"));
+    terrainDiffuseTexture = new draw::RGBTexture2D(terrainHeightTexture->getWidth(), terrainHeightTexture->getHeight());
     
     draw::computeScaledTexture(*terrainHeightTexture, *terrainFarHeightTexture, vec4(terrainHeightScale/255.0f), vec4(0.0f));
     draw::computeNormalMap(*terrainFarHeightTexture, *terrainFarNormalTexture, terrainScale.x*terrainFarScale.x);
+    draw::computeColourFromHeight(*terrainFarHeightTexture, *terrainDiffuseTexture, terrainScale.x*terrainFarScale.x);
     
     terrain = new draw::Terrain(6, 8);
     
