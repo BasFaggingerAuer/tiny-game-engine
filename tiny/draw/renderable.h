@@ -75,11 +75,25 @@ class Renderable
         }
         
         template <typename T>
+        void renderIndicesAsTrianglesInstanced(const IndexBuffer<T> &buffer, const size_t &nrInstances) const
+        {
+            if (nrInstances > 0)
+            {
+                buffer.bind();
+                GL_CHECK(glDrawElementsInstanced(GL_TRIANGLES, buffer.size(), detail::getOpenGLDataType<T>(), 0, nrInstances));
+                buffer.unbind();
+            }
+        }
+        
+        template <typename T>
         void renderIndicesAsTriangleStripsInstanced(const IndexBuffer<T> &buffer, const size_t &nrInstances) const
         {
-            buffer.bind();
-            GL_CHECK(glDrawElementsInstanced(GL_TRIANGLE_STRIP, buffer.size(), detail::getOpenGLDataType<T>(), 0, nrInstances));
-            buffer.unbind();
+            if (nrInstances > 0)
+            {
+                buffer.bind();
+                GL_CHECK(glDrawElementsInstanced(GL_TRIANGLE_STRIP, buffer.size(), detail::getOpenGLDataType<T>(), 0, nrInstances));
+                buffer.unbind();
+            }
         }
         
         UniformMap uniformMap;

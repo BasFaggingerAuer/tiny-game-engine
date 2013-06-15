@@ -31,6 +31,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/draw/worldeffectrenderer.h>
 #include <tiny/draw/screensquare.h>
 #include <tiny/draw/staticmesh.h>
+#include <tiny/draw/staticmeshhorde.h>
 #include <tiny/draw/texture2d.h>
 #include <tiny/draw/icontexture2d.h>
 #include <tiny/draw/iconhorde.h>
@@ -53,6 +54,8 @@ draw::WorldRenderer *worldRenderer = 0;
 draw::WorldEffectRenderer *effectRenderer = 0;
 
 draw::StaticMesh *testMesh = 0;
+draw::StaticMeshHorde *testMeshes = 0;
+std::vector<draw::StaticMeshInstance> testMeshesInstances;
 draw::RGBATexture2D *testDiffuseTexture = 0;
 
 draw::StaticMesh *skyBox = 0;
@@ -195,6 +198,24 @@ void setup()
     testDiffuseTexture = new draw::RGBATexture2D(img::io::readImage(DATA_DIRECTORY + "img/default.png"));
     testMesh->setDiffuseTexture(*testDiffuseTexture);
     
+    testMeshes = new draw::StaticMeshHorde(mesh::StaticMesh::createCubeMesh(0.25f), 1024);
+    testMeshes->setDiffuseTexture(*testDiffuseTexture);
+    
+    const float meshSpacing = 1.0f;
+    
+    for (int i = -4; i <= 4; ++i)
+    {
+        for (int j = -4; j <= 4; ++j)
+        {
+            for (int k = -4; k <= 4; ++k)
+            {
+                testMeshesInstances.push_back(draw::StaticMeshInstance(vec4(meshSpacing*i, meshSpacing*j, meshSpacing*k, 1.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f)));
+            }
+        }
+    }
+    
+    testMeshes->setMeshes(testMeshesInstances.begin(), testMeshesInstances.end());
+    
     //Create sky.
     skyBox = new draw::StaticMesh(mesh::StaticMesh::createCubeMesh(-1.0e5));
     skyTexture = new draw::RGBATexture2D(img::io::readImage(DATA_DIRECTORY + "img/sky.png"));
@@ -273,6 +294,7 @@ void setup()
     
     worldRenderer->addRenderable(skyBox);
     worldRenderer->addRenderable(testMesh);
+    worldRenderer->addRenderable(testMeshes);
     worldRenderer->addRenderable(terrain);
     worldRenderer->addRenderable(worldFont);
     
@@ -309,6 +331,7 @@ void cleanup()
     delete skyTexture;
     delete skyBox;
     
+    delete testMeshes;
     delete testMesh;
     delete testDiffuseTexture;
 }
@@ -361,7 +384,7 @@ int main(int, char **)
 {
     try
     {
-        application = new os::SDLApplication(1280, 800);
+        application = new os::SDLApplication(1920, 980);
         setup();
     }
     catch (std::exception &e)

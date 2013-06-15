@@ -33,6 +33,7 @@ ScreenIconVertexBufferInterpreter::~ScreenIconVertexBufferInterpreter()
 }
 
 ScreenIconHorde::ScreenIconHorde(const size_t &a_maxNrIcons) :
+    Renderable(),
     maxNrIcons(a_maxNrIcons),
     nrIcons(0),
     icons(a_maxNrIcons)
@@ -223,6 +224,7 @@ WorldIconVertexBufferInterpreter::~WorldIconVertexBufferInterpreter()
 }
 
 WorldIconHorde::WorldIconHorde(const size_t &a_maxNrIcons) :
+    Renderable(),
     maxNrIcons(a_maxNrIcons),
     nrIcons(0),
     icons(a_maxNrIcons)

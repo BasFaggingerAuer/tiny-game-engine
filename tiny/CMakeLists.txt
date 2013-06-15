@@ -25,6 +25,7 @@ add_library(tinygame
             draw/worldrenderer.cpp
             draw/worldeffectrenderer.cpp
             draw/staticmesh.cpp
+            draw/staticmeshhorde.cpp
             draw/icontexture2d.cpp
             draw/iconhorde.cpp
             draw/lighthorde.cpp

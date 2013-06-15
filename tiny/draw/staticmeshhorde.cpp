@@ -14,50 +14,41 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <tiny/draw/staticmesh.h>
+#include <tiny/draw/staticmeshhorde.h>
 
 using namespace tiny::draw;
 
-StaticMeshVertexBufferInterpreter::StaticMeshVertexBufferInterpreter(const tiny::mesh::StaticMesh &mesh) :
-    VertexBufferInterpreter<tiny::mesh::StaticMeshVertex>(mesh.vertices.begin(), mesh.vertices.end())
+StaticMeshInstanceVertexBufferInterpreter::StaticMeshInstanceVertexBufferInterpreter(const size_t &nrMeshes) :
+    VertexBufferInterpreter<StaticMeshInstance>(nrMeshes)
 {
-    addVec2Attribute(0*sizeof(float), "v_textureCoordinate");
-    addVec3Attribute(2*sizeof(float), "v_normal");
-    addVec3Attribute(5*sizeof(float), "v_position");
+    addVec4Attribute(0*sizeof(float), "v_positionAndSize");
+    addVec4Attribute(4*sizeof(float), "v_orientation");
 }
 
-StaticMeshVertexBufferInterpreter::~StaticMeshVertexBufferInterpreter()
-{
-
-}
-
-StaticMeshIndexBuffer::StaticMeshIndexBuffer(const tiny::mesh::StaticMesh &mesh) :
-    IndexBuffer<unsigned int>(mesh.indices.begin(), mesh.indices.end())
+StaticMeshInstanceVertexBufferInterpreter::~StaticMeshInstanceVertexBufferInterpreter()
 {
 
 }
 
-StaticMeshIndexBuffer::~StaticMeshIndexBuffer()
-{
-
-}
-
-StaticMesh::StaticMesh(const tiny::mesh::StaticMesh &mesh) :
+StaticMeshHorde::StaticMeshHorde(const tiny::mesh::StaticMesh &mesh, const size_t &a_maxNrMeshes) :
     Renderable(),
     nrVertices(mesh.vertices.size()),
     nrIndices(mesh.indices.size()),
+    maxNrMeshes(a_maxNrMeshes),
+    nrMeshes(0),
     indices(mesh),
-    vertices(mesh)
+    vertices(mesh),
+    meshes(maxNrMeshes)
 {
     uniformMap.addTexture("diffuseTexture");
 }
 
-StaticMesh::~StaticMesh()
+StaticMeshHorde::~StaticMeshHorde()
 {
 
 }
 
-std::string StaticMesh::getVertexShaderCode() const
+std::string StaticMeshHorde::getVertexShaderCode() const
 {
     return
 "#version 150\n"
@@ -68,22 +59,30 @@ std::string StaticMesh::getVertexShaderCode() const
 "in vec3 v_normal;\n"
 "in vec3 v_position;\n"
 "\n"
+"in vec4 v_positionAndSize;\n"
+"in vec4 v_orientation;\n"
+"\n"
 "out vec2 f_tex;\n"
 "out vec3 f_worldNormal;\n"
 "out vec3 f_worldPosition;\n"
 "out float f_cameraDepth;\n"
+"\n"
+"vec3 qtransform(const vec4 q, const vec3 v)\n"
+"{\n"
+"   return (v + 2.0f*cross(cross(v, q.xyz) + q.w*v, q.xyz));\n"
+"}\n"
 "\n"
 "void main(void)\n"
 "{\n"
 "   f_tex = v_textureCoordinate;\n"
 "   f_worldNormal = v_normal;\n"
 "   f_worldPosition = v_position;\n"
-"   gl_Position = worldToScreen*vec4(v_position, 1.0f);\n"
+"   gl_Position = worldToScreen*vec4(v_positionAndSize.w*qtransform(v_orientation, v_position) + v_positionAndSize.xyz, 1.0f);\n"
 "   f_cameraDepth = gl_Position.z;\n"
 "}\n\0";
 }
 
-std::string StaticMesh::getFragmentShaderCode() const
+std::string StaticMeshHorde::getFragmentShaderCode() const
 {
     return
 "#version 150\n"
@@ -113,10 +112,11 @@ std::string StaticMesh::getFragmentShaderCode() const
 "}\n\0";
 }
 
-void StaticMesh::render(const ShaderProgram &program) const
+void StaticMeshHorde::render(const ShaderProgram &program) const
 {
     vertices.bind(program);
-    renderIndicesAsTriangles(indices);
+    meshes.bind(program, 1);
+    renderIndicesAsTrianglesInstanced(indices, nrMeshes);
     vertices.unbind(program);
 }
 
