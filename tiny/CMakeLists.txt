@@ -9,6 +9,7 @@ add_library(tinygame
             math/vec.cpp
             img/image.cpp
             img/io/image.cpp
+            lod/quadtree.cpp
             mesh/staticmesh.cpp
             mesh/io/staticmesh.cpp
             draw/glcheck.cpp
