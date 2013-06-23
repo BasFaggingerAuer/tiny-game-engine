@@ -32,6 +32,8 @@ class Image
         Image(const size_t &, const size_t &);
         ~Image();
         
+        static Image createTestImage(const size_t & = 64);
+        
         size_t width, height;
         std::vector<unsigned char> data;
 };

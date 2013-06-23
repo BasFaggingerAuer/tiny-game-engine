@@ -195,7 +195,7 @@ void setup()
     //testMesh = new draw::StaticMesh(mesh::io::readStaticMeshOBJ(DATA_DIRECTORY + "mesh/sponza/sponza_triangles.obj"));
     //testMesh = new draw::StaticMesh(mesh::io::readStaticMeshOBJ(DATA_DIRECTORY + "mesh/sibenik/sibenik_triangles.obj"));
     testMesh = new draw::StaticMesh(mesh::StaticMesh::createCubeMesh(0.5f));
-    testDiffuseTexture = new draw::RGBATexture2D(img::io::readImage(DATA_DIRECTORY + "img/default.png"));
+    testDiffuseTexture = new draw::RGBATexture2D(img::Image::createTestImage());
     testMesh->setDiffuseTexture(*testDiffuseTexture);
     
     testMeshes = new draw::StaticMeshHorde(mesh::StaticMesh::createCubeMesh(0.25f), 1024);
