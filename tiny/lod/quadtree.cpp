@@ -31,7 +31,7 @@ Quadtree::~Quadtree()
 
 }
 
-void Quadtree::splitNode(QuadtreeNode &node, const std::vector<vec3> &inst)
+void Quadtree::splitNode(QuadtreeNode &node, std::vector<int> &idx, const std::vector<vec3> &pos)
 {
     //Discard empty nodes.
     if (node.startIndex >= node.endIndex)
@@ -40,13 +40,13 @@ void Quadtree::splitNode(QuadtreeNode &node, const std::vector<vec3> &inst)
     }
     
     //Determine the bounding box of this node.
-    vec3 minBound = inst[node.startIndex];
-    vec3 maxBound = inst[node.startIndex];
+    vec3 minBound = pos[idx[node.startIndex]];
+    vec3 maxBound = pos[idx[node.startIndex]];
     
     for (int i = node.startIndex + 1; i < node.endIndex; ++i)
     {
-        minBound = min(minBound, inst[i]);
-        maxBound = max(maxBound, inst[i]);
+        minBound = min(minBound, pos[idx[i]]);
+        maxBound = max(maxBound, pos[idx[i]]);
     }
     
     //Determine the node's centre and radius.
@@ -55,7 +55,7 @@ void Quadtree::splitNode(QuadtreeNode &node, const std::vector<vec3> &inst)
     
     for (int i = node.startIndex; i < node.endIndex; ++i)
     {
-        float r = length(inst[i] - node.centre);
+        float r = length(pos[idx[i]] - node.centre);
         
         node.radius = std::max(node.radius, r);
     }
@@ -74,7 +74,7 @@ void Quadtree::splitNode(QuadtreeNode &node, const std::vector<vec3> &inst)
     
     for (int i = node.startIndex; i < node.endIndex; ++i)
     {
-        const vec3 v = (inst[i] - minBound)*invScale;
+        const vec3 v = (pos[idx[i]] - minBound)*invScale;
         const int leaf = (v.x < 0.5f ? 0 : 1) | (v.z < 0.5f ? 0 : 2);
         
         counts[leaf]++;
@@ -90,10 +90,16 @@ void Quadtree::splitNode(QuadtreeNode &node, const std::vector<vec3> &inst)
     //Perform a counting sort.
     for (int i = node.startIndex; i < node.endIndex; ++i)
     {
-        const vec3 v = (inst[i] - minBound)*invScale;
+        const vec3 v = (pos[idx[i]] - minBound)*invScale;
         const int leaf = (v.x < 0.5f ? 0 : 1) | (v.z < 0.5f ? 0 : 2);
         
-        instances[offsets[leaf]++] = inst[i];
+        instances[offsets[leaf]++] = idx[i];
+    }
+    
+    //Copy the sorted indices.
+    for (int i = node.startIndex; i < node.endIndex; ++i)
+    {
+        idx[i] = instances[i];
     }
     
     //Create leaves for all non-empty nodes.
@@ -118,7 +124,7 @@ void Quadtree::splitNode(QuadtreeNode &node, const std::vector<vec3> &inst)
     {
         if (node.children[i] > 0)
         {
-            splitNode(nodes[node.children[i]], inst);
+            splitNode(nodes[node.children[i]], idx, pos);
         }
     }
 }

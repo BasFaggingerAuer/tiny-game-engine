@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <exception>
 #include <string>
 #include <vector>
+#include <queue>
 
 #include <cassert>
 
@@ -81,21 +82,114 @@ class Quadtree
                 return;
             }
             
-            std::vector<vec3> unorderedInstances(first, last);
+            std::vector<vec3> temporaryPositions(first, last);
+            std::vector<int> temporaryInstances(temporaryPositions.size());
             
-            std::cerr << "Constructing quadtree of " << unorderedInstances.size() << " objects..." << std::endl;
+            std::cerr << "Constructing quadtree of " << temporaryInstances.size() << " objects..." << std::endl;
             
-            instances = unorderedInstances;
-            nodes.push_back(QuadtreeNode(0, unorderedInstances.size()));
-            splitNode(nodes[0], unorderedInstances);
+            for (unsigned int i = 0; i < temporaryInstances.size(); ++i)
+            {
+                temporaryInstances[i] = i;
+            }
+            
+            instances = temporaryInstances;
+            nodes.push_back(QuadtreeNode(0, temporaryInstances.size()));
+            splitNode(nodes[0], temporaryInstances, temporaryPositions);
+
+#ifndef NDEBUG
+            //Check that we have really created a proper permutation.
+            if (true)
+            {
+                std::vector<bool> check(instances.size(), false);
+                
+                for (unsigned int i = 0; i < instances.size(); ++i)
+                {
+                    assert(instances[i] < 0 || instances[i] >= instances.size());
+                    check[instances[i]] = true;
+                }
+                
+                for (std::vector<bool>::const_iterator i = check.begin(); i != check.end(); ++i)
+                {
+                    assert(*i);
+                }
+            }
+#endif
             
             std::cerr << "Built quadtree with " << nodes.size() << " nodes." << std::endl;
         }
         
-    private:
-        void splitNode(QuadtreeNode &, const std::vector<vec3> &);
+        template <typename Iterator>
+        Iterator retrieveIndicesBetweenRadii(const vec3 &position, const float &minRadius, const float &maxRadius, Iterator indices, int maxNrIndices) const
+        {
+            if (instances.empty())
+            {
+                std::cerr << "Warning: Unable to determine indices within an empty quadtree!" << std::endl;
+                return indices;
+            }
+            
+            if (maxNrIndices <= 0)
+            {
+                std::cerr << "Warning: Filling empty instance list!" << std::endl;
+                return indices;
+            }
+            
+            //Recursively traverse the quadtree to find the indices of all objects such that their distance lies between the radii.
+            std::queue<int> queue;
+            
+            queue.push(0);
+            
+            while (!queue.empty() && maxNrIndices > 0)
+            {
+                const QuadtreeNode n = nodes[queue.front()];
+                
+                queue.pop();
+                
+                const float distance = length(n.centre - position);
+                const bool hasChildren = (n.children[0] != 0 || n.children[1] != 0 || n.children[2] != 0 || n.children[3] != 0);
+                
+                if (distance + n.radius < minRadius || distance - n.radius >= maxRadius)
+                {
+                    //The node is completely outside the annulus.
+                    continue;
+                }
+                else if (distance - n.radius >= minRadius && distance + n.radius <= maxRadius)
+                {
+                    //The node is contained entirely within the annulus.
+                    for (int i = n.startIndex; i < n.endIndex && maxNrIndices > 0; ++i)
+                    {
+                        *indices++ = instances[i];
+                        --maxNrIndices;
+                    }
+                }
+                else if (hasChildren)
+                {
+                    //Partially contained node with children, so we recurse.
+                    for (int i = 0; i < 4; ++i)
+                    {
+                        if (n.children[i] != 0)
+                        {
+                            queue.push(n.children[i]);
+                        }
+                    }
+                }
+                else if (distance >= minRadius && distance < maxRadius)
+                {
+                    //Indivisible partially contained node.
+                    for (int i = n.startIndex; i < n.endIndex && maxNrIndices > 0; ++i)
+                    {
+                        *indices++ = instances[i];
+                        --maxNrIndices;
+                    }
+                }
+            }
+            
+            return indices;
+        }
         
-        std::vector<vec3> instances;
+    private:
+        void splitNode(QuadtreeNode &, std::vector<int> &, const std::vector<vec3> &);
+        
+        std::vector<int> instances;
         float instanceRadius;
         std::vector<QuadtreeNode> nodes;
 };
