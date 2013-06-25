@@ -57,6 +57,9 @@ target_link_libraries(test_SDLApplication ${USED_LIBS})
 add_executable(test_ComputeTexture src/test_ComputeTexture.cpp)
 target_link_libraries(test_ComputeTexture ${USED_LIBS})
 
+add_executable(test_Font src/test_Font.cpp)
+target_link_libraries(test_Font ${USED_LIBS})
+
 add_executable(test_world src/test_world.cpp)
 target_link_libraries(test_world ${USED_LIBS})
 

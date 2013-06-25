@@ -16,6 +16,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #pragma once
 
+#include <tiny/math/vec.h>
+
 namespace tiny
 {
 
@@ -35,6 +37,8 @@ class Application
         
         bool isRunning() const;
         bool isKeyPressed(const int &) const;
+        
+        void updateSimpleCamera(const float &, vec3 &, vec4 &) const;
         
     protected:
         void stopRunning();

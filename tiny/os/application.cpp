@@ -46,3 +46,25 @@ void Application::stopRunning()
     running = false;
 }
 
+void Application::updateSimpleCamera(const float &dt, vec3 &cameraPosition, vec4 &cameraOrientation) const
+{
+    //Update the position and orientation of a simple controllable camera.
+    const float ds = (isKeyPressed('f') ? 300.0f : 2.0f)*dt;
+    const float dr = 2.1f*dt;
+    
+    if (isKeyPressed('i')) cameraOrientation = quatmul(quatrot(dr, vec3(-1.0f, 0.0f, 0.0f)), cameraOrientation);
+    if (isKeyPressed('k')) cameraOrientation = quatmul(quatrot(dr, vec3( 1.0f, 0.0f, 0.0f)), cameraOrientation);
+    if (isKeyPressed('j')) cameraOrientation = quatmul(quatrot(dr, vec3( 0.0f,-1.0f, 0.0f)), cameraOrientation);
+    if (isKeyPressed('l')) cameraOrientation = quatmul(quatrot(dr, vec3( 0.0f, 1.0f, 0.0f)), cameraOrientation);
+    if (isKeyPressed('u')) cameraOrientation = quatmul(quatrot(dr, vec3( 0.0f, 0.0f,-1.0f)), cameraOrientation);
+    if (isKeyPressed('o')) cameraOrientation = quatmul(quatrot(dr, vec3( 0.0f, 0.0f, 1.0f)), cameraOrientation);
+
+    quatnormalize(cameraOrientation);
+
+    vec3 vel = mat4(cameraOrientation)*vec3((isKeyPressed('d') && isKeyPressed('a')) ? 0.0f : (isKeyPressed('d') ? 1.0f : (isKeyPressed('a') ? -1.0f : 0.0f)),
+                                            (isKeyPressed('q') && isKeyPressed('e')) ? 0.0f : (isKeyPressed('q') ? 1.0f : (isKeyPressed('e') ? -1.0f : 0.0f)),
+                                            (isKeyPressed('s') && isKeyPressed('w')) ? 0.0f : (isKeyPressed('s') ? 1.0f : (isKeyPressed('w') ? -1.0f : 0.0f)));
+    
+    cameraPosition += ds*normalize(vel);
+}
+

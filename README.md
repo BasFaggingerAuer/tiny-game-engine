@@ -41,4 +41,5 @@ To familiarise yourself with the tiny game engine, I would recommend looking at 
 Below is a list of examples, ordered by complexity, together with the particular elements that they are designed to test.
 1. [test_SDLApplication](/src/test_SDLApplication.cpp): Create an empty SDL window.
 2. [test_ComputeTexture](/src/test_ComputeTexture.cpp): Example in which a test image is passed through a simple GLSL fragment shader to the screen.
+3. [test_Font](/src/test_Font.cpp): Read a TrueType font and display text on the screen.
 

@@ -47,7 +47,7 @@ int main(int, char **)
 {
     try
     {
-        application = new tiny::os::SDLApplication(1024, 768);
+        application = new tiny::os::SDLApplication(SCREEN_WIDTH, SCREEN_HEIGHT);
         setup();
     }
     catch (std::exception &e)

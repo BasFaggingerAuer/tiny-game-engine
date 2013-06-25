@@ -338,23 +338,7 @@ void cleanup()
 
 void update(const double &dt)
 {
-    const float ds = (application->isKeyPressed('f') ? 300.0f : 2.0f)*dt;
-    const float dr = 2.1f*dt;
-    
-    if (application->isKeyPressed('i')) cameraOrientation = quatmul(quatrot(dr, vec3(-1.0f, 0.0f, 0.0f)), cameraOrientation);
-    if (application->isKeyPressed('k')) cameraOrientation = quatmul(quatrot(dr, vec3( 1.0f, 0.0f, 0.0f)), cameraOrientation);
-    if (application->isKeyPressed('j')) cameraOrientation = quatmul(quatrot(dr, vec3( 0.0f,-1.0f, 0.0f)), cameraOrientation);
-    if (application->isKeyPressed('l')) cameraOrientation = quatmul(quatrot(dr, vec3( 0.0f, 1.0f, 0.0f)), cameraOrientation);
-    if (application->isKeyPressed('u')) cameraOrientation = quatmul(quatrot(dr, vec3( 0.0f, 0.0f,-1.0f)), cameraOrientation);
-    if (application->isKeyPressed('o')) cameraOrientation = quatmul(quatrot(dr, vec3( 0.0f, 0.0f, 1.0f)), cameraOrientation);
-
-    quatnormalize(cameraOrientation);
-
-    vec3 vel = mat4(cameraOrientation)*vec3((application->isKeyPressed('d') && application->isKeyPressed('a')) ? 0.0f : (application->isKeyPressed('d') ? 1.0f : (application->isKeyPressed('a') ? -1.0f : 0.0f)),
-                                            (application->isKeyPressed('q') && application->isKeyPressed('e')) ? 0.0f : (application->isKeyPressed('q') ? 1.0f : (application->isKeyPressed('e') ? -1.0f : 0.0f)),
-                                            (application->isKeyPressed('s') && application->isKeyPressed('w')) ? 0.0f : (application->isKeyPressed('s') ? 1.0f : (application->isKeyPressed('w') ? -1.0f : 0.0f)));
-    
-    cameraPosition += ds*normalize(vel);
+    application->updateSimpleCamera(dt, cameraPosition, cameraOrientation);
     
     terrain->setCameraPosition(cameraPosition);
     worldRenderer->setCamera(cameraPosition, cameraOrientation);
@@ -384,7 +368,7 @@ int main(int, char **)
 {
     try
     {
-        application = new os::SDLApplication(1920, 980);
+        application = new os::SDLApplication(SCREEN_WIDTH, SCREEN_HEIGHT);
         setup();
     }
     catch (std::exception &e)
