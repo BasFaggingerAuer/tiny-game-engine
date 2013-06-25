@@ -38,6 +38,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/draw/terrain.h>
 
 #include <tiny/draw/effects/diffuse.h>
+#include <tiny/draw/effects/normals.h>
+#include <tiny/draw/effects/lambert.h>
 
 #include <tiny/draw/heightmap/normalmap.h>
 #include <tiny/draw/heightmap/scale.h>
@@ -271,7 +273,9 @@ void setup()
     fogEffect = new SimpleFogEffect();
     fogEffect->setSkyTexture(*skyTexture);
     
-    screenEffect = new draw::effects::Diffuse();
+    //screenEffect = new draw::effects::Diffuse();
+    //screenEffect = new draw::effects::Normals();
+    screenEffect = new draw::effects::Lambert();
     
     worldRenderer = new draw::WorldRenderer(application->getScreenWidth(), application->getScreenHeight());
     
