@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cassert>
 
 #include <tiny/math/vec.h>
-#include <tiny/draw/camerarenderer.h>
+#include <tiny/draw/rendererwithcamera.h>
 
 namespace tiny
 {
@@ -31,11 +31,41 @@ namespace tiny
 namespace draw
 {
 
-class WorldEffectRenderer : public CameraRenderer
+namespace detail
+{
+
+//The first stage of world rendering: geometry --> diffuse, normals, positions, and depth.
+class WorldRendererStageOne : public RendererWithCamera
 {
     public:
-        WorldEffectRenderer(const float &);
-        virtual ~WorldEffectRenderer();
+        WorldRendererStageOne(const float &);
+        virtual ~WorldRendererStageOne();
+        
+        template<typename T, size_t Channels>
+        void setDiffuseTarget(const Texture2D<T, Channels> &texture)
+        {
+            setTextureTarget(texture, "diffuse");
+        }
+        
+        template<typename T, size_t Channels>
+        void setNormalsTarget(const Texture2D<T, Channels> &texture)
+        {
+            setTextureTarget(texture, "worldNormal");
+        }
+        
+        template<typename T, size_t Channels>
+        void setPositionsTarget(const Texture2D<T, Channels> &texture)
+        {
+            setTextureTarget(texture, "worldPosition");
+        }
+};
+
+//The second stage of world rendering: diffuse, normals, positions, and depth --> colour.
+class WorldRendererStageTwo : public RendererWithCamera
+{
+    public:
+        WorldRendererStageTwo(const float &);
+        virtual ~WorldRendererStageTwo();
         
         template <typename TextureType>
         void setDiffuseSource(const TextureType &texture)
@@ -58,6 +88,8 @@ class WorldEffectRenderer : public CameraRenderer
             uniformMap.setTexture(texture, "worldPositionTexture");
         }
 };
+
+}
 
 }
 

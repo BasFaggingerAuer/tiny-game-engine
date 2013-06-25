@@ -16,11 +16,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <algorithm>
 
-#include <tiny/draw/camerarenderer.h>
+#include <tiny/draw/rendererwithcamera.h>
 
 using namespace tiny::draw;
 
-CameraRenderer::CameraRenderer(const float &aspectRatio) :
+RendererWithCamera::RendererWithCamera(const float &aspectRatio) :
     Renderer(),
     cameraToScreen(mat4::frustumMatrix(vec3(-0.07*aspectRatio, -0.07, 1.0e-1), vec3(0.07*aspectRatio, 0.07, 1.0e6))),
     cameraToWorld(mat4::identityMatrix()),
@@ -31,18 +31,18 @@ CameraRenderer::CameraRenderer(const float &aspectRatio) :
     updateCameraUniforms();
 }
 
-CameraRenderer::~CameraRenderer()
+RendererWithCamera::~RendererWithCamera()
 {
 
 }
 
-void CameraRenderer::setProjectionMatrix(const mat4 &matrix)
+void RendererWithCamera::setProjectionMatrix(const mat4 &matrix)
 {
     cameraToScreen = matrix;
     updateCameraUniforms();
 }
 
-void CameraRenderer::setCamera(const vec3 &position, const vec4 &orientation)
+void RendererWithCamera::setCamera(const vec3 &position, const vec4 &orientation)
 {
     cameraToWorld = mat4(orientation, position);
     worldToCamera = cameraToWorld.inverted();
@@ -50,7 +50,7 @@ void CameraRenderer::setCamera(const vec3 &position, const vec4 &orientation)
     updateCameraUniforms();
 }
 
-void CameraRenderer::updateCameraUniforms()
+void RendererWithCamera::updateCameraUniforms()
 {
     worldToScreen = cameraToScreen*worldToCamera;
     uniformMap.setVec3Uniform(cameraPosition, "cameraPosition");

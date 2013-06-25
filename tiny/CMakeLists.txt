@@ -22,9 +22,9 @@ add_library(tinygame
             draw/texture.cpp
             draw/computetexture.cpp
             draw/screensquare.cpp
-            draw/camerarenderer.cpp
+            draw/rendererwithcamera.cpp
             draw/worldrenderer.cpp
-            draw/worldeffectrenderer.cpp
+            draw/detail/worldrenderer.cpp
             draw/staticmesh.cpp
             draw/staticmeshhorde.cpp
             draw/icontexture2d.cpp

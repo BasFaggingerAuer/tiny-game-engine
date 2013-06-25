@@ -31,11 +31,11 @@ namespace tiny
 namespace draw
 {
 
-class CameraRenderer : public Renderer
+class RendererWithCamera : public Renderer
 {
     public:
-        CameraRenderer(const float &);
-        virtual ~CameraRenderer();
+        RendererWithCamera(const float &);
+        virtual ~RendererWithCamera();
         
         void setProjectionMatrix(const mat4 &);
         void setCamera(const vec3 &, const vec4 &);

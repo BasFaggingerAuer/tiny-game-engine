@@ -23,7 +23,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cassert>
 
 #include <tiny/math/vec.h>
-#include <tiny/draw/camerarenderer.h>
+#include <tiny/draw/rendererwithcamera.h>
+#include <tiny/draw/texture2d.h>
+#include <tiny/draw/detail/worldrenderer.h>
 
 namespace tiny
 {
@@ -31,29 +33,31 @@ namespace tiny
 namespace draw
 {
 
-class WorldRenderer : public CameraRenderer
+class WorldRenderer
 {
     public:
-        WorldRenderer(const float &);
-        virtual ~WorldRenderer();
+        WorldRenderer(const int &, const int &);
+        ~WorldRenderer();
         
-        template<typename T, size_t Channels>
-        void setDiffuseTarget(const Texture2D<T, Channels> &texture)
-        {
-            setTextureTarget(texture, "diffuse");
-        }
+        void setProjectionMatrix(const mat4 &);
+        void setCamera(const vec3 &, const vec4 &);
         
-        template<typename T, size_t Channels>
-        void setNormalsTarget(const Texture2D<T, Channels> &texture)
-        {
-            setTextureTarget(texture, "worldNormal");
-        }
+        void addWorldRenderable(Renderable *, const bool & = true, const bool & = true, const BlendMode & = BlendReplace);
+        void addScreenRenderable(Renderable *, const bool & = true, const bool & = true, const BlendMode & = BlendReplace);
         
-        template<typename T, size_t Channels>
-        void setPositionsTarget(const Texture2D<T, Channels> &texture)
-        {
-            setTextureTarget(texture, "worldPosition");
-        }
+        void clearTargets() const;
+        void render() const;
+        
+    private:
+        const float aspectRatio;
+        
+        RGBATexture2D diffuseTexture;
+        Vec4Texture2D worldNormalTexture;
+        Vec4Texture2D worldPositionTexture;
+        DepthTexture2D depthTexture;
+        
+        detail::WorldRendererStageOne worldToScreenRenderer;
+        detail::WorldRendererStageTwo screenToColourRenderer;
 };
 
 }

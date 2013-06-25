@@ -20,16 +20,61 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using namespace tiny::draw;
 
-WorldRenderer::WorldRenderer(const float &aspectRatio) :
-    CameraRenderer(aspectRatio)
+WorldRenderer::WorldRenderer(const int &screenWidth, const int &screenHeight) :
+    aspectRatio(static_cast<float>(screenWidth)/std::max(static_cast<float>(screenHeight), 1.0f)),
+    diffuseTexture(screenWidth, screenHeight),
+    worldNormalTexture(screenWidth, screenHeight),
+    worldPositionTexture(screenWidth, screenHeight),
+    depthTexture(screenWidth, screenHeight),
+    worldToScreenRenderer(aspectRatio),
+    screenToColourRenderer(aspectRatio)
 {
-    addRenderTarget("diffuse");
-    addRenderTarget("worldNormal");
-    addRenderTarget("worldPosition");
+    //Link the two rendering stages.
+    worldToScreenRenderer.setDiffuseTarget(diffuseTexture);
+    worldToScreenRenderer.setNormalsTarget(worldNormalTexture);
+    worldToScreenRenderer.setPositionsTarget(worldPositionTexture);
+    worldToScreenRenderer.setDepthTextureTarget(depthTexture);
+    
+    screenToColourRenderer.setDiffuseSource(diffuseTexture);
+    screenToColourRenderer.setNormalsSource(worldNormalTexture);
+    screenToColourRenderer.setPositionsSource(worldPositionTexture);
 }
 
 WorldRenderer::~WorldRenderer()
 {
 
+}
+
+void WorldRenderer::setProjectionMatrix(const mat4 &matrix)
+{
+    worldToScreenRenderer.setProjectionMatrix(matrix);
+    screenToColourRenderer.setProjectionMatrix(matrix);
+}
+
+void WorldRenderer::setCamera(const vec3 &position, const vec4 &orientation)
+{
+    worldToScreenRenderer.setCamera(position, orientation);
+    screenToColourRenderer.setCamera(position, orientation);
+}
+
+void WorldRenderer::addWorldRenderable(Renderable *renderable, const bool &readFromDepthTexture, const bool &writeToDepthTexture, const BlendMode &blendMode)
+{
+    worldToScreenRenderer.addRenderable(renderable, readFromDepthTexture, writeToDepthTexture, blendMode);
+}
+
+void WorldRenderer::addScreenRenderable(Renderable *renderable, const bool &readFromDepthTexture, const bool &writeToDepthTexture, const BlendMode &blendMode)
+{
+    screenToColourRenderer.addRenderable(renderable, readFromDepthTexture, writeToDepthTexture, blendMode);
+}
+
+void WorldRenderer::clearTargets() const
+{
+    worldToScreenRenderer.clearTargets();
+}
+
+void WorldRenderer::render() const
+{
+    worldToScreenRenderer.render();
+    screenToColourRenderer.render();
 }
 

@@ -16,12 +16,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <algorithm>
 
-#include <tiny/draw/worldeffectrenderer.h>
+#include <tiny/draw/detail/worldrenderer.h>
 
-using namespace tiny::draw;
+using namespace tiny::draw::detail;
 
-WorldEffectRenderer::WorldEffectRenderer(const float &aspectRatio) :
-    CameraRenderer(aspectRatio)
+WorldRendererStageOne::WorldRendererStageOne(const float &aspectRatio) :
+    RendererWithCamera(aspectRatio)
+{
+    addRenderTarget("diffuse");
+    addRenderTarget("worldNormal");
+    addRenderTarget("worldPosition");
+}
+
+WorldRendererStageOne::~WorldRendererStageOne()
+{
+
+}
+
+WorldRendererStageTwo::WorldRendererStageTwo(const float &aspectRatio) :
+    RendererWithCamera(aspectRatio)
 {
     addRenderTarget("colour");
     uniformMap.addTexture("diffuseTexture");
@@ -29,7 +42,7 @@ WorldEffectRenderer::WorldEffectRenderer(const float &aspectRatio) :
     uniformMap.addTexture("worldPositionTexture");
 }
 
-WorldEffectRenderer::~WorldEffectRenderer()
+WorldRendererStageTwo::~WorldRendererStageTwo()
 {
 
 }

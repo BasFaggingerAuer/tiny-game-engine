@@ -28,7 +28,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/mesh/io/staticmesh.h>
 
 #include <tiny/draw/worldrenderer.h>
-#include <tiny/draw/worldeffectrenderer.h>
 #include <tiny/draw/screensquare.h>
 #include <tiny/draw/staticmesh.h>
 #include <tiny/draw/staticmeshhorde.h>
@@ -49,9 +48,7 @@ using namespace tiny;
 
 os::Application *application = 0;
 
-double aspectRatio = 1.0;
 draw::WorldRenderer *worldRenderer = 0;
-draw::WorldEffectRenderer *effectRenderer = 0;
 
 draw::StaticMesh *testMesh = 0;
 draw::StaticMeshHorde *testMeshes = 0;
@@ -74,11 +71,6 @@ draw::Terrain *terrain = 0;
 
 std::vector<draw::PointLightInstance> pointLightInstances;
 draw::PointLightHorde *pointLights = 0;
-
-draw::RGBATexture2D *screenDiffuseTexture = 0;
-draw::Vec4Texture2D *worldNormalTexture = 0;
-draw::Vec4Texture2D *worldPositionTexture = 0;
-draw::DepthTexture2D *depthTexture = 0;
 
 draw::ScreenIconHorde *font = 0;
 draw::IconTexture2D *fontTexture = 0;
@@ -190,7 +182,7 @@ SimpleFogEffect *fogEffect = 0;
 
 void setup()
 {
-    aspectRatio = static_cast<double>(application->getScreenWidth())/static_cast<double>(application->getScreenHeight());
+    const float aspectRatio = static_cast<float>(application->getScreenWidth())/static_cast<float>(application->getScreenHeight());
     
     //testMesh = new draw::StaticMesh(mesh::io::readStaticMeshOBJ(DATA_DIRECTORY + "mesh/sponza/sponza_triangles.obj"));
     //testMesh = new draw::StaticMesh(mesh::io::readStaticMeshOBJ(DATA_DIRECTORY + "mesh/sibenik/sibenik_triangles.obj"));
@@ -276,42 +268,22 @@ void setup()
     fogEffect = new SimpleFogEffect();
     fogEffect->setSkyTexture(*skyTexture);
     
-    screenDiffuseTexture = new draw::RGBATexture2D(application->getScreenWidth(), application->getScreenHeight());
-    worldNormalTexture = new draw::Vec4Texture2D(application->getScreenWidth(), application->getScreenHeight());
-    worldPositionTexture = new draw::Vec4Texture2D(application->getScreenWidth(), application->getScreenHeight());
-    depthTexture = new draw::DepthTexture2D(application->getScreenWidth(), application->getScreenHeight());
+    worldRenderer = new draw::WorldRenderer(application->getScreenWidth(), application->getScreenHeight());
     
-    worldRenderer = new draw::WorldRenderer(aspectRatio);
-    worldRenderer->setDiffuseTarget(*screenDiffuseTexture);
-    worldRenderer->setNormalsTarget(*worldNormalTexture);
-    worldRenderer->setPositionsTarget(*worldPositionTexture);
-    worldRenderer->setDepthTextureTarget(*depthTexture);
+    worldRenderer->addWorldRenderable(skyBox);
+    worldRenderer->addWorldRenderable(testMesh);
+    worldRenderer->addWorldRenderable(testMeshes);
+    worldRenderer->addWorldRenderable(terrain);
+    worldRenderer->addWorldRenderable(worldFont);
     
-    effectRenderer = new draw::WorldEffectRenderer(aspectRatio);
-    effectRenderer->setDiffuseSource(*screenDiffuseTexture);
-    effectRenderer->setNormalsSource(*worldNormalTexture);
-    effectRenderer->setPositionsSource(*worldPositionTexture);
-    
-    worldRenderer->addRenderable(skyBox);
-    worldRenderer->addRenderable(testMesh);
-    worldRenderer->addRenderable(testMeshes);
-    worldRenderer->addRenderable(terrain);
-    worldRenderer->addRenderable(worldFont);
-    
-    effectRenderer->addRenderable(fogEffect, false, false);
-    effectRenderer->addRenderable(pointLights, false, false, draw::BlendAdd);
-    effectRenderer->addRenderable(font, false, false, draw::BlendMix);
+    worldRenderer->addScreenRenderable(fogEffect, false, false);
+    worldRenderer->addScreenRenderable(pointLights, false, false, draw::BlendAdd);
+    worldRenderer->addScreenRenderable(font, false, false, draw::BlendMix);
 }
 
 void cleanup()
 {
-    delete effectRenderer;
     delete worldRenderer;
-    
-    delete depthTexture;
-    delete worldPositionTexture;
-    delete worldNormalTexture;
-    delete screenDiffuseTexture;
     
     delete fogEffect;
     
@@ -342,7 +314,6 @@ void update(const double &dt)
     
     terrain->setCameraPosition(cameraPosition);
     worldRenderer->setCamera(cameraPosition, cameraOrientation);
-    effectRenderer->setCamera(cameraPosition, cameraOrientation);
     
     fogEffect->setSun(vec3(cos(0.5f*globalTime), 1.0f, sin(0.5f*globalTime)));
     
@@ -360,8 +331,6 @@ void render()
 {
     worldRenderer->clearTargets();
     worldRenderer->render();
-    //effectRenderer->clearTargets();
-    effectRenderer->render();
 }
 
 int main(int, char **)
