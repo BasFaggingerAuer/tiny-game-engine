@@ -31,6 +31,7 @@ add_library(tinygame
             draw/iconhorde.cpp
             draw/lighthorde.cpp
             draw/terrain.cpp
+            draw/effects/diffuse.cpp
             os/application.cpp
             os/sdlapplication.cpp)
 

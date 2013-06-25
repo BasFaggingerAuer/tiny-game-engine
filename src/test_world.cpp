@@ -37,6 +37,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/draw/lighthorde.h>
 #include <tiny/draw/terrain.h>
 
+#include <tiny/draw/effects/diffuse.h>
+
 #include <tiny/draw/heightmap/normalmap.h>
 #include <tiny/draw/heightmap/scale.h>
 #include <tiny/draw/heightmap/resize.h>
@@ -179,6 +181,7 @@ void SimpleFogEffect::setFog(const float &fogIntensity)
 }
 
 SimpleFogEffect *fogEffect = 0;
+draw::Renderable *screenEffect = 0;
 
 void setup()
 {
@@ -268,6 +271,8 @@ void setup()
     fogEffect = new SimpleFogEffect();
     fogEffect->setSkyTexture(*skyTexture);
     
+    screenEffect = new draw::effects::Diffuse();
+    
     worldRenderer = new draw::WorldRenderer(application->getScreenWidth(), application->getScreenHeight());
     
     worldRenderer->addWorldRenderable(skyBox);
@@ -276,7 +281,8 @@ void setup()
     worldRenderer->addWorldRenderable(terrain);
     worldRenderer->addWorldRenderable(worldFont);
     
-    worldRenderer->addScreenRenderable(fogEffect, false, false);
+    //worldRenderer->addScreenRenderable(fogEffect, false, false);
+    worldRenderer->addScreenRenderable(screenEffect, false, false);
     worldRenderer->addScreenRenderable(pointLights, false, false, draw::BlendAdd);
     worldRenderer->addScreenRenderable(font, false, false, draw::BlendMix);
 }
@@ -285,6 +291,7 @@ void cleanup()
 {
     delete worldRenderer;
     
+    delete screenEffect;
     delete fogEffect;
     
     delete worldFont;
