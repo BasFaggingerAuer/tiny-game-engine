@@ -27,7 +27,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/img/image.h>
 #include <tiny/mesh/staticmesh.h>
 
-#include <tiny/draw/staticmesh.h>
+#include <tiny/draw/staticmeshhorde.h>
 #include <tiny/draw/effects/diffuse.h>
 #include <tiny/draw/worldrenderer.h>
 
@@ -38,27 +38,44 @@ os::Application *application = 0;
 
 draw::WorldRenderer *worldRenderer = 0;
 
-draw::StaticMesh *cubeMesh = 0;
+std::vector<draw::StaticMeshInstance> cubeMeshInstances;
+draw::StaticMeshHorde *cubeMeshHorde = 0;
 draw::RGBATexture2D *cubeDiffuseTexture = 0;
 
 draw::Renderable *screenEffect = 0;
 
-vec3 cameraPosition = vec3(0.0f, 0.0f, 3.0f);
+vec3 cameraPosition = vec3(0.0f, 0.0f, 10.0f);
 vec4 cameraOrientation = vec4(0.0f, 0.0f, 0.0f, 1.0f);
 
 void setup()
 {
     //Create a cube mesh and paint it with a texture.
-    cubeMesh = new draw::StaticMesh(mesh::StaticMesh::createCubeMesh(0.5f));
+    cubeMeshHorde = new draw::StaticMeshHorde(mesh::StaticMesh::createCubeMesh(0.5f), 1024);
     cubeDiffuseTexture = new draw::RGBATexture2D(img::Image::createTestImage());
-    cubeMesh->setDiffuseTexture(*cubeDiffuseTexture);
+    cubeMeshHorde->setDiffuseTexture(*cubeDiffuseTexture);
+    
+    //Create instances of the cubes in a grid.
+    const float meshSpacing = 2.0f;
+    
+    for (int i = -4; i <= 4; ++i)
+    {
+        for (int j = -4; j <= 4; ++j)
+        {
+            for (int k = -4; k <= 4; ++k)
+            {
+                cubeMeshInstances.push_back(draw::StaticMeshInstance(vec4(meshSpacing*i, meshSpacing*j, meshSpacing*k, 1.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f)));
+            }
+        }
+    }
+    
+    cubeMeshHorde->setMeshes(cubeMeshInstances.begin(), cubeMeshInstances.end());
     
     //Render only diffuse colours to the screen.
     screenEffect = new draw::effects::Diffuse();
     
     //Create a renderer and add the cube and the diffuse rendering effect to it.
     worldRenderer = new draw::WorldRenderer(application->getScreenWidth(), application->getScreenHeight());
-    worldRenderer->addWorldRenderable(cubeMesh);
+    worldRenderer->addWorldRenderable(cubeMeshHorde);
     worldRenderer->addScreenRenderable(screenEffect, false, false);
 }
 
@@ -68,7 +85,7 @@ void cleanup()
     
     delete screenEffect;
     
-    delete cubeMesh;
+    delete cubeMeshHorde;
     delete cubeDiffuseTexture;
 }
 

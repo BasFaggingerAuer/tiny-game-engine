@@ -63,6 +63,9 @@ target_link_libraries(test_Font ${USED_LIBS})
 add_executable(test_StaticMesh src/test_StaticMesh.cpp)
 target_link_libraries(test_StaticMesh ${USED_LIBS})
 
+add_executable(test_StaticMeshHorde src/test_StaticMeshHorde.cpp)
+target_link_libraries(test_StaticMeshHorde ${USED_LIBS})
+
 add_executable(test_world src/test_world.cpp)
 target_link_libraries(test_world ${USED_LIBS})
 

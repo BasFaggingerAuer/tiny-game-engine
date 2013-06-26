@@ -46,4 +46,5 @@ Below is a list of examples, ordered by complexity, together with the particular
 2.   [test_ComputeTexture](/src/test_ComputeTexture.cpp): Example in which a test image is passed through a simple GLSL fragment shader to the screen.
 3.   [test_Font](/src/test_Font.cpp): Read a TrueType font and display text on the screen.
 4.   [test_StaticMesh](/src/test_StaticMesh.cpp): Render a cube on the screen, viewed through a controllable camera.
+5.   [test_StaticMeshHorde](/src/test_StaticMeshHorde.cpp): Render a large number of cube instances on the screen, viewed through a controllable camera.
 
