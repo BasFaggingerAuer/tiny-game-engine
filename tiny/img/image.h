@@ -32,6 +32,7 @@ class Image
         Image(const size_t &, const size_t &);
         ~Image();
         
+        static Image createSolidImage(const size_t & = 64, const unsigned char & = 255, const unsigned char & = 255, const unsigned char & = 255, const unsigned char & = 255);
         static Image createTestImage(const size_t & = 64);
         
         size_t width, height;

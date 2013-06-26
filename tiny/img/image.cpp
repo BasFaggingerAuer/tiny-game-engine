@@ -42,6 +42,32 @@ Image::~Image()
 
 }
 
+Image Image::createSolidImage(const size_t &size, const unsigned char &r, const unsigned char &g, const unsigned char &b, const unsigned char &a)
+{
+    Image test(size, size);
+    unsigned char *data = &test.data[0];
+    
+    if (size <= 0)
+    {
+        std::cerr << "Unable to create empty solid image." << std::endl;
+        throw std::exception();
+    }
+    
+    //Create a solid image.
+    for (size_t i = 0; i < size; ++i)
+    {
+        for (size_t j = 0; j < size; ++j)
+        {
+            *data++ = r;
+            *data++ = g;
+            *data++ = b;
+            *data++ = a;
+        }
+    }
+    
+    return test;
+}
+
 Image Image::createTestImage(const size_t &size)
 {
     Image test(size, size);
