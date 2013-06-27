@@ -47,4 +47,5 @@ Below is a list of examples, ordered by complexity, together with the particular
 3.   [test_Font](/src/test_Font.cpp): Read a TrueType font and display text on the screen.
 4.   [test_StaticMesh](/src/test_StaticMesh.cpp): Render a cube on the screen, viewed through a controllable camera.
 5.   [test_StaticMeshHorde](/src/test_StaticMeshHorde.cpp): Render a large number of cube instances on the screen, viewed through a controllable camera.
+6.   [test_Terrain](/src/test_Terrain.cpp): Fly over a simple terrain.
 
