@@ -46,6 +46,7 @@ const float terrainHeightScale = 256.0f;
 draw::Terrain *terrain = 0;
 draw::FloatTexture2D *terrainHeightTexture = 0;
 draw::RGBTexture2D *terrainNormalTexture = 0;
+draw::RGBATexture2D *terrainAttributeTexture = 0;
 draw::RGBTexture2D *terrainDiffuseTexture = 0;
 
 const ivec2 terrainFarScale = ivec2(4, 4);
@@ -87,14 +88,15 @@ void setup()
     draw::computeNormalMap(*terrainFarHeightTexture, *terrainFarNormalTexture, terrainScale.x*terrainFarScale.x);
     draw::computeNormalMap(*terrainHeightTexture, *terrainNormalTexture, terrainScale.x);
     
-    //Create diffuse texture.
+    //Create simple attribute and diffuse texture.
+    terrainAttributeTexture = new draw::RGBATexture2D(img::Image::createSolidImage(terrainHeightTexture->getWidth()));
     terrainDiffuseTexture = new draw::RGBTexture2D(img::Image::createSolidImage(terrainHeightTexture->getWidth()));
     
     //Paint the terrain with the zoomed-in and far-away textures.
-    terrain->setFarTextures(*terrainHeightTexture, *terrainFarHeightTexture,
-                            *terrainNormalTexture, *terrainFarNormalTexture,
-                            *terrainDiffuseTexture,
-                            terrainScale, terrainFarScale, terrainFarOffset);
+    terrain->setFarHeightTextures(*terrainHeightTexture, *terrainFarHeightTexture,
+                                  *terrainNormalTexture, *terrainFarNormalTexture,
+                                  terrainScale, terrainFarScale, terrainFarOffset);
+    terrain->setDiffuseTexture(*terrainAttributeTexture, *terrainDiffuseTexture);
     
     //Render using Lambertian shading.
     screenEffect = new draw::effects::Lambert();
@@ -116,6 +118,7 @@ void cleanup()
     delete terrainHeightTexture;
     delete terrainFarNormalTexture;
     delete terrainNormalTexture;
+    delete terrainAttributeTexture;
     delete terrainDiffuseTexture;
 }
 

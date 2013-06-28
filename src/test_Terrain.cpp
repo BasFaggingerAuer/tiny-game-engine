@@ -42,6 +42,7 @@ const vec2 terrainScale = vec2(5.0f, 5.0f);
 draw::Terrain *terrain = 0;
 draw::FloatTexture2D *terrainHeightTexture = 0;
 draw::RGBTexture2D *terrainNormalTexture = 0;
+draw::RGBATexture2D *terrainAttributeTexture = 0;
 draw::RGBTexture2D *terrainDiffuseTexture = 0;
 
 bool terrainFollowsCamera = true;
@@ -57,11 +58,14 @@ void setup()
     terrain = new draw::Terrain(4, 6);
     terrainHeightTexture = new draw::FloatTexture2D(img::io::readImage(DATA_DIRECTORY + "img/terrain.png"));
     terrainNormalTexture = new draw::RGBTexture2D(terrainHeightTexture->getWidth(), terrainHeightTexture->getHeight());
+    
+    terrainAttributeTexture = new draw::RGBATexture2D(img::Image::createSolidImage(terrainHeightTexture->getWidth()));
     terrainDiffuseTexture = new draw::RGBTexture2D(img::Image::createSolidImage(terrainHeightTexture->getWidth()));
     
     //Calculate normal map and paint the terrain with the textures.
     draw::computeNormalMap(*terrainHeightTexture, *terrainNormalTexture, terrainScale.x);
-    terrain->setTextures(*terrainHeightTexture, *terrainNormalTexture, *terrainDiffuseTexture, terrainScale);
+    terrain->setHeightTextures(*terrainHeightTexture, *terrainNormalTexture, terrainScale);
+    terrain->setDiffuseTexture(*terrainAttributeTexture, *terrainDiffuseTexture);
     
     //Render using Lambertian shading.
     screenEffect = new draw::effects::Lambert();
@@ -81,6 +85,7 @@ void cleanup()
     delete terrain;
     delete terrainHeightTexture;
     delete terrainNormalTexture;
+    delete terrainAttributeTexture;
     delete terrainDiffuseTexture;
 }
 

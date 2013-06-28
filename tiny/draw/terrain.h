@@ -127,29 +127,25 @@ class Terrain : public Renderable
         Terrain(const int &, const int &);
         ~Terrain();
         
-        template <typename TextureType1, typename TextureType2, typename TextureType3>
-        void setTextures(const TextureType1 &heightTexture,
+        template <typename TextureType1, typename TextureType2>
+        void setHeightTextures(const TextureType1 &heightTexture,
                          const TextureType2 &normalTexture,
-                         const TextureType3 &diffuseTexture,
                          const vec2 &scale_)
         {
-            setFarTextures(heightTexture, heightTexture,
+            setFarHeightTextures(heightTexture, heightTexture,
                            normalTexture, normalTexture,
-                           diffuseTexture,
                            scale_, ivec2(1, 1), vec2(0.0f, 0.0f));
         }
         
-        template <typename TextureType1, typename TextureType2, typename TextureType3>
-        void setFarTextures(const TextureType1 &heightTexture, const TextureType1 &farHeightTexture,
+        template <typename TextureType1, typename TextureType2>
+        void setFarHeightTextures(const TextureType1 &heightTexture, const TextureType1 &farHeightTexture,
                             const TextureType2 &normalTexture, const TextureType2 &farNormalTexture,
-                            const TextureType3 &diffuseTexture,
                             const vec2 &scale_, const ivec2 &farScale_, const vec2 farOffset)
         {
             uniformMap.setTexture(heightTexture, "heightTexture");
             uniformMap.setTexture(farHeightTexture, "farHeightTexture");
             uniformMap.setTexture(normalTexture, "normalTexture");
             uniformMap.setTexture(farNormalTexture, "farNormalTexture");
-            uniformMap.setTexture(diffuseTexture, "diffuseTexture");
             
             scale = scale_;
             farScale = farScale_;
@@ -157,6 +153,36 @@ class Terrain : public Renderable
             uniformMap.setVec4Uniform(1.0f/static_cast<float>(farScale.x), 1.0f/static_cast<float>(farScale.y), farOffset.x, farOffset.y, "scaleAndTranslateFar");
             uniformMap.setVec2Uniform(1.0f/static_cast<float>(heightTexture.getWidth()), 1.0f/static_cast<float>(heightTexture.getHeight()), "inverseHeightTextureSize");
             uniformMap.setVec2Uniform(heightTexture.getWidth()/2, heightTexture.getHeight()/2, "textureShift");
+        }
+        
+        template <typename TextureType1, typename TextureType2>
+        void setDiffuseTexture(const TextureType1 &attributeTexture,
+                               const TextureType2 &diffuseTexture,
+                               const vec2 &diffuseScale = vec2(1.0f, 1.0f))
+        {
+            setFarDiffuseTextures(attributeTexture, attributeTexture, diffuseTexture, diffuseTexture, diffuseTexture, diffuseTexture, diffuseScale);
+        }
+        
+        template <typename TextureType1, typename TextureType2>
+        void setDiffuseTextures(const TextureType1 &attributeTexture,
+                                const TextureType2 &diffuseTexture1, const TextureType2 &diffuseTexture2, const TextureType2 &diffuseTexture3, const TextureType2 &diffuseTexture4,
+                                const vec2 &diffuseScale)
+        {
+            setFarDiffuseTextures(attributeTexture, attributeTexture, diffuseTexture1, diffuseTexture2, diffuseTexture3, diffuseTexture4, diffuseScale);
+        }
+        
+        template <typename TextureType1, typename TextureType2>
+        void setFarDiffuseTextures(const TextureType1 &attributeTexture, const TextureType1 &farAttributeTexture,
+                                   const TextureType2 &diffuseTexture1, const TextureType2 &diffuseTexture2, const TextureType2 &diffuseTexture3, const TextureType2 &diffuseTexture4,
+                                   const vec2 &diffuseScale)
+        {
+            uniformMap.setTexture(attributeTexture, "attributeTexture");
+            uniformMap.setTexture(farAttributeTexture, "farAttributeTexture");
+            uniformMap.setTexture(diffuseTexture1, "diffuseTexture1");
+            uniformMap.setTexture(diffuseTexture2, "diffuseTexture2");
+            uniformMap.setTexture(diffuseTexture3, "diffuseTexture3");
+            uniformMap.setTexture(diffuseTexture4, "diffuseTexture4");
+            uniformMap.setVec2Uniform(diffuseScale, "diffuseScale");
         }
         
         std::string getVertexShaderCode() const;

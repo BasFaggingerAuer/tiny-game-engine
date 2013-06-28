@@ -249,7 +249,13 @@ Terrain::Terrain(const int &a_shiftBlockSize, const int &a_maxLevel) :
     uniformMap.addTexture("farHeightTexture");
     uniformMap.addTexture("normalTexture");
     uniformMap.addTexture("farNormalTexture");
-    uniformMap.addTexture("diffuseTexture");
+    
+    uniformMap.addTexture("attributeTexture");
+    uniformMap.addTexture("farAttributeTexture");
+    uniformMap.addTexture("diffuseTexture1");
+    uniformMap.addTexture("diffuseTexture2");
+    uniformMap.addTexture("diffuseTexture3");
+    uniformMap.addTexture("diffuseTexture4");
     
     //Setup initial blockTranslations.
     blockTranslations[maxLevel - 1] = ivec2(-(superBlockSize << (maxLevel - 2)));
@@ -321,7 +327,14 @@ std::string Terrain::getFragmentShaderCode() const
 "\n"
 "uniform sampler2D normalTexture;\n"
 "uniform sampler2D farNormalTexture;\n"
-"uniform sampler2D diffuseTexture;\n"
+"\n"
+"uniform sampler2D attributeTexture;\n"
+"uniform sampler2D farAttributeTexture;\n"
+"uniform sampler2D diffuseTexture1;\n"
+"uniform sampler2D diffuseTexture2;\n"
+"uniform sampler2D diffuseTexture3;\n"
+"uniform sampler2D diffuseTexture4;\n"
+"uniform vec2 diffuseScale;\n"
 "\n"
 "const float C = 1.0f, D = 1.0e6, E = 1.0f;\n"
 "\n"
@@ -336,7 +349,13 @@ std::string Terrain::getFragmentShaderCode() const
 "\n"
 "void main(void)\n"
 "{\n"
-"   diffuse = texture(diffuseTexture, f_texturePosition.zw);\n"
+"   vec4 att = mix(texture(attributeTexture, f_texturePosition.xy),\n"
+"                  texture(farAttributeTexture, f_texturePosition.zw),\n"
+"                  f_farMorphFactor);\n"
+"   diffuse = texture(diffuseTexture1, diffuseScale*f_texturePosition.zw)*att.x +\n"
+"             texture(diffuseTexture2, diffuseScale*f_texturePosition.zw)*att.y +\n"
+"             texture(diffuseTexture3, diffuseScale*f_texturePosition.zw)*att.z +\n"
+"             texture(diffuseTexture4, diffuseScale*f_texturePosition.zw)*att.w;\n"
 "   \n"
 "   vec3 normal1 = normalize(2.0f*texture(normalTexture, f_texturePosition.xy).xyz - 1.0f);\n"
 "   vec3 normal2 = normalize(2.0f*texture(farNormalTexture, f_texturePosition.zw).xyz - 1.0f);\n"
