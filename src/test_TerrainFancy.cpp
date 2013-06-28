@@ -129,9 +129,10 @@ void computeTerrainTypeFromHeight(const TextureType1 &heightMap, TextureType2 &c
 
 //A simple bilinear texture sampler.
 template<typename TextureType>
-float getHeightBilinear(const TextureType &heightMap, const vec2 &pos)
+float getHeightBilinear(const TextureType &heightMap, const vec2 &scale, const vec2 &a_pos)
 {
     //Sample heightmap at the four points surrounding pos.
+    const vec2 pos = vec2(a_pos.x/scale.x + 0.5f*static_cast<float>(heightMap.getWidth()), a_pos.y/scale.y + 0.5f*static_cast<float>(heightMap.getHeight()));
     const ivec2 intPos = ivec2(floor(pos.x), floor(pos.y));
     const float h00 = heightMap(intPos.x + 0, intPos.y + 0).x;
     const float h01 = heightMap(intPos.x + 0, intPos.y + 1).x;
@@ -244,9 +245,7 @@ void update(const double &dt)
     application->updateSimpleCamera(dt, cameraPosition, cameraOrientation);
     
     //If the camera is below the terrain, increase its height.
-    const vec2 cameraPositionOnTerrain((cameraPosition.x/terrainScale.x) + 0.5f*static_cast<float>(terrainHeightTexture->getWidth()),
-                                       (cameraPosition.z/terrainScale.y) + 0.5f*static_cast<float>(terrainHeightTexture->getHeight()));
-    const float terrainHeight = getHeightBilinear(*terrainHeightTexture, cameraPositionOnTerrain) + 2.0f;
+    const float terrainHeight = getHeightBilinear(*terrainHeightTexture, terrainScale, vec2(cameraPosition.x, cameraPosition.z)) + 2.0f;
     
     cameraPosition.y = std::max(cameraPosition.y, terrainHeight);
     
@@ -270,7 +269,7 @@ void update(const double &dt)
         sunAngle += 1.0f*dt;
     }
     
-    sunSky->setSun(vec3(sin(sunAngle), cos(sunAngle), -0.7f));
+    sunSky->setSun(vec3(sin(sunAngle), cos(sunAngle), -0.5f));
     
     //Update the terrain with respect to the camera.
     if (lodFollowsCamera)

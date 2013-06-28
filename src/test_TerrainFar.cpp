@@ -67,7 +67,7 @@ void setup()
     terrain = new draw::Terrain(4, 8);
     
     //Read heightmap for the far-away terrain.
-    terrainHeightTexture = new draw::FloatTexture2D(img::io::readImage(DATA_DIRECTORY + "img/terrain.png"));
+    terrainHeightTexture = new draw::FloatTexture2D(img::io::readImage(DATA_DIRECTORY + "img/tasmania.png"));
     terrainFarHeightTexture = new draw::FloatTexture2D(terrainHeightTexture->getWidth(), terrainHeightTexture->getHeight());
     
     //Scale vertical range of the far-away heightmap.
