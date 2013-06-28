@@ -46,6 +46,7 @@ class TextureInterface
         size_t getDepth() const;
         void bind(const int & = 0) const;
         void unbind(const int & = 0) const;
+        void setAttributes(const bool & = false, const bool & = true, const bool & = false) const;
         
     protected:
         void createDeviceTexture();
@@ -120,6 +121,15 @@ class Texture : public TextureInterface
             else if (textureTarget == GL_TEXTURE_3D) GL_CHECK(glTexSubImage3D(textureTarget, 0, 0, 0, 0, width, height, depth, textureChannels, textureDataType, &hostData[0]));
             else throw std::exception();
             
+            GL_CHECK(glBindTexture(textureTarget, 0));
+        }
+        
+        void getFromDevice()
+        {
+            if (hostData.empty()) return;
+            
+            GL_CHECK(glBindTexture(textureTarget, textureIndex));
+            GL_CHECK(glGetTexImage(textureTarget, 0, textureChannels, textureDataType, &hostData[0]));
             GL_CHECK(glBindTexture(textureTarget, 0));
         }
         

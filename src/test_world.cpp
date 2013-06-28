@@ -103,7 +103,9 @@ class SimpleFogEffect : public tiny::draw::ScreenFillingSquare
                 
                 for (size_t i = 0; i < width; ++i)
                 {
-                    skyColours[i] = texture(i, 0);
+                    const vec4 colour = texture(i, 0);
+                    
+                    skyColours[i] = vec3(colour.x, colour.y, colour.z);
                 }
             }
         }

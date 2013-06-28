@@ -90,6 +90,27 @@ void TextureInterface::unbind(const int &bindTarget) const
     GL_CHECK(glBindTexture(textureTarget, 0));
 }
 
+void TextureInterface::setAttributes(const bool &repeat, const bool &filter, const bool &mipMap) const
+{
+    GL_CHECK(glBindTexture(textureTarget, textureIndex));
+    GL_CHECK(glTexParameteri(textureTarget, GL_TEXTURE_WRAP_S, repeat ? GL_REPEAT : GL_CLAMP));
+    GL_CHECK(glTexParameteri(textureTarget, GL_TEXTURE_WRAP_T, repeat ? GL_REPEAT : GL_CLAMP));
+    
+    if (!mipMap)
+    {
+        GL_CHECK(glTexParameteri(textureTarget, GL_TEXTURE_MAG_FILTER, filter ? GL_LINEAR : GL_NEAREST));
+        GL_CHECK(glTexParameteri(textureTarget, GL_TEXTURE_MIN_FILTER, filter ? GL_LINEAR : GL_NEAREST));
+    }
+    else
+    {
+        GL_CHECK(glTexParameteri(textureTarget, GL_TEXTURE_MAG_FILTER, filter ? GL_LINEAR : GL_NEAREST));
+        GL_CHECK(glTexParameteri(textureTarget, GL_TEXTURE_MIN_FILTER, filter ? GL_LINEAR_MIPMAP_LINEAR : GL_NEAREST_MIPMAP_NEAREST));
+        GL_CHECK(glGenerateMipmap(textureTarget));
+    }
+    
+    GL_CHECK(glBindTexture(textureTarget, 0));
+}
+
 void TextureInterface::createDeviceTexture()
 {
     GL_CHECK(glGenTextures(1, &textureIndex));

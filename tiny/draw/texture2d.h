@@ -81,16 +81,33 @@ class Texture2D : public Texture<T, Channels>
             
         }
         
-        vec3 operator () (const size_t &, const size_t &) const;
+        vec4 operator () (const size_t &, const size_t &) const;
 };
 
 //Functions to sample different types of textures.
 template <>
-inline vec3 Texture2D<unsigned char, 4>::operator () (const size_t &a_x, const size_t &a_y) const
+inline vec4 Texture2D<unsigned char, 4>::operator () (const size_t &a_x, const size_t &a_y) const
 {
-    return vec3(static_cast<float>(this->hostData[4*(a_x + this->width*a_y) + 0])/255.0f,
+    if (a_x >= width || a_y >= height)
+    {
+        return vec4(0.0f, 0.0f, 0.0f, 1.0f);
+    }
+    
+    return vec4(static_cast<float>(this->hostData[4*(a_x + this->width*a_y) + 0])/255.0f,
                 static_cast<float>(this->hostData[4*(a_x + this->width*a_y) + 1])/255.0f,
-                static_cast<float>(this->hostData[4*(a_x + this->width*a_y) + 2])/255.0f);
+                static_cast<float>(this->hostData[4*(a_x + this->width*a_y) + 2])/255.0f,
+                1.0f);
+}
+
+template <>
+inline vec4 Texture2D<float, 1>::operator () (const size_t &a_x, const size_t &a_y) const
+{
+    if (a_x >= width || a_y >= height)
+    {
+        return vec4(0.0f, 0.0f, 0.0f, 1.0f);
+    }
+    
+    return vec4(this->hostData[a_x + this->width*a_y], 0.0f, 0.0f, 1.0f);
 }
 
 typedef Texture2D<float, 1> FloatTexture2D;
