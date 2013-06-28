@@ -34,6 +34,7 @@ add_library(tinygame
             draw/effects/diffuse.cpp
             draw/effects/normals.cpp
             draw/effects/lambert.cpp
+            draw/effects/sunsky.cpp
             os/application.cpp
             os/sdlapplication.cpp)
 

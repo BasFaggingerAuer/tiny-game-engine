@@ -27,12 +27,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/img/io/image.h>
 
 #include <tiny/draw/computetexture.h>
+#include <tiny/draw/staticmesh.h>
 #include <tiny/draw/terrain.h>
 #include <tiny/draw/heightmap/scale.h>
 #include <tiny/draw/heightmap/resize.h>
 #include <tiny/draw/heightmap/normalmap.h>
 #include <tiny/draw/heightmap/diamondsquare.h>
-#include <tiny/draw/effects/lambert.h>
+#include <tiny/draw/effects/sunsky.h>
 #include <tiny/draw/worldrenderer.h>
 
 using namespace std;
@@ -65,9 +66,13 @@ draw::RGBTexture2D *terrainFarNormalTexture = 0;
 
 draw::RGBATexture2D *terrainFarAttributeTexture = 0;
 
+draw::StaticMesh *skyBox = 0;
+draw::RGBATexture2D *skyTexture = 0;
+float sunAngle = 0.0f;
+
 bool lodFollowsCamera = true;
 
-draw::Renderable *screenEffect = 0;
+draw::effects::SunSky *sunSky = 0;
 
 vec3 cameraPosition = vec3(0.0f, 256.0f, 0.0f);
 vec4 cameraOrientation = vec4(0.0f, 0.0f, 0.0f, 1.0f);
@@ -193,20 +198,30 @@ void setup()
                                    *terrainDiffuseForestTexture, *terrainDiffuseGrassTexture, *terrainDiffuseMudTexture, *terrainDiffuseStoneTexture,
                                    terrainDiffuseScale);
     
-    //Render using Lambertian shading.
-    screenEffect = new draw::effects::Lambert();
+    //Create sky (a simple cube containing the world).
+    skyBox = new draw::StaticMesh(mesh::StaticMesh::createCubeMesh(-1.0e5));
+    skyTexture = new draw::RGBATexture2D(img::io::readImage(DATA_DIRECTORY + "img/sky.png"));
+    
+    //Render using a more advanced shading model.
+    sunSky = new draw::effects::SunSky();
+    
+    sunSky->setSkyTexture(*skyTexture);
     
     //Create a renderer and add the cube and the diffuse rendering effect to it.
     worldRenderer = new draw::WorldRenderer(application->getScreenWidth(), application->getScreenHeight());
+    worldRenderer->addWorldRenderable(skyBox);
     worldRenderer->addWorldRenderable(terrain);
-    worldRenderer->addScreenRenderable(screenEffect, false, false);
+    worldRenderer->addScreenRenderable(sunSky, false, false);
 }
 
 void cleanup()
 {
     delete worldRenderer;
     
-    delete screenEffect;
+    delete sunSky;
+    
+    delete skyBox;
+    delete skyTexture;
     
     delete terrain;
     
@@ -244,6 +259,18 @@ void update(const double &dt)
     {
         lodFollowsCamera = false;
     }
+    
+    //Update the sun.
+    if (application->isKeyPressed('3'))
+    {
+        sunAngle -= 2.0f*dt;
+    }
+    else if (application->isKeyPressed('4'))
+    {
+        sunAngle += 2.0f*dt;
+    }
+    
+    sunSky->setSun(vec3(sin(sunAngle), cos(sunAngle), -0.5f));
     
     //Update the terrain with respect to the camera.
     if (lodFollowsCamera)
