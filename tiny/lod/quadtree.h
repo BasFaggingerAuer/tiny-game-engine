@@ -73,19 +73,21 @@ class Quadtree
         template <typename Iterator>
         void buildQuadtree(Iterator first, Iterator last, const float &radius)
         {
+            instanceRadius = radius;
             instances.clear();
             nodes.clear();
             
-            if (last - first <= 0)
+            std::vector<vec3> temporaryPositions(first, last);
+            
+            if (temporaryPositions.empty())
             {
                 std::cerr << "Warning: Empty quadtree!" << std::endl;
                 return;
             }
             
-            std::vector<vec3> temporaryPositions(first, last);
-            std::vector<int> temporaryInstances(temporaryPositions.size());
+            std::cerr << "Constructing quadtree of " << temporaryPositions.size() << " objects..." << std::endl;
             
-            std::cerr << "Constructing quadtree of " << temporaryInstances.size() << " objects..." << std::endl;
+            std::vector<int> temporaryInstances(temporaryPositions.size());
             
             for (unsigned int i = 0; i < temporaryInstances.size(); ++i)
             {
@@ -93,6 +95,7 @@ class Quadtree
             }
             
             instances = temporaryInstances;
+            nodes.reserve(instances.size());
             nodes.push_back(QuadtreeNode(0, temporaryInstances.size()));
             splitNode(nodes[0], temporaryInstances, temporaryPositions);
 
@@ -104,7 +107,7 @@ class Quadtree
                 
                 for (unsigned int i = 0; i < instances.size(); ++i)
                 {
-                    assert(instances[i] < 0 || instances[i] >= instances.size());
+                    assert(instances[i] >= 0 && instances[i] < static_cast<int>(instances.size()));
                     check[instances[i]] = true;
                 }
                 
@@ -146,6 +149,27 @@ class Quadtree
                 
                 const float distance = length(n.centre - position);
                 const bool hasChildren = (n.children[0] != 0 || n.children[1] != 0 || n.children[2] != 0 || n.children[3] != 0);
+                
+                /*
+                if (hasChildren)
+                {
+                    for (int i = 0; i < 4; ++i)
+                    {
+                        if (n.children[i] > 0)
+                        {
+                            queue.push(n.children[i]);
+                        }
+                    }
+                }
+                else if (distance >= minRadius && distance <= maxRadius)
+                {
+                    for (int i = n.startIndex; i < n.endIndex && maxNrIndices > 0; ++i)
+                    {
+                        *indices++ = instances[i];
+                        --maxNrIndices;
+                    }
+                }
+                */
                 
                 if (distance + n.radius < minRadius || distance - n.radius >= maxRadius)
                 {

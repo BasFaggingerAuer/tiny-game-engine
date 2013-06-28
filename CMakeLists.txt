@@ -72,6 +72,9 @@ target_link_libraries(test_Terrain ${USED_LIBS})
 add_executable(test_TerrainFar src/test_TerrainFar.cpp)
 target_link_libraries(test_TerrainFar ${USED_LIBS})
 
+add_executable(test_Quadtree src/test_Quadtree.cpp)
+target_link_libraries(test_Quadtree ${USED_LIBS})
+
 add_executable(test_world src/test_world.cpp)
 target_link_libraries(test_world ${USED_LIBS})
 

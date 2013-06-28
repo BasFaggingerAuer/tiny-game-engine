@@ -55,12 +55,18 @@ void Quadtree::splitNode(QuadtreeNode &node, std::vector<int> &idx, const std::v
     
     for (int i = node.startIndex; i < node.endIndex; ++i)
     {
-        float r = length(pos[idx[i]] - node.centre);
+        const float r = length(pos[idx[i]] - node.centre);
         
         node.radius = std::max(node.radius, r);
     }
     
     node.radius += instanceRadius;
+    
+    //Clear children for this node.
+    for (int i = 0; i < 4; ++i)
+    {
+        node.children[i] = 0;
+    }
     
     //Do we want to subdivide this node further?
     if (node.endIndex - node.startIndex <= 4)
@@ -80,6 +86,8 @@ void Quadtree::splitNode(QuadtreeNode &node, std::vector<int> &idx, const std::v
         counts[leaf]++;
     }
     
+    assert(node.startIndex + counts[0] + counts[1] + counts[2] + counts[3] == node.endIndex);
+    
     //Create new ranges for the leaves.
     int offsets[4] = {
         node.startIndex,
@@ -95,6 +103,11 @@ void Quadtree::splitNode(QuadtreeNode &node, std::vector<int> &idx, const std::v
         
         instances[offsets[leaf]++] = idx[i];
     }
+    
+    assert(offsets[0] == node.startIndex + counts[0]);
+    assert(offsets[1] == node.startIndex + counts[0] + counts[1]);
+    assert(offsets[2] == node.startIndex + counts[0] + counts[1] + counts[2]);
+    assert(offsets[3] == node.endIndex);
     
     //Copy the sorted indices.
     for (int i = node.startIndex; i < node.endIndex; ++i)
