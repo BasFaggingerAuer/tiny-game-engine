@@ -329,7 +329,7 @@ std::string WorldIconHorde::getFragmentShaderCode() const
 "\n"
 "uniform sampler2D iconTexture;\n"
 "\n"
-"const float C = 1.0f, D = 1.0e6, E = 1.0f;\n"
+"const float C = 1.0f, D = 1.0e8, E = 1.0f;\n"
 "\n"
 "in vec2 f_tex;\n"
 "in vec4 f_colour;\n"

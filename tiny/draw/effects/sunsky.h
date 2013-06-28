@@ -61,6 +61,7 @@ class SunSky : public tiny::draw::ScreenFillingSquare
             }
             
             setSun(sun);
+            uniformMap.setTexture(texture, "skyTexture");
         }
         
         void setSun(const vec3 &);

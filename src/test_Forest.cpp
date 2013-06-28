@@ -199,7 +199,7 @@ void setup()
                                    terrainDiffuseScale);
     
     //Create sky (a simple cube containing the world).
-    skyBox = new draw::StaticMesh(mesh::StaticMesh::createCubeMesh(-1.0e5));
+    skyBox = new draw::StaticMesh(mesh::StaticMesh::createCubeMesh(-1.0e6));
     skyTexture = new draw::RGBATexture2D(img::io::readImage(DATA_DIRECTORY + "img/sky.png"));
     
     //Render using a more advanced shading model.
@@ -263,14 +263,14 @@ void update(const double &dt)
     //Update the sun.
     if (application->isKeyPressed('3'))
     {
-        sunAngle -= 2.0f*dt;
+        sunAngle -= 1.0f*dt;
     }
     else if (application->isKeyPressed('4'))
     {
-        sunAngle += 2.0f*dt;
+        sunAngle += 1.0f*dt;
     }
     
-    sunSky->setSun(vec3(sin(sunAngle), cos(sunAngle), -0.5f));
+    sunSky->setSun(vec3(sin(sunAngle), cos(sunAngle), -0.7f));
     
     //Update the terrain with respect to the camera.
     if (lodFollowsCamera)

@@ -336,7 +336,7 @@ std::string Terrain::getFragmentShaderCode() const
 "uniform sampler2D diffuseTexture4;\n"
 "uniform vec2 diffuseScale;\n"
 "\n"
-"const float C = 1.0f, D = 1.0e6, E = 1.0f;\n"
+"const float C = 1.0f, D = 1.0e8, E = 1.0f;\n"
 "\n"
 "in vec3 f_worldPosition;\n"
 "in vec4 f_texturePosition;\n"

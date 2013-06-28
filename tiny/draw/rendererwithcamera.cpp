@@ -22,7 +22,7 @@ using namespace tiny::draw;
 
 RendererWithCamera::RendererWithCamera(const float &aspectRatio) :
     Renderer(),
-    cameraToScreen(mat4::frustumMatrix(vec3(-0.07*aspectRatio, -0.07, 1.0e-1), vec3(0.07*aspectRatio, 0.07, 1.0e6))),
+    cameraToScreen(mat4::frustumMatrix(vec3(-0.07*aspectRatio, -0.07, 1.0e-1), vec3(0.07*aspectRatio, 0.07, 1.0e8))),
     cameraToWorld(mat4::identityMatrix()),
     worldToCamera(mat4::identityMatrix()),
     worldToScreen(mat4::identityMatrix()),
