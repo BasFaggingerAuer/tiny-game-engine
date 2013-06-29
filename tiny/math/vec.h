@@ -350,6 +350,7 @@ void quatnormalize(vec4 &);
 vec4 quatrot(const float &, const vec3 &);
 vec4 quatmatrix(const mat4 &);
 
+vec2 randomVec2(const float & = 1.0f);
 vec3 randomVec3(const float & = 1.0f);
 vec4 randomVec4(const float & = 1.0f);
 

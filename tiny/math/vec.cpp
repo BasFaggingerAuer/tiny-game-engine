@@ -85,6 +85,12 @@ vec4 tiny::quatmatrix(const mat4 &a)
     return normalize(q);
 }
 
+vec2 tiny::randomVec2(const float &s)
+{
+    return vec2(2.0f*s*static_cast<float>(rand())/static_cast<float>(RAND_MAX) - s,
+                2.0f*s*static_cast<float>(rand())/static_cast<float>(RAND_MAX) - s);
+}
+
 vec3 tiny::randomVec3(const float &s)
 {
     return vec3(2.0f*s*static_cast<float>(rand())/static_cast<float>(RAND_MAX) - s,

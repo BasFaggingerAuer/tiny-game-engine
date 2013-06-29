@@ -73,12 +73,21 @@ draw::RGBATexture2D *terrainFarAttributeTexture = 0;
 lod::Quadtree *quadtree = 0;
 const int maxNrHighDetailTrees = 2048;
 const int maxNrLowDetailTrees = 16384;
+const float treeHighDetailRadius = 256.0f;
+const float treeLowDetailRadius = 1024.0f;
 draw::StaticMeshHorde *treeTrunkMeshes = 0;
 draw::StaticMeshHorde *treeLeavesMeshes = 0;
 draw::WorldIconHorde *treeSprites = 0;
 draw::RGBTexture2D *treeTrunkTexture = 0;
 draw::RGBATexture2D *treeLeavesTexture = 0;
 draw::RGBATexture2D *treeSpriteTexture = 0;
+
+std::vector<draw::StaticMeshInstance> allTreeHighDetailInstances;
+std::vector<draw::WorldIconInstance> allTreeLowDetailInstances;
+
+std::vector<int> visibleTreeInstanceIndices;
+std::vector<draw::StaticMeshInstance> visibleTreeHighDetailInstances;
+std::vector<draw::WorldIconInstance> visibleTreeLowDetailInstances;
 
 //Sky box and associated atmospherics data.
 draw::StaticMesh *skyBox = 0;
@@ -161,8 +170,63 @@ vec4 sampleTextureBilinear(const TextureType &texture, const vec2 &scale, const 
     return delta.y*(delta.x*h11 + (1.0f - delta.x)*h01) + (1.0f - delta.y)*(delta.x*h10 + (1.0f - delta.x)*h00);
 }
 
+//Function to populate a list with trees, that are placed with probability as indicated by a given attribute map.
+template<typename TextureType1, typename TextureType2>
+int plantTrees(const TextureType1 &heightTexture, const TextureType2 &attributeTexture, const vec2 &scale,
+               const float &maxDistance, const int &maxNrTrees,
+               std::vector<draw::StaticMeshInstance> &highDetailInstances, std::vector<draw::WorldIconInstance> &lowDetailInstances, std::vector<vec3> &positions)
+{
+    int nrTrees = 0;
+    
+    highDetailInstances.clear();
+    lowDetailInstances.clear();
+    positions.clear();
+    
+    if (maxNrTrees <= 0)
+    {
+        std::cerr << "Warning: Not placing any trees!" << std::endl;
+        return 0;
+    }
+
+    std::cerr << "Placing up to " << maxNrTrees << " trees..." << std::endl;
+    
+    highDetailInstances.reserve(maxNrTrees);
+    lowDetailInstances.reserve(maxNrTrees);
+    positions.reserve(maxNrTrees);
+    
+    for (int i = 0; i < maxNrTrees; ++i)
+    {
+        //Determine the random spot where we want to place a tree.
+        const vec2 treePlanePosition = randomVec2(maxDistance);
+        
+        //Are we going to place a tree here?
+        const float placeProbability = sampleTextureBilinear(attributeTexture, scale, treePlanePosition).x;
+        
+        if (static_cast<float>(rand())/static_cast<float>(RAND_MAX) <= placeProbability)
+        {
+            //Determine height.
+            const vec3 treePosition = vec3(treePlanePosition.x, sampleTextureBilinear(heightTexture, scale, treePlanePosition).x, treePlanePosition.y);
+            
+            highDetailInstances.push_back(draw::StaticMeshInstance(vec4(treePosition.x, treePosition.y, treePosition.z, 1.0f),
+                                                                   vec4(0.0f, 0.0f, 0.0f, 1.0f)));
+            lowDetailInstances.push_back(draw::WorldIconInstance(vec4(treePosition.x, treePosition.y, treePosition.z, 1.0f),
+                                                                 vec2(4.0f, 4.0f),
+                                                                 vec4(0.0f, 0.0f, 1.0f, 1.0f),
+                                                                 vec4(1.0f, 1.0f, 1.0f, 1.0f)));
+            positions.push_back(treePosition);
+            ++nrTrees;
+        }
+    }
+
+    std::cerr << "Placed " << nrTrees << " trees." << std::endl;
+    
+    return nrTrees;
+}
+
 void setup()
 {
+    srand(1234567890);
+    
     //Create large example terrain.
     terrain = new draw::Terrain(6, 8);
     
@@ -207,6 +271,7 @@ void setup()
     
     computeTerrainTypeFromHeight(*terrainHeightTexture, *terrainAttributeTexture, terrainScale.x);
     computeTerrainTypeFromHeight(*terrainFarHeightTexture, *terrainFarAttributeTexture, terrainScale.x*terrainFarScale.x);
+    terrainAttributeTexture->getFromDevice();
     
     //Paint the terrain with the zoomed-in and far-away textures.
     terrain->setFarHeightTextures(*terrainHeightTexture, *terrainFarHeightTexture,
@@ -217,17 +282,36 @@ void setup()
                                    terrainDiffuseScale);
     
     //Create a forest by using the attribute texture, only on the zoomed-in terrain.
-    treeTrunkMeshes = new draw::StaticMeshHorde(mesh::io::readStaticMeshOBJ(DATA_DIRECTORY + "mesh/tree0_trunk.obj"), maxNrHighDetailTrees);
+    //Read and paint the tree trunks.
+    //treeTrunkMeshes = new draw::StaticMeshHorde(mesh::io::readStaticMeshOBJ(DATA_DIRECTORY + "mesh/tree0_trunk.obj"), maxNrHighDetailTrees);
+    treeTrunkMeshes = new draw::StaticMeshHorde(mesh::StaticMesh::createCubeMesh(1.0f), maxNrHighDetailTrees);
     treeTrunkTexture = new draw::RGBTexture2D(img::io::readImage(DATA_DIRECTORY + "img/tree0_trunk.png"));
     treeTrunkMeshes->setDiffuseTexture(*treeTrunkTexture);
     
+    //Read and paint the tree leaves.
     treeLeavesMeshes = new draw::StaticMeshHorde(mesh::io::readStaticMeshOBJ(DATA_DIRECTORY + "mesh/tree0_leaves.obj"), maxNrHighDetailTrees);
     treeLeavesTexture = new draw::RGBATexture2D(img::io::readImage(DATA_DIRECTORY + "img/tree0_leaves.png"));
     treeLeavesMeshes->setDiffuseTexture(*treeLeavesTexture);
     
+    //Read and paint the sprites for far-away trees.
     treeSprites = new draw::WorldIconHorde(maxNrLowDetailTrees);
-    treeSpriteTexture = new draw::RGBATexture2D(img::io::readImage(DATA_DIRECTORY + "img/tree0_sprite.png"));
+    //treeSpriteTexture = new draw::RGBATexture2D(img::io::readImage(DATA_DIRECTORY + "img/tree0_sprite.png"));
+    treeSpriteTexture = new draw::RGBATexture2D(img::Image::createSolidImage(16, 255, 0, 0, 255));
     treeSprites->setIconTexture(*treeSpriteTexture);
+    
+    //Create a forest and place it into a quadtree for efficient rendering.
+    std::vector<vec3> tmpTreePositions;
+    
+    plantTrees(*terrainHeightTexture, *terrainAttributeTexture, terrainScale,
+               0.5f*terrainHeightTexture->getWidth()*terrainScale.x, 262144,
+               allTreeHighDetailInstances, allTreeLowDetailInstances, tmpTreePositions);
+    
+    visibleTreeInstanceIndices.resize(std::max(maxNrHighDetailTrees, maxNrLowDetailTrees));
+    visibleTreeHighDetailInstances.resize(maxNrHighDetailTrees);
+    visibleTreeLowDetailInstances.resize(maxNrLowDetailTrees);
+    
+    quadtree = new lod::Quadtree();
+    quadtree->buildQuadtree(tmpTreePositions.begin(), tmpTreePositions.end(), 4.0f);
     
     //Create sky (a simple cube containing the world).
     skyBox = new draw::StaticMesh(mesh::StaticMesh::createCubeMesh(-1.0e6));
@@ -318,10 +402,40 @@ void update(const double &dt)
     
     sunSky->setSun(vec3(sin(sunAngle), cos(sunAngle), -0.5f));
     
-    //Update the terrain with respect to the camera.
     if (lodFollowsCamera)
     {
+        //Update the terrain with respect to the camera.
         terrain->setCameraPosition(cameraPosition);
+        
+        //Update the forest with respect to the camera.
+        int nrInstances = quadtree->retrieveIndicesBetweenRadii(cameraPosition,
+                                                                0.0f, treeHighDetailRadius,
+                                                                visibleTreeInstanceIndices.begin(), maxNrHighDetailTrees)
+                          - visibleTreeInstanceIndices.begin();
+        
+        //Copy high detail instances.
+        for (int i = 0; i < nrInstances; ++i)
+        {
+            visibleTreeHighDetailInstances[i] = allTreeHighDetailInstances[visibleTreeInstanceIndices[i]];
+        }
+        
+        //Send them to the GPU.
+        treeTrunkMeshes->setMeshes(visibleTreeHighDetailInstances.begin(), visibleTreeHighDetailInstances.begin() + nrInstances);
+        treeLeavesMeshes->setMeshes(visibleTreeHighDetailInstances.begin(), visibleTreeHighDetailInstances.begin() + nrInstances);
+        
+        nrInstances = quadtree->retrieveIndicesBetweenRadii(cameraPosition,
+                                                            treeHighDetailRadius, treeLowDetailRadius,
+                                                            visibleTreeInstanceIndices.begin(), maxNrLowDetailTrees)
+                      - visibleTreeInstanceIndices.begin();
+        
+        //Copy low detail instances.
+        for (int i = 0; i < nrInstances; ++i)
+        {
+            visibleTreeLowDetailInstances[i] = allTreeLowDetailInstances[visibleTreeInstanceIndices[i]];
+        }
+        
+        //Send them to the GPU.
+        treeSprites->setIcons(visibleTreeLowDetailInstances.begin(), visibleTreeLowDetailInstances.begin() + nrInstances);
     }
     
     //Tell the world renderer that the camera has changed.
