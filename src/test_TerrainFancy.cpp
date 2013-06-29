@@ -25,9 +25,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/os/sdlapplication.h>
 
 #include <tiny/img/io/image.h>
+#include <tiny/mesh/io/staticmesh.h>
+
+#include <tiny/lod/quadtree.h>
 
 #include <tiny/draw/computetexture.h>
 #include <tiny/draw/staticmesh.h>
+#include <tiny/draw/staticmeshhorde.h>
+#include <tiny/draw/iconhorde.h>
 #include <tiny/draw/terrain.h>
 #include <tiny/draw/heightmap/scale.h>
 #include <tiny/draw/heightmap/resize.h>
@@ -43,10 +48,8 @@ os::Application *application = 0;
 
 draw::WorldRenderer *worldRenderer = 0;
 
-//The Tasmania heightmap encompasses an area of about 3*10^5 metres squared in 2048x2048 pixels.
-//For a zoomed-in heightmap scaling of 16, this means that we should scale the terrain by 3*10^5/(2048*16) \approx 9 for an accurate representation.
+//All terrain-related data.
 const vec2 terrainScale = vec2(3.0f, 3.0f);
-//The highest mountain on Tasmania is 1617 metres, so this should be the order of magnitude for our vertical scaling.
 const float terrainHeightScale = 1617.0f;
 draw::Terrain *terrain = 0;
 draw::FloatTexture2D *terrainHeightTexture = 0;
@@ -66,13 +69,27 @@ draw::RGBTexture2D *terrainFarNormalTexture = 0;
 
 draw::RGBATexture2D *terrainFarAttributeTexture = 0;
 
+//Forest data.
+lod::Quadtree *quadtree = 0;
+const int maxNrHighDetailTrees = 2048;
+const int maxNrLowDetailTrees = 16384;
+draw::StaticMeshHorde *treeTrunkMeshes = 0;
+draw::StaticMeshHorde *treeLeavesMeshes = 0;
+draw::WorldIconHorde *treeSprites = 0;
+draw::RGBTexture2D *treeTrunkTexture = 0;
+draw::RGBATexture2D *treeLeavesTexture = 0;
+draw::RGBATexture2D *treeSpriteTexture = 0;
+
+//Sky box and associated atmospherics data.
 draw::StaticMesh *skyBox = 0;
-draw::RGBATexture2D *skyTexture = 0;
+draw::RGBTexture2D *skyBoxTexture = 0;
+draw::RGBATexture2D *skyGradientTexture = 0;
 float sunAngle = 0.0f;
 
-bool lodFollowsCamera = true;
-
 draw::effects::SunSky *sunSky = 0;
+
+//Camera data.
+bool lodFollowsCamera = true;
 
 vec3 cameraPosition = vec3(0.0f, 256.0f, 0.0f);
 vec4 cameraOrientation = vec4(0.0f, 0.0f, 0.0f, 1.0f);
@@ -127,17 +144,17 @@ void computeTerrainTypeFromHeight(const TextureType1 &heightMap, TextureType2 &c
     delete computeTexture;
 }
 
-//A simple bilinear texture sampler.
+//A simple bilinear texture sampler, which converts world coordinates to the corresponding texture coordinates on the zoomed-in terrain.
 template<typename TextureType>
-float getHeightBilinear(const TextureType &heightMap, const vec2 &scale, const vec2 &a_pos)
+vec4 sampleTextureBilinear(const TextureType &texture, const vec2 &scale, const vec2 &a_pos)
 {
-    //Sample heightmap at the four points surrounding pos.
-    const vec2 pos = vec2(a_pos.x/scale.x + 0.5f*static_cast<float>(heightMap.getWidth()), a_pos.y/scale.y + 0.5f*static_cast<float>(heightMap.getHeight()));
+    //Sample texture at the four points surrounding pos.
+    const vec2 pos = vec2(a_pos.x/scale.x + 0.5f*static_cast<float>(texture.getWidth()), a_pos.y/scale.y + 0.5f*static_cast<float>(texture.getHeight()));
     const ivec2 intPos = ivec2(floor(pos.x), floor(pos.y));
-    const float h00 = heightMap(intPos.x + 0, intPos.y + 0).x;
-    const float h01 = heightMap(intPos.x + 0, intPos.y + 1).x;
-    const float h10 = heightMap(intPos.x + 1, intPos.y + 0).x;
-    const float h11 = heightMap(intPos.x + 1, intPos.y + 1).x;
+    const vec4 h00 = texture(intPos.x + 0, intPos.y + 0);
+    const vec4 h01 = texture(intPos.x + 0, intPos.y + 1);
+    const vec4 h10 = texture(intPos.x + 1, intPos.y + 0);
+    const vec4 h11 = texture(intPos.x + 1, intPos.y + 1);
     const vec2 delta = vec2(pos.x - floor(pos.x), pos.y - floor(pos.y));
     
     //Interpolate between these four points.
@@ -199,19 +216,40 @@ void setup()
                                    *terrainDiffuseForestTexture, *terrainDiffuseGrassTexture, *terrainDiffuseMudTexture, *terrainDiffuseStoneTexture,
                                    terrainDiffuseScale);
     
+    //Create a forest by using the attribute texture, only on the zoomed-in terrain.
+    treeTrunkMeshes = new draw::StaticMeshHorde(mesh::io::readStaticMeshOBJ(DATA_DIRECTORY + "mesh/tree0_trunk.obj"), maxNrHighDetailTrees);
+    treeTrunkTexture = new draw::RGBTexture2D(img::io::readImage(DATA_DIRECTORY + "img/tree0_trunk.png"));
+    treeTrunkMeshes->setDiffuseTexture(*treeTrunkTexture);
+    
+    treeLeavesMeshes = new draw::StaticMeshHorde(mesh::io::readStaticMeshOBJ(DATA_DIRECTORY + "mesh/tree0_leaves.obj"), maxNrHighDetailTrees);
+    treeLeavesTexture = new draw::RGBATexture2D(img::io::readImage(DATA_DIRECTORY + "img/tree0_leaves.png"));
+    treeLeavesMeshes->setDiffuseTexture(*treeLeavesTexture);
+    
+    treeSprites = new draw::WorldIconHorde(maxNrLowDetailTrees);
+    treeSpriteTexture = new draw::RGBATexture2D(img::io::readImage(DATA_DIRECTORY + "img/tree0_sprite.png"));
+    treeSprites->setIconTexture(*treeSpriteTexture);
+    
     //Create sky (a simple cube containing the world).
     skyBox = new draw::StaticMesh(mesh::StaticMesh::createCubeMesh(-1.0e6));
-    skyTexture = new draw::RGBATexture2D(img::io::readImage(DATA_DIRECTORY + "img/sky.png"));
+    skyBoxTexture = new draw::RGBTexture2D(img::Image::createSolidImage(16));
+    skyBox->setDiffuseTexture(*skyBoxTexture);
     
     //Render using a more advanced shading model.
     sunSky = new draw::effects::SunSky();
+    skyGradientTexture = new draw::RGBATexture2D(img::io::readImage(DATA_DIRECTORY + "img/sky.png"));
+    sunSky->setSkyTexture(*skyGradientTexture);
     
-    sunSky->setSkyTexture(*skyTexture);
-    
-    //Create a renderer and add the cube and the diffuse rendering effect to it.
+    //Create a renderer and add the terrain, forest, and the atmospheric rendering effect to it.
     worldRenderer = new draw::WorldRenderer(application->getScreenWidth(), application->getScreenHeight());
+    
     worldRenderer->addWorldRenderable(skyBox);
+    
     worldRenderer->addWorldRenderable(terrain);
+    
+    worldRenderer->addWorldRenderable(treeTrunkMeshes);
+    worldRenderer->addWorldRenderable(treeLeavesMeshes);
+    worldRenderer->addWorldRenderable(treeSprites);
+    
     worldRenderer->addScreenRenderable(sunSky, false, false);
 }
 
@@ -222,7 +260,16 @@ void cleanup()
     delete sunSky;
     
     delete skyBox;
-    delete skyTexture;
+    delete skyBoxTexture;
+    delete skyGradientTexture;
+    
+    delete quadtree;
+    delete treeTrunkMeshes;
+    delete treeLeavesMeshes;
+    delete treeSprites;
+    delete treeTrunkTexture;
+    delete treeLeavesTexture;
+    delete treeSpriteTexture;
     
     delete terrain;
     
@@ -245,7 +292,7 @@ void update(const double &dt)
     application->updateSimpleCamera(dt, cameraPosition, cameraOrientation);
     
     //If the camera is below the terrain, increase its height.
-    const float terrainHeight = getHeightBilinear(*terrainHeightTexture, terrainScale, vec2(cameraPosition.x, cameraPosition.z)) + 2.0f;
+    const float terrainHeight = sampleTextureBilinear(*terrainHeightTexture, terrainScale, vec2(cameraPosition.x, cameraPosition.z)).x + 2.0f;
     
     cameraPosition.y = std::max(cameraPosition.y, terrainHeight);
     
