@@ -43,36 +43,12 @@ Image tiny::img::io::readImage(const std::string &fileName)
         throw std::exception();
     }
     
-    //Convert image.
-#if SDL_BYTEORDER == SDL_BIG_ENDIAN
-    const Uint32 rMask = 0xff000000, gMask = 0x00ff0000, bMask = 0x0000ff00, aMask = 0x000000ff;
-#else
-    const Uint32 rMask = 0x000000ff, gMask = 0x0000ff00, bMask = 0x00ff0000, aMask = 0xff000000;
-#endif
-    SDL_Surface *surface2 = SDL_CreateRGBSurface(SDL_SWSURFACE, surface->w, surface->h, 32, rMask, gMask, bMask, aMask);
-    
     image = Image(surface->w, surface->h);
-    
-    if (!surface2)
-    {
-        std::cerr << "Unable to create output surface: " << SDL_GetError() << "!" << std::endl;
-        throw std::exception();
-    }
-    
-    SDL_FillRect(surface2, 0, 0);
-    SDL_SetAlpha(surface2, 0, 255);
-    
-    if (SDL_BlitSurface(surface, 0, surface2, 0) < 0)
-    {
-        std::cerr << "Unable to blit: " << SDL_GetError() << "!" << std::endl;
-        throw std::exception();
-    }
-    
-    SDL_FreeSurface(surface);
     
     //Gather pixel data.
     unsigned char *destination = &image.data[0];
-    const unsigned char *srcRow = static_cast<unsigned char *>(surface2->pixels);
+    const unsigned char *srcRow = static_cast<unsigned char *>(surface->pixels);
+    const size_t nrChannels = surface->format->BytesPerPixel;
     
     for (size_t y = 0; y < image.height; ++y)
     {
@@ -80,15 +56,25 @@ Image tiny::img::io::readImage(const std::string &fileName)
         
         for (size_t x = 0; x < image.width; ++x)
         {
-            for (size_t i = 0; i < 4; ++i) *destination++ = *src++;
+            size_t i = 0;
+            
+            for (i = 0; i < 4 && i < nrChannels; ++i)
+            {
+                *destination++ = *src++;
+            }
+            
+            for ( ; i < 4; ++i)
+            {
+                *destination++ = 255;
+            }
         }
         
-        srcRow += surface2->pitch;
+        srcRow += surface->pitch;
     }
     
-    SDL_FreeSurface(surface2);
+    SDL_FreeSurface(surface);
     
-    std::cerr << "Read a " << image.width << "x" << image.height << " image from '" << fileName << "'." << std::endl;
+    std::cerr << "Read a " << image.width << "x" << image.height << " image from '" << fileName << "' with " << nrChannels << " channels." << std::endl;
     
     return image;
 }

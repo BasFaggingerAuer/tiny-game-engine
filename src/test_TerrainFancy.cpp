@@ -209,7 +209,7 @@ int plantTrees(const TextureType1 &heightTexture, const TextureType2 &attributeT
             
             highDetailInstances.push_back(draw::StaticMeshInstance(vec4(treePosition.x, treePosition.y, treePosition.z, 1.0f),
                                                                    vec4(0.0f, 0.0f, 0.0f, 1.0f)));
-            lowDetailInstances.push_back(draw::WorldIconInstance(vec4(treePosition.x, treePosition.y, treePosition.z, 1.0f),
+            lowDetailInstances.push_back(draw::WorldIconInstance(vec4(treePosition.x, treePosition.y + 4.0f, treePosition.z, 1.0f),
                                                                  vec2(4.0f, 4.0f),
                                                                  vec4(0.0f, 0.0f, 1.0f, 1.0f),
                                                                  vec4(1.0f, 1.0f, 1.0f, 1.0f)));
@@ -295,8 +295,7 @@ void setup()
     
     //Read and paint the sprites for far-away trees.
     treeSprites = new draw::WorldIconHorde(maxNrLowDetailTrees);
-    //treeSpriteTexture = new draw::RGBATexture2D(img::io::readImage(DATA_DIRECTORY + "img/tree0_sprite.png"));
-    treeSpriteTexture = new draw::RGBATexture2D(img::Image::createSolidImage(16, 255, 0, 0, 255));
+    treeSpriteTexture = new draw::RGBATexture2D(img::io::readImage(DATA_DIRECTORY + "img/tree0_sprite.png"));
     treeSprites->setIconTexture(*treeSpriteTexture);
     
     //Create a forest and place it into a quadtree for efficient rendering.
