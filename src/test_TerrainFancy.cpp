@@ -71,9 +71,9 @@ draw::RGBATexture2D *terrainFarAttributeTexture = 0;
 
 //Forest data.
 lod::Quadtree *quadtree = 0;
-const int maxNrHighDetailTrees = 2048;
-const int maxNrLowDetailTrees = 16384;
-const float treeHighDetailRadius = 256.0f;
+const int maxNrHighDetailTrees = 1024;
+const int maxNrLowDetailTrees = 32768;
+const float treeHighDetailRadius = 128.0f;
 const float treeLowDetailRadius = 1024.0f;
 draw::StaticMeshHorde *treeTrunkMeshes = 0;
 draw::StaticMeshHorde *treeLeavesMeshes = 0;
@@ -283,8 +283,7 @@ void setup()
     
     //Create a forest by using the attribute texture, only on the zoomed-in terrain.
     //Read and paint the tree trunks.
-    //treeTrunkMeshes = new draw::StaticMeshHorde(mesh::io::readStaticMeshOBJ(DATA_DIRECTORY + "mesh/tree0_trunk.obj"), maxNrHighDetailTrees);
-    treeTrunkMeshes = new draw::StaticMeshHorde(mesh::StaticMesh::createCubeMesh(1.0f), maxNrHighDetailTrees);
+    treeTrunkMeshes = new draw::StaticMeshHorde(mesh::io::readStaticMeshOBJ(DATA_DIRECTORY + "mesh/tree0_trunk.obj"), maxNrHighDetailTrees);
     treeTrunkTexture = new draw::RGBTexture2D(img::io::readImage(DATA_DIRECTORY + "img/tree0_trunk.png"));
     treeTrunkMeshes->setDiffuseTexture(*treeTrunkTexture);
     
@@ -302,7 +301,7 @@ void setup()
     std::vector<vec3> tmpTreePositions;
     
     plantTrees(*terrainHeightTexture, *terrainAttributeTexture, terrainScale,
-               0.5f*terrainHeightTexture->getWidth()*terrainScale.x, 262144,
+               0.5f*terrainHeightTexture->getWidth()*terrainScale.x, 524288,
                allTreeHighDetailInstances, allTreeLowDetailInstances, tmpTreePositions);
     
     visibleTreeInstanceIndices.resize(std::max(maxNrHighDetailTrees, maxNrLowDetailTrees));
@@ -399,7 +398,7 @@ void update(const double &dt)
         sunAngle += 1.0f*dt;
     }
     
-    sunSky->setSun(vec3(sin(sunAngle), cos(sunAngle), -0.5f));
+    sunSky->setSun(vec3(sin(sunAngle), cos(sunAngle), 0.5f));
     
     if (lodFollowsCamera)
     {
