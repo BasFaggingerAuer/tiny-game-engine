@@ -63,7 +63,7 @@ std::string SunSky::getFragmentShaderCode() const
 "   vec3 sunContribution = max(0.0f, sunDirection.y)*vec3(800.0f, 500.0f, 0.0f)*max(0.0f, dot(relativePosition, sunDirection) - 0.999f);\n"
 "   \n"
 "   float depth = worldPosition.w;\n"
-"   float directLight = 0.25f + 1.5f*max(dot(worldNormal.xyz, sunDirection), 0.0f);\n"
+"   float directLight = 0.5f + max(dot(worldNormal.xyz, sunDirection), 0.0f);\n"
 "   vec3 decay = vec3(exp(depth*fogFalloff));\n"
 "   \n"
 "	vec4 skyDirectColour = texture(skyTexture, vec2(0.5f*(1.0f - sunDirection.y), 1.0f - max(0.01f, normalize(worldPosition).y)));\n"

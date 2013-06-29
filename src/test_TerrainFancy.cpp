@@ -93,7 +93,7 @@ std::vector<draw::WorldIconInstance> visibleTreeLowDetailInstances;
 draw::StaticMesh *skyBox = 0;
 draw::RGBTexture2D *skyBoxTexture = 0;
 draw::RGBATexture2D *skyGradientTexture = 0;
-float sunAngle = 0.0f;
+float sunAngle = -0.4f;
 
 draw::effects::SunSky *sunSky = 0;
 
@@ -285,16 +285,19 @@ void setup()
     //Read and paint the tree trunks.
     treeTrunkMeshes = new draw::StaticMeshHorde(mesh::io::readStaticMeshOBJ(DATA_DIRECTORY + "mesh/tree0_trunk.obj"), maxNrHighDetailTrees);
     treeTrunkTexture = new draw::RGBTexture2D(img::io::readImage(DATA_DIRECTORY + "img/tree0_trunk.png"));
+    treeTrunkTexture->setAttributes(true, true, true);
     treeTrunkMeshes->setDiffuseTexture(*treeTrunkTexture);
     
     //Read and paint the tree leaves.
     treeLeavesMeshes = new draw::StaticMeshHorde(mesh::io::readStaticMeshOBJ(DATA_DIRECTORY + "mesh/tree0_leaves.obj"), maxNrHighDetailTrees);
     treeLeavesTexture = new draw::RGBATexture2D(img::io::readImage(DATA_DIRECTORY + "img/tree0_leaves.png"));
+    treeLeavesTexture->setAttributes(false, true, true);
     treeLeavesMeshes->setDiffuseTexture(*treeLeavesTexture);
     
     //Read and paint the sprites for far-away trees.
     treeSprites = new draw::WorldIconHorde(maxNrLowDetailTrees);
     treeSpriteTexture = new draw::RGBATexture2D(img::io::readImage(DATA_DIRECTORY + "img/tree0_sprite.png"));
+    treeSpriteTexture->setAttributes(false, true, true);
     treeSprites->setIconTexture(*treeSpriteTexture);
     
     //Create a forest and place it into a quadtree for efficient rendering.
