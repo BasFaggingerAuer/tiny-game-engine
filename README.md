@@ -26,7 +26,7 @@ Installation
 ------------
 
 Compiling the tiny game engine is done using CMake.
-Please open a terminal and go to the directory where the source code was extracted (containing this README).
+Please open a terminal and go to the directory where the package was extracted (containing this README).
 Then, issue the following commands:
 
 1.   mkdir build
@@ -49,6 +49,6 @@ Below is a list of examples, ordered by complexity, together with the particular
 5.   [test_StaticMeshHorde](/src/test_StaticMeshHorde.cpp): Render a large number of cube instances on the screen, viewed through a controllable camera.
 6.   [test_Terrain](/src/test_Terrain.cpp): Fly over a simple terrain.
 7.   [test_TerrainFar](/src/test_TerrainFar.cpp): Fly over a very large terrain.
-8.   [test_TerrainFancy](/src/test_TerrainFancy.cpp): Fly over a very large terrain with advanced texturing, atmospherics, and a forest.
-9.   [test_Quadtree](/src/test_Quadtree.cpp): Example of using a quadtree for level of detail management.
+8.   [test_Quadtree](/src/test_Quadtree.cpp): Example of using a quadtree for level of detail management.
+9.   [test_TerrainFancy](/src/test_TerrainFancy.cpp): Fly over a very large terrain with advanced texturing, atmospherics, and a forest.
 

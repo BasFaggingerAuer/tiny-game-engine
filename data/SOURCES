@@ -1,0 +1,25 @@
+Sources of all included data files
+==================================
+
+font/OpenBaskerville-0.0.75.ttf
+From the Open Font Library, http://openfontlibrary.org/font/open-baskerville (SIL Open Font License).
+
+img/sky.png
+From the Ogre3D Caelum project, http://caelum.googlecode.com/hg/main/resources/EarthClearSky2.png (GNU Lesser GPL).
+
+img/tasmania.png
+From the onformative Heightmaps flickr set, http://www.flickr.com/photos/46262341@N05/sets/72157626067623920/ (unknown).
+
+img/terrain/forest.jpg
+img/terrain/rocks.jpg
+img/terrain/dirt.jpg
+img/terrain/grass.jpg
+From OpenGameArt.Org, http://opengameart.org/ (Creative Commons).
+
+img/tree0_sprite.png
+img/tree0_leaves.png
+img/tree0_trunk.png
+mesh/tree0_leaves.obj
+mesh/tree0_trunk.obj
+Tree mesh created by Matthijs van Dorp, with textures from photographs (GNU GPL v3).
+
