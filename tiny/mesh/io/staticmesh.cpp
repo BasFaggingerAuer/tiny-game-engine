@@ -22,11 +22,28 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 #include <map>
 
+#include <assimp/aiScene.h>
+#include <assimp/assimp.hpp>
+#include <assimp/aiPostProcess.h>
+
 #include <tiny/math/vec.h>
 #include <tiny/mesh/io/staticmesh.h>
 
 using namespace tiny;
 using namespace tiny::mesh;
+
+StaticMesh tiny::mesh::io::readStaticMesh(const std::string &fileName)
+{
+	//Use AssImp to read all data from the file.
+	Assimp::Importer importer;
+	const aiScene *scene = importer.ReadFile(fileName.c_str(), aiProcessPreset_TargetRealtime_Quality);
+	
+	if (!scene)
+	{
+		std::cerr << "Unable to read '" << fileName << "' from disk!" << std::endl;
+		throw std::exception();
+	}
+}
 
 struct compareivec3
 {

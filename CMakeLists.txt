@@ -22,12 +22,18 @@ find_package(GLEW REQUIRED)
 find_package(SDL REQUIRED)
 find_package(SDL_image REQUIRED)
 find_package(SDL_ttf REQUIRED)
+find_package(Assimp REQUIRED)
+
+message("Assimp include directory: ${ASSIMP_INCLUDE_DIR}")
+message("Assimp library directory: ${ASSIMP_LIBRARY_DIR}")
+message("Assimp library          : ${ASSIMP_LIBRARIES}")
 
 configure_file(config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
 
 set(CMAKE_CXX_FLAGS "-O2 -g -Wall -Wextra -Wshadow -ansi -pedantic")
 #set(CMAKE_CXX_FLAGS "-O3 -Wall -DNDEBUG")
 set(CMAKE_EXE_LINKER_FLAGS "-lrt")
+#set(CMAKE_VERBOSE_MAKEFILE true)
 
 add_subdirectory(${TINY_SOURCE_DIR}/tiny/)
 
@@ -35,6 +41,8 @@ include_directories(${OPENGL_INCLUDE_DIR})
 link_directories(${OPENGL_LIBRARY_DIR})
 include_directories(${GLEW_INCLUDE_DIR})
 link_directories(${GLEW_LIBRARY_DIR})
+include_directories(${ASSIMP_INCLUDE_DIR})
+link_directories(${ASSIMP_LIBRARY_DIR})
 include_directories(${SDL_INCLUDE_DIR})
 link_directories(${SDL_LIBRARY_DIR})
 include_directories(${SDL_IMAGE_INCLUDE_DIR})
@@ -44,7 +52,9 @@ link_directories(${SDL_TTF_LIBRARY_DIR})
 include_directories(${TINY_SOURCE_DIR})
 include_directories(${TINY_BINARY_DIR})
 
-set(USED_LIBS tinygame
+set(USED_LIBS 
+              tinygame
+              ${ASSIMP_LIBRARIES}
               ${OPENGL_LIBRARY}
               ${GLEW_LIBRARY}
               ${SDL_LIBRARY}
