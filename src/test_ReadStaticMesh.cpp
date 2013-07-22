@@ -25,11 +25,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/os/sdlapplication.h>
 
 #include <tiny/img/image.h>
+#include <tiny/img/io/image.h>
 #include <tiny/mesh/staticmesh.h>
 #include <tiny/mesh/io/staticmesh.h>
 
 #include <tiny/draw/staticmesh.h>
-#include <tiny/draw/effects/diffuse.h>
+#include <tiny/draw/effects/lambert.h>
 #include <tiny/draw/worldrenderer.h>
 
 using namespace std;
@@ -40,7 +41,8 @@ os::Application *application = 0;
 draw::WorldRenderer *worldRenderer = 0;
 
 draw::StaticMesh *testMesh = 0;
-draw::RGBATexture2D *testDiffuseTexture = 0;
+draw::RGBTexture2D *testDiffuseTexture = 0;
+draw::RGBTexture2D *testNormalTexture = 0;
 
 draw::Renderable *screenEffect = 0;
 
@@ -51,11 +53,13 @@ void setup()
 {
     //Create a test mesh and paint it with a texture.
     testMesh = new draw::StaticMesh(mesh::io::readStaticMesh(DATA_DIRECTORY + "mesh/tree0_trunk.obj"));
-    testDiffuseTexture = new draw::RGBATexture2D(img::Image::createTestImage());
+    testDiffuseTexture = new draw::RGBTexture2D(img::io::readImage(DATA_DIRECTORY + "img/tree0_trunk.png"));
+    testNormalTexture = new draw::RGBTexture2D(img::io::readImage(DATA_DIRECTORY + "img/tree0_trunk_normal.png"));
     testMesh->setDiffuseTexture(*testDiffuseTexture);
+    testMesh->setNormalTexture(*testNormalTexture);
     
     //Render only diffuse colours to the screen.
-    screenEffect = new draw::effects::Diffuse();
+    screenEffect = new draw::effects::Lambert();
     
     //Create a renderer and add the test and the diffuse rendering effect to it.
     worldRenderer = new draw::WorldRenderer(application->getScreenWidth(), application->getScreenHeight());
@@ -71,6 +75,7 @@ void cleanup()
     
     delete testMesh;
     delete testDiffuseTexture;
+    delete testNormalTexture;
 }
 
 void update(const double &dt)

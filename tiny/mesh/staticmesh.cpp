@@ -34,35 +34,35 @@ StaticMesh StaticMesh::createCubeMesh(const float &size)
 {
     StaticMesh mesh;
     
-    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 0.0f), vec3( 0.0f, 0.0f,-1.0f), vec3(-size, -size, -size)));
-    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 0.0f), vec3( 0.0f, 0.0f,-1.0f), vec3( size, -size, -size)));
-    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 1.0f), vec3( 0.0f, 0.0f,-1.0f), vec3(-size,  size, -size)));
-    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 1.0f), vec3( 0.0f, 0.0f,-1.0f), vec3( size,  size, -size)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 0.0f), vec3(1.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f), vec3( 0.0f, 0.0f,-1.0f), vec3(-size, -size, -size)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 0.0f), vec3(1.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f), vec3( 0.0f, 0.0f,-1.0f), vec3( size, -size, -size)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 1.0f), vec3(1.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f), vec3( 0.0f, 0.0f,-1.0f), vec3(-size,  size, -size)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 1.0f), vec3(1.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f), vec3( 0.0f, 0.0f,-1.0f), vec3( size,  size, -size)));
     
-    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 0.0f), vec3( 0.0f, 0.0f, 1.0f), vec3(-size, -size,  size)));
-    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 0.0f), vec3( 0.0f, 0.0f, 1.0f), vec3( size, -size,  size)));
-    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 1.0f), vec3( 0.0f, 0.0f, 1.0f), vec3(-size,  size,  size)));
-    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 1.0f), vec3( 0.0f, 0.0f, 1.0f), vec3( size,  size,  size)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 0.0f), vec3(1.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f), vec3( 0.0f, 0.0f, 1.0f), vec3(-size, -size,  size)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 0.0f), vec3(1.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f), vec3( 0.0f, 0.0f, 1.0f), vec3( size, -size,  size)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 1.0f), vec3(1.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f), vec3( 0.0f, 0.0f, 1.0f), vec3(-size,  size,  size)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 1.0f), vec3(1.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f), vec3( 0.0f, 0.0f, 1.0f), vec3( size,  size,  size)));
     
-    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 0.0f), vec3( 0.0f,-1.0f, 0.0f), vec3(-size, -size, -size)));
-    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 0.0f), vec3( 0.0f,-1.0f, 0.0f), vec3( size, -size, -size)));
-    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 1.0f), vec3( 0.0f,-1.0f, 0.0f), vec3(-size, -size,  size)));
-    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 1.0f), vec3( 0.0f,-1.0f, 0.0f), vec3( size, -size,  size)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 0.0f), vec3(1.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 1.0f), vec3( 0.0f,-1.0f, 0.0f), vec3(-size, -size, -size)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 0.0f), vec3(1.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 1.0f), vec3( 0.0f,-1.0f, 0.0f), vec3( size, -size, -size)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 1.0f), vec3(1.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 1.0f), vec3( 0.0f,-1.0f, 0.0f), vec3(-size, -size,  size)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 1.0f), vec3(1.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 1.0f), vec3( 0.0f,-1.0f, 0.0f), vec3( size, -size,  size)));
     
-    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 0.0f), vec3( 0.0f, 1.0f, 0.0f), vec3(-size,  size, -size)));
-    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 0.0f), vec3( 0.0f, 1.0f, 0.0f), vec3( size,  size, -size)));
-    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 1.0f), vec3( 0.0f, 1.0f, 0.0f), vec3(-size,  size,  size)));
-    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 1.0f), vec3( 0.0f, 1.0f, 0.0f), vec3( size,  size,  size)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 0.0f), vec3(1.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 1.0f), vec3( 0.0f, 1.0f, 0.0f), vec3(-size,  size, -size)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 0.0f), vec3(1.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 1.0f), vec3( 0.0f, 1.0f, 0.0f), vec3( size,  size, -size)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 1.0f), vec3(1.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 1.0f), vec3( 0.0f, 1.0f, 0.0f), vec3(-size,  size,  size)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 1.0f), vec3(1.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 1.0f), vec3( 0.0f, 1.0f, 0.0f), vec3( size,  size,  size)));
     
-    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 0.0f), vec3(-1.0f, 0.0f, 0.0f), vec3(-size, -size, -size)));
-    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 0.0f), vec3(-1.0f, 0.0f, 0.0f), vec3(-size,  size, -size)));
-    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 1.0f), vec3(-1.0f, 0.0f, 0.0f), vec3(-size, -size,  size)));
-    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 1.0f), vec3(-1.0f, 0.0f, 0.0f), vec3(-size,  size,  size)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f), vec3(0.0f, 0.0f, 1.0f), vec3(-1.0f, 0.0f, 0.0f), vec3(-size, -size, -size)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f), vec3(0.0f, 0.0f, 1.0f), vec3(-1.0f, 0.0f, 0.0f), vec3(-size,  size, -size)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 1.0f), vec3(0.0f, 1.0f, 0.0f), vec3(0.0f, 0.0f, 1.0f), vec3(-1.0f, 0.0f, 0.0f), vec3(-size, -size,  size)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 1.0f), vec3(0.0f, 1.0f, 0.0f), vec3(0.0f, 0.0f, 1.0f), vec3(-1.0f, 0.0f, 0.0f), vec3(-size,  size,  size)));
     
-    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 0.0f), vec3( 1.0f, 0.0f, 0.0f), vec3( size, -size, -size)));
-    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 0.0f), vec3( 1.0f, 0.0f, 0.0f), vec3( size,  size, -size)));
-    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 1.0f), vec3( 1.0f, 0.0f, 0.0f), vec3( size, -size,  size)));
-    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 1.0f), vec3( 1.0f, 0.0f, 0.0f), vec3( size,  size,  size)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f), vec3(0.0f, 0.0f, 1.0f), vec3( 1.0f, 0.0f, 0.0f), vec3( size, -size, -size)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f), vec3(0.0f, 0.0f, 1.0f), vec3( 1.0f, 0.0f, 0.0f), vec3( size,  size, -size)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 1.0f), vec3(0.0f, 1.0f, 0.0f), vec3(0.0f, 0.0f, 1.0f), vec3( 1.0f, 0.0f, 0.0f), vec3( size, -size,  size)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 1.0f), vec3(0.0f, 1.0f, 0.0f), vec3(0.0f, 0.0f, 1.0f), vec3( 1.0f, 0.0f, 0.0f), vec3( size,  size,  size)));
     
     mesh.indices.push_back(0);
     mesh.indices.push_back(3);

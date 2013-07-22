@@ -68,6 +68,7 @@ StaticMesh tiny::mesh::io::readStaticMesh(const std::string &fileName)
     if (sourceMesh->mNumVertices <= 0 ||
         !sourceMesh->HasPositions() ||
         !sourceMesh->HasFaces() ||
+        !sourceMesh->HasTangentsAndBitangents() ||
         !sourceMesh->HasNormals() ||
         !sourceMesh->HasTextureCoords(0))
     {
@@ -83,6 +84,8 @@ StaticMesh tiny::mesh::io::readStaticMesh(const std::string &fileName)
     for (unsigned int i = 0; i < mesh.vertices.size(); ++i)
     {
         mesh.vertices[i] = StaticMeshVertex(vec2(sourceMesh->mTextureCoords[0][i].x, sourceMesh->mTextureCoords[0][i].y),
+                                            vec3(sourceMesh->mTangents[i].x, sourceMesh->mTangents[i].y, sourceMesh->mTangents[i].z),
+                                            vec3(sourceMesh->mBitangents[i].x, sourceMesh->mBitangents[i].y, sourceMesh->mBitangents[i].z),
                                             vec3(sourceMesh->mNormals[i].x, sourceMesh->mNormals[i].y, sourceMesh->mNormals[i].z),
                                             vec3(sourceMesh->mVertices[i].x, sourceMesh->mVertices[i].y, sourceMesh->mVertices[i].z));
     }

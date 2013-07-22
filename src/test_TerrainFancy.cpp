@@ -78,8 +78,9 @@ const float treeLowDetailRadius = 1024.0f;
 draw::StaticMeshHorde *treeTrunkMeshes = 0;
 draw::StaticMeshHorde *treeLeavesMeshes = 0;
 draw::WorldIconHorde *treeSprites = 0;
-draw::RGBTexture2D *treeTrunkTexture = 0;
-draw::RGBATexture2D *treeLeavesTexture = 0;
+draw::RGBTexture2D *treeTrunkDiffuseTexture = 0;
+draw::RGBTexture2D *treeTrunkNormalTexture = 0;
+draw::RGBATexture2D *treeLeavesDiffuseTexture = 0;
 draw::RGBATexture2D *treeSpriteTexture = 0;
 
 std::vector<draw::StaticMeshInstance> allTreeHighDetailInstances;
@@ -284,15 +285,18 @@ void setup()
     //Create a forest by using the attribute texture, only on the zoomed-in terrain.
     //Read and paint the tree trunks.
     treeTrunkMeshes = new draw::StaticMeshHorde(mesh::io::readStaticMesh(DATA_DIRECTORY + "mesh/tree0_trunk.obj"), maxNrHighDetailTrees);
-    treeTrunkTexture = new draw::RGBTexture2D(img::io::readImage(DATA_DIRECTORY + "img/tree0_trunk.png"));
-    treeTrunkTexture->setAttributes(true, true, true);
-    treeTrunkMeshes->setDiffuseTexture(*treeTrunkTexture);
+    treeTrunkDiffuseTexture = new draw::RGBTexture2D(img::io::readImage(DATA_DIRECTORY + "img/tree0_trunk.png"));
+    treeTrunkNormalTexture = new draw::RGBTexture2D(img::io::readImage(DATA_DIRECTORY + "img/tree0_trunk_normal.png"));
+    treeTrunkDiffuseTexture->setAttributes(true, true, true);
+    treeTrunkNormalTexture->setAttributes(true, true, true);
+    treeTrunkMeshes->setDiffuseTexture(*treeTrunkDiffuseTexture);
+    treeTrunkMeshes->setNormalTexture(*treeTrunkNormalTexture);
     
     //Read and paint the tree leaves.
     treeLeavesMeshes = new draw::StaticMeshHorde(mesh::io::readStaticMesh(DATA_DIRECTORY + "mesh/tree0_leaves.obj"), maxNrHighDetailTrees);
-    treeLeavesTexture = new draw::RGBATexture2D(img::io::readImage(DATA_DIRECTORY + "img/tree0_leaves.png"));
-    treeLeavesTexture->setAttributes(false, true, true);
-    treeLeavesMeshes->setDiffuseTexture(*treeLeavesTexture);
+    treeLeavesDiffuseTexture = new draw::RGBATexture2D(img::io::readImage(DATA_DIRECTORY + "img/tree0_leaves.png"));
+    treeLeavesDiffuseTexture->setAttributes(false, true, true);
+    treeLeavesMeshes->setDiffuseTexture(*treeLeavesDiffuseTexture);
     
     //Read and paint the sprites for far-away trees.
     treeSprites = new draw::WorldIconHorde(maxNrLowDetailTrees);
@@ -352,8 +356,9 @@ void cleanup()
     delete treeTrunkMeshes;
     delete treeLeavesMeshes;
     delete treeSprites;
-    delete treeTrunkTexture;
-    delete treeLeavesTexture;
+    delete treeTrunkDiffuseTexture;
+    delete treeTrunkNormalTexture;
+    delete treeLeavesDiffuseTexture;
     delete treeSpriteTexture;
     
     delete terrain;

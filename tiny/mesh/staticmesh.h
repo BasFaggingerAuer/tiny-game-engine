@@ -38,9 +38,13 @@ struct StaticMeshVertex
     }
     
     StaticMeshVertex(const vec2 &a_textureCoordinate,
+                     const vec3 &a_tangent,
+                     const vec3 &a_bitangent,
                      const vec3 &a_normal,
                      const vec3 &a_position) :
         textureCoordinate(a_textureCoordinate),
+        tangent(a_tangent),
+        bitangent(a_bitangent),
         normal(a_normal),
         position(a_position)
     {
@@ -48,6 +52,8 @@ struct StaticMeshVertex
     }
 
     vec2 textureCoordinate;
+    vec3 tangent;
+    vec3 bitangent;
     vec3 normal;
     vec3 position;
 };

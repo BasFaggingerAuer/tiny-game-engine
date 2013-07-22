@@ -73,6 +73,12 @@ class StaticMeshHorde : public Renderable
             uniformMap.setTexture(texture, "diffuseTexture");
         }
         
+        template <typename TextureType>
+        void setNormalTexture(const TextureType &texture)
+        {
+            uniformMap.setTexture(texture, "normalTexture");
+        }
+        
         template <typename Iterator>
         void setMeshes(Iterator first, Iterator last)
         {

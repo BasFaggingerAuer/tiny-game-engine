@@ -60,6 +60,12 @@ class StaticMesh : public Renderable
             uniformMap.setTexture(texture, "diffuseTexture");
         }
         
+        template <typename TextureType>
+        void setNormalTexture(const TextureType &texture)
+        {
+            uniformMap.setTexture(texture, "normalTexture");
+        }
+        
         std::string getVertexShaderCode() const;
         std::string getFragmentShaderCode() const;
         
