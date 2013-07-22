@@ -283,13 +283,13 @@ void setup()
     
     //Create a forest by using the attribute texture, only on the zoomed-in terrain.
     //Read and paint the tree trunks.
-    treeTrunkMeshes = new draw::StaticMeshHorde(mesh::io::readStaticMeshOBJ(DATA_DIRECTORY + "mesh/tree0_trunk.obj"), maxNrHighDetailTrees);
+    treeTrunkMeshes = new draw::StaticMeshHorde(mesh::io::readStaticMesh(DATA_DIRECTORY + "mesh/tree0_trunk.obj"), maxNrHighDetailTrees);
     treeTrunkTexture = new draw::RGBTexture2D(img::io::readImage(DATA_DIRECTORY + "img/tree0_trunk.png"));
     treeTrunkTexture->setAttributes(true, true, true);
     treeTrunkMeshes->setDiffuseTexture(*treeTrunkTexture);
     
     //Read and paint the tree leaves.
-    treeLeavesMeshes = new draw::StaticMeshHorde(mesh::io::readStaticMeshOBJ(DATA_DIRECTORY + "mesh/tree0_leaves.obj"), maxNrHighDetailTrees);
+    treeLeavesMeshes = new draw::StaticMeshHorde(mesh::io::readStaticMesh(DATA_DIRECTORY + "mesh/tree0_leaves.obj"), maxNrHighDetailTrees);
     treeLeavesTexture = new draw::RGBATexture2D(img::io::readImage(DATA_DIRECTORY + "img/tree0_leaves.png"));
     treeLeavesTexture->setAttributes(false, true, true);
     treeLeavesMeshes->setDiffuseTexture(*treeLeavesTexture);

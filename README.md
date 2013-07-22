@@ -42,13 +42,14 @@ Using libtinygame
 To familiarise yourself with the tiny game engine, I would recommend looking at the source code of the provided examples in the [src](/src/) directory.
 Below is a list of examples, ordered by complexity, together with the particular elements that they are designed to test.
 
-1.   [test_SDLApplication](/src/test_SDLApplication.cpp): Create an empty SDL window.
-2.   [test_ComputeTexture](/src/test_ComputeTexture.cpp): Example in which a test image is passed through a simple GLSL fragment shader to the screen.
-3.   [test_Font](/src/test_Font.cpp): Read a TrueType font and display text on the screen.
-4.   [test_StaticMesh](/src/test_StaticMesh.cpp): Render a cube on the screen, viewed through a controllable camera.
-5.   [test_StaticMeshHorde](/src/test_StaticMeshHorde.cpp): Render a large number of cube instances on the screen, viewed through a controllable camera.
-6.   [test_Terrain](/src/test_Terrain.cpp): Fly over a simple terrain.
-7.   [test_TerrainFar](/src/test_TerrainFar.cpp): Fly over a very large terrain.
-8.   [test_Quadtree](/src/test_Quadtree.cpp): Example of using a quadtree for level of detail management.
-9.   [test_TerrainFancy](/src/test_TerrainFancy.cpp): Fly over a very large terrain with advanced texturing, atmospherics, and a forest.
+*   [test_SDLApplication](/src/test_SDLApplication.cpp): Create an empty SDL window.
+*   [test_ComputeTexture](/src/test_ComputeTexture.cpp): Example in which a test image is passed through a simple GLSL fragment shader to the screen.
+*   [test_Font](/src/test_Font.cpp): Read a TrueType font and display text on the screen.
+*   [test_StaticMesh](/src/test_StaticMesh.cpp): Render a cube on the screen, viewed through a controllable camera.
+*   [test_ReadStaticMesh](/src/test_ReadStaticMesh.cpp): Render a mesh read from disk on the screen, viewed through a controllable camera.
+*   [test_StaticMeshHorde](/src/test_StaticMeshHorde.cpp): Render a large number of cube instances on the screen, viewed through a controllable camera.
+*   [test_Terrain](/src/test_Terrain.cpp): Fly over a simple terrain.
+*   [test_TerrainFar](/src/test_TerrainFar.cpp): Fly over a very large terrain.
+*   [test_Quadtree](/src/test_Quadtree.cpp): Example of using a quadtree for level of detail management.
+*   [test_TerrainFancy](/src/test_TerrainFancy.cpp): Fly over a very large terrain with advanced texturing, atmospherics, and a forest.
 
