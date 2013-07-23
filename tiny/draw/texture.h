@@ -33,10 +33,21 @@ namespace tiny
 namespace draw
 {
 
+namespace tf
+{
+
+//Texture flags for filtering/repeating/...
+const unsigned int none   = 0x0000;
+const unsigned int repeat = 0x0001;
+const unsigned int filter = 0x0002;
+const unsigned int mipmap = 0x0004;
+
+} //namespace tf
+
 class TextureInterface
 {
     public:
-        TextureInterface(const GLenum &a_textureTarget, const GLint &a_textureFormat, const GLenum &a_textureChannels, const GLenum &a_textureDataType, const size_t &a_width, const size_t &a_height = 1, const size_t &a_depth = 1);
+        TextureInterface(const GLenum &a_textureTarget, const GLint &a_textureFormat, const GLenum &a_textureChannels, const GLenum &a_textureDataType, const unsigned int &a_flags, const size_t &a_width, const size_t &a_height = 1, const size_t &a_depth = 1);
         TextureInterface(const TextureInterface &a_texture);
         virtual ~TextureInterface();
         
@@ -46,7 +57,6 @@ class TextureInterface
         size_t getDepth() const;
         void bind(const int & = 0) const;
         void unbind(const int & = 0) const;
-        void setAttributes(const bool & = false, const bool & = true, const bool & = false) const;
         
     protected:
         void createDeviceTexture();
@@ -56,6 +66,7 @@ class TextureInterface
         const GLint textureFormat;
         const GLenum textureChannels;
         const GLenum textureDataType;
+        const unsigned int flags;
         const size_t width, height, depth;
         GLuint textureIndex;
 };
@@ -64,11 +75,12 @@ template<typename T, size_t Channels>
 class Texture : public TextureInterface
 {
     public:
-        Texture(const GLenum &a_textureTarget, const size_t &a_width, const size_t &a_height = 1, const size_t &a_depth = 1) :
+        Texture(const GLenum &a_textureTarget, const unsigned int &a_flags, const size_t &a_width, const size_t &a_height = 1, const size_t &a_depth = 1) :
             TextureInterface(a_textureTarget,
                              detail::getOpenGLTextureFormat<Channels, T>(),
                              detail::getOpenGLChannelType<Channels>(),
                              detail::getOpenGLDataType<T>(),
+                             a_flags,
                              a_width,
                              a_height,
                              a_depth),
@@ -120,6 +132,11 @@ class Texture : public TextureInterface
             else if (textureTarget == GL_TEXTURE_2D) GL_CHECK(glTexSubImage2D(textureTarget, 0, 0, 0, width, height, textureChannels, textureDataType, &hostData[0]));
             else if (textureTarget == GL_TEXTURE_3D) GL_CHECK(glTexSubImage3D(textureTarget, 0, 0, 0, 0, width, height, depth, textureChannels, textureDataType, &hostData[0]));
             else throw std::exception();
+    
+            if ((flags & tf::mipmap) != 0)
+            {
+                GL_CHECK(glGenerateMipmap(textureTarget));
+            }
             
             GL_CHECK(glBindTexture(textureTarget, 0));
         }
@@ -129,6 +146,12 @@ class Texture : public TextureInterface
             if (hostData.empty()) return;
             
             GL_CHECK(glBindTexture(textureTarget, textureIndex));
+            
+            if ((flags & tf::mipmap) != 0)
+            {
+                GL_CHECK(glGenerateMipmap(textureTarget));
+            }
+            
             GL_CHECK(glGetTexImage(textureTarget, 0, textureChannels, textureDataType, &hostData[0]));
             GL_CHECK(glBindTexture(textureTarget, 0));
         }

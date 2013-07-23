@@ -69,6 +69,7 @@ void computeColourFromHeight(const TextureType1 &heightMap, TextureType2 &colour
     computeTexture->setInput(heightMap, "source");
     computeTexture->setOutput(colourMap, "colour");
     computeTexture->compute();
+    colourMap.getFromDevice();
     
     delete computeTexture;
 }

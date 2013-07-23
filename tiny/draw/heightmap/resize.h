@@ -59,6 +59,7 @@ void computeResizedTexture(const TextureType1 &source, TextureType2 &dest, const
     computeTexture->setInput(source, "source");
     computeTexture->setOutput(dest, "colour");
     computeTexture->compute();
+    dest.getFromDevice();
     
     delete computeTexture;
 }

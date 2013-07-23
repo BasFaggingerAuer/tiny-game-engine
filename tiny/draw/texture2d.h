@@ -33,9 +33,9 @@ class DepthTexture2D : public TextureInterface
                              GL_DEPTH_COMPONENT24,
                              GL_DEPTH_COMPONENT,
                              GL_UNSIGNED_BYTE,
+                             tf::none,
                              a_width,
-                             a_height,
-                             1)
+                             a_height)
         {
             
         }
@@ -50,8 +50,8 @@ template<typename T, size_t Channels>
 class Texture2D : public Texture<T, Channels>
 {
     public:
-        Texture2D(const size_t &a_width, const size_t &a_height) :
-            Texture<T, Channels>(GL_TEXTURE_2D, a_width, a_height)
+        Texture2D(const size_t &a_width, const size_t &a_height, const unsigned int &a_flags = tf::repeat | tf::filter | tf::mipmap) :
+            Texture<T, Channels>(GL_TEXTURE_2D, a_flags, a_width, a_height)
         {
             
         }
@@ -62,8 +62,8 @@ class Texture2D : public Texture<T, Channels>
             
         }
         
-        Texture2D(const tiny::img::Image &image) :
-            Texture<T, Channels>(GL_TEXTURE_2D, image.width, image.height)
+        Texture2D(const tiny::img::Image &image, const unsigned int &a_flags = tf::repeat | tf::filter | tf::mipmap) :
+            Texture<T, Channels>(GL_TEXTURE_2D, a_flags, image.width, image.height)
         {
             for (size_t y = 0; y < image.height; ++y)
             {

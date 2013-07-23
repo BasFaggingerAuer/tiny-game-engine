@@ -150,6 +150,7 @@ void computeTerrainTypeFromHeight(const TextureType1 &heightMap, TextureType2 &c
     computeTexture->setInput(heightMap, "source");
     computeTexture->setOutput(colourMap, "colour");
     computeTexture->compute();
+    colourMap.getFromDevice();
     
     delete computeTexture;
 }
@@ -232,8 +233,8 @@ void setup()
     terrain = new draw::Terrain(6, 8);
     
     //Read heightmap for the far-away terrain.
-    terrainHeightTexture = new draw::FloatTexture2D(img::io::readImage(DATA_DIRECTORY + "img/tasmania.png"));
-    terrainFarHeightTexture = new draw::FloatTexture2D(terrainHeightTexture->getWidth(), terrainHeightTexture->getHeight());
+    terrainHeightTexture = new draw::FloatTexture2D(img::io::readImage(DATA_DIRECTORY + "img/tasmania.png"), draw::tf::filter);
+    terrainFarHeightTexture = new draw::FloatTexture2D(terrainHeightTexture->getWidth(), terrainHeightTexture->getHeight(), draw::tf::filter);
     
     //Scale vertical range of the far-away heightmap.
     draw::computeScaledTexture(*terrainHeightTexture, *terrainFarHeightTexture, vec4(terrainHeightScale/255.0f), vec4(0.0f));
@@ -260,10 +261,6 @@ void setup()
     terrainDiffuseGrassTexture = new draw::RGBTexture2D(img::io::readImage(DATA_DIRECTORY + "img/terrain/grass.jpg"));
     terrainDiffuseMudTexture = new draw::RGBTexture2D(img::io::readImage(DATA_DIRECTORY + "img/terrain/dirt.jpg"));
     terrainDiffuseStoneTexture = new draw::RGBTexture2D(img::io::readImage(DATA_DIRECTORY + "img/terrain/rocks.jpg"));
-    terrainDiffuseForestTexture->setAttributes(true, true, true);
-    terrainDiffuseGrassTexture->setAttributes(true, true, true);
-    terrainDiffuseMudTexture->setAttributes(true, true, true);
-    terrainDiffuseStoneTexture->setAttributes(true, true, true);
     
     //Create an attribute texture that determines the terrain type (forest/grass/mud/stone) based on the altitude and slope.
     //We do this for both the zoomed-in and far-away terrain.
@@ -287,21 +284,17 @@ void setup()
     treeTrunkMeshes = new draw::StaticMeshHorde(mesh::io::readStaticMesh(DATA_DIRECTORY + "mesh/tree0_trunk.obj"), maxNrHighDetailTrees);
     treeTrunkDiffuseTexture = new draw::RGBTexture2D(img::io::readImage(DATA_DIRECTORY + "img/tree0_trunk.png"));
     treeTrunkNormalTexture = new draw::RGBTexture2D(img::io::readImage(DATA_DIRECTORY + "img/tree0_trunk_normal.png"));
-    treeTrunkDiffuseTexture->setAttributes(true, true, true);
-    treeTrunkNormalTexture->setAttributes(true, true, true);
     treeTrunkMeshes->setDiffuseTexture(*treeTrunkDiffuseTexture);
     treeTrunkMeshes->setNormalTexture(*treeTrunkNormalTexture);
     
     //Read and paint the tree leaves.
     treeLeavesMeshes = new draw::StaticMeshHorde(mesh::io::readStaticMesh(DATA_DIRECTORY + "mesh/tree0_leaves.obj"), maxNrHighDetailTrees);
     treeLeavesDiffuseTexture = new draw::RGBATexture2D(img::io::readImage(DATA_DIRECTORY + "img/tree0_leaves.png"));
-    treeLeavesDiffuseTexture->setAttributes(false, true, true);
     treeLeavesMeshes->setDiffuseTexture(*treeLeavesDiffuseTexture);
     
     //Read and paint the sprites for far-away trees.
     treeSprites = new draw::WorldIconHorde(maxNrLowDetailTrees);
     treeSpriteTexture = new draw::RGBATexture2D(img::io::readImage(DATA_DIRECTORY + "img/tree0_sprite.png"));
-    treeSpriteTexture->setAttributes(false, true, true);
     treeSprites->setIconTexture(*treeSpriteTexture);
     
     //Create a forest and place it into a quadtree for efficient rendering.

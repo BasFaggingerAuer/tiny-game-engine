@@ -40,8 +40,8 @@ void computeDiamondSquareRefinement(const TextureType &source, TextureType &dest
     //Allocate temporary textures.
     TextureType *tmp[2];
     
-    tmp[0] = new TextureType(source.getWidth(), source.getHeight());
-    tmp[1] = new TextureType(source.getWidth(), source.getHeight());
+    tmp[0] = new TextureType(source);
+    tmp[1] = new TextureType(source);
     
     std::vector<std::string> inputTextures;
     std::vector<std::string> outputTextures;
@@ -179,6 +179,8 @@ void computeDiamondSquareRefinement(const TextureType &source, TextureType &dest
         diamondComputeTexture->compute();
         squareComputeTexture->compute();
     }
+    
+    dest.getFromDevice();
     
     //Free all data.
     delete diamondComputeTexture;

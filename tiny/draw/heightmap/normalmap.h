@@ -65,6 +65,7 @@ void computeNormalMap(const TextureType1 &heightMap, TextureType2 &normalMap, co
     computeTexture->setInput(heightMap, "source");
     computeTexture->setOutput(normalMap, "normal");
     computeTexture->compute();
+    normalMap.getFromDevice();
     
     delete computeTexture;
 }
