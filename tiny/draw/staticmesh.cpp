@@ -23,9 +23,8 @@ StaticMeshVertexBufferInterpreter::StaticMeshVertexBufferInterpreter(const tiny:
 {
     addVec2Attribute(0*sizeof(float), "v_textureCoordinate");
     addVec3Attribute(2*sizeof(float), "v_tangent");
-    addVec3Attribute(5*sizeof(float), "v_bitangent");
-    addVec3Attribute(8*sizeof(float), "v_normal");
-    addVec3Attribute(11*sizeof(float), "v_position");
+    addVec3Attribute(5*sizeof(float), "v_normal");
+    addVec3Attribute(8*sizeof(float), "v_position");
 }
 
 StaticMeshVertexBufferInterpreter::~StaticMeshVertexBufferInterpreter()
@@ -69,13 +68,11 @@ std::string StaticMesh::getVertexShaderCode() const
 "\n"
 "in vec2 v_textureCoordinate;\n"
 "in vec3 v_tangent;\n"
-"in vec3 v_bitangent;\n"
 "in vec3 v_normal;\n"
 "in vec3 v_position;\n"
 "\n"
 "out vec2 f_tex;\n"
 "out vec3 f_worldTangent;\n"
-"out vec3 f_worldBitangent;\n"
 "out vec3 f_worldNormal;\n"
 "out vec3 f_worldPosition;\n"
 "out float f_cameraDepth;\n"
@@ -84,7 +81,6 @@ std::string StaticMesh::getVertexShaderCode() const
 "{\n"
 "   f_tex = v_textureCoordinate;\n"
 "   f_worldTangent = v_tangent;\n"
-"   f_worldBitangent = v_bitangent;\n"
 "   f_worldNormal = v_normal;\n"
 "   f_worldPosition = v_position;\n"
 "   gl_Position = worldToScreen*vec4(v_position, 1.0f);\n"
@@ -106,7 +102,6 @@ std::string StaticMesh::getFragmentShaderCode() const
 "\n"
 "in vec2 f_tex;\n"
 "in vec3 f_worldTangent;\n"
-"in vec3 f_worldBitangent;\n"
 "in vec3 f_worldNormal;\n"
 "in vec3 f_worldPosition;\n"
 "in float f_cameraDepth;\n"
@@ -123,7 +118,7 @@ std::string StaticMesh::getFragmentShaderCode() const
 "   \n"
 "   vec3 normal = 2.0f*texture(normalTexture, f_tex).xyz - vec3(1.0f);\n"
 "   \n"
-"   worldNormal = vec4(normalize(mat3(f_worldTangent, f_worldBitangent, f_worldNormal)*normal), 0.0f);\n"
+"   worldNormal = vec4(normalize(mat3(f_worldTangent, cross(f_worldNormal, f_worldTangent), f_worldNormal)*normal), 0.0f);\n"
 "   worldPosition = vec4(f_worldPosition, f_cameraDepth);\n"
 "   \n"
 "   gl_FragDepth = (log(C*f_cameraDepth + E) / log(C*D + E));\n"
