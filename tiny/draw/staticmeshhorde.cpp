@@ -132,6 +132,7 @@ void StaticMeshHorde::render(const ShaderProgram &program) const
     vertices.bind(program);
     meshes.bind(program, 1);
     renderIndicesAsTrianglesInstanced(indices, nrMeshes);
+    meshes.unbind(program);
     vertices.unbind(program);
 }
 

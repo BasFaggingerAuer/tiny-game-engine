@@ -246,8 +246,6 @@ void setup()
     
     //Apply the diamond-square fractal algorithm to make the zoomed-in heightmap a little less boring.
     draw::computeDiamondSquareRefinement(*terrainHeightTexture, *terrainHeightTexture, terrainFarScale.x);
-    //Retrieve height data for collision detection.
-    terrainHeightTexture->getFromDevice();
     
     //Create normal maps for the far-away and zoomed-in heightmaps.
     terrainFarNormalTexture = new draw::RGBTexture2D(terrainHeightTexture->getWidth(), terrainHeightTexture->getHeight());
