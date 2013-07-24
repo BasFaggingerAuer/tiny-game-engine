@@ -56,6 +56,8 @@ class Texture2DArray : public Texture<T, Channels>
             }
             
             this->sendToDevice();
+            
+            std::cerr << "Created a " << this->width << "x" << this->height << " texture array containing a single texture." << std::endl;
         }
         
         template<typename ImageIterator>
@@ -80,10 +82,12 @@ class Texture2DArray : public Texture<T, Channels>
                     }
                 }
                 
-                offset += this->width*this->height;
+                offset += Channels*this->width*this->height;
             }
             
             this->sendToDevice();
+            
+            std::cerr << "Created a " << this->width << "x" << this->height << " texture array containing " << this->depth << " textures." << std::endl;
         }
         
         ~Texture2DArray()

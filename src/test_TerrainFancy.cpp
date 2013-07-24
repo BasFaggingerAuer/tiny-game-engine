@@ -141,8 +141,11 @@ void computeTerrainTypeFromHeight(const TextureType1 &heightMap, TextureType2 &c
 "	float mudFrac = (1.0f - grassFrac - forestFrac)*clamp(max(0.0f, 1.0f - 1.0f*slope), 0.0f, 1.0f);\n"
 "	float rockFrac = 1.0f - forestFrac - grassFrac - mudFrac;\n"
 "	\n"
-"	//colour = vec4(forestFrac, grassFrac, mudFrac, rockFrac);\n"
-"	colour = vec4(0.0f, 0.0f, 0.0f, 1.0f);\n"
+"   /* if (forestFrac >= grassFrac && forestFrac >= mudFrac && forestFrac >= rockFrac) colour = vec4(0.0f, 0.0f, 0.0f, 0.0f);\n"
+"   else if (grassFrac >= mudFrac && grassFrac >= rockFrac) colour = vec4(1.0f, 0.0f, 0.0f, 0.0f);\n"
+"   else if (mudFrac >= rockFrac) colour = vec4(2.0f, 0.0f, 0.0f, 0.0f);\n"
+"   else colour = vec4(3.0f, 0.0f, 0.0f, 0.0f); */\n"
+"   colour = vec4(0.0f*forestFrac + 1.0f*grassFrac + 2.0f*mudFrac + 3.0f*rockFrac, 0.0f, 0.0f, 0.0f);\n"
 "}\n";
     
     inputTextures.push_back("source");
@@ -208,7 +211,7 @@ int plantTrees(const TextureType1 &heightTexture, const TextureType2 &attributeT
         //Are we going to place a tree here?
         const float placeProbability = sampleTextureBilinear(attributeTexture, scale, treePlanePosition).x;
         
-        if (static_cast<float>(rand())/static_cast<float>(RAND_MAX) <= placeProbability)
+        if (placeProbability <= 0.5f)
         {
             //Determine height.
             const vec3 treePosition = vec3(treePlanePosition.x, sampleTextureBilinear(heightTexture, scale, treePlanePosition).x, treePlanePosition.y);
@@ -268,10 +271,16 @@ void setup()
         std::vector<img::Image> diffuseTextures;
         std::vector<img::Image> normalTextures;
         
+        diffuseTextures.push_back(img::io::readImage(DATA_DIRECTORY + "img/terrain/forest.jpg"));
+        diffuseTextures.push_back(img::io::readImage(DATA_DIRECTORY + "img/terrain/grass.jpg"));
+        diffuseTextures.push_back(img::io::readImage(DATA_DIRECTORY + "img/terrain/dirt.jpg"));
         diffuseTextures.push_back(img::io::readImage(DATA_DIRECTORY + "img/terrain/rocks.jpg"));
-        normalTextures.push_back(img::io::readImage(DATA_DIRECTORY + "img/terrain/rocks_normal.png"));
-        
         terrainLocalDiffuseTextures = new draw::RGBTexture2DArray(diffuseTextures.begin(), diffuseTextures.end());
+        
+        normalTextures.push_back(img::io::readImage(DATA_DIRECTORY + "img/terrain/forest_normal.jpg"));
+        normalTextures.push_back(img::io::readImage(DATA_DIRECTORY + "img/terrain/grass_normal.jpg"));
+        normalTextures.push_back(img::io::readImage(DATA_DIRECTORY + "img/terrain/dirt_normal.jpg"));
+        normalTextures.push_back(img::io::readImage(DATA_DIRECTORY + "img/terrain/rocks_normal.jpg"));
         terrainLocalNormalTextures = new draw::RGBTexture2DArray(normalTextures.begin(), normalTextures.end());
     }
     

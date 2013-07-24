@@ -148,7 +148,7 @@ class Texture : public TextureInterface
                 {
                     GL_CHECK(glTexSubImage3D(textureTarget, 0, 0, 0, i, width, height, 1, textureChannels, textureDataType, &hostData[offset]));
                     
-                    offset += width*height;
+                    offset += Channels*width*height;
                 }
             }
             else
