@@ -96,3 +96,29 @@ Image Image::createTestImage(const size_t &size)
     return test;
 }
 
+Image Image::createUpNormalImage(const size_t &size)
+{
+    Image test(size, size);
+    unsigned char *data = &test.data[0];
+    
+    if (size <= 0)
+    {
+        std::cerr << "Unable to create empty up-normal image." << std::endl;
+        throw std::exception();
+    }
+    
+    //Create a simple test image.
+    for (size_t i = 0; i < size; ++i)
+    {
+        for (size_t j = 0; j < size; ++j)
+        {
+            *data++ = 0;
+            *data++ = 0;
+            *data++ = 255;
+            *data++ = 255;
+        }
+    }
+    
+    return test;
+}
+

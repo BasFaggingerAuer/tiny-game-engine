@@ -26,7 +26,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <tiny/img/io/image.h>
 
+#include <tiny/draw/texture2darray.h>
 #include <tiny/draw/terrain.h>
+#include <tiny/draw/heightmap/tangentmap.h>
 #include <tiny/draw/heightmap/normalmap.h>
 #include <tiny/draw/effects/lambert.h>
 #include <tiny/draw/worldrenderer.h>
@@ -41,9 +43,11 @@ draw::WorldRenderer *worldRenderer = 0;
 const vec2 terrainScale = vec2(5.0f, 5.0f);
 draw::Terrain *terrain = 0;
 draw::FloatTexture2D *terrainHeightTexture = 0;
+draw::RGBTexture2D *terrainTangentTexture = 0;
 draw::RGBTexture2D *terrainNormalTexture = 0;
 draw::RGBATexture2D *terrainAttributeTexture = 0;
-draw::RGBTexture2D *terrainDiffuseTexture = 0;
+draw::RGBTexture2DArray *terrainLocalDiffuseTextures = 0;
+draw::RGBTexture2DArray *terrainLocalNormalTextures = 0;
 
 bool terrainFollowsCamera = true;
 
@@ -57,15 +61,18 @@ void setup()
     //Create simple example terrain.
     terrain = new draw::Terrain(4, 6);
     terrainHeightTexture = new draw::FloatTexture2D(img::io::readImage(DATA_DIRECTORY + "img/tasmania.png"), draw::tf::filter);
+    terrainTangentTexture = new draw::RGBTexture2D(terrainHeightTexture->getWidth(), terrainHeightTexture->getHeight());
     terrainNormalTexture = new draw::RGBTexture2D(terrainHeightTexture->getWidth(), terrainHeightTexture->getHeight());
     
     terrainAttributeTexture = new draw::RGBATexture2D(img::Image::createSolidImage(terrainHeightTexture->getWidth()));
-    terrainDiffuseTexture = new draw::RGBTexture2D(img::Image::createSolidImage(terrainHeightTexture->getWidth()));
+    terrainLocalDiffuseTextures = new draw::RGBTexture2DArray(img::Image::createSolidImage());
+    terrainLocalNormalTextures = new draw::RGBTexture2DArray(img::Image::createUpNormalImage());
     
     //Calculate normal map and paint the terrain with the textures.
+    draw::computeTangentMap(*terrainHeightTexture, *terrainTangentTexture, terrainScale.x);
     draw::computeNormalMap(*terrainHeightTexture, *terrainNormalTexture, terrainScale.x);
-    terrain->setHeightTextures(*terrainHeightTexture, *terrainNormalTexture, terrainScale);
-    terrain->setDiffuseTexture(*terrainAttributeTexture, *terrainDiffuseTexture);
+    terrain->setHeightTextures(*terrainHeightTexture, *terrainTangentTexture, *terrainNormalTexture, terrainScale);
+    terrain->setDiffuseTextures(*terrainAttributeTexture, *terrainLocalDiffuseTextures, *terrainLocalNormalTextures, vec2(1.0f, 1.0f));
     
     //Render using Lambertian shading.
     screenEffect = new draw::effects::Lambert();
@@ -84,9 +91,11 @@ void cleanup()
     
     delete terrain;
     delete terrainHeightTexture;
+    delete terrainTangentTexture;
     delete terrainNormalTexture;
     delete terrainAttributeTexture;
-    delete terrainDiffuseTexture;
+    delete terrainLocalDiffuseTextures;
+    delete terrainLocalNormalTextures;
 }
 
 void update(const double &dt)

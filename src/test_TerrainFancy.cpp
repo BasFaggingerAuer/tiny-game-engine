@@ -29,6 +29,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <tiny/lod/quadtree.h>
 
+#include <tiny/draw/texture2d.h>
+#include <tiny/draw/texture2darray.h>
 #include <tiny/draw/computetexture.h>
 #include <tiny/draw/staticmesh.h>
 #include <tiny/draw/staticmeshhorde.h>
@@ -37,6 +39,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/draw/heightmap/scale.h>
 #include <tiny/draw/heightmap/resize.h>
 #include <tiny/draw/heightmap/normalmap.h>
+#include <tiny/draw/heightmap/tangentmap.h>
 #include <tiny/draw/heightmap/diamondsquare.h>
 #include <tiny/draw/effects/sunsky.h>
 #include <tiny/draw/worldrenderer.h>
@@ -54,18 +57,18 @@ const float terrainHeightScale = 1617.0f;
 draw::Terrain *terrain = 0;
 draw::FloatTexture2D *terrainHeightTexture = 0;
 draw::RGBTexture2D *terrainNormalTexture = 0;
+draw::RGBTexture2D *terrainTangentTexture = 0;
 
 const vec2 terrainDiffuseScale = vec2(1024.0f, 1024.0f);
 draw::RGBATexture2D *terrainAttributeTexture = 0;
-draw::RGBTexture2D *terrainDiffuseForestTexture = 0;
-draw::RGBTexture2D *terrainDiffuseGrassTexture = 0;
-draw::RGBTexture2D *terrainDiffuseMudTexture = 0;
-draw::RGBTexture2D *terrainDiffuseStoneTexture = 0;
+draw::RGBTexture2DArray *terrainLocalDiffuseTextures = 0;
+draw::RGBTexture2DArray *terrainLocalNormalTextures = 0;
 
 const ivec2 terrainFarScale = ivec2(16, 16);
 const vec2 terrainFarOffset = vec2(0.5f, 0.5f);
 draw::FloatTexture2D *terrainFarHeightTexture = 0;
 draw::RGBTexture2D *terrainFarNormalTexture = 0;
+draw::RGBTexture2D *terrainFarTangentTexture = 0;
 
 draw::RGBATexture2D *terrainFarAttributeTexture = 0;
 
@@ -138,7 +141,8 @@ void computeTerrainTypeFromHeight(const TextureType1 &heightMap, TextureType2 &c
 "	float mudFrac = (1.0f - grassFrac - forestFrac)*clamp(max(0.0f, 1.0f - 1.0f*slope), 0.0f, 1.0f);\n"
 "	float rockFrac = 1.0f - forestFrac - grassFrac - mudFrac;\n"
 "	\n"
-"	colour = vec4(forestFrac, grassFrac, mudFrac, rockFrac);\n"
+"	//colour = vec4(forestFrac, grassFrac, mudFrac, rockFrac);\n"
+"	colour = vec4(0.0f, 0.0f, 0.0f, 1.0f);\n"
 "}\n";
     
     inputTextures.push_back("source");
@@ -250,15 +254,26 @@ void setup()
     //Create normal maps for the far-away and zoomed-in heightmaps.
     terrainFarNormalTexture = new draw::RGBTexture2D(terrainHeightTexture->getWidth(), terrainHeightTexture->getHeight());
     terrainNormalTexture = new draw::RGBTexture2D(terrainHeightTexture->getWidth(), terrainHeightTexture->getHeight());
+    terrainFarTangentTexture = new draw::RGBTexture2D(terrainHeightTexture->getWidth(), terrainHeightTexture->getHeight());
+    terrainTangentTexture = new draw::RGBTexture2D(terrainHeightTexture->getWidth(), terrainHeightTexture->getHeight());
     
     draw::computeNormalMap(*terrainFarHeightTexture, *terrainFarNormalTexture, terrainScale.x*terrainFarScale.x);
     draw::computeNormalMap(*terrainHeightTexture, *terrainNormalTexture, terrainScale.x);
+    draw::computeTangentMap(*terrainFarHeightTexture, *terrainFarTangentTexture, terrainScale.x*terrainFarScale.x);
+    draw::computeTangentMap(*terrainHeightTexture, *terrainTangentTexture, terrainScale.x);
     
     //Read diffuse textures and make them tileable.
-    terrainDiffuseForestTexture = new draw::RGBTexture2D(img::io::readImage(DATA_DIRECTORY + "img/terrain/forest.jpg"));
-    terrainDiffuseGrassTexture = new draw::RGBTexture2D(img::io::readImage(DATA_DIRECTORY + "img/terrain/grass.jpg"));
-    terrainDiffuseMudTexture = new draw::RGBTexture2D(img::io::readImage(DATA_DIRECTORY + "img/terrain/dirt.jpg"));
-    terrainDiffuseStoneTexture = new draw::RGBTexture2D(img::io::readImage(DATA_DIRECTORY + "img/terrain/rocks.jpg"));
+    if (true)
+    {
+        std::vector<img::Image> diffuseTextures;
+        std::vector<img::Image> normalTextures;
+        
+        diffuseTextures.push_back(img::io::readImage(DATA_DIRECTORY + "img/terrain/rocks.jpg"));
+        normalTextures.push_back(img::io::readImage(DATA_DIRECTORY + "img/terrain/rocks_normal.png"));
+        
+        terrainLocalDiffuseTextures = new draw::RGBTexture2DArray(diffuseTextures.begin(), diffuseTextures.end());
+        terrainLocalNormalTextures = new draw::RGBTexture2DArray(normalTextures.begin(), normalTextures.end());
+    }
     
     //Create an attribute texture that determines the terrain type (forest/grass/mud/stone) based on the altitude and slope.
     //We do this for both the zoomed-in and far-away terrain.
@@ -271,10 +286,11 @@ void setup()
     
     //Paint the terrain with the zoomed-in and far-away textures.
     terrain->setFarHeightTextures(*terrainHeightTexture, *terrainFarHeightTexture,
+                                  *terrainTangentTexture, *terrainFarTangentTexture,
                                   *terrainNormalTexture, *terrainFarNormalTexture,
                                   terrainScale, terrainFarScale, terrainFarOffset);
     terrain->setFarDiffuseTextures(*terrainAttributeTexture, *terrainFarAttributeTexture,
-                                   *terrainDiffuseForestTexture, *terrainDiffuseGrassTexture, *terrainDiffuseMudTexture, *terrainDiffuseStoneTexture,
+                                   *terrainLocalDiffuseTextures, *terrainLocalNormalTextures,
                                    terrainDiffuseScale);
     
     //Create a forest by using the attribute texture, only on the zoomed-in terrain.
@@ -356,15 +372,15 @@ void cleanup()
     
     delete terrainFarHeightTexture;
     delete terrainHeightTexture;
+    delete terrainFarTangentTexture;
+    delete terrainTangentTexture;
     delete terrainFarNormalTexture;
     delete terrainNormalTexture;
     
     delete terrainFarAttributeTexture;
     delete terrainAttributeTexture;
-    delete terrainDiffuseForestTexture;
-    delete terrainDiffuseGrassTexture;
-    delete terrainDiffuseMudTexture;
-    delete terrainDiffuseStoneTexture;
+    delete terrainLocalDiffuseTextures;
+    delete terrainLocalNormalTextures;
 }
 
 void update(const double &dt)

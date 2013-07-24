@@ -247,15 +247,15 @@ Terrain::Terrain(const int &a_shiftBlockSize, const int &a_maxLevel) :
     //Setup textures.
     uniformMap.addTexture("heightTexture");
     uniformMap.addTexture("farHeightTexture");
+    uniformMap.addTexture("tangentTexture");
+    uniformMap.addTexture("farTangentTexture");
     uniformMap.addTexture("normalTexture");
     uniformMap.addTexture("farNormalTexture");
     
     uniformMap.addTexture("attributeTexture");
     uniformMap.addTexture("farAttributeTexture");
-    uniformMap.addTexture("diffuseTexture1");
-    uniformMap.addTexture("diffuseTexture2");
-    uniformMap.addTexture("diffuseTexture3");
-    uniformMap.addTexture("diffuseTexture4");
+    uniformMap.addTexture("localDiffuseTexture");
+    uniformMap.addTexture("localNormalTexture");
     
     //Setup initial blockTranslations.
     blockTranslations[maxLevel - 1] = ivec2(-(superBlockSize << (maxLevel - 2)));
@@ -325,15 +325,15 @@ std::string Terrain::getFragmentShaderCode() const
 "\n"
 "precision highp float;\n"
 "\n"
+"uniform sampler2D tangentTexture;\n"
+"uniform sampler2D farTangentTexture;\n"
 "uniform sampler2D normalTexture;\n"
 "uniform sampler2D farNormalTexture;\n"
 "\n"
 "uniform sampler2D attributeTexture;\n"
 "uniform sampler2D farAttributeTexture;\n"
-"uniform sampler2D diffuseTexture1;\n"
-"uniform sampler2D diffuseTexture2;\n"
-"uniform sampler2D diffuseTexture3;\n"
-"uniform sampler2D diffuseTexture4;\n"
+"uniform sampler2DArray localDiffuseTexture;\n"
+"uniform sampler2DArray localNormalTexture;\n"
 "uniform vec2 diffuseScale;\n"
 "\n"
 "const float C = 1.0f, D = 1.0e8, E = 1.0f;\n"
@@ -349,18 +349,22 @@ std::string Terrain::getFragmentShaderCode() const
 "\n"
 "void main(void)\n"
 "{\n"
-"   vec4 att = mix(texture(attributeTexture, f_texturePosition.xy),\n"
-"                  texture(farAttributeTexture, f_texturePosition.zw),\n"
-"                  f_farMorphFactor);\n"
-"   diffuse = texture(diffuseTexture1, diffuseScale*f_texturePosition.xy)*att.x +\n"
-"             texture(diffuseTexture2, diffuseScale*f_texturePosition.xy)*att.y +\n"
-"             texture(diffuseTexture3, diffuseScale*f_texturePosition.xy)*att.z +\n"
-"             texture(diffuseTexture4, diffuseScale*f_texturePosition.xy)*att.w;\n"
+"   vec4 att = (f_farMorphFactor <= 0.5f ?\n"
+"                  texture(attributeTexture, f_texturePosition.xy) :\n"
+"                  texture(farAttributeTexture, f_texturePosition.zw));\n"
+"   vec3 f_worldTangent = normalize(mix(\n"
+"                            2.0f*texture(tangentTexture, f_texturePosition.xy).xyz - vec3(1.0f),\n"
+"                            2.0f*texture(farTangentTexture, f_texturePosition.zw).xyz - vec3(1.0f),\n"
+"                            f_farMorphFactor));\n"
+"   vec3 f_worldNormal = normalize(mix(\n"
+"                            2.0f*texture(normalTexture, f_texturePosition.xy).xyz - vec3(1.0f),\n"
+"                            2.0f*texture(farNormalTexture, f_texturePosition.zw).xyz - vec3(1.0f),\n"
+"                            f_farMorphFactor));\n"
 "   \n"
-"   vec3 normal1 = normalize(2.0f*texture(normalTexture, f_texturePosition.xy).xyz - 1.0f);\n"
-"   vec3 normal2 = normalize(2.0f*texture(farNormalTexture, f_texturePosition.zw).xyz - 1.0f);\n"
+"   vec3 normal = 2.0f*texture(localNormalTexture, vec3(diffuseScale*f_texturePosition.xy, att.x)).xyz - vec3(1.0f);\n"
 "   \n"
-"   worldNormal = vec4(normalize(mix(normal1, normal2, f_farMorphFactor)), 0.0f);\n"
+"   diffuse = texture(localDiffuseTexture, vec3(diffuseScale*f_texturePosition.xy, att.x));\n"
+"   worldNormal = vec4(normalize(mat3(f_worldTangent, cross(f_worldNormal, f_worldTangent), f_worldNormal)*normal), 0.0f);\n"
 "   worldPosition = vec4(f_worldPosition, f_cameraDepth);\n"
 "   \n"
 "   gl_FragDepth = (log(C*f_cameraDepth + E) / log(C*D + E));\n"

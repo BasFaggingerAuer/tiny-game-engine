@@ -102,10 +102,26 @@ void TextureInterface::createDeviceTexture()
     
     GL_CHECK(glBindTexture(textureTarget, textureIndex));
          
-         if (textureTarget == GL_TEXTURE_1D) GL_CHECK(glTexImage1D(textureTarget, 0, textureFormat, width, 0, textureChannels, textureDataType, 0));
-    else if (textureTarget == GL_TEXTURE_2D) GL_CHECK(glTexImage2D(textureTarget, 0, textureFormat, width, height, 0, textureChannels, textureDataType, 0));
-    else if (textureTarget == GL_TEXTURE_3D) GL_CHECK(glTexImage3D(textureTarget, 0, textureFormat, width, height, depth, 0, textureChannels, textureDataType, 0));
-    else throw std::exception();
+    if (textureTarget == GL_TEXTURE_1D)
+    {
+        GL_CHECK(glTexImage1D(textureTarget, 0, textureFormat, width, 0, textureChannels, textureDataType, 0));
+    }
+    else if (textureTarget == GL_TEXTURE_2D)
+    {
+        GL_CHECK(glTexImage2D(textureTarget, 0, textureFormat, width, height, 0, textureChannels, textureDataType, 0));
+    }
+    else if (textureTarget == GL_TEXTURE_3D)
+    {
+        GL_CHECK(glTexImage3D(textureTarget, 0, textureFormat, width, height, depth, 0, textureChannels, textureDataType, 0));
+    }
+    else if (textureTarget == GL_TEXTURE_2D_ARRAY)
+    {
+        GL_CHECK(glTexImage3D(textureTarget, 0, textureFormat, width, height, depth, 0, textureChannels, textureDataType, 0));
+    }
+    else
+    {
+        throw std::exception();
+    }
     
     GL_CHECK(glTexParameteri(textureTarget, GL_TEXTURE_WRAP_S, (flags & tf::repeat) != 0 ? GL_REPEAT : GL_CLAMP));
     GL_CHECK(glTexParameteri(textureTarget, GL_TEXTURE_WRAP_T, (flags & tf::repeat) != 0 ? GL_REPEAT : GL_CLAMP));

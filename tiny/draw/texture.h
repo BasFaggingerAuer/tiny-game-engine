@@ -128,10 +128,33 @@ class Texture : public TextureInterface
             
             GL_CHECK(glBindTexture(textureTarget, textureIndex));
             
-                 if (textureTarget == GL_TEXTURE_1D) GL_CHECK(glTexSubImage1D(textureTarget, 0, 0, width, textureChannels, textureDataType, &hostData[0]));
-            else if (textureTarget == GL_TEXTURE_2D) GL_CHECK(glTexSubImage2D(textureTarget, 0, 0, 0, width, height, textureChannels, textureDataType, &hostData[0]));
-            else if (textureTarget == GL_TEXTURE_3D) GL_CHECK(glTexSubImage3D(textureTarget, 0, 0, 0, 0, width, height, depth, textureChannels, textureDataType, &hostData[0]));
-            else throw std::exception();
+            if (textureTarget == GL_TEXTURE_1D)
+            {
+                GL_CHECK(glTexSubImage1D(textureTarget, 0, 0, width, textureChannels, textureDataType, &hostData[0]));
+            }
+            else if (textureTarget == GL_TEXTURE_2D)
+            {
+                GL_CHECK(glTexSubImage2D(textureTarget, 0, 0, 0, width, height, textureChannels, textureDataType, &hostData[0]));
+            }
+            else if (textureTarget == GL_TEXTURE_3D)
+            {
+                GL_CHECK(glTexSubImage3D(textureTarget, 0, 0, 0, 0, width, height, depth, textureChannels, textureDataType, &hostData[0]));
+            }
+            else if (textureTarget == GL_TEXTURE_2D_ARRAY)
+            {
+                size_t offset = 0;
+                
+                for (size_t i = 0; i < depth; ++i)
+                {
+                    GL_CHECK(glTexSubImage3D(textureTarget, 0, 0, 0, i, width, height, 1, textureChannels, textureDataType, &hostData[offset]));
+                    
+                    offset += width*height;
+                }
+            }
+            else
+            {
+                throw std::exception();
+            }
     
             if ((flags & tf::mipmap) != 0)
             {

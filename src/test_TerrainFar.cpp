@@ -26,9 +26,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <tiny/img/io/image.h>
 
+#include <tiny/draw/texture2darray.h>
 #include <tiny/draw/terrain.h>
 #include <tiny/draw/heightmap/scale.h>
 #include <tiny/draw/heightmap/resize.h>
+#include <tiny/draw/heightmap/tangentmap.h>
 #include <tiny/draw/heightmap/normalmap.h>
 #include <tiny/draw/heightmap/diamondsquare.h>
 #include <tiny/draw/effects/lambert.h>
@@ -45,13 +47,16 @@ const vec2 terrainScale = vec2(2.0f, 2.0f);
 const float terrainHeightScale = 256.0f;
 draw::Terrain *terrain = 0;
 draw::FloatTexture2D *terrainHeightTexture = 0;
+draw::RGBTexture2D *terrainTangentTexture = 0;
 draw::RGBTexture2D *terrainNormalTexture = 0;
 draw::RGBATexture2D *terrainAttributeTexture = 0;
-draw::RGBTexture2D *terrainDiffuseTexture = 0;
+draw::RGBTexture2DArray *terrainLocalDiffuseTextures = 0;
+draw::RGBTexture2DArray *terrainLocalNormalTextures = 0;
 
 const ivec2 terrainFarScale = ivec2(4, 4);
 const vec2 terrainFarOffset = vec2(0.5f, 0.5f);
 draw::FloatTexture2D *terrainFarHeightTexture = 0;
+draw::RGBTexture2D *terrainFarTangentTexture = 0;
 draw::RGBTexture2D *terrainFarNormalTexture = 0;
 
 bool terrainFollowsCamera = true;
@@ -81,7 +86,13 @@ void setup()
     //Apply the diamond-square fractal algorithm to make the zoomed-in heightmap a little less boring.
     draw::computeDiamondSquareRefinement(*terrainHeightTexture, *terrainHeightTexture, terrainFarScale.x);
     
-    //Create normal maps for the far-away and zoomed-in heightmaps.
+    //Create tangent/normal maps for the far-away and zoomed-in heightmaps.
+    terrainFarTangentTexture = new draw::RGBTexture2D(terrainHeightTexture->getWidth(), terrainHeightTexture->getHeight());
+    terrainTangentTexture = new draw::RGBTexture2D(terrainHeightTexture->getWidth(), terrainHeightTexture->getHeight());
+    
+    draw::computeTangentMap(*terrainFarHeightTexture, *terrainFarTangentTexture, terrainScale.x*terrainFarScale.x);
+    draw::computeTangentMap(*terrainHeightTexture, *terrainTangentTexture, terrainScale.x);
+    
     terrainFarNormalTexture = new draw::RGBTexture2D(terrainHeightTexture->getWidth(), terrainHeightTexture->getHeight());
     terrainNormalTexture = new draw::RGBTexture2D(terrainHeightTexture->getWidth(), terrainHeightTexture->getHeight());
     
@@ -90,13 +101,15 @@ void setup()
     
     //Create simple attribute and diffuse texture.
     terrainAttributeTexture = new draw::RGBATexture2D(img::Image::createSolidImage(terrainHeightTexture->getWidth()));
-    terrainDiffuseTexture = new draw::RGBTexture2D(img::Image::createSolidImage(terrainHeightTexture->getWidth()));
+    terrainLocalDiffuseTextures = new draw::RGBTexture2DArray(img::Image::createSolidImage());
+    terrainLocalNormalTextures = new draw::RGBTexture2DArray(img::Image::createUpNormalImage());
     
     //Paint the terrain with the zoomed-in and far-away textures.
     terrain->setFarHeightTextures(*terrainHeightTexture, *terrainFarHeightTexture,
+                                  *terrainTangentTexture, *terrainFarTangentTexture,
                                   *terrainNormalTexture, *terrainFarNormalTexture,
                                   terrainScale, terrainFarScale, terrainFarOffset);
-    terrain->setDiffuseTexture(*terrainAttributeTexture, *terrainDiffuseTexture);
+    terrain->setDiffuseTextures(*terrainAttributeTexture, *terrainLocalDiffuseTextures, *terrainLocalNormalTextures, vec2(1.0f, 1.0f));
     
     //Render using Lambertian shading.
     screenEffect = new draw::effects::Lambert();
@@ -116,10 +129,13 @@ void cleanup()
     delete terrain;
     delete terrainFarHeightTexture;
     delete terrainHeightTexture;
+    delete terrainFarTangentTexture;
+    delete terrainTangentTexture;
     delete terrainFarNormalTexture;
     delete terrainNormalTexture;
     delete terrainAttributeTexture;
-    delete terrainDiffuseTexture;
+    delete terrainLocalDiffuseTextures;
+    delete terrainLocalNormalTextures;
 }
 
 void update(const double &dt)
