@@ -86,6 +86,10 @@ class Shader
                 std::cerr << "Unable to compile shader:" << std::endl << a_code << std::endl << "Shader log:" << std::endl << logText << std::endl;
                 
                 delete [] logText;
+                
+#ifndef NDEBUG
+                throw std::exception();
+#endif
             }
 #ifndef NDEBUG
             else

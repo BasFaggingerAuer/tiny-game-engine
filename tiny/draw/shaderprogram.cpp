@@ -15,6 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <iostream>
+#include <exception>
 
 #include <tiny/draw/shaderprogram.h>
 
@@ -46,12 +47,6 @@ void ShaderProgram::link()
     GL_CHECK(glLinkProgram(programIndex));
     GL_CHECK(glGetProgramiv(programIndex, GL_LINK_STATUS, &result));
     
-    if (result == GL_TRUE)
-    {
-        GL_CHECK(glValidateProgram(programIndex));
-        GL_CHECK(glGetProgramiv(programIndex, GL_VALIDATE_STATUS, &result));
-    }
-    
     if (result != GL_TRUE)
     {
         GLint logLength = 0;
@@ -72,6 +67,10 @@ void ShaderProgram::link()
         std::cerr << "Unable to link program!" << std::endl << "Program log:" << std::endl << logText << std::endl;
         
         delete [] logText;
+        
+#ifndef NDEBUG
+        throw std::exception();
+#endif
     }
 #ifndef NDEBUG
     else
@@ -79,6 +78,46 @@ void ShaderProgram::link()
         std::cerr << "Successfully linked shader program " << programIndex << "." << std::endl;
     }
 #endif
+}
+
+bool ShaderProgram::validate() const
+{
+    GLint result = GL_FALSE;
+    
+    GL_CHECK(glValidateProgram(programIndex));
+    GL_CHECK(glGetProgramiv(programIndex, GL_VALIDATE_STATUS, &result));
+    
+    if (result != GL_TRUE)
+    {
+        GLint logLength = 0;
+        
+        GL_CHECK(glGetProgramiv(programIndex, GL_INFO_LOG_LENGTH, &logLength));
+        
+        if (logLength <= 0)
+        {
+            std::cerr << "Unable to validate program and there was no info log available!" << std::endl;
+            return false;
+        }
+        
+        GLchar *logText = new GLchar [logLength + 1];
+        
+        GL_CHECK(glGetProgramInfoLog(programIndex, logLength, 0, logText));
+        logText[logLength] = 0;
+        
+        std::cerr << "Unable to validate program " << programIndex << "!" << std::endl << "Program log:" << std::endl << logText << std::endl;
+        
+        delete [] logText;
+        
+        return false;
+    }
+#ifndef NDEBUG
+    else
+    {
+        std::cerr << "Successfully validated shader program " << programIndex << "." << std::endl;
+    }
+#endif
+    
+    return true;
 }
 
 GLuint ShaderProgram::getIndex() const

@@ -125,6 +125,14 @@ void Renderer::addRenderable(Renderable *renderable, const bool &readFromDepthTe
     uniformMap.setUniformsAndTexturesInProgram(*program);
     renderable->uniformMap.setUniformsAndTexturesInProgram(*program, uniformMap.getNrTextures());
     program->unbind();
+
+#ifndef NDEBUG
+    if (!program->validate())
+    {
+        std::cerr << "Unable to validate program!" << std::endl;
+        throw std::exception();
+    }
+#endif
     
     renderables.push_back(detail::BoundRenderable(renderable, vertexShader, geometryShader, fragmentShader, program, readFromDepthTexture, writeToDepthTexture, blendMode));
 }

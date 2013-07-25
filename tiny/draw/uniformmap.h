@@ -120,7 +120,7 @@ struct BoundTexture
     const TextureInterface *texture;
 };
 
-}
+} //namespace detail
 
 class UniformMap
 {

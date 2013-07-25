@@ -50,6 +50,7 @@ class ShaderProgram
         }
 
         void link();
+        bool validate() const;
         GLuint getIndex() const;
         void bind() const;
         void unbind() const;
