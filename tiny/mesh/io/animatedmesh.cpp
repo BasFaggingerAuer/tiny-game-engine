@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <sstream>
 #include <vector>
 #include <map>
+#include <cassert>
 
 #include <assimp/aiScene.h>
 #include <assimp/assimp.hpp>
@@ -45,7 +46,7 @@ AnimatedMesh tiny::mesh::io::readAnimatedMesh(const std::string &fileName, const
     }
     
     //Obtain the mesh with the largest number of vertices in the file and the given name.
-    if (!scene->mMeshes || scene->mNumMeshes < 1)
+    if (!scene->HasMeshes())
     {
         std::cerr << "'" << fileName << "' does not contain any meshes!" << std::endl;
         throw std::exception();
@@ -157,6 +158,83 @@ AnimatedMesh tiny::mesh::io::readAnimatedMesh(const std::string &fileName, const
                     
                 vertexBoneCounts[id]++;
             }
+        }
+    }
+    
+    //Copy animations if available.
+    if (scene->HasAnimations())
+    {
+        //Create map from bone names to their indices.
+        std::map<std::string, unsigned int> boneNameToIndex;
+        
+        for (std::vector<Bone>::const_iterator i = mesh.skeleton.bones.begin(); i != mesh.skeleton.bones.end(); ++i)
+        {
+            if (!boneNameToIndex.insert(std::make_pair(i->name, i - mesh.skeleton.bones.begin())).second)
+            {
+                std::cerr << "Bone name '" << i->name << "' of mesh '" << meshName << "' in '" << fileName << "' is not unique!" << std::endl;
+                throw std::exception();
+            }
+        }
+        
+        assert(boneNameToIndex.size() == mesh.skeleton.bones.size());
+        
+        mesh.skeleton.animations.resize(scene->mNumAnimations);
+        
+        for (unsigned int i = 0; i < mesh.skeleton.animations.size(); ++i)
+        {
+            const aiAnimation *animation = scene->mAnimations[i];
+            unsigned int nrFrames = 0;
+            
+            mesh.skeleton.animations[i].name = std::string(animation->mName.data);
+            
+            if (animation->mNumChannels != mesh.skeleton.bones.size())
+            {
+                std::cerr << "Warning: animation '" << animation->mName.data << "' in mesh '" << meshName << "' in '" << fileName << "' has an invalid number of channels (" << animation->mNumChannels << " for " << mesh.skeleton.bones.size() << " bones)!" << std::endl;
+            }
+            
+            for (unsigned int j = 0; j < animation->mNumChannels; ++j)
+            {
+                const aiNodeAnim *nodeAnim = animation->mChannels[j];
+                
+                if (boneNameToIndex.find(nodeAnim->mNodeName.data) != boneNameToIndex.end())
+                {
+                    //Update total number of frames for this animation.
+                    nrFrames = std::max(std::max(std::max(nodeAnim->mNumPositionKeys, nodeAnim->mNumRotationKeys), nodeAnim->mNumScalingKeys), nrFrames);
+                    mesh.skeleton.animations[i].frames.resize(nrFrames*mesh.skeleton.bones.size());
+                    
+                    //Copy frame data.
+                    KeyFrame *frames = &mesh.skeleton.animations[i].frames[boneNameToIndex[nodeAnim->mNodeName.data]];
+                    
+                    for (unsigned int k = 0; k < nrFrames; ++k)
+                    {
+                        aiVector3D scale(1.0f, 1.0f, 1.0f);
+                        aiQuaternion rotate(0.0f, 0.0f, 0.0f, 1.0f);
+                        aiVector3D translate(0.0f, 0.0f, 0.0f);
+                        
+                        if (k < nodeAnim->mNumPositionKeys) translate = nodeAnim->mPositionKeys[k].mValue;
+                        else if (nodeAnim->mNumPositionKeys > 0) translate = nodeAnim->mPositionKeys[nodeAnim->mNumPositionKeys - 1].mValue;
+                        if (k < nodeAnim->mNumRotationKeys) rotate = nodeAnim->mRotationKeys[k].mValue;
+                        else if (nodeAnim->mNumRotationKeys > 0) rotate = nodeAnim->mRotationKeys[nodeAnim->mNumRotationKeys - 1].mValue;
+                        if (k < nodeAnim->mNumScalingKeys) scale = nodeAnim->mScalingKeys[k].mValue;
+                        else if (nodeAnim->mNumScalingKeys > 0) scale = nodeAnim->mScalingKeys[nodeAnim->mNumScalingKeys - 1].mValue;
+                        
+                        frames[k*mesh.skeleton.bones.size()] = KeyFrame(vec3(scale.x, scale.y, scale.z),
+                                                                        k,
+                                                                        vec4(rotate.x, rotate.y, rotate.z, rotate.w),
+                                                                        vec4(translate.x, translate.y, translate.z, 0.0f));
+                    }
+                }
+#ifndef NDEBUG
+                else
+                {
+                    std::cerr << "Warning: the channel for bone '" << nodeAnim->mNodeName.data << "' in animation '" << animation->mName.data << "' cannot be mapped to the skeleton!" << std::endl;
+                }
+#endif
+            }
+            
+#ifndef NDEBUG
+            std::cerr << "Added animation '" << animation->mName.data << "' with " << nrFrames << " frames." << std::endl;
+#endif
         }
     }
     

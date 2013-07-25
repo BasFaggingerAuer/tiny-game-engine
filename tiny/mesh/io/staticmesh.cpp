@@ -45,7 +45,7 @@ StaticMesh tiny::mesh::io::readStaticMesh(const std::string &fileName, const std
     }
     
     //Obtain the mesh with the largest number of vertices in the file and the given name.
-    if (!scene->mMeshes || scene->mNumMeshes < 1)
+    if (!scene->HasMeshes())
     {
         std::cerr << "'" << fileName << "' does not contain any meshes!" << std::endl;
         throw std::exception();
