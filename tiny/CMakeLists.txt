@@ -11,6 +11,7 @@ add_library(tinygame
             img/io/image.cpp
             lod/quadtree.cpp
             mesh/staticmesh.cpp
+            mesh/animatedmesh.cpp
             mesh/io/staticmesh.cpp
             draw/glcheck.cpp
             draw/buffer.cpp

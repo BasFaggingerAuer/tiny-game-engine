@@ -71,7 +71,7 @@ SDLApplication::SDLApplication(const int &a_screenWidth,
     }
     
     SDL_EnableUNICODE(1);
-    SDL_WM_SetCaption("", 0);
+    SDL_WM_SetCaption(" ", 0);
     
     //Initialise OpenGL and GLEW.
     std::cerr << "Initialising OpenGL..." << std::endl;
