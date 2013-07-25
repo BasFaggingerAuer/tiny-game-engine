@@ -14,36 +14,38 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <tiny/draw/staticmesh.h>
+#include <tiny/draw/animatedmesh.h>
 
 using namespace tiny::draw;
 
-StaticMeshVertexBufferInterpreter::StaticMeshVertexBufferInterpreter(const tiny::mesh::StaticMesh &mesh) :
-    VertexBufferInterpreter<tiny::mesh::StaticMeshVertex>(mesh.vertices.begin(), mesh.vertices.end())
+AnimatedMeshVertexBufferInterpreter::AnimatedMeshVertexBufferInterpreter(const tiny::mesh::AnimatedMesh &mesh) :
+    VertexBufferInterpreter<tiny::mesh::AnimatedMeshVertex>(mesh.vertices.begin(), mesh.vertices.end())
 {
     addVec2Attribute(0*sizeof(float), "v_textureCoordinate");
     addVec3Attribute(2*sizeof(float), "v_tangent");
     addVec3Attribute(5*sizeof(float), "v_normal");
     addVec3Attribute(8*sizeof(float), "v_position");
+    addVec4Attribute(11*sizeof(float), "v_weights");
+    addIVec4Attribute(15*sizeof(float), "v_bones");
 }
 
-StaticMeshVertexBufferInterpreter::~StaticMeshVertexBufferInterpreter()
+AnimatedMeshVertexBufferInterpreter::~AnimatedMeshVertexBufferInterpreter()
 {
 
 }
 
-StaticMeshIndexBuffer::StaticMeshIndexBuffer(const tiny::mesh::StaticMesh &mesh) :
+AnimatedMeshIndexBuffer::AnimatedMeshIndexBuffer(const tiny::mesh::AnimatedMesh &mesh) :
     IndexBuffer<unsigned int>(mesh.indices.begin(), mesh.indices.end())
 {
 
 }
 
-StaticMeshIndexBuffer::~StaticMeshIndexBuffer()
+AnimatedMeshIndexBuffer::~AnimatedMeshIndexBuffer()
 {
 
 }
 
-StaticMesh::StaticMesh(const tiny::mesh::StaticMesh &mesh) :
+AnimatedMesh::AnimatedMesh(const tiny::mesh::AnimatedMesh &mesh) :
     Renderable(),
     indices(mesh),
     vertices(mesh)
@@ -52,12 +54,12 @@ StaticMesh::StaticMesh(const tiny::mesh::StaticMesh &mesh) :
     uniformMap.addTexture("normalTexture");
 }
 
-StaticMesh::~StaticMesh()
+AnimatedMesh::~AnimatedMesh()
 {
 
 }
 
-std::string StaticMesh::getVertexShaderCode() const
+std::string AnimatedMesh::getVertexShaderCode() const
 {
     return
 "#version 150\n"
@@ -68,6 +70,8 @@ std::string StaticMesh::getVertexShaderCode() const
 "in vec3 v_tangent;\n"
 "in vec3 v_normal;\n"
 "in vec3 v_position;\n"
+"in vec4 v_weights;\n"
+"in ivec4 v_bones;\n"
 "\n"
 "out vec2 f_tex;\n"
 "out vec3 f_worldTangent;\n"
@@ -86,7 +90,7 @@ std::string StaticMesh::getVertexShaderCode() const
 "}\n\0";
 }
 
-std::string StaticMesh::getFragmentShaderCode() const
+std::string AnimatedMesh::getFragmentShaderCode() const
 {
     return
 "#version 150\n"
@@ -123,7 +127,7 @@ std::string StaticMesh::getFragmentShaderCode() const
 "}\n\0";
 }
 
-void StaticMesh::render(const ShaderProgram &program) const
+void AnimatedMesh::render(const ShaderProgram &program) const
 {
     vertices.bind(program);
     renderIndicesAsTriangles(indices);

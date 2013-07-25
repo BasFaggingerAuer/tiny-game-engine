@@ -127,6 +127,7 @@ class VertexBufferInterpreter : public VertexBuffer<T>
         void addVec2Attribute(const size_t &offset, const std::string &name) {addAttribute(2, GL_FLOAT, sizeof(T), offset, name);}
         void addVec3Attribute(const size_t &offset, const std::string &name) {addAttribute(3, GL_FLOAT, sizeof(T), offset, name);}
         void addVec4Attribute(const size_t &offset, const std::string &name) {addAttribute(4, GL_FLOAT, sizeof(T), offset, name);}
+        void addIVec4Attribute(const size_t &offset, const std::string &name) {addAttribute(4, GL_INT, sizeof(T), offset, name);}
         
     private:
         void addAttribute(const size_t &numComponents, const GLenum &type, const size_t &stride, const size_t &offset, const std::string &name)

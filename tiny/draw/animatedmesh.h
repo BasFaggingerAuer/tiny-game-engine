@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cassert>
 
-#include <tiny/mesh/staticmesh.h>
+#include <tiny/mesh/animatedmesh.h>
 #include <tiny/draw/indexbuffer.h>
 #include <tiny/draw/vertexbuffer.h>
 #include <tiny/draw/vertexbufferinterpreter.h>
@@ -34,25 +34,25 @@ namespace tiny
 namespace draw
 {
 
-class StaticMeshVertexBufferInterpreter : public VertexBufferInterpreter<tiny::mesh::StaticMeshVertex>
+class AnimatedMeshVertexBufferInterpreter : public VertexBufferInterpreter<tiny::mesh::AnimatedMeshVertex>
 {
     public:
-        StaticMeshVertexBufferInterpreter(const tiny::mesh::StaticMesh &);
-        ~StaticMeshVertexBufferInterpreter();
+        AnimatedMeshVertexBufferInterpreter(const tiny::mesh::AnimatedMesh &);
+        ~AnimatedMeshVertexBufferInterpreter();
 };
 
-class StaticMeshIndexBuffer : public IndexBuffer<unsigned int>
+class AnimatedMeshIndexBuffer : public IndexBuffer<unsigned int>
 {
     public:
-        StaticMeshIndexBuffer(const tiny::mesh::StaticMesh &);
-        ~StaticMeshIndexBuffer();
+        AnimatedMeshIndexBuffer(const tiny::mesh::AnimatedMesh &);
+        ~AnimatedMeshIndexBuffer();
 };
 
-class StaticMesh : public Renderable
+class AnimatedMesh : public Renderable
 {
     public:
-        StaticMesh(const tiny::mesh::StaticMesh &);
-        ~StaticMesh();
+        AnimatedMesh(const tiny::mesh::AnimatedMesh &);
+        ~AnimatedMesh();
         
         template <typename TextureType>
         void setDiffuseTexture(const TextureType &texture)
@@ -73,8 +73,8 @@ class StaticMesh : public Renderable
         void render(const ShaderProgram &) const;
         
     private:
-        StaticMeshIndexBuffer indices;
-        StaticMeshVertexBufferInterpreter vertices;
+        AnimatedMeshIndexBuffer indices;
+        AnimatedMeshVertexBufferInterpreter vertices;
 };
 
 }
