@@ -30,7 +30,7 @@ namespace mesh
 namespace io
 {
 
-tiny::mesh::StaticMesh readStaticMesh(const std::string &);
+tiny::mesh::StaticMesh readStaticMesh(const std::string &, const std::string & = "");
 
 }
 

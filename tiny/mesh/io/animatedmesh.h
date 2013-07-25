@@ -14,44 +14,27 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+#pragma once
+
+#include <string>
+#include <vector>
+
 #include <tiny/mesh/animatedmesh.h>
 
-using namespace tiny::mesh;
-
-Animation::Animation() :
-    name(""),
-    frames()
+namespace tiny
 {
+
+namespace mesh
+{
+
+namespace io
+{
+
+tiny::mesh::AnimatedMesh readAnimatedMesh(const std::string &, const std::string & = "");
 
 }
 
-Animation::~Animation()
-{
-
 }
-
-Skeleton::Skeleton() :
-    bones(),
-    animations()
-{
-
-}
-
-Skeleton::~Skeleton()
-{
-
-}
-
-AnimatedMesh::AnimatedMesh() :
-    skeleton(),
-    vertices(),
-    indices()
-{
-
-}
-
-AnimatedMesh::~AnimatedMesh()
-{
 
 }
 

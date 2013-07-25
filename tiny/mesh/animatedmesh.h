@@ -88,6 +88,20 @@ struct AnimatedMeshVertex
     AnimatedMeshVertex(const vec2 &a_textureCoordinate,
                      const vec3 &a_tangent,
                      const vec3 &a_normal,
+                     const vec3 &a_position) :
+        textureCoordinate(a_textureCoordinate),
+        tangent(a_tangent),
+        normal(a_normal),
+        position(a_position),
+        weights(vec4(1.0f, 0.0f, 0.0f, 0.0f)),
+        bones(ivec4(0, 0, 0, 0))
+    {
+
+    }
+
+    AnimatedMeshVertex(const vec2 &a_textureCoordinate,
+                     const vec3 &a_tangent,
+                     const vec3 &a_normal,
                      const vec3 &a_position,
                      const vec4 &a_weights,
                      const ivec4 &a_bones) :
@@ -125,7 +139,6 @@ class Skeleton
         Skeleton();
         ~Skeleton();
         
-        std::string name;
         std::vector<Bone> bones;
         std::vector<Animation> animations;
 };
@@ -136,6 +149,7 @@ class AnimatedMesh
         AnimatedMesh();
         ~AnimatedMesh();
         
+        Skeleton skeleton;
         std::vector<AnimatedMeshVertex> vertices;
         std::vector<unsigned int> indices;
 };

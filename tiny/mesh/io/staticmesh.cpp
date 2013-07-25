@@ -32,7 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using namespace tiny;
 using namespace tiny::mesh;
 
-StaticMesh tiny::mesh::io::readStaticMesh(const std::string &fileName)
+StaticMesh tiny::mesh::io::readStaticMesh(const std::string &fileName, const std::string &meshName)
 {
     //Use AssImp to read all data from the file.
     Assimp::Importer importer;
@@ -44,19 +44,19 @@ StaticMesh tiny::mesh::io::readStaticMesh(const std::string &fileName)
         throw std::exception();
     }
     
-    //Obtain the mesh with the largest number of vertices in the file.
+    //Obtain the mesh with the largest number of vertices in the file and the given name.
     if (!scene->mMeshes || scene->mNumMeshes < 1)
     {
         std::cerr << "'" << fileName << "' does not contain any meshes!" << std::endl;
         throw std::exception();
     }
     
-    unsigned int largestNrVertices = scene->mMeshes[0]->mNumVertices;
+    unsigned int largestNrVertices = 0;
     unsigned int largestIndex = 0;
     
-    for (unsigned int i = 1; i < scene->mNumMeshes; ++i)
+    for (unsigned int i = 0; i < scene->mNumMeshes; ++i)
     {
-        if (scene->mMeshes[i]->mNumVertices > largestNrVertices)
+        if (scene->mMeshes[i]->mNumVertices > largestNrVertices && (meshName == "" || aiString(meshName) == scene->mMeshes[i]->mName))
         {
             largestNrVertices = scene->mMeshes[i]->mNumVertices;
             largestIndex = i;
@@ -72,7 +72,7 @@ StaticMesh tiny::mesh::io::readStaticMesh(const std::string &fileName)
         !sourceMesh->HasNormals() ||
         !sourceMesh->HasTextureCoords(0))
     {
-        std::cerr << "Largest mesh in '" << fileName << "' does not possess vertex/face/normal/texture data!" << std::endl;
+        std::cerr << "Mesh '" << meshName << "' in '" << fileName << "' does not possess vertex/face/normal/texture data!" << std::endl;
         throw std::exception();
     }
     
@@ -98,7 +98,7 @@ StaticMesh tiny::mesh::io::readStaticMesh(const std::string &fileName)
         
         if (face->mNumIndices != 3)
         {
-            std::cerr << "Largest mesh in '" << fileName << "' does not consist of triangles!" << std::endl;
+            std::cerr << "Mesh '" << meshName << "' in '" << fileName << "' does not consist of triangles!" << std::endl;
             throw std::exception();
         }
         
@@ -107,7 +107,7 @@ StaticMesh tiny::mesh::io::readStaticMesh(const std::string &fileName)
         mesh.indices[3*i + 2] = face->mIndices[2];
     }
     
-    std::cerr << "Read a mesh with " << mesh.vertices.size() << " vertices and " << mesh.indices.size()/3 << " triangles from '" << fileName << "'." << std::endl;
+    std::cerr << "Read mesh '" << meshName << "' with " << mesh.vertices.size() << " vertices and " << mesh.indices.size()/3 << " triangles from '" << fileName << "'." << std::endl;
     
     //importer will go out of scope, which will free all read data automatically.
     return mesh;
