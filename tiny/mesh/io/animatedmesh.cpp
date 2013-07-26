@@ -16,9 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <iostream>
 #include <exception>
-#include <fstream>
 #include <string>
-#include <sstream>
 #include <vector>
 #include <map>
 #include <cassert>
@@ -29,68 +27,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <tiny/math/vec.h>
 #include <tiny/mesh/io/animatedmesh.h>
+#include <tiny/mesh/io/detail/aimesh.h>
 
 using namespace tiny;
 using namespace tiny::mesh;
 
-AnimatedMesh tiny::mesh::io::readAnimatedMesh(const std::string &fileName, const std::string &meshName)
+namespace tiny
 {
-    //Use AssImp to read all data from the file.
-    Assimp::Importer importer;
-    const aiScene *scene = importer.ReadFile(fileName.c_str(), aiProcessPreset_TargetRealtime_Quality);
-    
-    if (!scene)
-    {
-        std::cerr << "Unable to read '" << fileName << "' from disk!" << std::endl;
-        throw std::exception();
-    }
-    
-    //Obtain the mesh with the largest number of vertices in the file and the given name.
-    if (!scene->HasMeshes())
-    {
-        std::cerr << "'" << fileName << "' does not contain any meshes!" << std::endl;
-        throw std::exception();
-    }
-    
-    unsigned int largestNrVertices = scene->mMeshes[0]->mNumVertices;
-    unsigned int largestIndex = 0;
-    
-    for (unsigned int i = 1; i < scene->mNumMeshes; ++i)
-    {
-        if (scene->mMeshes[i]->mNumVertices > largestNrVertices)
-        {
-            largestNrVertices = scene->mMeshes[i]->mNumVertices;
-            largestIndex = i;
-        }
-    }
-    
-    const aiMesh *sourceMesh = scene->mMeshes[largestIndex];
-    
-    if (sourceMesh->mNumVertices <= 0 ||
-        !sourceMesh->HasPositions() ||
-        !sourceMesh->HasFaces() ||
-        !sourceMesh->HasTangentsAndBitangents() ||
-        !sourceMesh->HasNormals() ||
-        !sourceMesh->HasTextureCoords(0) ||
-        !sourceMesh->HasBones())
-    {
-        std::cerr << "Mesh '" << meshName << "' in '" << fileName << "' does not possess vertex/face/normal/texture/bone data!" << std::endl;
-        throw std::exception();
-    }
-    
-    AnimatedMesh mesh;
-    
-    //Copy vertices.
-    mesh.vertices.resize(sourceMesh->mNumVertices);
-    
-    for (unsigned int i = 0; i < mesh.vertices.size(); ++i)
-    {
-        mesh.vertices[i] = AnimatedMeshVertex(vec2(sourceMesh->mTextureCoords[0][i].x, sourceMesh->mTextureCoords[0][i].y),
-                                            vec3(sourceMesh->mTangents[i].x, sourceMesh->mTangents[i].y, sourceMesh->mTangents[i].z),
-                                            vec3(sourceMesh->mNormals[i].x, sourceMesh->mNormals[i].y, sourceMesh->mNormals[i].z),
-                                            vec3(sourceMesh->mVertices[i].x, sourceMesh->mVertices[i].y, sourceMesh->mVertices[i].z));
-    }
-    
+
+namespace mesh
+{
+
+namespace io
+{
+
+namespace detail
+{
+
+void copyAiMeshBones(const aiMesh *sourceMesh, AnimatedMesh &mesh)
+{
     //Copy bones.
     std::vector<unsigned int> vertexBoneCounts(mesh.vertices.size(), 0);
     
@@ -115,7 +70,7 @@ AnimatedMesh tiny::mesh::io::readAnimatedMesh(const std::string &fileName, const
             
             if (id >= mesh.vertices.size() || weight < 0.0f || weight > 1.0f)
             {
-                std::cerr << "Mesh '" << meshName << "' in '" << fileName << "' contains invalid bone indices " << id << " or weights " << weight << "!" << std::endl;
+                std::cerr << "Mesh has invalid bone indices " << id << " or weights " << weight << "!" << std::endl;
                 throw std::exception();
             }
             
@@ -129,7 +84,7 @@ AnimatedMesh tiny::mesh::io::readAnimatedMesh(const std::string &fileName, const
             
             if (count >= 4)
             {
-                std::cerr << "Warning: mesh '" << meshName << "' in '" << fileName << "' contains more than four bones per vertex, discarding excess data!" << std::endl;
+                std::cerr << "Warning: mesh contains more than four bones per vertex, discarding excess data!" << std::endl;
             }
             else
             {
@@ -175,7 +130,7 @@ AnimatedMesh tiny::mesh::io::readAnimatedMesh(const std::string &fileName, const
             v.weights.w < 0.0f || v.weights.w > 1.0f ||
             fabsf(weightSum - 1.0f) > 1.0e-2)
         {
-            std::cerr << "Warning: invalid weights " << v.weights << " (sum " << weightSum << ") in '" << fileName << "'!" << std::endl;
+            std::cerr << "Warning: invalid weights " << v.weights << " (sum " << weightSum << ")!" << std::endl;
         
             //Normalise weight sum.
             mesh.vertices[i].weights /= weightSum;
@@ -186,117 +141,162 @@ AnimatedMesh tiny::mesh::io::readAnimatedMesh(const std::string &fileName, const
             v.bones.z < 0 || v.bones.z >= nrBones ||
             v.bones.w < 0 || v.bones.w >= nrBones)
         {
-            std::cerr << "Invalid bone indices " << v.bones << " in '" << fileName << "'!" << std::endl;
+            std::cerr << "Invalid bone indices " << v.bones << "!" << std::endl;
             throw std::exception();
         }
     }
 #endif
+}
+
+void setAiNodePointers(aiNode *node, std::map<std::string, aiNode *> &nodeNameToPointer)
+{
+    //Does the node name already exist?
+    if (!nodeNameToPointer.insert(std::make_pair(node->mName.data, node)).second)
+    {
+        std::cerr << "Node name '" << node->mName.data << "' is not unique!" << std::endl;
+        throw std::exception();
+    }
+    
+    for (unsigned int i = 0; i < node->mNumChildren; ++i)
+    {
+        setAiNodePointers(node->mChildren[i], nodeNameToPointer);
+    }
+}
+
+void copyAiAnimations(const aiScene *scene, Skeleton &skeleton)
+{
+    //Create map from bone names to their indices.
+    std::map<std::string, unsigned int> boneNameToIndex;
+    
+    for (unsigned int i = 0; i < skeleton.bones.size(); ++i)
+    {
+        if (!boneNameToIndex.insert(std::make_pair(skeleton.bones[i].name, i)).second)
+        {
+            std::cerr << "Bone name '" << skeleton.bones[i].name << "' is not unique!" << std::endl;
+            throw std::exception();
+        }
+    }
+    
+    assert(boneNameToIndex.size() == skeleton.bones.size());
+    
+    //Create map from node names to their pointers.
+    std::map<std::string, aiNode *> nodeNameToPointer;
+    
+    detail::setAiNodePointers(scene->mRootNode, nodeNameToPointer);
+    
+    //We need to keep track of all transformation matrices.
+    std::map<std::string, mat4> nodeNameToMatrix;
+    
+    for (std::map<std::string, aiNode *>::const_iterator i = nodeNameToPointer.begin(); i != nodeNameToPointer.end(); ++i)
+    {
+        nodeNameToMatrix.insert(std::make_pair(i->first, mat4::identityMatrix()));
+    }
+    
+    //Process all animations.
+    skeleton.animations.resize(scene->mNumAnimations);
+    
+    for (unsigned int i = 0; i < skeleton.animations.size(); ++i)
+    {
+        const aiAnimation *animation = scene->mAnimations[i];
+        unsigned int nrFrames = 0;
+        
+        skeleton.animations[i].name = std::string(animation->mName.data);
+        
+        if (animation->mNumChannels != skeleton.bones.size())
+        {
+            std::cerr << "Warning: animation '" << animation->mName.data << "' has an invalid number of channels (" << animation->mNumChannels << " for " << skeleton.bones.size() << " bones)!" << std::endl;
+        }
+        
+        for (unsigned int j = 0; j < animation->mNumChannels; ++j)
+        {
+            const aiNodeAnim *nodeAnim = animation->mChannels[j];
+            
+            if (boneNameToIndex.find(nodeAnim->mNodeName.data) != boneNameToIndex.end())
+            {
+                //Update total number of frames for this animation.
+                const unsigned int boneIndex = boneNameToIndex[nodeAnim->mNodeName.data];
+                const unsigned int newNrFrames = std::max(std::max(nodeAnim->mNumPositionKeys, nodeAnim->mNumRotationKeys), nodeAnim->mNumScalingKeys);
+                const mat4 boneMatrix = skeleton.bones[boneIndex].meshToBone;
+                
+                assert(boneIndex < skeleton.bones.size());
+                
+                if (newNrFrames > nrFrames)
+                {
+                    nrFrames = newNrFrames;
+                    skeleton.animations[i].frames.resize(nrFrames*skeleton.bones.size());
+                }
+                
+                //Copy frame data.
+                KeyFrame *frames = &skeleton.animations[i].frames[boneIndex];
+                
+                for (unsigned int k = 0; k < nrFrames; ++k)
+                {
+                    aiVector3D ai_scale(1.0f, 1.0f, 1.0f);
+                    aiQuaternion ai_rotate(0.0f, 0.0f, 0.0f, 1.0f);
+                    aiVector3D ai_translate(0.0f, 0.0f, 0.0f);
+                    
+                    if (k < nodeAnim->mNumPositionKeys) ai_translate = nodeAnim->mPositionKeys[k].mValue;
+                    else if (nodeAnim->mNumPositionKeys > 0) ai_translate = nodeAnim->mPositionKeys[nodeAnim->mNumPositionKeys - 1].mValue;
+                    if (k < nodeAnim->mNumRotationKeys) ai_rotate = nodeAnim->mRotationKeys[k].mValue;
+                    else if (nodeAnim->mNumRotationKeys > 0) ai_rotate = nodeAnim->mRotationKeys[nodeAnim->mNumRotationKeys - 1].mValue;
+                    if (k < nodeAnim->mNumScalingKeys) ai_scale = nodeAnim->mScalingKeys[k].mValue;
+                    else if (nodeAnim->mNumScalingKeys > 0) ai_scale = nodeAnim->mScalingKeys[nodeAnim->mNumScalingKeys - 1].mValue;
+                    
+                    const vec3 scale(ai_scale.x, ai_scale.y, ai_scale.z);
+                    const vec4 rotate(normalize(vec4(ai_rotate.x, ai_rotate.y, ai_rotate.z, ai_rotate.w)));
+                    const vec3 translate(ai_translate.x, ai_translate.y, ai_translate.z);
+                    
+                    const mat4 transformation = boneMatrix.inverted()*mat4(rotate, translate)*boneMatrix;
+                    
+                    frames[k*skeleton.bones.size()] = KeyFrame(scale, k, quatmatrix(transformation), transformation.getTranslation());
+                }
+            }
+#ifndef NDEBUG
+            else
+            {
+                std::cerr << "Warning: the channel for bone '" << nodeAnim->mNodeName.data << "' in animation '" << animation->mName.data << "' cannot be mapped to the skeleton!" << std::endl;
+            }
+#endif
+        }
+        
+#ifndef NDEBUG
+        std::cerr << "Added animation '" << animation->mName.data << "' with " << nrFrames << " frames." << std::endl;
+#endif
+    }
+}
+
+} //namespace detail
+
+} //namespace io
+
+} //namespace mesh
+
+} //namespace tiny
+
+AnimatedMesh tiny::mesh::io::readAnimatedMesh(const std::string &fileName, const std::string &meshName)
+{
+    //Use AssImp to read all data from the file.
+    Assimp::Importer importer;
+    const aiScene *scene = importer.ReadFile(fileName.c_str(), aiProcessPreset_TargetRealtime_Quality);
+    
+    if (!scene)
+    {
+        std::cerr << "Unable to read '" << fileName << "' from disk!" << std::endl;
+        throw std::exception();
+    }
+    
+    const aiMesh *sourceMesh = detail::getAiMesh(scene, meshName);
+    AnimatedMesh mesh;
+    
+    assert(sourceMesh);
+    detail::copyAiMeshVertices<AnimatedMesh, AnimatedMeshVertex>(sourceMesh, mesh);
+    detail::copyAiMeshIndices(sourceMesh, mesh);
+    detail::copyAiMeshBones(sourceMesh, mesh);
     
     //Copy animations if available.
     if (scene->HasAnimations())
     {
-        //Create map from bone names to their indices.
-        std::map<std::string, unsigned int> boneNameToIndex;
-        
-        for (unsigned int i = 0; i < mesh.skeleton.bones.size(); ++i)
-        {
-            if (!boneNameToIndex.insert(std::make_pair(mesh.skeleton.bones[i].name, i)).second)
-            {
-                std::cerr << "Bone name '" << mesh.skeleton.bones[i].name << "' of mesh '" << meshName << "' in '" << fileName << "' is not unique!" << std::endl;
-                throw std::exception();
-            }
-        }
-        
-        assert(boneNameToIndex.size() == mesh.skeleton.bones.size());
-        
-        mesh.skeleton.animations.resize(scene->mNumAnimations);
-        
-        for (unsigned int i = 0; i < mesh.skeleton.animations.size(); ++i)
-        {
-            const aiAnimation *animation = scene->mAnimations[i];
-            unsigned int nrFrames = 0;
-            
-            mesh.skeleton.animations[i].name = std::string(animation->mName.data);
-            
-            if (animation->mNumChannels != mesh.skeleton.bones.size())
-            {
-                std::cerr << "Warning: animation '" << animation->mName.data << "' in mesh '" << meshName << "' in '" << fileName << "' has an invalid number of channels (" << animation->mNumChannels << " for " << mesh.skeleton.bones.size() << " bones)!" << std::endl;
-            }
-            
-            for (unsigned int j = 0; j < animation->mNumChannels; ++j)
-            {
-                const aiNodeAnim *nodeAnim = animation->mChannels[j];
-                
-                if (boneNameToIndex.find(nodeAnim->mNodeName.data) != boneNameToIndex.end())
-                {
-                    //Update total number of frames for this animation.
-                    const unsigned int boneIndex = boneNameToIndex[nodeAnim->mNodeName.data];
-                    const unsigned int newNrFrames = std::max(std::max(nodeAnim->mNumPositionKeys, nodeAnim->mNumRotationKeys), nodeAnim->mNumScalingKeys);
-                    const mat4 boneMatrix = mesh.skeleton.bones[boneIndex].meshToBone;
-                    
-                    assert(boneIndex < mesh.skeleton.bones.size());
-                    
-                    if (newNrFrames > nrFrames)
-                    {
-                        nrFrames = newNrFrames;
-                        mesh.skeleton.animations[i].frames.resize(nrFrames*mesh.skeleton.bones.size());
-                    }
-                    
-                    //Copy frame data.
-                    KeyFrame *frames = &mesh.skeleton.animations[i].frames[boneIndex];
-                    
-                    for (unsigned int k = 0; k < nrFrames; ++k)
-                    {
-                        aiVector3D ai_scale(1.0f, 1.0f, 1.0f);
-                        aiQuaternion ai_rotate(0.0f, 0.0f, 0.0f, 1.0f);
-                        aiVector3D ai_translate(0.0f, 0.0f, 0.0f);
-                        
-                        if (k < nodeAnim->mNumPositionKeys) ai_translate = nodeAnim->mPositionKeys[k].mValue;
-                        else if (nodeAnim->mNumPositionKeys > 0) ai_translate = nodeAnim->mPositionKeys[nodeAnim->mNumPositionKeys - 1].mValue;
-                        if (k < nodeAnim->mNumRotationKeys) ai_rotate = nodeAnim->mRotationKeys[k].mValue;
-                        else if (nodeAnim->mNumRotationKeys > 0) ai_rotate = nodeAnim->mRotationKeys[nodeAnim->mNumRotationKeys - 1].mValue;
-                        if (k < nodeAnim->mNumScalingKeys) ai_scale = nodeAnim->mScalingKeys[k].mValue;
-                        else if (nodeAnim->mNumScalingKeys > 0) ai_scale = nodeAnim->mScalingKeys[nodeAnim->mNumScalingKeys - 1].mValue;
-                        
-                        const vec3 scale(ai_scale.x, ai_scale.y, ai_scale.z);
-                        const vec4 rotate(normalize(vec4(ai_rotate.x, ai_rotate.y, ai_rotate.z, ai_rotate.w)));
-                        const vec3 translate(ai_translate.x, ai_translate.y, ai_translate.z);
-                        
-                        const mat4 transformation = boneMatrix.inverted()*mat4(rotate, translate)*boneMatrix;
-                        
-                        frames[k*mesh.skeleton.bones.size()] = KeyFrame(scale, k, quatmatrix(transformation), transformation.getTranslation());
-                    }
-                }
-#ifndef NDEBUG
-                else
-                {
-                    std::cerr << "Warning: the channel for bone '" << nodeAnim->mNodeName.data << "' in animation '" << animation->mName.data << "' cannot be mapped to the skeleton!" << std::endl;
-                }
-#endif
-            }
-            
-#ifndef NDEBUG
-            std::cerr << "Added animation '" << animation->mName.data << "' with " << nrFrames << " frames." << std::endl;
-#endif
-        }
-    }
-    
-    //Copy indices.
-    mesh.indices.resize(3*sourceMesh->mNumFaces);
-    
-    for (unsigned int i = 0; i < sourceMesh->mNumFaces; ++i)
-    {
-        const aiFace *face = &sourceMesh->mFaces[i];
-        
-        if (face->mNumIndices != 3)
-        {
-            std::cerr << "Mesh '" << meshName << "' in '" << fileName << "' does not consist of triangles!" << std::endl;
-            throw std::exception();
-        }
-        
-        mesh.indices[3*i + 0] = face->mIndices[0];
-        mesh.indices[3*i + 1] = face->mIndices[1];
-        mesh.indices[3*i + 2] = face->mIndices[2];
+        detail::copyAiAnimations(scene, mesh.skeleton);
     }
     
     std::cerr << "Read mesh '" << meshName << "' with " << mesh.vertices.size() << " vertices, " << mesh.indices.size()/3 << " triangles, " << mesh.skeleton.bones.size() << " bones, and " << mesh.skeleton.animations.size() << " animations from '" << fileName << "'." << std::endl;

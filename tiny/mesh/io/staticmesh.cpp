@@ -16,11 +16,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <iostream>
 #include <exception>
-#include <fstream>
 #include <string>
-#include <sstream>
 #include <vector>
-#include <map>
+#include <cassert>
 
 #include <assimp/aiScene.h>
 #include <assimp/assimp.hpp>
@@ -28,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <tiny/math/vec.h>
 #include <tiny/mesh/io/staticmesh.h>
+#include <tiny/mesh/io/detail/aimesh.h>
 
 using namespace tiny;
 using namespace tiny::mesh;
@@ -44,68 +43,12 @@ StaticMesh tiny::mesh::io::readStaticMesh(const std::string &fileName, const std
         throw std::exception();
     }
     
-    //Obtain the mesh with the largest number of vertices in the file and the given name.
-    if (!scene->HasMeshes())
-    {
-        std::cerr << "'" << fileName << "' does not contain any meshes!" << std::endl;
-        throw std::exception();
-    }
-    
-    unsigned int largestNrVertices = 0;
-    unsigned int largestIndex = 0;
-    
-    for (unsigned int i = 0; i < scene->mNumMeshes; ++i)
-    {
-        if (scene->mMeshes[i]->mNumVertices > largestNrVertices && (meshName == "" || aiString(meshName) == scene->mMeshes[i]->mName))
-        {
-            largestNrVertices = scene->mMeshes[i]->mNumVertices;
-            largestIndex = i;
-        }
-    }
-    
-    const aiMesh *sourceMesh = scene->mMeshes[largestIndex];
-    
-    if (sourceMesh->mNumVertices <= 0 ||
-        !sourceMesh->HasPositions() ||
-        !sourceMesh->HasFaces() ||
-        !sourceMesh->HasTangentsAndBitangents() ||
-        !sourceMesh->HasNormals() ||
-        !sourceMesh->HasTextureCoords(0))
-    {
-        std::cerr << "Mesh '" << meshName << "' in '" << fileName << "' does not possess vertex/face/normal/texture data!" << std::endl;
-        throw std::exception();
-    }
-    
+    const aiMesh *sourceMesh = detail::getAiMesh(scene, meshName);
     StaticMesh mesh;
     
-    //Copy vertices.
-    mesh.vertices.resize(sourceMesh->mNumVertices);
-    
-    for (unsigned int i = 0; i < mesh.vertices.size(); ++i)
-    {
-        mesh.vertices[i] = StaticMeshVertex(vec2(sourceMesh->mTextureCoords[0][i].x, sourceMesh->mTextureCoords[0][i].y),
-                                            vec3(sourceMesh->mTangents[i].x, sourceMesh->mTangents[i].y, sourceMesh->mTangents[i].z),
-                                            vec3(sourceMesh->mNormals[i].x, sourceMesh->mNormals[i].y, sourceMesh->mNormals[i].z),
-                                            vec3(sourceMesh->mVertices[i].x, sourceMesh->mVertices[i].y, sourceMesh->mVertices[i].z));
-    }
-    
-    //Copy indices.
-    mesh.indices.resize(3*sourceMesh->mNumFaces);
-    
-    for (unsigned int i = 0; i < sourceMesh->mNumFaces; ++i)
-    {
-        const aiFace *face = &sourceMesh->mFaces[i];
-        
-        if (face->mNumIndices != 3)
-        {
-            std::cerr << "Mesh '" << meshName << "' in '" << fileName << "' does not consist of triangles!" << std::endl;
-            throw std::exception();
-        }
-        
-        mesh.indices[3*i + 0] = face->mIndices[0];
-        mesh.indices[3*i + 1] = face->mIndices[1];
-        mesh.indices[3*i + 2] = face->mIndices[2];
-    }
+    assert(sourceMesh);
+    detail::copyAiMeshVertices<StaticMesh, StaticMeshVertex>(sourceMesh, mesh);
+    detail::copyAiMeshIndices(sourceMesh, mesh);
     
     std::cerr << "Read mesh '" << meshName << "' with " << mesh.vertices.size() << " vertices and " << mesh.indices.size()/3 << " triangles from '" << fileName << "'." << std::endl;
     
