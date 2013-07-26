@@ -41,6 +41,7 @@ os::Application *application = 0;
 draw::WorldRenderer *worldRenderer = 0;
 
 draw::AnimatedMesh *testMesh = 0;
+draw::AnimationTextureBuffer *testAnimations = 0;
 draw::RGBTexture2D *testDiffuseTexture = 0;
 draw::RGBTexture2D *testNormalTexture = 0;
 
@@ -52,9 +53,14 @@ vec4 cameraOrientation = vec4(0.0f, 0.0f, 0.0f, 1.0f);
 void setup()
 {
     //Create a test mesh and paint it with a texture.
-    testMesh = new draw::AnimatedMesh(mesh::io::readAnimatedMesh(DATA_DIRECTORY + "mesh/f_walk_01.dae"));
+    mesh::AnimatedMesh animatedMesh = mesh::io::readAnimatedMesh(DATA_DIRECTORY + "mesh/f_walk_01.dae");
+    
+    testMesh = new draw::AnimatedMesh(animatedMesh);
+    testAnimations = new draw::AnimationTextureBuffer();
+    testAnimations->setAnimations(animatedMesh.skeleton.animations.begin(), animatedMesh.skeleton.animations.end());
     testDiffuseTexture = new draw::RGBTexture2D(img::io::readImage(DATA_DIRECTORY + "img/tree0_trunk.png"));
     testNormalTexture = new draw::RGBTexture2D(img::io::readImage(DATA_DIRECTORY + "img/tree0_trunk_normal.png"));
+    testMesh->setAnimationTexture(*testAnimations);
     testMesh->setDiffuseTexture(*testDiffuseTexture);
     testMesh->setNormalTexture(*testNormalTexture);
     
@@ -74,6 +80,7 @@ void cleanup()
     delete screenEffect;
     
     delete testMesh;
+    delete testAnimations;
     delete testDiffuseTexture;
     delete testNormalTexture;
 }

@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <tiny/draw/texture.h>
+#include <tiny/draw/buffer.h>
 
 namespace tiny
 {
@@ -25,38 +26,36 @@ namespace draw
 {
 
 template<typename T, size_t Channels>
-class Texture1D : public Texture<T, Channels>
+class TextureBuffer : public Texture<T, Channels>
 {
     public:
-        Texture1D(const size_t &width, const size_t &height) :
-            Texture<T, Channels>(GL_TEXTURE_1D, width, height)
+        TextureBuffer() :
+            Texture<T, Channels>(GL_TEXTURE_BUFFER, 1, 1, 1)
+        {
+            unbindBuffer();
+        }
+        
+        ~TextureBuffer()
         {
             
         }
         
-        Texture1D(const Texture1D<T, Channels> &texture)
-            Texture<T, Channels>(texture)
+        void bindBuffer(const BufferInterface &buffer) const
         {
-            
+            this->bind();
+            GL_CHECK(glTexBuffer(GL_TEXTURE_BUFFER, this->textureFormat, buffer.getIndex()));
+            this->unbind();
         }
         
-        ~Texture1D()
+        void unbindBuffer() const
         {
-            
-        }
-        
-        T & operator () (const size_t &a_x)
-        {
-            return this->hostData[a_x];
-        }
-        
-        const T & operator () (const size_t &a_x) const
-        {
-            return this->hostData[a_x];
+            this->bind();
+            GL_CHECK(glTexBuffer(GL_TEXTURE_BUFFER, this->textureFormat, 0));
+            this->unbind();
         }
 };
 
-typedef Texture1D<float, 4> Vec4Texture1D;
+typedef TextureBuffer<float, 4> Vec4TextureBuffer;
 
 }
 

@@ -118,24 +118,32 @@ void TextureInterface::createDeviceTexture()
     {
         GL_CHECK(glTexImage3D(textureTarget, 0, textureFormat, width, height, depth, 0, textureChannels, textureDataType, 0));
     }
+    else if (textureTarget == GL_TEXTURE_BUFFER)
+    {
+        //No action is required.
+    }
     else
     {
+        std::cerr << "Invalid texture target!" << std::endl;
         throw std::exception();
     }
     
-    GL_CHECK(glTexParameteri(textureTarget, GL_TEXTURE_WRAP_S, (flags & tf::repeat) != 0 ? GL_REPEAT : GL_CLAMP));
-    GL_CHECK(glTexParameteri(textureTarget, GL_TEXTURE_WRAP_T, (flags & tf::repeat) != 0 ? GL_REPEAT : GL_CLAMP));
-    
-    if ((flags & tf::mipmap) != 0)
+    if (textureTarget != GL_TEXTURE_BUFFER)
     {
-        GL_CHECK(glTexParameteri(textureTarget, GL_TEXTURE_MAG_FILTER, (flags & tf::filter) != 0 ? GL_LINEAR : GL_NEAREST));
-        GL_CHECK(glTexParameteri(textureTarget, GL_TEXTURE_MIN_FILTER, (flags & tf::filter) != 0 ? GL_LINEAR_MIPMAP_LINEAR : GL_NEAREST_MIPMAP_NEAREST));
-        GL_CHECK(glGenerateMipmap(textureTarget));
-    }
-    else
-    {
-        GL_CHECK(glTexParameteri(textureTarget, GL_TEXTURE_MAG_FILTER, (flags & tf::filter) != 0 ? GL_LINEAR : GL_NEAREST));
-        GL_CHECK(glTexParameteri(textureTarget, GL_TEXTURE_MIN_FILTER, (flags & tf::filter) != 0 ? GL_LINEAR : GL_NEAREST));
+        GL_CHECK(glTexParameteri(textureTarget, GL_TEXTURE_WRAP_S, (flags & tf::repeat) != 0 ? GL_REPEAT : GL_CLAMP));
+        GL_CHECK(glTexParameteri(textureTarget, GL_TEXTURE_WRAP_T, (flags & tf::repeat) != 0 ? GL_REPEAT : GL_CLAMP));
+        
+        if ((flags & tf::mipmap) != 0)
+        {
+            GL_CHECK(glTexParameteri(textureTarget, GL_TEXTURE_MAG_FILTER, (flags & tf::filter) != 0 ? GL_LINEAR : GL_NEAREST));
+            GL_CHECK(glTexParameteri(textureTarget, GL_TEXTURE_MIN_FILTER, (flags & tf::filter) != 0 ? GL_LINEAR_MIPMAP_LINEAR : GL_NEAREST_MIPMAP_NEAREST));
+            GL_CHECK(glGenerateMipmap(textureTarget));
+        }
+        else
+        {
+            GL_CHECK(glTexParameteri(textureTarget, GL_TEXTURE_MAG_FILTER, (flags & tf::filter) != 0 ? GL_LINEAR : GL_NEAREST));
+            GL_CHECK(glTexParameteri(textureTarget, GL_TEXTURE_MIN_FILTER, (flags & tf::filter) != 0 ? GL_LINEAR : GL_NEAREST));
+        }
     }
     
     GL_CHECK(glBindTexture(textureTarget, 0));

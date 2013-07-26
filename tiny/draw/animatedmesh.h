@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cassert>
 
 #include <tiny/mesh/animatedmesh.h>
+#include <tiny/draw/texturebuffer.h>
 #include <tiny/draw/indexbuffer.h>
 #include <tiny/draw/vertexbuffer.h>
 #include <tiny/draw/vertexbufferinterpreter.h>
@@ -48,11 +49,57 @@ class AnimatedMeshIndexBuffer : public IndexBuffer<unsigned int>
         ~AnimatedMeshIndexBuffer();
 };
 
+class AnimationTextureBuffer : public Vec4TextureBuffer
+{
+    public:
+        AnimationTextureBuffer();
+        ~AnimationTextureBuffer();
+        
+        template <typename Iterator>
+        void setAnimations(Iterator first, Iterator last)
+        {
+            this->unbindBuffer();
+            
+            //Count total number of frames.
+            size_t nrFrames = 0;
+            
+            for (Iterator i = first; i != last; ++i)
+            {
+                nrFrames += i->frames.size();
+            }
+            
+            //Copy all frames to the vertex buffer.
+            keyFrameBuffer.resize(nrFrames);
+            nrFrames = 0;
+            
+            for (Iterator i = first; i != last; ++i)
+            {
+                for (size_t j = 0; j < i->frames.size(); ++j)
+                {
+                    keyFrameBuffer[nrFrames++] = i->frames[j];
+                }
+            }
+            
+            //Send frames to device.
+            keyFrameBuffer.sendToDevice();
+            this->bindBuffer(keyFrameBuffer);
+        }
+        
+    private:
+        VertexBuffer<tiny::mesh::KeyFrame> keyFrameBuffer;
+};
+
 class AnimatedMesh : public Renderable
 {
     public:
         AnimatedMesh(const tiny::mesh::AnimatedMesh &);
         ~AnimatedMesh();
+        
+        template <typename TextureType>
+        void setAnimationTexture(const TextureType &texture)
+        {
+            uniformMap.setTexture(texture, "animationTexture");
+        }
         
         template <typename TextureType>
         void setDiffuseTexture(const TextureType &texture)

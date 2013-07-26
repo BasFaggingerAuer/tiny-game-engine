@@ -45,11 +45,23 @@ AnimatedMeshIndexBuffer::~AnimatedMeshIndexBuffer()
 
 }
 
+AnimationTextureBuffer::AnimationTextureBuffer() :
+    keyFrameBuffer(1)
+{
+
+}
+
+AnimationTextureBuffer::~AnimationTextureBuffer()
+{
+
+}
+
 AnimatedMesh::AnimatedMesh(const tiny::mesh::AnimatedMesh &mesh) :
     Renderable(),
     indices(mesh),
     vertices(mesh)
 {
+    uniformMap.addTexture("animationTexture");
     uniformMap.addTexture("diffuseTexture");
     uniformMap.addTexture("normalTexture");
 }
@@ -65,6 +77,7 @@ std::string AnimatedMesh::getVertexShaderCode() const
 "#version 150\n"
 "\n"
 "uniform mat4 worldToScreen;\n"
+"uniform samplerBuffer animationTexture;\n"
 "\n"
 "in vec2 v_textureCoordinate;\n"
 "in vec3 v_tangent;\n"
@@ -79,13 +92,40 @@ std::string AnimatedMesh::getVertexShaderCode() const
 "out vec3 f_worldPosition;\n"
 "out float f_cameraDepth;\n"
 "\n"
+"vec3 qtransform(const vec4 q, const vec3 v)\n"
+"{\n"
+"	return (v + 2.0f*cross(cross(v, q.xyz) + q.w*v, q.xyz));\n"
+"}\n"
+"\n"
 "void main(void)\n"
 "{\n"
+"   vec4 scaleAndTime = vec4(0.0f);\n"
+"   vec4 rotate = vec4(0.0f);\n"
+"   vec4 translate = vec4(0.0f);\n"
+"   \n"
+"   scaleAndTime += v_weights.x*texelFetch(animationTexture, 3*v_bones.x + 0);\n"
+"   rotate += v_weights.x*texelFetch(animationTexture, 3*v_bones.x + 1);\n"
+"   translate += v_weights.x*texelFetch(animationTexture, 3*v_bones.x + 2);\n"
+"   \n"
+"   scaleAndTime += v_weights.y*texelFetch(animationTexture, 3*v_bones.y + 0);\n"
+"   rotate += v_weights.y*texelFetch(animationTexture, 3*v_bones.y + 1);\n"
+"   translate += v_weights.y*texelFetch(animationTexture, 3*v_bones.y + 2);\n"
+"   \n"
+"   scaleAndTime += v_weights.z*texelFetch(animationTexture, 3*v_bones.z + 0);\n"
+"   rotate += v_weights.z*texelFetch(animationTexture, 3*v_bones.z + 1);\n"
+"   translate += v_weights.z*texelFetch(animationTexture, 3*v_bones.z + 2);\n"
+"   \n"
+"   scaleAndTime += v_weights.w*texelFetch(animationTexture, 3*v_bones.w + 0);\n"
+"   rotate += v_weights.w*texelFetch(animationTexture, 3*v_bones.w + 1);\n"
+"   translate += v_weights.w*texelFetch(animationTexture, 3*v_bones.w + 2);\n"
+"   \n"
+"   normalize(rotate);\n"
+"   \n"
 "   f_tex = v_textureCoordinate;\n"
-"   f_worldTangent = v_tangent;\n"
-"   f_worldNormal = v_normal;\n"
-"   f_worldPosition = v_position;\n"
-"   gl_Position = worldToScreen*vec4(v_position, 1.0f);\n"
+"   f_worldTangent = normalize(qtransform(rotate, scaleAndTime.xyz*v_tangent));\n"
+"   f_worldNormal = normalize(qtransform(rotate, scaleAndTime.xyz*v_normal));\n"
+"   f_worldPosition = qtransform(rotate, scaleAndTime.xyz*v_position) + translate.xyz;\n"
+"   gl_Position = worldToScreen*vec4(f_worldPosition, 1.0f);\n"
 "   f_cameraDepth = gl_Position.z;\n"
 "}\n\0";
 }
