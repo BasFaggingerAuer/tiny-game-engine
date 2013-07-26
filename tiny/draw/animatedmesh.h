@@ -86,7 +86,7 @@ class AnimationTextureBuffer : public Vec4TextureBuffer
         }
         
     private:
-        VertexBuffer<tiny::mesh::KeyFrame> keyFrameBuffer;
+        Buffer<tiny::mesh::KeyFrame> keyFrameBuffer;
 };
 
 class AnimatedMesh : public Renderable

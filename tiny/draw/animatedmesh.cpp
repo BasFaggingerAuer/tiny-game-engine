@@ -46,7 +46,7 @@ AnimatedMeshIndexBuffer::~AnimatedMeshIndexBuffer()
 }
 
 AnimationTextureBuffer::AnimationTextureBuffer() :
-    keyFrameBuffer(1)
+    keyFrameBuffer(1, GL_TEXTURE_BUFFER, GL_STATIC_DRAW)
 {
 
 }

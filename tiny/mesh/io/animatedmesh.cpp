@@ -161,17 +161,48 @@ AnimatedMesh tiny::mesh::io::readAnimatedMesh(const std::string &fileName, const
         }
     }
     
+#ifndef NDEBUG
+    //Verify bone weights and indices.
+    for (unsigned int i = 0; i < mesh.vertices.size(); ++i)
+    {
+        const int nrBones = mesh.skeleton.bones.size();
+        const AnimatedMeshVertex v = mesh.vertices[i];
+        const float weightSum = v.weights.x + v.weights.y + v.weights.z + v.weights.w;
+        
+        if (v.weights.x < 0.0f || v.weights.x > 1.0f ||
+            v.weights.y < 0.0f || v.weights.y > 1.0f ||
+            v.weights.z < 0.0f || v.weights.z > 1.0f ||
+            v.weights.w < 0.0f || v.weights.w > 1.0f ||
+            fabsf(weightSum - 1.0f) > 1.0e-2)
+        {
+            std::cerr << "Warning: invalid weights " << v.weights << " (sum " << weightSum << ") in '" << fileName << "'!" << std::endl;
+        
+            //Normalise weight sum.
+            mesh.vertices[i].weights /= weightSum;
+        }
+        
+        if (v.bones.x < 0 || v.bones.x >= nrBones ||
+            v.bones.y < 0 || v.bones.y >= nrBones ||
+            v.bones.z < 0 || v.bones.z >= nrBones ||
+            v.bones.w < 0 || v.bones.w >= nrBones)
+        {
+            std::cerr << "Invalid bone indices " << v.bones << " in '" << fileName << "'!" << std::endl;
+            throw std::exception();
+        }
+    }
+#endif
+    
     //Copy animations if available.
     if (scene->HasAnimations())
     {
         //Create map from bone names to their indices.
         std::map<std::string, unsigned int> boneNameToIndex;
         
-        for (std::vector<Bone>::const_iterator i = mesh.skeleton.bones.begin(); i != mesh.skeleton.bones.end(); ++i)
+        for (unsigned int i = 0; i < mesh.skeleton.bones.size(); ++i)
         {
-            if (!boneNameToIndex.insert(std::make_pair(i->name, i - mesh.skeleton.bones.begin())).second)
+            if (!boneNameToIndex.insert(std::make_pair(mesh.skeleton.bones[i].name, i)).second)
             {
-                std::cerr << "Bone name '" << i->name << "' of mesh '" << meshName << "' in '" << fileName << "' is not unique!" << std::endl;
+                std::cerr << "Bone name '" << mesh.skeleton.bones[i].name << "' of mesh '" << meshName << "' in '" << fileName << "' is not unique!" << std::endl;
                 throw std::exception();
             }
         }
@@ -199,29 +230,36 @@ AnimatedMesh tiny::mesh::io::readAnimatedMesh(const std::string &fileName, const
                 if (boneNameToIndex.find(nodeAnim->mNodeName.data) != boneNameToIndex.end())
                 {
                     //Update total number of frames for this animation.
-                    nrFrames = std::max(std::max(std::max(nodeAnim->mNumPositionKeys, nodeAnim->mNumRotationKeys), nodeAnim->mNumScalingKeys), nrFrames);
-                    mesh.skeleton.animations[i].frames.resize(nrFrames*mesh.skeleton.bones.size());
+                    const unsigned int newNrFrames = std::max(std::max(nodeAnim->mNumPositionKeys, nodeAnim->mNumRotationKeys), nodeAnim->mNumScalingKeys);
+                    
+                    if (newNrFrames > nrFrames)
+                    {
+                        nrFrames = newNrFrames;
+                        mesh.skeleton.animations[i].frames.resize(nrFrames*mesh.skeleton.bones.size());
+                    }
                     
                     //Copy frame data.
                     KeyFrame *frames = &mesh.skeleton.animations[i].frames[boneNameToIndex[nodeAnim->mNodeName.data]];
                     
                     for (unsigned int k = 0; k < nrFrames; ++k)
                     {
-                        aiVector3D scale(1.0f, 1.0f, 1.0f);
-                        aiQuaternion rotate(0.0f, 0.0f, 0.0f, 1.0f);
-                        aiVector3D translate(0.0f, 0.0f, 0.0f);
+                        aiVector3D ai_scale(1.0f, 1.0f, 1.0f);
+                        aiQuaternion ai_rotate(0.0f, 0.0f, 0.0f, 1.0f);
+                        aiVector3D ai_translate(0.0f, 0.0f, 0.0f);
                         
-                        if (k < nodeAnim->mNumPositionKeys) translate = nodeAnim->mPositionKeys[k].mValue;
-                        else if (nodeAnim->mNumPositionKeys > 0) translate = nodeAnim->mPositionKeys[nodeAnim->mNumPositionKeys - 1].mValue;
-                        if (k < nodeAnim->mNumRotationKeys) rotate = nodeAnim->mRotationKeys[k].mValue;
-                        else if (nodeAnim->mNumRotationKeys > 0) rotate = nodeAnim->mRotationKeys[nodeAnim->mNumRotationKeys - 1].mValue;
-                        if (k < nodeAnim->mNumScalingKeys) scale = nodeAnim->mScalingKeys[k].mValue;
-                        else if (nodeAnim->mNumScalingKeys > 0) scale = nodeAnim->mScalingKeys[nodeAnim->mNumScalingKeys - 1].mValue;
+                        if (k < nodeAnim->mNumPositionKeys) ai_translate = nodeAnim->mPositionKeys[k].mValue;
+                        else if (nodeAnim->mNumPositionKeys > 0) ai_translate = nodeAnim->mPositionKeys[nodeAnim->mNumPositionKeys - 1].mValue;
+                        if (k < nodeAnim->mNumRotationKeys) ai_rotate = nodeAnim->mRotationKeys[k].mValue;
+                        else if (nodeAnim->mNumRotationKeys > 0) ai_rotate = nodeAnim->mRotationKeys[nodeAnim->mNumRotationKeys - 1].mValue;
+                        if (k < nodeAnim->mNumScalingKeys) ai_scale = nodeAnim->mScalingKeys[k].mValue;
+                        else if (nodeAnim->mNumScalingKeys > 0) ai_scale = nodeAnim->mScalingKeys[nodeAnim->mNumScalingKeys - 1].mValue;
                         
+                        /*
                         frames[k*mesh.skeleton.bones.size()] = KeyFrame(vec3(scale.x, scale.y, scale.z),
                                                                         k,
                                                                         vec4(rotate.x, rotate.y, rotate.z, rotate.w),
                                                                         vec4(translate.x, translate.y, translate.z, 0.0f));
+                        */
                     }
                 }
 #ifndef NDEBUG
