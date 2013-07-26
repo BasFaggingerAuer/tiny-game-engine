@@ -163,6 +163,130 @@ void setAiNodePointers(aiNode *node, std::map<std::string, aiNode *> &nodeNameTo
     }
 }
 
+void updateAiNodeMatrices(aiNode *node, const mat4 &transformation, std::map<std::string, mat4> &nodeNameToMatrix)
+{
+    const mat4 newTransformation = transformation*nodeNameToMatrix[node->mName.data];
+    
+    nodeNameToMatrix[node->mName.data] = newTransformation;
+    
+    for (unsigned int i = 0; i < node->mNumChildren; ++i)
+    {
+        updateAiNodeMatrices(node->mChildren[i], newTransformation, nodeNameToMatrix);
+    }
+}
+
+size_t getAiNrAnimationFrames(const aiAnimation *animation)
+{
+    size_t nrFrames = 0;
+    
+    for (unsigned int i = 0; i < animation->mNumChannels; ++i)
+    {
+        const aiNodeAnim *n = animation->mChannels[i];
+        
+        nrFrames = std::max<size_t>(n->mNumPositionKeys, nrFrames);
+        nrFrames = std::max<size_t>(n->mNumRotationKeys, nrFrames);
+        nrFrames = std::max<size_t>(n->mNumScalingKeys, nrFrames);
+    }
+    
+    return nrFrames;
+}
+
+void copyAiAnimation(const aiScene *scene, const unsigned int &animationIndex,
+    std::map<std::string, unsigned int> &boneNameToIndex,
+    std::map<std::string, mat4> &nodeNameToMatrix,
+    Skeleton &skeleton)
+{
+    const aiAnimation *sourceAnimation = scene->mAnimations[animationIndex];
+    Animation *animation = &skeleton.animations[animationIndex];
+    const size_t nrFrames = getAiNrAnimationFrames(sourceAnimation);
+    
+    animation->name = std::string(sourceAnimation->mName.data);
+    animation->frames.assign(nrFrames*skeleton.bones.size(), KeyFrame());
+    
+    if (sourceAnimation->mNumChannels != skeleton.bones.size())
+    {
+        std::cerr << "Warning: animation '" << animation->name << "' has an invalid number of channels (" << sourceAnimation->mNumChannels << " for " << skeleton.bones.size() << " bones)!" << std::endl;
+    }
+    
+    //Process all frames.
+    KeyFrame *frames = &animation->frames[0];
+    
+    for (size_t frame = 0; frame < nrFrames; ++frame)
+    {
+        //For this frame, first reset all transformations to the identity.
+        for (std::map<std::string, mat4>::iterator i = nodeNameToMatrix.begin(); i != nodeNameToMatrix.end(); ++i)
+        {
+            i->second = mat4::identityMatrix();
+        }
+        
+        //Then, retrieve all transformations that are stored in the animation data for the corresponding nodes.
+        for (size_t i = 0; i < sourceAnimation->mNumChannels; ++i)
+        {
+            const aiNodeAnim *nodeAnim = sourceAnimation->mChannels[i];
+            
+            //Get data for this frame.
+            //TODO: Take care of scaling.
+            //aiVector3D ai_scale(1.0f, 1.0f, 1.0f);
+            aiQuaternion ai_rotate(0.0f, 0.0f, 0.0f, 1.0f);
+            aiVector3D ai_translate(0.0f, 0.0f, 0.0f);
+            
+            //if (frame < nodeAnim->mNumScalingKeys) ai_scale = nodeAnim->mScalingKeys[frame].mValue;
+            //else if (nodeAnim->mNumScalingKeys > 0) ai_scale = nodeAnim->mScalingKeys[nodeAnim->mNumScalingKeys - 1].mValue;
+            if (frame < nodeAnim->mNumRotationKeys) ai_rotate = nodeAnim->mRotationKeys[frame].mValue;
+            else if (nodeAnim->mNumRotationKeys > 0) ai_rotate = nodeAnim->mRotationKeys[nodeAnim->mNumRotationKeys - 1].mValue;
+            if (frame < nodeAnim->mNumPositionKeys) ai_translate = nodeAnim->mPositionKeys[frame].mValue;
+            else if (nodeAnim->mNumPositionKeys > 0) ai_translate = nodeAnim->mPositionKeys[nodeAnim->mNumPositionKeys - 1].mValue;
+            
+            //Create transformation matrix.
+            //const vec3 scale(ai_scale.x, ai_scale.y, ai_scale.z);
+            const vec4 rotate(normalize(vec4(ai_rotate.x, ai_rotate.y, ai_rotate.z, ai_rotate.w)));
+            const vec3 translate(ai_translate.x, ai_translate.y, ai_translate.z);
+            
+            if (nodeNameToMatrix.find(nodeAnim->mNodeName.data) != nodeNameToMatrix.end())
+            {
+                nodeNameToMatrix[nodeAnim->mNodeName.data] = mat4(rotate, translate);
+            }
+            else
+            {
+                std::cerr << "Warning: animation data for node '" << nodeAnim->mNodeName.data << "' is not available!" << std::endl;
+            }
+        }
+        
+        //Recursively update these transformations.
+        updateAiNodeMatrices(scene->mRootNode, mat4::identityMatrix(), nodeNameToMatrix);
+
+        //Assign the updated transformations to the corresponding bones.
+        for (size_t i = 0; i < sourceAnimation->mNumChannels; ++i)
+        {
+            const aiNodeAnim *nodeAnim = sourceAnimation->mChannels[i];
+            
+            if (nodeNameToMatrix.find(nodeAnim->mNodeName.data) != nodeNameToMatrix.end() &&
+                boneNameToIndex.find(nodeAnim->mNodeName.data) != boneNameToIndex.end())
+            {
+                const unsigned int boneIndex = boneNameToIndex[nodeAnim->mNodeName.data];
+                const mat4 boneMatrix = skeleton.bones[boneIndex].meshToBone;
+                const mat4 transformation = nodeNameToMatrix[nodeAnim->mNodeName.data]*boneMatrix;
+                
+                frames[boneIndex] = KeyFrame(vec3(1.0f, 1.0f, 1.0f),
+                                             frame,
+                                             quatmatrix(transformation),
+                                             transformation.getTranslation());
+            }
+            else
+            {
+                std::cerr << "Warning: animation data for node or bone '" << nodeAnim->mNodeName.data << "' cannot be updated!" << std::endl;
+            }
+        }
+        
+        //Advance to next frame.
+        frames += skeleton.bones.size();
+    }
+    
+#ifndef NDEBUG
+    std::cerr << "Added animation '" << animation->name << "' with " << nrFrames << " frames." << std::endl;
+#endif
+}
+
 void copyAiAnimations(const aiScene *scene, Skeleton &skeleton)
 {
     //Create map from bone names to their indices.
@@ -197,71 +321,7 @@ void copyAiAnimations(const aiScene *scene, Skeleton &skeleton)
     
     for (unsigned int i = 0; i < skeleton.animations.size(); ++i)
     {
-        const aiAnimation *animation = scene->mAnimations[i];
-        unsigned int nrFrames = 0;
-        
-        skeleton.animations[i].name = std::string(animation->mName.data);
-        
-        if (animation->mNumChannels != skeleton.bones.size())
-        {
-            std::cerr << "Warning: animation '" << animation->mName.data << "' has an invalid number of channels (" << animation->mNumChannels << " for " << skeleton.bones.size() << " bones)!" << std::endl;
-        }
-        
-        for (unsigned int j = 0; j < animation->mNumChannels; ++j)
-        {
-            const aiNodeAnim *nodeAnim = animation->mChannels[j];
-            
-            if (boneNameToIndex.find(nodeAnim->mNodeName.data) != boneNameToIndex.end())
-            {
-                //Update total number of frames for this animation.
-                const unsigned int boneIndex = boneNameToIndex[nodeAnim->mNodeName.data];
-                const unsigned int newNrFrames = std::max(std::max(nodeAnim->mNumPositionKeys, nodeAnim->mNumRotationKeys), nodeAnim->mNumScalingKeys);
-                const mat4 boneMatrix = skeleton.bones[boneIndex].meshToBone;
-                
-                assert(boneIndex < skeleton.bones.size());
-                
-                if (newNrFrames > nrFrames)
-                {
-                    nrFrames = newNrFrames;
-                    skeleton.animations[i].frames.resize(nrFrames*skeleton.bones.size());
-                }
-                
-                //Copy frame data.
-                KeyFrame *frames = &skeleton.animations[i].frames[boneIndex];
-                
-                for (unsigned int k = 0; k < nrFrames; ++k)
-                {
-                    aiVector3D ai_scale(1.0f, 1.0f, 1.0f);
-                    aiQuaternion ai_rotate(0.0f, 0.0f, 0.0f, 1.0f);
-                    aiVector3D ai_translate(0.0f, 0.0f, 0.0f);
-                    
-                    if (k < nodeAnim->mNumPositionKeys) ai_translate = nodeAnim->mPositionKeys[k].mValue;
-                    else if (nodeAnim->mNumPositionKeys > 0) ai_translate = nodeAnim->mPositionKeys[nodeAnim->mNumPositionKeys - 1].mValue;
-                    if (k < nodeAnim->mNumRotationKeys) ai_rotate = nodeAnim->mRotationKeys[k].mValue;
-                    else if (nodeAnim->mNumRotationKeys > 0) ai_rotate = nodeAnim->mRotationKeys[nodeAnim->mNumRotationKeys - 1].mValue;
-                    if (k < nodeAnim->mNumScalingKeys) ai_scale = nodeAnim->mScalingKeys[k].mValue;
-                    else if (nodeAnim->mNumScalingKeys > 0) ai_scale = nodeAnim->mScalingKeys[nodeAnim->mNumScalingKeys - 1].mValue;
-                    
-                    const vec3 scale(ai_scale.x, ai_scale.y, ai_scale.z);
-                    const vec4 rotate(normalize(vec4(ai_rotate.x, ai_rotate.y, ai_rotate.z, ai_rotate.w)));
-                    const vec3 translate(ai_translate.x, ai_translate.y, ai_translate.z);
-                    
-                    const mat4 transformation = boneMatrix.inverted()*mat4(rotate, translate)*boneMatrix;
-                    
-                    frames[k*skeleton.bones.size()] = KeyFrame(scale, k, quatmatrix(transformation), transformation.getTranslation());
-                }
-            }
-#ifndef NDEBUG
-            else
-            {
-                std::cerr << "Warning: the channel for bone '" << nodeAnim->mNodeName.data << "' in animation '" << animation->mName.data << "' cannot be mapped to the skeleton!" << std::endl;
-            }
-#endif
-        }
-        
-#ifndef NDEBUG
-        std::cerr << "Added animation '" << animation->mName.data << "' with " << nrFrames << " frames." << std::endl;
-#endif
+        copyAiAnimation(scene, i, boneNameToIndex, nodeNameToMatrix, skeleton);
     }
 }
 
