@@ -122,9 +122,9 @@ std::string AnimatedMesh::getVertexShaderCode() const
 "   normalize(rotate);\n"
 "   \n"
 "   f_tex = v_textureCoordinate;\n"
-"   f_worldTangent = normalize(qtransform(rotate, scaleAndTime.xyz*v_tangent));\n"
-"   f_worldNormal = normalize(qtransform(rotate, scaleAndTime.xyz*v_normal));\n"
-"   f_worldPosition = qtransform(rotate, scaleAndTime.xyz*v_position) + translate.xyz;\n"
+"   f_worldTangent = normalize(qtransform(rotate, v_tangent));\n"
+"   f_worldNormal = normalize(qtransform(rotate, v_normal));\n"
+"   f_worldPosition = qtransform(rotate, v_position) + translate.xyz;\n"
 "   gl_Position = worldToScreen*vec4(f_worldPosition, 1.0f);\n"
 "   f_cameraDepth = gl_Position.z;\n"
 "}\n\0";

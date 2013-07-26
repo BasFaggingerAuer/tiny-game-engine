@@ -303,6 +303,11 @@ class mat4
             return *this;
         };
         
+        inline vec3 getTranslation() const
+        {
+            return vec3(v03, v13, v23);
+        };
+        
         static mat4 identityMatrix()
         {
             return mat4(1.0, 0.0, 0.0, 0.0,

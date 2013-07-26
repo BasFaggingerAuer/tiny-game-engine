@@ -230,7 +230,11 @@ AnimatedMesh tiny::mesh::io::readAnimatedMesh(const std::string &fileName, const
                 if (boneNameToIndex.find(nodeAnim->mNodeName.data) != boneNameToIndex.end())
                 {
                     //Update total number of frames for this animation.
+                    const unsigned int boneIndex = boneNameToIndex[nodeAnim->mNodeName.data];
                     const unsigned int newNrFrames = std::max(std::max(nodeAnim->mNumPositionKeys, nodeAnim->mNumRotationKeys), nodeAnim->mNumScalingKeys);
+                    const mat4 boneMatrix = mesh.skeleton.bones[boneIndex].meshToBone;
+                    
+                    assert(boneIndex < mesh.skeleton.bones.size());
                     
                     if (newNrFrames > nrFrames)
                     {
@@ -239,7 +243,7 @@ AnimatedMesh tiny::mesh::io::readAnimatedMesh(const std::string &fileName, const
                     }
                     
                     //Copy frame data.
-                    KeyFrame *frames = &mesh.skeleton.animations[i].frames[boneNameToIndex[nodeAnim->mNodeName.data]];
+                    KeyFrame *frames = &mesh.skeleton.animations[i].frames[boneIndex];
                     
                     for (unsigned int k = 0; k < nrFrames; ++k)
                     {
@@ -254,12 +258,13 @@ AnimatedMesh tiny::mesh::io::readAnimatedMesh(const std::string &fileName, const
                         if (k < nodeAnim->mNumScalingKeys) ai_scale = nodeAnim->mScalingKeys[k].mValue;
                         else if (nodeAnim->mNumScalingKeys > 0) ai_scale = nodeAnim->mScalingKeys[nodeAnim->mNumScalingKeys - 1].mValue;
                         
-                        /*
-                        frames[k*mesh.skeleton.bones.size()] = KeyFrame(vec3(scale.x, scale.y, scale.z),
-                                                                        k,
-                                                                        vec4(rotate.x, rotate.y, rotate.z, rotate.w),
-                                                                        vec4(translate.x, translate.y, translate.z, 0.0f));
-                        */
+                        const vec3 scale(ai_scale.x, ai_scale.y, ai_scale.z);
+                        const vec4 rotate(normalize(vec4(ai_rotate.x, ai_rotate.y, ai_rotate.z, ai_rotate.w)));
+                        const vec3 translate(ai_translate.x, ai_translate.y, ai_translate.z);
+                        
+                        const mat4 transformation = boneMatrix.inverted()*mat4(rotate, translate)*boneMatrix;
+                        
+                        frames[k*mesh.skeleton.bones.size()] = KeyFrame(scale, k, quatmatrix(transformation), transformation.getTranslation());
                     }
                 }
 #ifndef NDEBUG
