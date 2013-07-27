@@ -50,13 +50,9 @@ void copyAiMeshBones(const aiMesh *sourceMesh, AnimatedMesh &mesh)
     for (unsigned int i = 0; i < mesh.skeleton.bones.size(); ++i)
     {
         const aiBone *sourceBone = sourceMesh->mBones[i];
-        const aiMatrix4x4 m = sourceBone->mOffsetMatrix;
         
         mesh.skeleton.bones[i] = Bone(std::string(sourceBone->mName.data),
-                                      mat4(m.a1, m.a2, m.a3, m.a4,
-                                           m.b1, m.b2, m.b3, m.b4,
-                                           m.c1, m.c2, m.c3, m.c4,
-                                           m.d1, m.d2, m.d3, m.d4));
+                                      aiMatrixToMat4(sourceBone->mOffsetMatrix));
         
         //Retrieve weights for vertices affected by this bone.
         for (unsigned int j = 0; j < sourceBone->mNumWeights; ++j)
@@ -144,7 +140,7 @@ void copyAiMeshBones(const aiMesh *sourceMesh, AnimatedMesh &mesh)
 #endif
 }
 
-void setAiNodePointers(aiNode *node, std::map<std::string, aiNode *> &nodeNameToPointer)
+void setAiNodePointers(const aiNode *node, std::map<std::string, const aiNode *> &nodeNameToPointer)
 {
     //Does the node name already exist?
     if (!nodeNameToPointer.insert(std::make_pair(node->mName.data, node)).second)
@@ -189,6 +185,7 @@ size_t getAiNrAnimationFrames(const aiAnimation *animation)
 
 void copyAiAnimation(const aiScene *scene, const unsigned int &animationIndex,
     std::map<std::string, unsigned int> &boneNameToIndex,
+    std::map<std::string, const aiNode *> &nodeNameToPointer,
     std::map<std::string, mat4> &nodeNameToMatrix,
     Skeleton &skeleton)
 {
@@ -209,10 +206,11 @@ void copyAiAnimation(const aiScene *scene, const unsigned int &animationIndex,
     
     for (size_t frame = 0; frame < nrFrames; ++frame)
     {
-        //For this frame, first reset all transformations to the identity.
+        //For this frame, first reset all transformations to their originals.
         for (std::map<std::string, mat4>::iterator i = nodeNameToMatrix.begin(); i != nodeNameToMatrix.end(); ++i)
         {
-            i->second = mat4::identityMatrix();
+            assert(nodeNameToPointer[i->first]);
+            i->second = aiMatrixToMat4(nodeNameToPointer[i->first]->mTransformation);
         }
         
         //Then, retrieve all transformations that are stored in the animation data for the corresponding nodes.
@@ -221,26 +219,26 @@ void copyAiAnimation(const aiScene *scene, const unsigned int &animationIndex,
             const aiNodeAnim *nodeAnim = sourceAnimation->mChannels[i];
             
             //Get data for this frame.
-            //TODO: Take care of scaling.
-            //aiVector3D ai_scale(1.0f, 1.0f, 1.0f);
+            aiVector3D ai_scale(1.0f, 1.0f, 1.0f);
             aiQuaternion ai_rotate(0.0f, 0.0f, 0.0f, 1.0f);
             aiVector3D ai_translate(0.0f, 0.0f, 0.0f);
             
-            //if (frame < nodeAnim->mNumScalingKeys) ai_scale = nodeAnim->mScalingKeys[frame].mValue;
-            //else if (nodeAnim->mNumScalingKeys > 0) ai_scale = nodeAnim->mScalingKeys[nodeAnim->mNumScalingKeys - 1].mValue;
+            if (frame < nodeAnim->mNumScalingKeys) ai_scale = nodeAnim->mScalingKeys[frame].mValue;
+            else if (nodeAnim->mNumScalingKeys > 0) ai_scale = nodeAnim->mScalingKeys[nodeAnim->mNumScalingKeys - 1].mValue;
             if (frame < nodeAnim->mNumRotationKeys) ai_rotate = nodeAnim->mRotationKeys[frame].mValue;
             else if (nodeAnim->mNumRotationKeys > 0) ai_rotate = nodeAnim->mRotationKeys[nodeAnim->mNumRotationKeys - 1].mValue;
             if (frame < nodeAnim->mNumPositionKeys) ai_translate = nodeAnim->mPositionKeys[frame].mValue;
             else if (nodeAnim->mNumPositionKeys > 0) ai_translate = nodeAnim->mPositionKeys[nodeAnim->mNumPositionKeys - 1].mValue;
             
             //Create transformation matrix.
-            //const vec3 scale(ai_scale.x, ai_scale.y, ai_scale.z);
+            const vec3 scale(ai_scale.x, ai_scale.y, ai_scale.z);
             const vec4 rotate(normalize(vec4(ai_rotate.x, ai_rotate.y, ai_rotate.z, ai_rotate.w)));
             const vec3 translate(ai_translate.x, ai_translate.y, ai_translate.z);
             
             if (nodeNameToMatrix.find(nodeAnim->mNodeName.data) != nodeNameToMatrix.end())
             {
-                nodeNameToMatrix[nodeAnim->mNodeName.data] = mat4(rotate, translate);
+                //nodeNameToMatrix[nodeAnim->mNodeName.data] = mat4(rotate, translate);
+                nodeNameToMatrix[nodeAnim->mNodeName.data] = mat4::translationMatrix(translate)*mat4::rotationMatrix(rotate)*mat4::scaleMatrix(scale);
             }
             else
             {
@@ -266,7 +264,7 @@ void copyAiAnimation(const aiScene *scene, const unsigned int &animationIndex,
                 
                 frames[boneIndex] = KeyFrame(vec3(1.0f, 1.0f, 1.0f),
                                              frame,
-                                             quatmatrix(transformation),
+                                             transformation.getRotation(),
                                              transformation.getTranslation());
             }
             else
@@ -280,7 +278,7 @@ void copyAiAnimation(const aiScene *scene, const unsigned int &animationIndex,
     }
     
 #ifndef NDEBUG
-    std::cerr << "Added animation '" << animation->name << "' with " << nrFrames << " frames." << std::endl;
+    std::cerr << "Added animation '" << animation->name << "' with " << nrFrames << " frames, resulting in " << animation->frames.size() << " keyframes." << std::endl;
 #endif
 }
 
@@ -301,14 +299,14 @@ void copyAiAnimations(const aiScene *scene, Skeleton &skeleton)
     assert(boneNameToIndex.size() == skeleton.bones.size());
     
     //Create map from node names to their pointers.
-    std::map<std::string, aiNode *> nodeNameToPointer;
+    std::map<std::string, const aiNode *> nodeNameToPointer;
     
     detail::setAiNodePointers(scene->mRootNode, nodeNameToPointer);
     
     //We need to keep track of all transformation matrices.
     std::map<std::string, mat4> nodeNameToMatrix;
     
-    for (std::map<std::string, aiNode *>::const_iterator i = nodeNameToPointer.begin(); i != nodeNameToPointer.end(); ++i)
+    for (std::map<std::string, const aiNode *>::const_iterator i = nodeNameToPointer.begin(); i != nodeNameToPointer.end(); ++i)
     {
         nodeNameToMatrix.insert(std::make_pair(i->first, mat4::identityMatrix()));
     }
@@ -318,7 +316,7 @@ void copyAiAnimations(const aiScene *scene, Skeleton &skeleton)
     
     for (unsigned int i = 0; i < skeleton.animations.size(); ++i)
     {
-        copyAiAnimation(scene, i, boneNameToIndex, nodeNameToMatrix, skeleton);
+        copyAiAnimation(scene, i, boneNameToIndex, nodeNameToPointer, nodeNameToMatrix, skeleton);
     }
 }
 

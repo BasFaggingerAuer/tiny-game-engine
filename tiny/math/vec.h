@@ -151,9 +151,9 @@ template <typename t> t length2(const typed2vector<t> &a) {return dot(a, a);}
 template <typename t> t length2(const typed3vector<t> &a) {return dot(a, a);}
 template <typename t> t length2(const typed4vector<t> &a) {return dot(a, a);}
 
-template <typename t> typed2vector<t> normalize(const typed2vector<t> &a) {t l = dot(a, a); l = (l > 1.0e-8 ? 1/sqrt(l) : 1); return typed2vector<t>(a.x*l, a.y*l);}
-template <typename t> typed3vector<t> normalize(const typed3vector<t> &a) {t l = dot(a, a); l = (l > 1.0e-8 ? 1/sqrt(l) : 1); return typed3vector<t>(a.x*l, a.y*l, a.z*l);}
-template <typename t> typed4vector<t> normalize(const typed4vector<t> &a) {t l = dot(a, a); l = (l > 1.0e-8 ? 1/sqrt(l) : 1); return typed4vector<t>(a.x*l, a.y*l, a.z*l, a.w*l);}
+template <typename t> typed2vector<t> normalize(const typed2vector<t> &a) {t l = dot(a, a); l = (l > 1.0e-8 ? 1.0/sqrt(l) : 1.0); return typed2vector<t>(a.x*l, a.y*l);}
+template <typename t> typed3vector<t> normalize(const typed3vector<t> &a) {t l = dot(a, a); l = (l > 1.0e-8 ? 1.0/sqrt(l) : 1.0); return typed3vector<t>(a.x*l, a.y*l, a.z*l);}
+template <typename t> typed4vector<t> normalize(const typed4vector<t> &a) {t l = dot(a, a); l = (l > 1.0e-8 ? 1.0/sqrt(l) : 1.0); return typed4vector<t>(a.x*l, a.y*l, a.z*l, a.w*l);}
 
 typedef typed2vector<int> ivec2;
 typedef typed2vector<float> vec2;
@@ -316,12 +316,83 @@ class mat4
             return vec3(v03, v13, v23);
         };
         
+        inline vec4 getRotation() const
+        {
+            //From http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/index.htm.
+            const float t = v00 + v11 + v22;
+            vec4 q;
+            
+            if (t > 0.0f)
+            {
+                const float s = 0.5f/sqrtf(1.0f + t);
+                
+                q = vec4((v21 - v12)*s, (v02 - v20)*s, (v10 - v01)*s, 0.25f/s);
+            }
+            else
+            {
+                if (v00 > v11 && v00 > v22)
+                {
+                    const float s = 0.5f/sqrtf(1.0f + v00 - v11 - v22);
+                    
+                    q = vec4(0.25f/s, (v01 + v10)*s, (v02 + v20)*s, (v21 - v12)*s);
+                }
+                else if (v11 > v22)
+                {
+                    const float s = 0.5f/sqrtf(1.0f + v11 - v00 - v22);
+                    
+                    q = vec4((v01 + v10)*s, 0.25f/s, (v12 + v21)*s, (v02 - v20)*s);
+                }
+                else
+                {
+                    const float s = 0.5f/sqrtf(1.0f + v22 - v00 - v11);
+                    
+                    q = vec4((v02 + v20)*s, (v12 + v21)*s, 0.25f/s, (v10 - v01)*s);
+                }
+            }
+            
+            return normalize(q);
+        };
+        
         static mat4 identityMatrix()
         {
             return mat4(1.0, 0.0, 0.0, 0.0,
                         0.0, 1.0, 0.0, 0.0,
                         0.0, 0.0, 1.0, 0.0,
                         0.0, 0.0, 0.0, 1.0);
+        };
+        
+        static mat4 translationMatrix(const vec3 &a)
+        {
+            return mat4(1.0f, 0.0f, 0.0f, 0.0f,
+                        0.0f, 1.0f, 0.0f, 0.0f,
+                        0.0f, 0.0f, 1.0f, 0.0f,
+                        a.x, a.y, a.z, 1.0f);
+        };
+        
+        static mat4 scaleMatrix(const vec3 &a)
+        {
+            return mat4(a.x, 0.0, 0.0, 0.0,
+                        0.0, a.y, 0.0, 0.0,
+                        0.0, 0.0, a.z, 0.0,
+                        0.0, 0.0, 0.0, 1.0);
+        };
+        
+        static mat4 rotationMatrix(const vec4 &a)
+        {
+            return mat4(
+                1.0f - 2.0f*(a.y*a.y + a.z*a.z),
+                2.0f*(a.x*a.y - a.w*a.z),
+                2.0f*(a.x*a.z + a.w*a.y),
+                0.0f,
+                2.0f*(a.x*a.y + a.w*a.z),
+                1.0f - 2.0f*(a.x*a.x + a.z*a.z),
+                2.0f*(a.y*a.z - a.w*a.x),
+                0.0f,
+                2.0f*(a.x*a.z - a.w*a.y),
+                2.0f*(a.y*a.z + a.w*a.x),
+                1.0f - 2.0f*(a.x*a.x + a.y*a.y),
+                0.0f,
+                0.0f, 0.0f, 0.0f, 1.0f);
         };
         
         static mat4 frustumMatrix(const vec3 &a, const vec3 &b)
@@ -359,9 +430,7 @@ inline mat4 & operator * (mat4 a, const mat4 &b) {return a *= b;}
 
 vec4 quatmul(const vec4 &, const vec4 &);
 vec4 quatconj(const vec4 &);
-void quatnormalize(vec4 &);
 vec4 quatrot(const float &, const vec3 &);
-vec4 quatmatrix(const mat4 &);
 
 vec2 randomVec2(const float & = 1.0f);
 vec3 randomVec3(const float & = 1.0f);

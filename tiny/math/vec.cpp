@@ -34,55 +34,11 @@ vec4 tiny::quatconj(const vec4 &a)
     return vec4(-a.x, -a.y, -a.z, a.w);
 }
 
-void tiny::quatnormalize(vec4 &a)
-{
-    const float l = 1.0/sqrt(a.x*a.x + a.y*a.y + a.z*a.z + a.w*a.w);
-    
-    a.x *= l; a.y *= l; a.z *= l; a.w *= l;
-}
-
 vec4 tiny::quatrot(const float &alpha, const vec3 &a)
 {
     const float s = sin(0.5*alpha);
     
     return vec4(s*a.x, s*a.y, s*a.z, cos(0.5*alpha));
-}
-
-vec4 tiny::quatmatrix(const mat4 &a)
-{
-    //From http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/index.htm.
-    const float t = a.v00 + a.v11 + a.v22;
-    vec4 q;
-    
-    if (t > 0.0f)
-    {
-        const float s = 0.5f/sqrtf(1.0f + t);
-        
-        q = vec4((a.v21 - a.v12)*s, (a.v02 - a.v20)*s, (a.v10 - a.v01)*s, 0.25f/s);
-    }
-    else
-    {
-        if (a.v00 > a.v11 && a.v00 > a.v22)
-        {
-            const float s = 0.5f/sqrtf(1.0f + a.v00 - a.v11 - a.v22);
-            
-            q = vec4(0.25f/s, (a.v01 + a.v10)*s, (a.v02 + a.v20)*s, (a.v21 - a.v12)*s);
-        }
-        else if (a.v11 > a.v22)
-        {
-            const float s = 0.5f/sqrtf(1.0f + a.v11 - a.v00 - a.v22);
-            
-            q = vec4((a.v01 + a.v10)*s, 0.25f/s, (a.v12 + a.v21)*s, (a.v02 - a.v20)*s);
-        }
-        else
-        {
-            const float s = 0.5f/sqrtf(1.0f + a.v22 - a.v00 - a.v11);
-            
-            q = vec4((a.v02 + a.v20)*s, (a.v12 + a.v21)*s, 0.25f/s, (a.v10 - a.v01)*s);
-        }
-    }
-    
-    return normalize(q);
 }
 
 vec2 tiny::randomVec2(const float &s)

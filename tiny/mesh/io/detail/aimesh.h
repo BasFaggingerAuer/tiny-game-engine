@@ -26,6 +26,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <assimp/Importer.hpp>
 #include <assimp/DefaultLogger.hpp>
 
+#include <tiny/math/vec.h>
+
 using namespace tiny;
 using namespace tiny::mesh;
 
@@ -40,6 +42,14 @@ namespace io
 
 namespace detail
 {
+
+mat4 aiMatrixToMat4(const aiMatrix4x4 &m)
+{
+    return mat4(m.a1, m.a2, m.a3, m.a4,
+                m.b1, m.b2, m.b3, m.b4,
+                m.c1, m.c2, m.c3, m.c4,
+                m.d1, m.d2, m.d3, m.d4);
+}
 
 const aiMesh *getAiMesh(const aiScene *scene, const std::string &meshName)
 {
