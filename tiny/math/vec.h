@@ -282,7 +282,15 @@ class mat4
             v[14] = v23;
             v[15] = v33;
         };
-
+        
+        inline mat4 transposed() const
+        {
+            return mat4(v00, v01, v02, v03,
+                        v10, v11, v12, v13,
+                        v20, v21, v22, v23,
+                        v30, v31, v32, v33);
+        };
+        
         inline mat4 inverted() const
         {
             return mat4(v00, v01, v02, 0.0f,

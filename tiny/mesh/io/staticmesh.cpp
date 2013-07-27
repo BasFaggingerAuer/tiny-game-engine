@@ -20,10 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 #include <cassert>
 
-#include <assimp/aiScene.h>
-#include <assimp/assimp.hpp>
-#include <assimp/aiPostProcess.h>
-
 #include <tiny/math/vec.h>
 #include <tiny/mesh/io/staticmesh.h>
 #include <tiny/mesh/io/detail/aimesh.h>
@@ -39,7 +35,7 @@ StaticMesh tiny::mesh::io::readStaticMesh(const std::string &fileName, const std
     
     if (!scene)
     {
-        std::cerr << "Unable to read '" << fileName << "' from disk!" << std::endl;
+        std::cerr << "Unable to read '" << fileName << "' from disk:" << importer.GetErrorString() << "!" << std::endl;
         throw std::exception();
     }
     

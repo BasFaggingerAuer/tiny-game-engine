@@ -21,10 +21,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <map>
 #include <cassert>
 
-#include <assimp/aiScene.h>
-#include <assimp/assimp.hpp>
-#include <assimp/aiPostProcess.h>
-
 #include <tiny/math/vec.h>
 #include <tiny/mesh/io/animatedmesh.h>
 #include <tiny/mesh/io/detail/aimesh.h>
@@ -53,20 +49,20 @@ void copyAiMeshBones(const aiMesh *sourceMesh, AnimatedMesh &mesh)
     
     for (unsigned int i = 0; i < mesh.skeleton.bones.size(); ++i)
     {
-        const aiBone *bone = sourceMesh->mBones[i];
-        const aiMatrix4x4 m = bone->mOffsetMatrix;
+        const aiBone *sourceBone = sourceMesh->mBones[i];
+        const aiMatrix4x4 m = sourceBone->mOffsetMatrix;
         
-        mesh.skeleton.bones[i] = Bone(std::string(bone->mName.data),
+        mesh.skeleton.bones[i] = Bone(std::string(sourceBone->mName.data),
                                       mat4(m.a1, m.a2, m.a3, m.a4,
                                            m.b1, m.b2, m.b3, m.b4,
                                            m.c1, m.c2, m.c3, m.c4,
                                            m.d1, m.d2, m.d3, m.d4));
         
         //Retrieve weights for vertices affected by this bone.
-        for (unsigned int j = 0; j < bone->mNumWeights; ++j)
+        for (unsigned int j = 0; j < sourceBone->mNumWeights; ++j)
         {
-            const unsigned int id = bone->mWeights[j].mVertexId;
-            const float weight = bone->mWeights[j].mWeight;
+            const unsigned int id = sourceBone->mWeights[j].mVertexId;
+            const float weight = sourceBone->mWeights[j].mWeight;
             
             if (id >= mesh.vertices.size() || weight < 0.0f || weight > 1.0f)
             {
@@ -136,10 +132,10 @@ void copyAiMeshBones(const aiMesh *sourceMesh, AnimatedMesh &mesh)
             mesh.vertices[i].weights /= weightSum;
         }
         
-        if (v.bones.x < 0 || v.bones.x >= nrBones ||
-            v.bones.y < 0 || v.bones.y >= nrBones ||
-            v.bones.z < 0 || v.bones.z >= nrBones ||
-            v.bones.w < 0 || v.bones.w >= nrBones)
+        if ((v.bones.x < 0 || v.bones.x >= nrBones ||
+             v.bones.y < 0 || v.bones.y >= nrBones ||
+             v.bones.z < 0 || v.bones.z >= nrBones ||
+             v.bones.w < 0 || v.bones.w >= nrBones) && nrBones > 0)
         {
             std::cerr << "Invalid bone indices " << v.bones << "!" << std::endl;
             throw std::exception();
@@ -265,6 +261,7 @@ void copyAiAnimation(const aiScene *scene, const unsigned int &animationIndex,
             {
                 const unsigned int boneIndex = boneNameToIndex[nodeAnim->mNodeName.data];
                 const mat4 boneMatrix = skeleton.bones[boneIndex].meshToBone;
+                //const mat4 transformation = mat4::identityMatrix();
                 const mat4 transformation = nodeNameToMatrix[nodeAnim->mNodeName.data]*boneMatrix;
                 
                 frames[boneIndex] = KeyFrame(vec3(1.0f, 1.0f, 1.0f),
@@ -341,7 +338,7 @@ AnimatedMesh tiny::mesh::io::readAnimatedMesh(const std::string &fileName, const
     
     if (!scene)
     {
-        std::cerr << "Unable to read '" << fileName << "' from disk!" << std::endl;
+        std::cerr << "Unable to read '" << fileName << "' from disk:" << importer.GetErrorString() << "!" << std::endl;
         throw std::exception();
     }
     

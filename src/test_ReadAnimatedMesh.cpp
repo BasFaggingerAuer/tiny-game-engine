@@ -30,7 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/mesh/io/animatedmesh.h>
 
 #include <tiny/draw/animatedmesh.h>
-#include <tiny/draw/effects/lambert.h>
+#include <tiny/draw/effects/diffuse.h>
 #include <tiny/draw/worldrenderer.h>
 
 using namespace std;
@@ -50,22 +50,45 @@ draw::Renderable *screenEffect = 0;
 vec3 cameraPosition = vec3(0.0f, 0.0f, 3.0f);
 vec4 cameraOrientation = vec4(0.0f, 0.0f, 0.0f, 1.0f);
 
-void setup()
+double globalTime = 0.0;
+
+void setup(const std::string &fileName)
 {
     //Create a test mesh and paint it with a texture.
-    mesh::AnimatedMesh animatedMesh = mesh::io::readAnimatedMesh(DATA_DIRECTORY + "mesh/f_walk_01.dae");
+    mesh::AnimatedMesh animatedMesh = mesh::io::readAnimatedMesh(fileName);
+    
+    //Create simple dummy animation if none exist.
+    if (animatedMesh.skeleton.animations.empty())
+    {
+        const size_t nrBones = animatedMesh.skeleton.bones.size();
+        const size_t nrFrames = 32;
+        mesh::Animation animation;
+        
+        animation.name = "Dummy";
+        animation.frames.assign(nrFrames*nrBones, mesh::KeyFrame());
+        
+        for (size_t i = 0; i < nrFrames; ++i)
+        {
+            for (size_t j = 0; j < nrBones; ++j)
+            {
+                animation.frames[nrBones*i + j] = mesh::KeyFrame(vec3(1.0f, 1.0f, 1.0f), i, quatrot(6.3f*static_cast<float>(i)/static_cast<float>(nrFrames), vec3(0.0f, 1.0f, 0.0f)), vec3(0.0f, 0.0f, 0.1f*sin(i)));
+            }
+        }
+        
+        animatedMesh.skeleton.animations.push_back(animation);
+    }
     
     testMesh = new draw::AnimatedMesh(animatedMesh);
     testAnimations = new draw::AnimationTextureBuffer();
     testAnimations->setAnimations(animatedMesh.skeleton.animations.begin(), animatedMesh.skeleton.animations.end());
-    testDiffuseTexture = new draw::RGBTexture2D(img::io::readImage(DATA_DIRECTORY + "img/tree0_trunk.png"));
-    testNormalTexture = new draw::RGBTexture2D(img::io::readImage(DATA_DIRECTORY + "img/tree0_trunk_normal.png"));
+    testDiffuseTexture = new draw::RGBTexture2D(img::Image::createTestImage(64));
+    testNormalTexture = new draw::RGBTexture2D(img::Image::createUpNormalImage());
     testMesh->setAnimationTexture(*testAnimations);
     testMesh->setDiffuseTexture(*testDiffuseTexture);
     testMesh->setNormalTexture(*testNormalTexture);
     
     //Render only diffuse colours to the screen.
-    screenEffect = new draw::effects::Lambert();
+    screenEffect = new draw::effects::Diffuse();
     
     //Create a renderer and add the test and the diffuse rendering effect to it.
     worldRenderer = new draw::WorldRenderer(application->getScreenWidth(), application->getScreenHeight());
@@ -90,6 +113,9 @@ void update(const double &dt)
     //Move the camera around.
     application->updateSimpleCamera(dt, cameraPosition, cameraOrientation);
     
+    globalTime += dt;
+    testMesh->setAnimationFrame(floor(globalTime));
+    
     //Tell the world renderer that the camera has changed.
     worldRenderer->setCamera(cameraPosition, cameraOrientation);
 }
@@ -100,12 +126,12 @@ void render()
     worldRenderer->render();
 }
 
-int main(int, char **)
+int main(int argc, char **argv)
 {
     try
     {
         application = new os::SDLApplication(SCREEN_WIDTH, SCREEN_HEIGHT);
-        setup();
+        setup(argc > 1 ? argv[1] : DATA_DIRECTORY + "mesh/cubes.dae");
     }
     catch (std::exception &e)
     {

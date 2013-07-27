@@ -21,9 +21,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <vector>
 
-#include <assimp/aiScene.h>
-#include <assimp/assimp.hpp>
-#include <assimp/aiPostProcess.h>
+#include <assimp/scene.h>
+#include <assimp/postprocess.h>
+#include <assimp/Importer.hpp>
+#include <assimp/DefaultLogger.hpp>
 
 using namespace tiny;
 using namespace tiny::mesh;
@@ -71,7 +72,7 @@ const aiMesh *getAiMesh(const aiScene *scene, const std::string &meshName)
         !sourceMesh->HasNormals() ||
         !sourceMesh->HasTextureCoords(0))
     {
-        std::cerr << "Mesh '" << meshName << "' in does not possess vertex/face/normal/texture/bone data!" << std::endl;
+        std::cerr << "Mesh '" << meshName << "' in does not possess vertex/face/normal/texture data!" << std::endl;
         throw std::exception();
     }
     

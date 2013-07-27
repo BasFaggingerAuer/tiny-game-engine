@@ -113,6 +113,8 @@ class AnimatedMesh : public Renderable
             uniformMap.setTexture(texture, "normalTexture");
         }
         
+        void setAnimationFrame(const int &);
+        
         std::string getVertexShaderCode() const;
         std::string getFragmentShaderCode() const;
         
@@ -122,6 +124,7 @@ class AnimatedMesh : public Renderable
     private:
         AnimatedMeshIndexBuffer indices;
         AnimatedMeshVertexBufferInterpreter vertices;
+        const int nrBones;
 };
 
 }

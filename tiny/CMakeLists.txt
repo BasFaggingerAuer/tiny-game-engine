@@ -1,5 +1,6 @@
 include_directories(${OPENGL_INCLUDE_DIR})
 include_directories(${GLEW_INCLUDE_DIR})
+include_directories(${ASSIMP_INCLUDE_DIR})
 include_directories(${SDL_INCLUDE_DIR})
 include_directories(${SDL_IMAGE_INCLUDE_DIR})
 include_directories(${SDL_TTF_INCLUDE_DIR})
