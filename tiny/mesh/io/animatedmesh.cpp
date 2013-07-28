@@ -155,9 +155,9 @@ void setAiNodePointers(const aiNode *node, std::map<std::string, const aiNode *>
     }
 }
 
-void updateAiNodeMatrices(aiNode *node, const mat4 &transformation, std::map<std::string, mat4> &nodeNameToMatrix)
+void updateAiNodeMatrices(aiNode *node, const aiMatrix4x4 &transformation, std::map<std::string, aiMatrix4x4> &nodeNameToMatrix)
 {
-    const mat4 newTransformation = transformation*nodeNameToMatrix[node->mName.data];
+    const aiMatrix4x4 newTransformation = transformation*nodeNameToMatrix[node->mName.data];
     
     nodeNameToMatrix[node->mName.data] = newTransformation;
     
@@ -183,10 +183,10 @@ size_t getAiNrAnimationFrames(const aiAnimation *animation)
     return nrFrames;
 }
 
-void copyAiAnimation(const aiScene *scene, const unsigned int &animationIndex,
+void copyAiAnimation(const aiScene *scene, const aiMesh *sourceMesh, const unsigned int &animationIndex,
     std::map<std::string, unsigned int> &boneNameToIndex,
     std::map<std::string, const aiNode *> &nodeNameToPointer,
-    std::map<std::string, mat4> &nodeNameToMatrix,
+    std::map<std::string, aiMatrix4x4> &nodeNameToMatrix,
     Skeleton &skeleton)
 {
     const aiAnimation *sourceAnimation = scene->mAnimations[animationIndex];
@@ -207,10 +207,10 @@ void copyAiAnimation(const aiScene *scene, const unsigned int &animationIndex,
     for (size_t frame = 0; frame < nrFrames; ++frame)
     {
         //For this frame, first reset all transformations to their originals.
-        for (std::map<std::string, mat4>::iterator i = nodeNameToMatrix.begin(); i != nodeNameToMatrix.end(); ++i)
+        for (std::map<std::string, aiMatrix4x4>::iterator i = nodeNameToMatrix.begin(); i != nodeNameToMatrix.end(); ++i)
         {
             assert(nodeNameToPointer[i->first]);
-            i->second = aiMatrixToMat4(nodeNameToPointer[i->first]->mTransformation);
+            i->second = nodeNameToPointer[i->first]->mTransformation;
         }
         
         //Then, retrieve all transformations that are stored in the animation data for the corresponding nodes.
@@ -219,35 +219,36 @@ void copyAiAnimation(const aiScene *scene, const unsigned int &animationIndex,
             const aiNodeAnim *nodeAnim = sourceAnimation->mChannels[i];
             
             //Get data for this frame.
-            aiVector3D ai_scale(1.0f, 1.0f, 1.0f);
-            aiQuaternion ai_rotate(0.0f, 0.0f, 0.0f, 1.0f);
-            aiVector3D ai_translate(0.0f, 0.0f, 0.0f);
+            aiVector3D scale(1.0f, 1.0f, 1.0f);
+            aiQuaternion rotate(1.0f, 0.0f, 0.0f, 0.0f);
+            aiVector3D translate(0.0f, 0.0f, 0.0f);
             
-            if (frame < nodeAnim->mNumScalingKeys) ai_scale = nodeAnim->mScalingKeys[frame].mValue;
-            else if (nodeAnim->mNumScalingKeys > 0) ai_scale = nodeAnim->mScalingKeys[nodeAnim->mNumScalingKeys - 1].mValue;
-            if (frame < nodeAnim->mNumRotationKeys) ai_rotate = nodeAnim->mRotationKeys[frame].mValue;
-            else if (nodeAnim->mNumRotationKeys > 0) ai_rotate = nodeAnim->mRotationKeys[nodeAnim->mNumRotationKeys - 1].mValue;
-            if (frame < nodeAnim->mNumPositionKeys) ai_translate = nodeAnim->mPositionKeys[frame].mValue;
-            else if (nodeAnim->mNumPositionKeys > 0) ai_translate = nodeAnim->mPositionKeys[nodeAnim->mNumPositionKeys - 1].mValue;
+            if (frame < nodeAnim->mNumScalingKeys) scale = nodeAnim->mScalingKeys[frame].mValue;
+            else if (nodeAnim->mNumScalingKeys > 0) scale = nodeAnim->mScalingKeys[nodeAnim->mNumScalingKeys - 1].mValue;
+            if (frame < nodeAnim->mNumRotationKeys) rotate = nodeAnim->mRotationKeys[frame].mValue;
+            else if (nodeAnim->mNumRotationKeys > 0) rotate = nodeAnim->mRotationKeys[nodeAnim->mNumRotationKeys - 1].mValue;
+            if (frame < nodeAnim->mNumPositionKeys) translate = nodeAnim->mPositionKeys[frame].mValue;
+            else if (nodeAnim->mNumPositionKeys > 0) translate = nodeAnim->mPositionKeys[nodeAnim->mNumPositionKeys - 1].mValue;
             
             //Create transformation matrix.
-            const vec3 scale(ai_scale.x, ai_scale.y, ai_scale.z);
-            const vec4 rotate(normalize(vec4(ai_rotate.x, ai_rotate.y, ai_rotate.z, ai_rotate.w)));
-            const vec3 translate(ai_translate.x, ai_translate.y, ai_translate.z);
-            
-            if (nodeNameToMatrix.find(nodeAnim->mNodeName.data) != nodeNameToMatrix.end())
-            {
-                //nodeNameToMatrix[nodeAnim->mNodeName.data] = mat4(rotate, translate);
-                nodeNameToMatrix[nodeAnim->mNodeName.data] = mat4::translationMatrix(translate)*mat4::rotationMatrix(rotate)*mat4::scaleMatrix(scale);
-            }
-            else
+            if (nodeNameToMatrix.find(nodeAnim->mNodeName.data) == nodeNameToMatrix.end())
             {
                 std::cerr << "Warning: animation data for node '" << nodeAnim->mNodeName.data << "' is not available!" << std::endl;
+                throw std::exception();
             }
+            
+            aiMatrix4x4 scaleMatrix;
+            aiMatrix4x4 rotationMatrix = aiMatrix4x4(rotate.GetMatrix());
+            aiMatrix4x4 translationMatrix;
+            
+            aiMatrix4x4::Scaling(scale, scaleMatrix);
+            aiMatrix4x4::Translation(scale, translationMatrix);
+            
+            nodeNameToMatrix[nodeAnim->mNodeName.data] = translationMatrix*rotationMatrix*scaleMatrix;
         }
         
         //Recursively update these transformations.
-        updateAiNodeMatrices(scene->mRootNode, mat4::identityMatrix(), nodeNameToMatrix);
+        updateAiNodeMatrices(scene->mRootNode, aiMatrix4x4(), nodeNameToMatrix);
 
         //Assign the updated transformations to the corresponding bones.
         for (size_t i = 0; i < sourceAnimation->mNumChannels; ++i)
@@ -258,14 +259,23 @@ void copyAiAnimation(const aiScene *scene, const unsigned int &animationIndex,
                 boneNameToIndex.find(nodeAnim->mNodeName.data) != boneNameToIndex.end())
             {
                 const unsigned int boneIndex = boneNameToIndex[nodeAnim->mNodeName.data];
-                const mat4 boneMatrix = skeleton.bones[boneIndex].meshToBone;
-                //const mat4 transformation = mat4::identityMatrix();
-                const mat4 transformation = nodeNameToMatrix[nodeAnim->mNodeName.data]*boneMatrix;
+                const aiMatrix4x4 boneMatrix = sourceMesh->mBones[boneIndex]->mOffsetMatrix;
+                const aiMatrix4x4 nodeMatrix = nodeNameToMatrix[nodeAnim->mNodeName.data];
+                const aiMatrix4x4 finalTransformation = nodeMatrix*boneMatrix;
                 
-                frames[boneIndex] = KeyFrame(vec3(1.0f, 1.0f, 1.0f),
+                assert(std::string(nodeAnim->mNodeName.data) == std::string(sourceMesh->mBones[boneIndex]->mName.data));
+                
+                aiVector3D scale(1.0f, 1.0f, 1.0f);
+                aiQuaternion rotate(1.0f, 0.0f, 0.0f, 0.0f);
+                aiVector3D translate(0.0f, 0.0f, 0.0f);
+                
+                finalTransformation.Decompose(scale, rotate, translate);
+                //finalTransformation.DecomposeNoScaling(rotate, translate);
+                
+                frames[boneIndex] = KeyFrame(vec3(scale.x, scale.y, scale.z),
                                              frame,
-                                             transformation.getRotation(),
-                                             transformation.getTranslation());
+                                             vec4(rotate.x, rotate.y, rotate.z, rotate.w),
+                                             vec3(translate.x, translate.y, translate.z));
             }
             else
             {
@@ -282,7 +292,7 @@ void copyAiAnimation(const aiScene *scene, const unsigned int &animationIndex,
 #endif
 }
 
-void copyAiAnimations(const aiScene *scene, Skeleton &skeleton)
+void copyAiAnimations(const aiScene *scene, const aiMesh *sourceMesh, Skeleton &skeleton)
 {
     //Create map from bone names to their indices.
     std::map<std::string, unsigned int> boneNameToIndex;
@@ -304,11 +314,11 @@ void copyAiAnimations(const aiScene *scene, Skeleton &skeleton)
     detail::setAiNodePointers(scene->mRootNode, nodeNameToPointer);
     
     //We need to keep track of all transformation matrices.
-    std::map<std::string, mat4> nodeNameToMatrix;
+    std::map<std::string, aiMatrix4x4> nodeNameToMatrix;
     
     for (std::map<std::string, const aiNode *>::const_iterator i = nodeNameToPointer.begin(); i != nodeNameToPointer.end(); ++i)
     {
-        nodeNameToMatrix.insert(std::make_pair(i->first, mat4::identityMatrix()));
+        nodeNameToMatrix.insert(std::make_pair(i->first, aiMatrix4x4()));
     }
     
     //Process all animations.
@@ -316,7 +326,7 @@ void copyAiAnimations(const aiScene *scene, Skeleton &skeleton)
     
     for (unsigned int i = 0; i < skeleton.animations.size(); ++i)
     {
-        copyAiAnimation(scene, i, boneNameToIndex, nodeNameToPointer, nodeNameToMatrix, skeleton);
+        copyAiAnimation(scene, sourceMesh, i, boneNameToIndex, nodeNameToPointer, nodeNameToMatrix, skeleton);
     }
 }
 
@@ -351,7 +361,7 @@ AnimatedMesh tiny::mesh::io::readAnimatedMesh(const std::string &fileName, const
     //Copy animations if available.
     if (scene->HasAnimations())
     {
-        detail::copyAiAnimations(scene, mesh.skeleton);
+        detail::copyAiAnimations(scene, sourceMesh, mesh.skeleton);
     }
     
     std::cerr << "Read mesh '" << meshName << "' with " << mesh.vertices.size() << " vertices, " << mesh.indices.size()/3 << " triangles, " << mesh.skeleton.bones.size() << " bones, and " << mesh.skeleton.animations.size() << " animations from '" << fileName << "'." << std::endl;

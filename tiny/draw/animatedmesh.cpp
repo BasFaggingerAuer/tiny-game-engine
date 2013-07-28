@@ -75,8 +75,10 @@ AnimatedMesh::~AnimatedMesh()
 
 void AnimatedMesh::setAnimationFrame(const int &a_frame)
 {
-    std::cout << "Setting animationFrame to " << 3*nrBones*a_frame << "..." << std::endl;
-    uniformMap.setIntUniform(3*nrBones*a_frame, "animationFrame");
+    const int newFrame = 3*nrBones*a_frame; //3*nrBones*a_frame;
+    
+    std::cout << "Setting animationFrame to " << newFrame << "..." << std::endl;
+    uniformMap.setIntUniform(newFrame, "animationFrame");
 }
 
 std::string AnimatedMesh::getVertexShaderCode() const
@@ -131,9 +133,9 @@ std::string AnimatedMesh::getVertexShaderCode() const
 "   normalize(rotate);\n"
 "   \n"
 "   f_tex = v_textureCoordinate;\n"
-"   f_worldTangent = qtransform(rotate, v_tangent);\n"
-"   f_worldNormal = qtransform(rotate, v_normal);\n"
-"   f_worldPosition = qtransform(rotate, v_position) + translate.xyz;\n"
+"   f_worldTangent = qtransform(rotate, scaleAndTime.xyz*v_tangent);\n"
+"   f_worldNormal = qtransform(rotate, scaleAndTime.xyz*v_normal);\n"
+"   f_worldPosition = qtransform(rotate, scaleAndTime.xyz*v_position) + translate.xyz;\n"
 "   gl_Position = worldToScreen*vec4(f_worldPosition, 1.0f);\n"
 "   f_cameraDepth = gl_Position.z;\n"
 "}\n\0";
