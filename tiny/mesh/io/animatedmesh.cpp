@@ -242,7 +242,7 @@ void copyAiAnimation(const aiScene *scene, const aiMesh *sourceMesh, const unsig
             aiMatrix4x4 translationMatrix;
             
             aiMatrix4x4::Scaling(scale, scaleMatrix);
-            aiMatrix4x4::Translation(scale, translationMatrix);
+            aiMatrix4x4::Translation(translate, translationMatrix);
             
             nodeNameToMatrix[nodeAnim->mNodeName.data] = translationMatrix*rotationMatrix*scaleMatrix;
         }
@@ -251,35 +251,25 @@ void copyAiAnimation(const aiScene *scene, const aiMesh *sourceMesh, const unsig
         updateAiNodeMatrices(scene->mRootNode, aiMatrix4x4(), nodeNameToMatrix);
 
         //Assign the updated transformations to the corresponding bones.
-        for (size_t i = 0; i < sourceAnimation->mNumChannels; ++i)
+        for (std::map<std::string, aiMatrix4x4>::const_iterator i = nodeNameToMatrix.begin(); i != nodeNameToMatrix.end(); ++i)
         {
-            const aiNodeAnim *nodeAnim = sourceAnimation->mChannels[i];
+            std::map<std::string, unsigned int>::const_iterator boneIterator = boneNameToIndex.find(i->first);
             
-            if (nodeNameToMatrix.find(nodeAnim->mNodeName.data) != nodeNameToMatrix.end() &&
-                boneNameToIndex.find(nodeAnim->mNodeName.data) != boneNameToIndex.end())
+            if (boneIterator != boneNameToIndex.end())
             {
-                const unsigned int boneIndex = boneNameToIndex[nodeAnim->mNodeName.data];
-                const aiMatrix4x4 boneMatrix = sourceMesh->mBones[boneIndex]->mOffsetMatrix;
-                const aiMatrix4x4 nodeMatrix = nodeNameToMatrix[nodeAnim->mNodeName.data];
-                const aiMatrix4x4 finalTransformation = nodeMatrix*boneMatrix;
-                
-                assert(std::string(nodeAnim->mNodeName.data) == std::string(sourceMesh->mBones[boneIndex]->mName.data));
+                const unsigned int boneIndex = boneIterator->second;
+                const aiMatrix4x4 finalTransformation = i->second*sourceMesh->mBones[boneIndex]->mOffsetMatrix;
                 
                 aiVector3D scale(1.0f, 1.0f, 1.0f);
                 aiQuaternion rotate(1.0f, 0.0f, 0.0f, 0.0f);
                 aiVector3D translate(0.0f, 0.0f, 0.0f);
                 
                 finalTransformation.Decompose(scale, rotate, translate);
-                //finalTransformation.DecomposeNoScaling(rotate, translate);
                 
                 frames[boneIndex] = KeyFrame(vec3(scale.x, scale.y, scale.z),
                                              frame,
                                              vec4(rotate.x, rotate.y, rotate.z, rotate.w),
                                              vec3(translate.x, translate.y, translate.z));
-            }
-            else
-            {
-                std::cerr << "Warning: animation data for node or bone '" << nodeAnim->mNodeName.data << "' cannot be updated!" << std::endl;
             }
         }
         

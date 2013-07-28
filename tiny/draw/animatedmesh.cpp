@@ -75,9 +75,8 @@ AnimatedMesh::~AnimatedMesh()
 
 void AnimatedMesh::setAnimationFrame(const int &a_frame)
 {
-    const int newFrame = 3*nrBones*a_frame; //3*nrBones*a_frame;
+    const int newFrame = 3*nrBones*a_frame;
     
-    std::cout << "Setting animationFrame to " << newFrame << "..." << std::endl;
     uniformMap.setIntUniform(newFrame, "animationFrame");
 }
 

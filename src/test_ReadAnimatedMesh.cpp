@@ -50,8 +50,6 @@ draw::Renderable *screenEffect = 0;
 vec3 cameraPosition = vec3(0.0f, 0.0f, 3.0f);
 vec4 cameraOrientation = vec4(0.0f, 0.0f, 0.0f, 1.0f);
 
-double globalTime = 0.0;
-
 void setup(const std::string &fileName)
 {
     //Create a test mesh and paint it with a texture.
@@ -113,8 +111,11 @@ void update(const double &dt)
     //Move the camera around.
     application->updateSimpleCamera(dt, cameraPosition, cameraOrientation);
     
-    globalTime += dt;
-    testMesh->setAnimationFrame(floor(globalTime));
+    //Let the user select a frame of the animation.
+    for (int i = 0; i < 8; ++i)
+    {
+        if (application->isKeyPressed('1' + i)) testMesh->setAnimationFrame(i);
+    }
     
     //Tell the world renderer that the camera has changed.
     worldRenderer->setCamera(cameraPosition, cameraOrientation);
