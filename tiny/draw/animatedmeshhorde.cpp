@@ -14,23 +14,24 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#include <tiny/draw/staticmeshhorde.h>
+#include <tiny/draw/animatedmeshhorde.h>
 
 using namespace tiny::draw;
 
-StaticMeshInstanceVertexBufferInterpreter::StaticMeshInstanceVertexBufferInterpreter(const size_t &nrMeshes) :
-    VertexBufferInterpreter<StaticMeshInstance>(nrMeshes)
+AnimatedMeshInstanceVertexBufferInterpreter::AnimatedMeshInstanceVertexBufferInterpreter(const size_t &nrMeshes) :
+    VertexBufferInterpreter<AnimatedMeshInstance>(nrMeshes)
 {
     addVec4Attribute(0*sizeof(float), "v_positionAndSize");
     addVec4Attribute(4*sizeof(float), "v_orientation");
+    addIVec2Attribute(8*sizeof(float), "v_animationFrames");
 }
 
-StaticMeshInstanceVertexBufferInterpreter::~StaticMeshInstanceVertexBufferInterpreter()
+AnimatedMeshInstanceVertexBufferInterpreter::~AnimatedMeshInstanceVertexBufferInterpreter()
 {
 
 }
 
-StaticMeshHorde::StaticMeshHorde(const tiny::mesh::StaticMesh &mesh, const size_t &a_maxNrMeshes) :
+AnimatedMeshHorde::AnimatedMeshHorde(const tiny::mesh::AnimatedMesh &mesh, const size_t &a_maxNrMeshes) :
     Renderable(),
     nrVertices(mesh.vertices.size()),
     nrIndices(mesh.indices.size()),
@@ -40,29 +41,34 @@ StaticMeshHorde::StaticMeshHorde(const tiny::mesh::StaticMesh &mesh, const size_
     vertices(mesh),
     meshes(maxNrMeshes)
 {
+    uniformMap.addTexture("animationTexture");
     uniformMap.addTexture("diffuseTexture");
     uniformMap.addTexture("normalTexture");
 }
 
-StaticMeshHorde::~StaticMeshHorde()
+AnimatedMeshHorde::~AnimatedMeshHorde()
 {
 
 }
 
-std::string StaticMeshHorde::getVertexShaderCode() const
+std::string AnimatedMeshHorde::getVertexShaderCode() const
 {
     return
 "#version 150\n"
 "\n"
 "uniform mat4 worldToScreen;\n"
+"uniform samplerBuffer animationTexture;\n"
 "\n"
 "in vec2 v_textureCoordinate;\n"
 "in vec3 v_tangent;\n"
 "in vec3 v_normal;\n"
 "in vec3 v_position;\n"
+"in vec4 v_weights;\n"
+"in ivec4 v_bones;\n"
 "\n"
 "in vec4 v_positionAndSize;\n"
 "in vec4 v_orientation;\n"
+"in ivec2 v_animationFrames;\n"
 "\n"
 "out vec2 f_tex;\n"
 "out vec3 f_worldTangent;\n"
@@ -77,16 +83,38 @@ std::string StaticMeshHorde::getVertexShaderCode() const
 "\n"
 "void main(void)\n"
 "{\n"
+"   vec4 scaleAndTime = vec4(0.0f);\n"
+"   vec4 rotate = vec4(0.0f);\n"
+"   vec4 translate = vec4(0.0f);\n"
+"   \n"
+"   scaleAndTime += v_weights.x*texelFetch(animationTexture, v_animationFrames.x + 3*v_bones.x + 0);\n"
+"   rotate += v_weights.x*texelFetch(animationTexture, v_animationFrames.x + 3*v_bones.x + 1);\n"
+"   translate += v_weights.x*texelFetch(animationTexture, v_animationFrames.x + 3*v_bones.x + 2);\n"
+"   \n"
+"   scaleAndTime += v_weights.y*texelFetch(animationTexture, v_animationFrames.x + 3*v_bones.y + 0);\n"
+"   rotate += v_weights.y*texelFetch(animationTexture, v_animationFrames.x + 3*v_bones.y + 1);\n"
+"   translate += v_weights.y*texelFetch(animationTexture, v_animationFrames.x + 3*v_bones.y + 2);\n"
+"   \n"
+"   scaleAndTime += v_weights.z*texelFetch(animationTexture, v_animationFrames.x + 3*v_bones.z + 0);\n"
+"   rotate += v_weights.z*texelFetch(animationTexture, v_animationFrames.x + 3*v_bones.z + 1);\n"
+"   translate += v_weights.z*texelFetch(animationTexture, v_animationFrames.x + 3*v_bones.z + 2);\n"
+"   \n"
+"   scaleAndTime += v_weights.w*texelFetch(animationTexture, v_animationFrames.x + 3*v_bones.w + 0);\n"
+"   rotate += v_weights.w*texelFetch(animationTexture, v_animationFrames.x + 3*v_bones.w + 1);\n"
+"   translate += v_weights.w*texelFetch(animationTexture, v_animationFrames.x + 3*v_bones.w + 2);\n"
+"   \n"
+"   normalize(rotate);\n"
+"   \n"
 "   f_tex = v_textureCoordinate;\n"
-"   f_worldTangent = qtransform(v_orientation, v_tangent);\n"
-"   f_worldNormal = qtransform(v_orientation, v_normal);\n"
-"   f_worldPosition = v_position;\n"
-"   gl_Position = worldToScreen*vec4(v_positionAndSize.w*qtransform(v_orientation, v_position) + v_positionAndSize.xyz, 1.0f);\n"
+"   f_worldTangent = qtransform(v_orientation, qtransform(rotate, scaleAndTime.xyz*v_tangent));\n"
+"   f_worldNormal = qtransform(v_orientation, qtransform(rotate, scaleAndTime.xyz*v_normal));\n"
+"   f_worldPosition = v_positionAndSize.w*qtransform(v_orientation, qtransform(rotate, scaleAndTime.xyz*v_position) + translate.xyz) + v_positionAndSize.xyz;\n"
+"   gl_Position = worldToScreen*vec4(f_worldPosition, 1.0f);\n"
 "   f_cameraDepth = gl_Position.z;\n"
 "}\n\0";
 }
 
-std::string StaticMeshHorde::getFragmentShaderCode() const
+std::string AnimatedMeshHorde::getFragmentShaderCode() const
 {
     return
 "#version 150\n"
@@ -122,7 +150,7 @@ std::string StaticMeshHorde::getFragmentShaderCode() const
 "}\n\0";
 }
 
-void StaticMeshHorde::render(const ShaderProgram &program) const
+void AnimatedMeshHorde::render(const ShaderProgram &program) const
 {
     vertices.bind(program);
     meshes.bind(program, 1);

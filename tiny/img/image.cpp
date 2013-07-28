@@ -84,7 +84,7 @@ Image Image::createTestImage(const size_t &size)
     {
         for (size_t j = 0; j < size; ++j)
         {
-            const unsigned char colour = 128 + (((2*i)/size)^((2*j)/size))*127;
+            const unsigned char colour = 32 + (((2*i)/size)^((2*j)/size))*223;
             
             *data++ = colour;
             *data++ = colour;

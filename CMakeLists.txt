@@ -85,6 +85,9 @@ target_link_libraries(test_ReadAnimatedMesh ${USED_LIBS})
 add_executable(test_StaticMeshHorde src/test_StaticMeshHorde.cpp)
 target_link_libraries(test_StaticMeshHorde ${USED_LIBS})
 
+add_executable(test_AnimatedMeshHorde src/test_AnimatedMeshHorde.cpp)
+target_link_libraries(test_AnimatedMeshHorde ${USED_LIBS})
+
 add_executable(test_WorldIconHorde src/test_WorldIconHorde.cpp)
 target_link_libraries(test_WorldIconHorde ${USED_LIBS})
 
