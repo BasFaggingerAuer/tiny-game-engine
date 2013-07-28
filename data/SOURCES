@@ -23,3 +23,6 @@ mesh/tree0_leaves.obj
 mesh/tree0_trunk.obj
 Tree mesh created by Matthijs van Dorp, with textures from photographs (GNU GPL v3).
 
+mesh/cubes.dae
+From Anima Animation Sample, https://code.google.com/p/anima-animation-sample/source/browse/trunk/Models/cubes.dae?r=8 (GNU GPL v3).
+

@@ -157,9 +157,15 @@ void setAiNodePointers(const aiNode *node, std::map<std::string, const aiNode *>
 
 void updateAiNodeMatrices(aiNode *node, const aiMatrix4x4 &transformation, std::map<std::string, aiMatrix4x4> &nodeNameToMatrix)
 {
-    const aiMatrix4x4 newTransformation = transformation*nodeNameToMatrix[node->mName.data];
+    assert(node);
     
-    nodeNameToMatrix[node->mName.data] = newTransformation;
+    std::map<std::string, aiMatrix4x4>::iterator nodeIterator = nodeNameToMatrix.find(node->mName.data);
+    
+    assert(nodeIterator != nodeNameToMatrix.end());
+    
+    const aiMatrix4x4 newTransformation = transformation*nodeIterator->second;
+    
+    nodeIterator->second = newTransformation;
     
     for (unsigned int i = 0; i < node->mNumChildren; ++i)
     {
@@ -268,7 +274,7 @@ void copyAiAnimation(const aiScene *scene, const aiMesh *sourceMesh, const unsig
                 
                 frames[boneIndex] = KeyFrame(vec3(scale.x, scale.y, scale.z),
                                              frame,
-                                             vec4(rotate.x, rotate.y, rotate.z, rotate.w),
+                                             quatconj(vec4(rotate.x, rotate.y, rotate.z, rotate.w)),
                                              vec3(translate.x, translate.y, translate.z));
             }
         }

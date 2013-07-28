@@ -69,7 +69,7 @@ void setup(const std::string &fileName)
         {
             for (size_t j = 0; j < nrBones; ++j)
             {
-                animation.frames[nrBones*i + j] = mesh::KeyFrame(vec3(1.0f, 1.0f, 1.0f), i, quatrot(6.3f*static_cast<float>(i)/static_cast<float>(nrFrames), vec3(0.0f, 1.0f, 0.0f)), vec3(0.0f, 0.0f, 0.1f*sin(i)));
+                animation.frames[nrBones*i + j] = mesh::KeyFrame(vec3(0.1f + static_cast<float>(i)/static_cast<float>(nrFrames)), i, quatrot(6.3f*static_cast<float>(i)/static_cast<float>(nrFrames), vec3(0.0f, 1.0f, 0.0f)), vec3(0.0f, 0.0f, 0.1f*sin(i)));
             }
         }
         
