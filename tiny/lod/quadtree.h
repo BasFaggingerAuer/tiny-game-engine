@@ -150,27 +150,6 @@ class Quadtree
                 const float distance = length(n.centre - position);
                 const bool hasChildren = (n.children[0] != 0 || n.children[1] != 0 || n.children[2] != 0 || n.children[3] != 0);
                 
-                /*
-                if (hasChildren)
-                {
-                    for (int i = 0; i < 4; ++i)
-                    {
-                        if (n.children[i] > 0)
-                        {
-                            queue.push(n.children[i]);
-                        }
-                    }
-                }
-                else if (distance >= minRadius && distance <= maxRadius)
-                {
-                    for (int i = n.startIndex; i < n.endIndex && maxNrIndices > 0; ++i)
-                    {
-                        *indices++ = instances[i];
-                        --maxNrIndices;
-                    }
-                }
-                */
-                
                 if (distance + n.radius < minRadius || distance - n.radius >= maxRadius)
                 {
                     //The node is completely outside the annulus.

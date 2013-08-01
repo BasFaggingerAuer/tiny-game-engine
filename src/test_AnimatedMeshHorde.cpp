@@ -54,6 +54,7 @@ void setup()
 {
     //Create a test mesh and paint it with a texture.
     mesh::AnimatedMesh animatedMesh = mesh::io::readAnimatedMesh(DATA_DIRECTORY + "mesh/cubes.dae");
+    const size_t nrBones = animatedMesh.skeleton.bones.size();
     const size_t nrFrames = animatedMesh.skeleton.animations[0].frames.size();
     
     //Create a test mesh and paint it with a texture.
@@ -75,7 +76,7 @@ void setup()
         {
             for (int k = -4; k <= 4; ++k)
             {
-                testMeshInstances.push_back(draw::AnimatedMeshInstance(vec4(meshSpacing*i, meshSpacing*j, meshSpacing*k, 1.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), ivec2(rand() % nrFrames, 0)));
+                testMeshInstances.push_back(draw::AnimatedMeshInstance(vec4(meshSpacing*i, meshSpacing*j, meshSpacing*k, 1.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), ivec2(3*nrBones*(rand() % nrFrames), 0)));
             }
         }
     }
