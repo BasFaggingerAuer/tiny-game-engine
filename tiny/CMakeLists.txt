@@ -8,6 +8,7 @@ include_directories(${CMAKE_SOURCE_DIR})
 
 add_library(tinygame
             math/vec.cpp
+            net/message.cpp
             img/image.cpp
             img/io/image.cpp
             lod/quadtree.cpp

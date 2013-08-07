@@ -22,9 +22,9 @@ using namespace tiny::draw;
 
 WorldRenderer::WorldRenderer(const int &screenWidth, const int &screenHeight) :
     aspectRatio(static_cast<float>(screenWidth)/std::max(static_cast<float>(screenHeight), 1.0f)),
-    diffuseTexture(screenWidth, screenHeight),
-    worldNormalTexture(screenWidth, screenHeight),
-    worldPositionTexture(screenWidth, screenHeight),
+    diffuseTexture(screenWidth, screenHeight, tf::none),
+    worldNormalTexture(screenWidth, screenHeight, tf::none),
+    worldPositionTexture(screenWidth, screenHeight, tf::none),
     depthTexture(screenWidth, screenHeight),
     worldToScreenRenderer(aspectRatio),
     screenToColourRenderer(aspectRatio)
