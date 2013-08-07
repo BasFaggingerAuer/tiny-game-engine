@@ -1,0 +1,112 @@
+\documentclass{article}
+
+\usepackage{amsmath}
+\usepackage{amssymb}
+\usepackage{amsthm}
+
+\usepackage[pdftex]{graphicx}
+\usepackage[english]{babel}
+\usepackage{hyperref}
+\usepackage{cleveref}
+\usepackage{url}
+
+\selectlanguage{english}
+\allowdisplaybreaks[1]
+
+\newtheorem{theorem}{Theorem}[section]
+\newtheorem{lemma}[theorem]{Lemma}
+
+\theoremstyle{definition}
+\newtheorem{definition}[theorem]{Definition}
+\newtheorem{example}[theorem]{Example}
+\newtheorem{xca}[theorem]{Exercise}
+
+\theoremstyle{remark}
+\newtheorem{remark}[theorem]{Remark}
+
+%Mathematical shorthand.
+\newcommand{\N}{\mathbf{N}}
+\newcommand{\Z}{\mathbf{Z}}
+\newcommand{\R}{\mathbf{R}}
+\newcommand{\C}{\mathcal{C}}
+\newcommand{\setsep}{\ |\ }
+\newcommand{\Ort}{\mathrm{O}}
+\newcommand{\SO}{\mathrm{SO}}
+\newcommand{\vecspan}{\mathrm{span}}
+\newcommand{\ud}{\, \mathrm{d}}
+\newcommand{\smooth}{\mathrm{C}^{\infty}}
+\newcommand{\Div}{\mathrm{div} \,}
+\newcommand{\Rot}{\mathrm{rot} \,}
+\newcommand{\Grad}{\mathrm{grad} \,}
+\newcommand{\Laplace}{\Delta}
+\newcommand{\Alambert}{\box}
+\newcommand{\implystep}[2]{\stackrel{\labelcref{#1}}{#2}}
+
+\begin{document}
+
+\title{Manual of the \texttt{tiny-game-engine}}
+
+\author{B.~O.~Fagginger Auer}
+
+\date{\today}
+
+\maketitle
+
+\section{Shading}
+
+TODO: Add image.
+Consider a single point $p \in \R^3$ on the surface of an object that we want to illuminate.
+Let $n \in S^2$ be the normal of the surface at $p$.
+Let $l \in S^2$ be the normalised direction from $p$ to the light source illuminating the object.
+Let $v \in \R^3$ be the position of the viewer and define the direction from $p$ to the viewer as
+$$e := (v - p)/\|v - p\|.$$
+Let $l_\perp$ and $e_\perp$ be the normalised projections of $l$ and $e$ to the tangent space of the object at $p$, i.e., the normalisation of $l - \langle n, l \rangle n$ and $e - \langle n, e \rangle n$, respectively.
+Let $\alpha$ be the angle between $n$ and $l$, $\beta$ the angle between $n$ and $e$, and $\gamma$ the angle between $l_\perp$ and $e_\perp$.
+
+Since we can see $p$ from $v$, we will assume that $0 \leq \beta \leq \frac{\pi}{2}$ (otherwise $p$ is invisible due to backface culling).
+
+\subsection{Diffuse shading}
+
+The most simple shading model for diffuse reflections is the cosine emission law due to Lambert.
+Here, the intensity $I_d$ of the diffuse colour of an object is given by
+\begin{equation} \label{eq:shading:lambert}
+I_d = \max(0, \cos(\alpha)) = \max(0, \langle n, l \rangle).
+\end{equation}
+However, this model is too simple to properly calculate reflections from rough diffuse objects (such as the moon).
+
+To improve upon the Lambertian reflection model, we will implement the qualitative Oren--Nayar reflectance model from \cite[\S 4.4]{Oren1994}.
+Here, we have
+\begin{equation} \label{eq:shading:orennayar}
+I_d = \max(0, \cos(\alpha)) \, \left( A + B \, \max(0, \cos(\gamma)) \, \sin(\delta_1) \, \tan(\delta_2) \right),
+\end{equation}
+where
+\begin{align*}
+A & = 1 - 0.5 \, \frac{\sigma^2}{\sigma^2 + 0.57}, \\
+B & = 0.45 \, \frac{\sigma^2}{\sigma^2 + 0.09}, \\
+\delta_1 & = \max(\alpha, \beta), \\
+\delta_2 & = \min(\alpha, \beta),
+\end{align*}
+and $\sigma \in \R_{\geq 0}$ is the surface roughness.
+
+Let us simplify this expression.
+Note that $0 \leq \alpha, \beta \leq \frac{\pi}{2}$, because otherwise there is either no diffuse contribution, or the point $p$ is invisible due to backface culling.
+Therefore $\cos(\alpha) \leq \cos(\beta)$ if and only if $\alpha \geq \beta$, so $\cos(\delta_2) = \cos(\min(\alpha, \beta)) = \max(\cos(\alpha), \cos(\beta))$.
+As $\sin(\arccos(x)) = \sqrt{1 - x^2}$, we have that $\sin(\alpha) = \sin(\arccos(\langle n, l \rangle)) = \sqrt{1 - \langle n, l \rangle^2}$, and similarly for $\sin(\beta)$.
+Hence,
+\begin{align*}
+\sin(\delta_1) \, \tan(\delta_2)
+ & = \sin(\delta_1) \, \sin(\delta_2) / \cos(\delta_2) \\
+ & = \sin(\alpha) \, \sin(\beta) / \cos(\min(\alpha, \beta)) \\
+ & = \sin(\alpha) \, \sin(\beta) / \max(\cos(\alpha), \cos(\beta)) \\
+ & = \sqrt{(1 - \langle n, l \rangle^2) \, (1 - \langle n, e \rangle^2)} / \max(\langle n, l \rangle, \langle n, l \rangle).
+\end{align*}
+Therefore, we can calculate $I_d$ as
+\begin{equation}
+I_d = \max(0, \langle n, l \rangle) \, \left( A + B \, \max(0, \langle l_\perp, e_\perp \rangle) \, \frac{\sqrt{(1 - \langle n, l \rangle^2) \, (1 - \langle n, e \rangle^2)}}{\max(\langle n, l \rangle, \langle n, l \rangle)} \right).
+\end{equation}
+
+\bibliographystyle{plain}
+\bibliography{manual}
+
+\end{document}
+
