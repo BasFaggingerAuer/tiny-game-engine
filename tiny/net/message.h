@@ -41,11 +41,12 @@ enum vt_enum
     Float,
     Vec2,
     Vec3,
-    Vec4,
-    String
+    Vec4
 };
 
 }
+
+#define MAX_MESSAGE_SIZE 65536
 
 struct VariableType
 {
@@ -66,7 +67,6 @@ struct VariableData
     VariableData(const vec2 &);
     VariableData(const vec3 &);
     VariableData(const vec4 &);
-    VariableData(const std::string &);
     
     int iv1;
     ivec2 iv2;
@@ -76,25 +76,35 @@ struct VariableData
     vec2 v2;
     vec3 v3;
     vec4 v4;
-    std::string s;
+};
+
+struct Message
+{
+    unsigned int id;
+    std::vector<VariableData> data;
 };
 
 class MessageType
 {
     public:
-        MessageType(const std::string &, const std::string & = "");
+        MessageType(const unsigned short &, const std::string &, const std::string & = "");
         virtual ~MessageType();
         
         size_t getNrVariables() const;
         std::string getDescription() const;
-        size_t getMinimumSizeInBytes() const;
-        bool extractDataFromString(const std::string &, VariableData *) const;
-        std::string convertDataToString(const VariableData *) const;
+        size_t getSizeInBytes() const;
+        
+        bool textToMessage(const std::string &, Message &) const;
+        bool messageToText(const Message &, std::string &) const;
+        
+        size_t dataToMessage(const unsigned char *, Message &) const;
+        size_t messageToData(const Message &, unsigned char *) const;
         
     protected:
         void addVariableType(const std::string &, const vt::vt_enum &);
         
     private:
+        const unsigned short id;
         const std::string name;
         const std::string usage;
         std::vector<VariableType> variableTypes;

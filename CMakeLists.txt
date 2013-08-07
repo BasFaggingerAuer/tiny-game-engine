@@ -22,14 +22,8 @@ find_package(GLEW REQUIRED)
 find_package(SDL REQUIRED)
 find_package(SDL_image REQUIRED)
 find_package(SDL_ttf REQUIRED)
-#find_package(Assimp REQUIRED)
-set(ASSIMP_INCLUDE_DIR "/home/nerzuhl/git/assimp/include")
-set(ASSIMP_LIBRARY_DIR "/home/nerzuhl/git/assimp/lib")
-set(ASSIMP_LIBRARIES "-lassimp")
-
-message("Assimp include directory: ${ASSIMP_INCLUDE_DIR}")
-message("Assimp library directory: ${ASSIMP_LIBRARY_DIR}")
-message("Assimp library          : ${ASSIMP_LIBRARIES}")
+find_package(SDL_net REQUIRED)
+find_package(Assimp REQUIRED)
 
 configure_file(config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
 
@@ -52,6 +46,8 @@ include_directories(${SDL_IMAGE_INCLUDE_DIR})
 link_directories(${SDL_IMAGE_LIBRARY_DIR})
 include_directories(${SDL_TTF_INCLUDE_DIR})
 link_directories(${SDL_TTF_LIBRARY_DIR})
+include_directories(${SDL_NET_INCLUDE_DIR})
+link_directories(${SDL_NET_LIBRARY_DIR})
 include_directories(${TINY_SOURCE_DIR})
 include_directories(${TINY_BINARY_DIR})
 
@@ -62,7 +58,8 @@ set(USED_LIBS
               ${GLEW_LIBRARY}
               ${SDL_LIBRARY}
               ${SDLIMAGE_LIBRARY}
-              ${SDLTTF_LIBRARY})
+              ${SDLTTF_LIBRARY}
+              ${SDLNET_LIBRARY})
 
 add_executable(test_SDLApplication src/test_SDLApplication.cpp)
 target_link_libraries(test_SDLApplication ${USED_LIBS})
@@ -102,4 +99,7 @@ target_link_libraries(test_Quadtree ${USED_LIBS})
 
 add_executable(test_TerrainFancy src/test_TerrainFancy.cpp)
 target_link_libraries(test_TerrainFancy ${USED_LIBS})
+
+add_executable(test_Network src/test_Network.cpp)
+target_link_libraries(test_Network ${USED_LIBS})
 

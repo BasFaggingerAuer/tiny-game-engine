@@ -16,6 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <iostream>
 #include <sstream>
+#include <cassert>
 
 #include <tiny/net/message.h>
 
@@ -36,8 +37,7 @@ VariableData::VariableData() :
     v1(0.0f),
     v2(0.0f, 0.0f),
     v3(0.0f, 0.0f, 0.0f),
-    v4(0.0f, 0.0f, 0.0f, 0.0f),
-    s("")
+    v4(0.0f, 0.0f, 0.0f, 0.0f)
 {
 
 }
@@ -50,8 +50,7 @@ VariableData::VariableData(const int &a) :
     v1(0.0f),
     v2(0.0f, 0.0f),
     v3(0.0f, 0.0f, 0.0f),
-    v4(0.0f, 0.0f, 0.0f, 0.0f),
-    s("")
+    v4(0.0f, 0.0f, 0.0f, 0.0f)
 {
 
 }
@@ -64,8 +63,7 @@ VariableData::VariableData(const ivec2 &a) :
     v1(0.0f),
     v2(0.0f, 0.0f),
     v3(0.0f, 0.0f, 0.0f),
-    v4(0.0f, 0.0f, 0.0f, 0.0f),
-    s("")
+    v4(0.0f, 0.0f, 0.0f, 0.0f)
 {
 
 }
@@ -78,8 +76,7 @@ VariableData::VariableData(const ivec3 &a) :
     v1(0.0f),
     v2(0.0f, 0.0f),
     v3(0.0f, 0.0f, 0.0f),
-    v4(0.0f, 0.0f, 0.0f, 0.0f),
-    s("")
+    v4(0.0f, 0.0f, 0.0f, 0.0f)
 {
 
 }
@@ -92,8 +89,7 @@ VariableData::VariableData(const ivec4 &a) :
     v1(0.0f),
     v2(0.0f, 0.0f),
     v3(0.0f, 0.0f, 0.0f),
-    v4(0.0f, 0.0f, 0.0f, 0.0f),
-    s("")
+    v4(0.0f, 0.0f, 0.0f, 0.0f)
 {
 
 }
@@ -106,8 +102,7 @@ VariableData::VariableData(const float &a) :
     v1(a),
     v2(0.0f, 0.0f),
     v3(0.0f, 0.0f, 0.0f),
-    v4(0.0f, 0.0f, 0.0f, 0.0f),
-    s("")
+    v4(0.0f, 0.0f, 0.0f, 0.0f)
 {
 
 }
@@ -120,8 +115,7 @@ VariableData::VariableData(const vec2 &a) :
     v1(0.0f),
     v2(a),
     v3(0.0f, 0.0f, 0.0f),
-    v4(0.0f, 0.0f, 0.0f, 0.0f),
-    s("")
+    v4(0.0f, 0.0f, 0.0f, 0.0f)
 {
 
 }
@@ -134,8 +128,7 @@ VariableData::VariableData(const vec3 &a) :
     v1(0.0f),
     v2(0.0f, 0.0f),
     v3(a),
-    v4(0.0f, 0.0f, 0.0f, 0.0f),
-    s("")
+    v4(0.0f, 0.0f, 0.0f, 0.0f)
 {
 
 }
@@ -148,27 +141,13 @@ VariableData::VariableData(const vec4 &a) :
     v1(0.0f),
     v2(0.0f, 0.0f),
     v3(0.0f, 0.0f, 0.0f),
-    v4(a),
-    s("")
+    v4(a)
 {
 
 }
 
-VariableData::VariableData(const std::string &a) :
-    iv1(0),
-    iv2(0, 0),
-    iv3(0, 0, 0),
-    iv4(0, 0, 0, 0),
-    v1(0.0f),
-    v2(0.0f, 0.0f),
-    v3(0.0f, 0.0f, 0.0f),
-    v4(0.0f, 0.0f, 0.0f, 0.0f),
-    s(a)
-{
-
-}
-
-MessageType::MessageType(const std::string &a_name, const std::string &a_usage) :
+MessageType::MessageType(const unsigned short &a_id, const std::string &a_name, const std::string &a_usage) :
+    id(a_id),
     name(a_name),
     usage(a_usage),
     variableTypes()
@@ -190,7 +169,7 @@ std::string MessageType::getDescription() const
 {
     std::ostringstream stream;
     
-    stream << name << "(";
+    stream << id << ": " << name << "(";
     
     for (std::vector<VariableType>::const_iterator i = variableTypes.begin(); i != variableTypes.end(); ++i)
     {
@@ -202,21 +181,19 @@ std::string MessageType::getDescription() const
         else if (i->type == vt::Vec2) stream << "vec2";
         else if (i->type == vt::Vec3) stream << "vec3";
         else if (i->type == vt::Vec4) stream << "vec4";
-        else if (i->type == vt::String) stream << "string";
         
-        stream << i->name << (i + 1 < variableTypes.end() ? "," : ")");
+        stream << " " << i->name << (i + 1 < variableTypes.end() ? "," : ")");
     }
     
-    stream << std::endl << "Minimum size (bytes): " << getMinimumSizeInBytes() << std::endl;
+    stream << std::endl << "Message size (bytes): " << getSizeInBytes() << std::endl;
     stream << std::endl << std::endl << usage;
     
     return stream.str();
 }
 
-size_t MessageType::getMinimumSizeInBytes() const
+size_t MessageType::getSizeInBytes() const
 {
-    //TODO: Include message type index?
-    size_t length = 0;
+    size_t length = sizeof(unsigned short);
     
     for (std::vector<VariableType>::const_iterator i = variableTypes.begin(); i != variableTypes.end(); ++i)
     {
@@ -228,15 +205,21 @@ size_t MessageType::getMinimumSizeInBytes() const
         else if (i->type == vt::Vec2) length += sizeof(vec2);
         else if (i->type == vt::Vec3) length += sizeof(vec3);
         else if (i->type == vt::Vec4) length += sizeof(vec4);
-        else if (i->type == vt::String) length += 1;
     }
     
     return length;
 }
 
-std::string MessageType::convertDataToString(const VariableData *in) const
+bool MessageType::messageToText(const Message &in, std::string &out) const
 {
+    if (in.id != id || in.data.size() != variableTypes.size())
+    {
+        std::cerr << "Error: Message has invalid id or the wrong number of variables!" << std::endl;
+        return false;
+    }
+    
     std::ostringstream stream;
+    const VariableData *ptr = &in.data[0];
     
     stream << name;
     
@@ -244,23 +227,24 @@ std::string MessageType::convertDataToString(const VariableData *in) const
     {
         stream << " ";
         
-             if (i->type == vt::Integer) stream << in->iv1;
-        else if (i->type == vt::IVec2) stream << in->iv2.x << " " << in->iv2.y;
-        else if (i->type == vt::IVec3) stream << in->iv3.x << " " << in->iv3.y << " " << in->iv3.z;
-        else if (i->type == vt::IVec4) stream << in->iv4.x << " " << in->iv4.y << " " << in->iv4.z << " " << in->iv4.w;
-        else if (i->type == vt::Float) stream << in->v1;
-        else if (i->type == vt::Vec2) stream << in->v2.x << " " << in->v2.y;
-        else if (i->type == vt::Vec3) stream << in->v3.x << " " << in->v3.y << " " << in->v3.z;
-        else if (i->type == vt::Vec4) stream << in->v4.x << " " << in->v4.y << " " << in->v4.z << " " << in->v4.w;
-        else if (i->type == vt::String) stream << in->s;
+             if (i->type == vt::Integer) stream << ptr->iv1;
+        else if (i->type == vt::IVec2) stream << ptr->iv2.x << " " << ptr->iv2.y;
+        else if (i->type == vt::IVec3) stream << ptr->iv3.x << " " << ptr->iv3.y << " " << ptr->iv3.z;
+        else if (i->type == vt::IVec4) stream << ptr->iv4.x << " " << ptr->iv4.y << " " << ptr->iv4.z << " " << ptr->iv4.w;
+        else if (i->type == vt::Float) stream << ptr->v1;
+        else if (i->type == vt::Vec2) stream << ptr->v2.x << " " << ptr->v2.y;
+        else if (i->type == vt::Vec3) stream << ptr->v3.x << " " << ptr->v3.y << " " << ptr->v3.z;
+        else if (i->type == vt::Vec4) stream << ptr->v4.x << " " << ptr->v4.y << " " << ptr->v4.z << " " << ptr->v4.w;
         
-        in++;
+        ptr++;
     }
     
-    return stream.str();
+    out = stream.str();
+    
+    return true;
 }
 
-bool MessageType::extractDataFromString(const std::string &in, VariableData *out) const
+bool MessageType::textToMessage(const std::string &in, Message &out) const
 {
     std::istringstream stream(in);
     std::string messageName = "";
@@ -270,6 +254,11 @@ bool MessageType::extractDataFromString(const std::string &in, VariableData *out
     
     if (messageName != name) return false;
     
+    out.id = id;
+    out.data.resize(variableTypes.size());
+    
+    VariableData *ptr = &out.data[0];
+    
     //Start extracting data.
     for (std::vector<VariableType>::const_iterator i = variableTypes.begin(); i != variableTypes.end(); ++i)
     {
@@ -278,67 +267,214 @@ bool MessageType::extractDataFromString(const std::string &in, VariableData *out
             int a = 0;
             
             stream >> a;
-            *out++ = VariableData(a);
+            *ptr++ = VariableData(a);
         }
         else if (i->type == vt::IVec2)
         {
             ivec2 a(0, 0);
             
             stream >> a.x >> a.y;
-            *out++ = VariableData(a);
+            *ptr++ = VariableData(a);
         }
         else if (i->type == vt::IVec3)
         {
             ivec3 a(0, 0, 0);
             
             stream >> a.x >> a.y >> a.z;
-            *out++ = VariableData(a);
+            *ptr++ = VariableData(a);
         }
         else if (i->type == vt::IVec4)
         {
             ivec4 a(0, 0, 0, 0);
             
             stream >> a.x >> a.y >> a.z >> a.w;
-            *out++ = VariableData(a);
+            *ptr++ = VariableData(a);
         }
         else if (i->type == vt::Float)
         {
             float a = 0.0f;
             
             stream >> a;
-            *out++ = VariableData(a);
+            *ptr++ = VariableData(a);
         }
         else if (i->type == vt::Vec2)
         {
             vec2 a(0.0f, 0.0f);
             
             stream >> a.x >> a.y;
-            *out++ = VariableData(a);
+            *ptr++ = VariableData(a);
         }
         else if (i->type == vt::Vec3)
         {
             vec3 a(0.0f, 0.0f, 0.0f);
             
             stream >> a.x >> a.y >> a.z;
-            *out++ = VariableData(a);
+            *ptr++ = VariableData(a);
         }
         else if (i->type == vt::Vec4)
         {
             vec4 a(0.0f, 0.0f, 0.0f, 0.0f);
             
             stream >> a.x >> a.y >> a.z >> a.w;
-            *out++ = VariableData(a);
-        }
-        else if (i->type == vt::String)
-        {
-            std::string a = "";
-            
-            stream >> a;
-            *out++ = VariableData(a);
+            *ptr++ = VariableData(a);
         }
     }
     
     return true;
+}
+
+size_t MessageType::dataToMessage(const unsigned char *data, Message &out) const
+{
+    //TODO: Different-endian systems.
+    const unsigned char *dataPtr = data;
+    
+    //Read identifier.
+    const unsigned short dataId = *(const unsigned short *)dataPtr;
+    
+    dataPtr += sizeof(unsigned short);
+    
+    //Invalid id.
+    if (dataId != id)
+    {
+        std::cerr << "Warning: Raw message with wrong data type, " << dataId << " instead of " << id << "!" << std::endl;
+        return 0;
+    }
+    
+    //Create new message.
+    out.id = id;
+    out.data.resize(variableTypes.size());
+    
+    VariableData *msgPtr = &out.data[0];
+    
+    //Start extracting data.
+    for (std::vector<VariableType>::const_iterator i = variableTypes.begin(); i != variableTypes.end(); ++i)
+    {
+        if (i->type == vt::Integer)
+        {
+            int a = *(const int *)dataPtr;
+            
+            dataPtr += sizeof(int);
+            *msgPtr++ = VariableData(a);
+        }
+        else if (i->type == vt::IVec2)
+        {
+            ivec2 a = *(const ivec2 *)dataPtr;
+            
+            dataPtr += sizeof(ivec2);
+            *msgPtr++ = VariableData(a);
+        }
+        else if (i->type == vt::IVec3)
+        {
+            ivec3 a = *(const ivec3 *)dataPtr;
+            
+            dataPtr += sizeof(ivec3);
+            *msgPtr++ = VariableData(a);
+        }
+        else if (i->type == vt::IVec4)
+        {
+            ivec4 a = *(const ivec4 *)dataPtr;
+            
+            dataPtr += sizeof(ivec4);
+            *msgPtr++ = VariableData(a);
+        }
+        else if (i->type == vt::Float)
+        {
+            float a = *(const float *)dataPtr;
+            
+            dataPtr += sizeof(float);
+            *msgPtr++ = VariableData(a);
+        }
+        else if (i->type == vt::Vec2)
+        {
+            vec2 a = *(const vec2 *)dataPtr;
+            
+            dataPtr += sizeof(vec2);
+            *msgPtr++ = VariableData(a);
+        }
+        else if (i->type == vt::Vec3)
+        {
+            vec3 a = *(const vec3 *)dataPtr;
+            
+            dataPtr += sizeof(vec3);
+            *msgPtr++ = VariableData(a);
+        }
+        else if (i->type == vt::Vec4)
+        {
+            vec4 a = *(const vec4 *)dataPtr;
+            
+            dataPtr += sizeof(vec4);
+            *msgPtr++ = VariableData(a);
+        }
+    }
+    
+    assert(dataPtr - data == static_cast<int>(getSizeInBytes()));
+    
+    return dataPtr - data;
+}
+
+size_t MessageType::messageToData(const Message &in, unsigned char *out) const
+{
+    if (in.id != id || in.data.size() != variableTypes.size())
+    {
+        std::cerr << "Error: Message has invalid id or the wrong number of variables!" << std::endl;
+        return 0;
+    }
+    
+    const VariableData *msgPtr = &in.data[0];
+    unsigned char *dataPtr = out;
+    
+    *(unsigned short *)dataPtr = id;
+    dataPtr += sizeof(unsigned short);
+    
+    for (std::vector<VariableType>::const_iterator i = variableTypes.begin(); i != variableTypes.end(); ++i)
+    {
+        if (i->type == vt::Integer)
+        {
+            *(int *)dataPtr = msgPtr->iv1;
+            dataPtr += sizeof(int);
+        }
+        else if (i->type == vt::IVec2)
+        {
+            *(ivec2 *)dataPtr = msgPtr->iv2;
+            dataPtr += sizeof(ivec2);
+        }
+        else if (i->type == vt::IVec3)
+        {
+            *(ivec3 *)dataPtr = msgPtr->iv3;
+            dataPtr += sizeof(ivec3);
+        }
+        else if (i->type == vt::IVec4)
+        {
+            *(ivec4 *)dataPtr = msgPtr->iv4;
+            dataPtr += sizeof(ivec4);
+        }
+        if (i->type == vt::Float)
+        {
+            *(float *)dataPtr = msgPtr->v1;
+            dataPtr += sizeof(float);
+        }
+        else if (i->type == vt::Vec2)
+        {
+            *(vec2 *)dataPtr = msgPtr->v2;
+            dataPtr += sizeof(vec2);
+        }
+        else if (i->type == vt::Vec3)
+        {
+            *(vec3 *)dataPtr = msgPtr->v3;
+            dataPtr += sizeof(vec3);
+        }
+        else if (i->type == vt::Vec4)
+        {
+            *(vec4 *)dataPtr = msgPtr->v4;
+            dataPtr += sizeof(vec4);
+        }
+        
+        msgPtr++;
+    }
+    
+    assert(dataPtr - out == static_cast<int>(getSizeInBytes()));
+    
+    return dataPtr - out;
 }
 
 void MessageType::addVariableType(const std::string &a_name, const vt::vt_enum &a_type)
@@ -353,5 +489,4 @@ void MessageType::addVariableType(const std::string &a_name, const vt::vt_enum &
     
     variableTypes.push_back(VariableType(a_name, a_type));
 }
-
 

@@ -24,6 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <SDL.h>
 #include <SDL_image.h>
 #include <SDL_ttf.h>
+#include <SDL_net.h>
 
 #include <tiny/os/sdlapplication.h>
 
@@ -112,6 +113,15 @@ SDLApplication::SDLApplication(const int &a_screenWidth,
         throw std::exception();
     }
     
+    //Initialise networking.
+    std::cerr << "Initialising networking..." << std::endl;
+    
+    if (SDLNet_Init() != 0)
+    {
+        std::cerr << "Unable to initialise SDL_net: " << SDLNet_GetError() << "!" << std::endl;
+        throw std::exception();
+    }
+    
     //Start main loop.
     std::cerr << "Initialisation complete." << std::endl;
     
@@ -124,6 +134,7 @@ SDLApplication::~SDLApplication()
     //Shut down everything.
     std::cerr << "Shutting down SDL..." << std::endl;
     
+    SDLNet_Quit();
     TTF_Quit();
     IMG_Quit();
     SDL_Quit();
