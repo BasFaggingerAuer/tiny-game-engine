@@ -207,6 +207,11 @@ void copyAiAnimation(const aiScene *scene, const aiMesh *sourceMesh, const unsig
         std::cerr << "Warning: animation '" << animation->name << "' has an invalid number of channels (" << sourceAnimation->mNumChannels << " for " << skeleton.bones.size() << " bones)!" << std::endl;
     }
     
+    //Store inverse of global transformation.
+    aiMatrix4x4 inverseGlobalTransformation = scene->mRootNode->mTransformation;
+    
+    inverseGlobalTransformation.Inverse();
+    
     //Process all frames.
     KeyFrame *frames = &animation->frames[0];
     
@@ -264,7 +269,7 @@ void copyAiAnimation(const aiScene *scene, const aiMesh *sourceMesh, const unsig
             if (boneIterator != boneNameToIndex.end())
             {
                 const unsigned int boneIndex = boneIterator->second;
-                const aiMatrix4x4 finalTransformation = i->second*sourceMesh->mBones[boneIndex]->mOffsetMatrix;
+                const aiMatrix4x4 finalTransformation = inverseGlobalTransformation*i->second*sourceMesh->mBones[boneIndex]->mOffsetMatrix;
                 
                 aiVector3D scale(1.0f, 1.0f, 1.0f);
                 aiQuaternion rotate(1.0f, 0.0f, 0.0f, 0.0f);

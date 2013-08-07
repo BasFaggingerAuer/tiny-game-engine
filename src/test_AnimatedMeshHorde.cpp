@@ -53,7 +53,7 @@ vec4 cameraOrientation = vec4(0.0f, 0.0f, 0.0f, 1.0f);
 void setup()
 {
     //Create a test mesh and paint it with a texture.
-    mesh::AnimatedMesh animatedMesh = mesh::io::readAnimatedMesh(DATA_DIRECTORY + "mesh/cubes.dae");
+    mesh::AnimatedMesh animatedMesh = mesh::io::readAnimatedMesh(DATA_DIRECTORY + "mesh/f_walk_01.dae");
     const size_t nrBones = animatedMesh.skeleton.bones.size();
     const size_t nrFrames = animatedMesh.skeleton.animations[0].frames.size();
     

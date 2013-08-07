@@ -50,6 +50,9 @@ draw::Renderable *screenEffect = 0;
 vec3 cameraPosition = vec3(0.0f, 0.0f, 3.0f);
 vec4 cameraOrientation = vec4(0.0f, 0.0f, 0.0f, 1.0f);
 
+double globalTime = 0.0;
+int testNrFrames = 1;
+
 void setup(const std::string &fileName)
 {
     //Create a test mesh and paint it with a texture.
@@ -59,21 +62,26 @@ void setup(const std::string &fileName)
     if (animatedMesh.skeleton.animations.empty())
     {
         const size_t nrBones = animatedMesh.skeleton.bones.size();
-        const size_t nrFrames = 32;
+        
+        testNrFrames = 32;
         mesh::Animation animation;
         
         animation.name = "Dummy";
-        animation.frames.assign(nrFrames*nrBones, mesh::KeyFrame());
+        animation.frames.assign(testNrFrames*nrBones, mesh::KeyFrame());
         
-        for (size_t i = 0; i < nrFrames; ++i)
+        for (int i = 0; i < testNrFrames; ++i)
         {
             for (size_t j = 0; j < nrBones; ++j)
             {
-                animation.frames[nrBones*i + j] = mesh::KeyFrame(vec3(0.1f + static_cast<float>(i)/static_cast<float>(nrFrames)), i, quatrot(6.3f*static_cast<float>(i)/static_cast<float>(nrFrames), vec3(0.0f, 1.0f, 0.0f)), vec3(0.0f, 0.0f, 0.1f*sin(i)));
+                animation.frames[nrBones*i + j] = mesh::KeyFrame(vec3(0.1f + static_cast<float>(i)/static_cast<float>(testNrFrames)), i, quatrot(6.3f*static_cast<float>(i)/static_cast<float>(testNrFrames), vec3(0.0f, 1.0f, 0.0f)), vec3(0.0f, 0.0f, 0.1f*sin(i)));
             }
         }
         
         animatedMesh.skeleton.animations.push_back(animation);
+    }
+    else
+    {
+        testNrFrames = std::max<int>(1, animatedMesh.skeleton.animations[0].frames.size()/animatedMesh.skeleton.bones.size());
     }
     
     testMesh = new draw::AnimatedMesh(animatedMesh);
@@ -112,10 +120,11 @@ void update(const double &dt)
     application->updateSimpleCamera(dt, cameraPosition, cameraOrientation);
     
     //Let the user select a frame of the animation.
-    for (int i = 0; i < 8; ++i)
-    {
-        if (application->isKeyPressed('1' + i)) testMesh->setAnimationFrame(i);
-    }
+    globalTime += dt;
+    
+    const int frame = static_cast<int>(floor(4.0*globalTime)) % testNrFrames;
+    
+    testMesh->setAnimationFrame(frame);
     
     //Tell the world renderer that the camera has changed.
     worldRenderer->setCamera(cameraPosition, cameraOrientation);
@@ -132,7 +141,7 @@ int main(int argc, char **argv)
     try
     {
         application = new os::SDLApplication(SCREEN_WIDTH, SCREEN_HEIGHT);
-        setup(argc > 1 ? argv[1] : DATA_DIRECTORY + "mesh/cubes.dae");
+        setup(argc > 1 ? argv[1] : DATA_DIRECTORY + "mesh/f_walk_01.dae");
     }
     catch (std::exception &e)
     {
