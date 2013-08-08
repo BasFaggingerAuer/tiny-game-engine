@@ -20,8 +20,15 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using namespace tiny::net;
 
-Client::Client(const std::string &hostName, const unsigned int &hostPort)
+Client::Client(const std::string &hostName, const unsigned int &hostPort, MessageTranslator *a_translator) :
+    translator(a_translator)
 {
+    if (!translator)
+    {
+        std::cerr << "Please supply a message translator!" << std::endl;
+        throw std::exception();
+    }
+    
     if (SDLNet_ResolveHost(&hostAddress, hostName.c_str(), hostPort) < 0)
     {
         std::cerr << "Unable to connect to host " << hostName << ":" << hostPort << ": " << SDLNet_GetError() << "!" << std::endl;
@@ -71,7 +78,18 @@ bool Client::listen(const double &dt)
     {
         if (SDLNet_SocketReady(socket) != 0)
         {
-            //TODO: Receive messages.
+            //Receive data.
+            Message message;
+            
+            if (!translator->receiveMessageTCP(socket, message))
+            {
+                std::cerr << "Lost connection to host!" << std::endl;
+                disconnectedFromHost();
+            }
+            else
+            {
+                receiveMessage(message);
+            }
         }
     }
     
@@ -81,9 +99,13 @@ bool Client::listen(const double &dt)
     return true;
 }
 
-void Client::sendMessage(const Message &)
+void Client::sendMessage(const Message &message)
 {
-    //TODO.
+    //Send message to host.
+    if (!translator->sendMessageTCP(message, socket))
+    {
+        std::cerr << "Unable to send message " << message.id << " to host!" << std::endl;
+    }
 }
 
 void Client::receiveMessage(const Message &)

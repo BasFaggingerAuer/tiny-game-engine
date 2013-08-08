@@ -31,15 +31,15 @@ namespace tiny
 namespace net
 {
 
-class Host : public MessageTranslator
+class Host
 {
     public:
-        Host(const unsigned int &);
+        Host(const unsigned int &, MessageTranslator *);
         virtual ~Host();
         
         bool listen(const double &);
         void sendMessage(const Message &);
-        void sendPrivateMessage(const unsigned int &, const Message &);
+        void sendPrivateMessage(const Message &, const unsigned int &);
         
     protected:
         virtual void addClient(const unsigned int &);
@@ -53,6 +53,7 @@ class Host : public MessageTranslator
         IPaddress hostAddress;
         TCPsocket hostSocket;
         std::map<TCPsocket, unsigned int> clients;
+        MessageTranslator * const translator;
 };
 
 }

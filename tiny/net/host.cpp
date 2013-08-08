@@ -21,9 +21,16 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using namespace tiny::net;
 
-Host::Host(const unsigned int &listenPort) :
-    lastClientIndex(0)
+Host::Host(const unsigned int &listenPort, MessageTranslator *a_translator) :
+    lastClientIndex(0),
+    translator(a_translator)
 {
+    if (!translator)
+    {
+        std::cerr << "Please supply a message translator!" << std::endl;
+        throw std::exception();
+    }
+    
     //Create listening socket.
     if (SDLNet_ResolveHost(&hostAddress, 0, listenPort) < 0)
     {
@@ -124,7 +131,7 @@ bool Host::listen(const double &dt)
                 //Receive data.
                 Message message;
                 
-                if (!receiveMessageTCP(c->first, message))
+                if (!translator->receiveMessageTCP(c->first, message))
                 {
                     std::cerr << "Lost connection from client " << c->second << "." << std::endl;
                     removeClient(c->second);
@@ -152,14 +159,35 @@ bool Host::listen(const double &dt)
     return true;
 }
 
-void Host::sendMessage(const Message &)
+void Host::sendMessage(const Message &message)
 {
-    //TODO.
+    //Send message to all clients.
+    for (std::map<TCPsocket, unsigned int>::const_iterator c = clients.begin(); c != clients.end(); ++c)
+    {
+        if (!translator->sendMessageTCP(message, c->first))
+        {
+            std::cerr << "Unable to send message " << message.id << " to client " << c->second << "!" << std::endl;
+        }
+    }
 }
 
-void Host::sendPrivateMessage(const unsigned int &, const Message &)
+void Host::sendPrivateMessage(const Message &message, const unsigned int &clientIndex)
 {
-    //TODO.
+    //Send message to a specific client.
+    for (std::map<TCPsocket, unsigned int>::const_iterator c = clients.begin(); c != clients.end(); ++c)
+    {
+        if (c->second == clientIndex)
+        {
+            if (!translator->sendMessageTCP(message, c->first))
+            {
+                std::cerr << "Unable to send private message " << message.id << " to client " << c->second << "!" << std::endl;
+            }
+            
+            return;
+        }
+    }
+    
+    std::cerr << "Unable to find client with index " << clientIndex << "!" << std::endl;
 }
 
 void Host::addClient(const unsigned int &)

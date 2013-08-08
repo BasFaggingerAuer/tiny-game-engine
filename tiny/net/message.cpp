@@ -185,8 +185,7 @@ std::string MessageType::getDescription() const
         stream << " " << i->name << (i + 1 < variableTypes.end() ? "," : ")");
     }
     
-    stream << std::endl << "Message size (bytes): " << getSizeInBytes() << std::endl;
-    stream << std::endl << std::endl << usage;
+    stream << std::endl << "Message size (bytes): " << getSizeInBytes() << std::endl << usage;
     
     return stream.str();
 }
@@ -498,7 +497,11 @@ MessageTranslator::MessageTranslator() :
 
 MessageTranslator::~MessageTranslator()
 {
-
+    //Free all added types.
+    for (std::map<id_t, const MessageType *>::const_iterator i = messageTypes.begin(); i != messageTypes.end(); ++i)
+    {
+        delete i->second;
+    }
 }
 
 bool MessageTranslator::addMessageType(const MessageType *type)
@@ -627,5 +630,29 @@ bool MessageTranslator::receiveMessageTCP(TCPsocket socket, Message &message)
     }
     
     return true;
+}
+
+std::string MessageTranslator::getMessageTypeNames(const std::string &separator) const
+{
+    std::ostringstream stream;
+    
+    for (std::map<id_t, const MessageType *>::const_iterator i = messageTypes.begin(); i != messageTypes.end(); ++i)
+    {
+        stream << i->second->name << separator;
+    }
+    
+    return stream.str();
+}
+
+std::string MessageTranslator::getMessageTypeDescriptions() const
+{
+    std::ostringstream stream;
+    
+    for (std::map<id_t, const MessageType *>::const_iterator i = messageTypes.begin(); i != messageTypes.end(); ++i)
+    {
+        stream << i->second->getDescription() << std::endl << std::endl;
+    }
+    
+    return stream.str();
 }
 

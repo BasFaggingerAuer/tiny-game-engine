@@ -83,7 +83,28 @@ struct VariableData
 
 struct Message
 {
-    unsigned int id;
+    Message() :
+        id(0),
+        data()
+    {
+
+    }
+    
+    Message(const id_t &a_id) :
+        id(a_id),
+        data()
+    {
+
+    }
+    
+    template<typename T>
+    Message & operator << (const T &a)
+    {
+        data.push_back(VariableData(a));
+        return *this;
+    }
+    
+    id_t id;
     std::vector<VariableData> data;
 };
 
@@ -125,6 +146,8 @@ class MessageTranslator
         bool messageToText(const Message &, std::string &) const;
         bool sendMessageTCP(const Message &, TCPsocket);
         bool receiveMessageTCP(TCPsocket, Message &);
+        std::string getMessageTypeNames(const std::string & = ", ") const;
+        std::string getMessageTypeDescriptions() const;
         
     protected:
         bool addMessageType(const MessageType *);

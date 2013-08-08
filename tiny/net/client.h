@@ -31,10 +31,10 @@ namespace tiny
 namespace net
 {
 
-class Client : public MessageTranslator
+class Client
 {
     public:
-        Client(const std::string &, const unsigned int &);
+        Client(const std::string &, const unsigned int &, MessageTranslator *);
         virtual ~Client();
         
         bool listen(const double &);
@@ -45,6 +45,7 @@ class Client : public MessageTranslator
         virtual void disconnectedFromHost();
         
     private:
+        MessageTranslator * const translator;
         IPaddress hostAddress;
         TCPsocket socket;
 };
