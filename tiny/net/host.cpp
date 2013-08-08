@@ -22,8 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using namespace tiny::net;
 
 Host::Host(const unsigned int &listenPort) :
-    lastClientIndex(0),
-    messageBuffer(MAX_MESSAGE_SIZE)
+    lastClientIndex(0)
 {
     //Create listening socket.
     if (SDLNet_ResolveHost(&hostAddress, 0, listenPort) < 0)
@@ -87,6 +86,7 @@ bool Host::listen(const double &dt)
     }
     
     //Are any of the sockets active?
+    //TODO: Keep doing this until there is no more data available?
     if (SDLNet_CheckSockets(selector, 1000.0*dt) > 0)
     {
         if (SDLNet_SocketReady(hostSocket) != 0)
@@ -112,14 +112,38 @@ bool Host::listen(const double &dt)
             }
         }
         
-        //Look for data from the clients.
+        //Look for data from the clients and remove the clients that have disconnected.
+        std::map<TCPsocket, unsigned int> remainingClients;
+        
         for (std::map<TCPsocket, unsigned int>::const_iterator c = clients.begin(); c != clients.end(); ++c)
         {
+            bool keepClient = true;
+            
             if (SDLNet_SocketReady(c->first) != 0)
             {
-                //TODO: Receive data.
+                //Receive data.
+                Message message;
+                
+                if (!receiveMessageTCP(c->first, message))
+                {
+                    std::cerr << "Lost connection from client " << c->second << "." << std::endl;
+                    removeClient(c->second);
+                    SDLNet_TCP_Close(c->first);
+                    keepClient = false;
+                }
+                else
+                {
+                    receiveMessage(c->second, message);
+                }
+            }
+            
+            if (keepClient)
+            {
+                remainingClients.insert(*c);
             }
         }
+        
+        clients = remainingClients;
     }
     
     //Free socket set.
@@ -136,11 +160,6 @@ void Host::sendMessage(const Message &)
 void Host::sendPrivateMessage(const unsigned int &, const Message &)
 {
     //TODO.
-}
-
-void Host::addMessageType(const MessageType *messageType)
-{
-    messageTypes.push_back(messageType);
 }
 
 void Host::addClient(const unsigned int &)

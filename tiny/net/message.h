@@ -20,6 +20,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <sstream>
 #include <vector>
+#include <map>
+
+#include <SDL_net.h>
 
 #include <tiny/math/vec.h>
 
@@ -46,7 +49,7 @@ enum vt_enum
 
 }
 
-#define MAX_MESSAGE_SIZE 65536
+typedef unsigned short id_t;
 
 struct VariableType
 {
@@ -87,7 +90,7 @@ struct Message
 class MessageType
 {
     public:
-        MessageType(const unsigned short &, const std::string &, const std::string & = "");
+        MessageType(const id_t &, const std::string &, const std::string & = "");
         virtual ~MessageType();
         
         size_t getNrVariables() const;
@@ -103,11 +106,32 @@ class MessageType
     protected:
         void addVariableType(const std::string &, const vt::vt_enum &);
         
-    private:
-        const unsigned short id;
+    public:
+        const id_t id;
         const std::string name;
         const std::string usage;
+        
+    private:
         std::vector<VariableType> variableTypes;
+};
+
+class MessageTranslator
+{
+    public:
+        MessageTranslator();
+        virtual ~MessageTranslator();
+        
+        bool textToMessage(const std::string &, Message &) const;
+        bool messageToText(const Message &, std::string &) const;
+        bool sendMessageTCP(const Message &, TCPsocket);
+        bool receiveMessageTCP(TCPsocket, Message &);
+        
+    protected:
+        bool addMessageType(const MessageType *);
+        
+    private:
+        std::vector<unsigned char> messageBuffer;
+        std::map<id_t, const MessageType *> messageTypes;
 };
 
 }

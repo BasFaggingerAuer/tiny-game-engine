@@ -20,8 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using namespace tiny::net;
 
-Client::Client(const std::string &hostName, const unsigned int &hostPort) :
-    messageBuffer(MAX_MESSAGE_SIZE)
+Client::Client(const std::string &hostName, const unsigned int &hostPort)
 {
     if (SDLNet_ResolveHost(&hostAddress, hostName.c_str(), hostPort) < 0)
     {
@@ -85,11 +84,6 @@ bool Client::listen(const double &dt)
 void Client::sendMessage(const Message &)
 {
     //TODO.
-}
-
-void Client::addMessageType(const MessageType *messageType)
-{
-    messageTypes.push_back(messageType);
 }
 
 void Client::receiveMessage(const Message &)

@@ -20,7 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <sstream>
 #include <vector>
-#include <map>
 
 #include <SDL_net.h>
 
@@ -32,7 +31,7 @@ namespace tiny
 namespace net
 {
 
-class Host
+class Host : public MessageTranslator
 {
     public:
         Host(const unsigned int &);
@@ -43,8 +42,6 @@ class Host
         void sendPrivateMessage(const unsigned int &, const Message &);
         
     protected:
-        void addMessageType(const MessageType *);
-        
         virtual void addClient(const unsigned int &);
         virtual void receiveMessage(const unsigned int &, const Message &);
         virtual void removeClient(const unsigned int &);
@@ -56,8 +53,6 @@ class Host
         IPaddress hostAddress;
         TCPsocket hostSocket;
         std::map<TCPsocket, unsigned int> clients;
-        std::vector<const MessageType *> messageTypes;
-        std::vector<unsigned char> messageBuffer;
 };
 
 }

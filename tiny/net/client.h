@@ -31,7 +31,7 @@ namespace tiny
 namespace net
 {
 
-class Client
+class Client : public MessageTranslator
 {
     public:
         Client(const std::string &, const unsigned int &);
@@ -41,16 +41,12 @@ class Client
         void sendMessage(const Message &);
         
     protected:
-        void addMessageType(const MessageType *);
-        
         virtual void receiveMessage(const Message &);
         virtual void disconnectedFromHost();
         
     private:
         IPaddress hostAddress;
         TCPsocket socket;
-        std::vector<const MessageType *> messageTypes;
-        std::vector<unsigned char> messageBuffer;
 };
 
 }

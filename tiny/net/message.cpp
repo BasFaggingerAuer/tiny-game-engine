@@ -146,7 +146,7 @@ VariableData::VariableData(const vec4 &a) :
 
 }
 
-MessageType::MessageType(const unsigned short &a_id, const std::string &a_name, const std::string &a_usage) :
+MessageType::MessageType(const id_t &a_id, const std::string &a_name, const std::string &a_usage) :
     id(a_id),
     name(a_name),
     usage(a_usage),
@@ -193,7 +193,7 @@ std::string MessageType::getDescription() const
 
 size_t MessageType::getSizeInBytes() const
 {
-    size_t length = sizeof(unsigned short);
+    size_t length = sizeof(id_t);
     
     for (std::vector<VariableType>::const_iterator i = variableTypes.begin(); i != variableTypes.end(); ++i)
     {
@@ -329,9 +329,9 @@ size_t MessageType::dataToMessage(const unsigned char *data, Message &out) const
     const unsigned char *dataPtr = data;
     
     //Read identifier.
-    const unsigned short dataId = *(const unsigned short *)dataPtr;
+    const id_t dataId = *(const id_t *)dataPtr;
     
-    dataPtr += sizeof(unsigned short);
+    dataPtr += sizeof(id_t);
     
     //Invalid id.
     if (dataId != id)
@@ -423,8 +423,8 @@ size_t MessageType::messageToData(const Message &in, unsigned char *out) const
     const VariableData *msgPtr = &in.data[0];
     unsigned char *dataPtr = out;
     
-    *(unsigned short *)dataPtr = id;
-    dataPtr += sizeof(unsigned short);
+    *(id_t *)dataPtr = id;
+    dataPtr += sizeof(id_t);
     
     for (std::vector<VariableType>::const_iterator i = variableTypes.begin(); i != variableTypes.end(); ++i)
     {
@@ -488,5 +488,144 @@ void MessageType::addVariableType(const std::string &a_name, const vt::vt_enum &
     }
     
     variableTypes.push_back(VariableType(a_name, a_type));
+}
+
+MessageTranslator::MessageTranslator() :
+    messageBuffer(65536)
+{
+
+}
+
+MessageTranslator::~MessageTranslator()
+{
+
+}
+
+bool MessageTranslator::addMessageType(const MessageType *type)
+{
+    if (!type)
+    {
+        std::cerr << "Warning: Null message type!" << std::endl;
+        return false;
+    }
+    
+    if (messageTypes.find(type->id) != messageTypes.end())
+    {
+        std::cerr << "Warning: The message type '" << type->name << "' with id " << type->id << " already exists in this translator!" << std::endl;
+        return false;
+    }
+    
+    messageTypes[type->id] = type;
+    
+    return true;
+}
+
+bool MessageTranslator::textToMessage(const std::string &text, Message &message) const
+{
+    //Retrieve message name.
+    std::istringstream stream(text);
+    std::string messageName = "";
+    
+    stream >> messageName;
+    
+    for (std::map<id_t, const MessageType *>::const_iterator i = messageTypes.begin(); i != messageTypes.end(); ++i)
+    {
+        if (i->second->name == messageName)
+        {
+            return i->second->textToMessage(text, message);
+        }
+    }
+    
+    std::cerr << "Unable to find message for '" << text << "'!" << std::endl;
+    
+    return false;
+}
+
+bool MessageTranslator::messageToText(const Message &message, std::string &text) const
+{
+    std::map<id_t, const MessageType *>::const_iterator i = messageTypes.find(message.id);
+    
+    if (i == messageTypes.end())
+    {
+        std::cerr << "Unable to find message type with id " << message.id << "!" << std::endl;
+        return false;
+    }
+    
+    return i->second->messageToText(message, text);
+}
+
+bool MessageTranslator::sendMessageTCP(const Message &message, TCPsocket socket)
+{
+    std::map<id_t, const MessageType *>::const_iterator i = messageTypes.find(message.id);
+    
+    if (i == messageTypes.end())
+    {
+        std::cerr << "Unable to find message type with id " << message.id << "!" << std::endl;
+        return false;
+    }
+    
+    const size_t messageSize = i->second->getSizeInBytes();
+    
+    if (messageSize > messageBuffer.size() || messageSize == 0)
+    {
+        std::cerr << "Message is too large to be sent over TCP (" << messageSize << " bytes)!" << std::endl;
+        return false;
+    }
+    
+    if (i->second->messageToData(message, &messageBuffer[0]) != messageSize)
+    {
+        std::cerr << "Unable to convert message to raw data!" << std::endl;
+        return false;
+    }
+    
+    if (SDLNet_TCP_Send(socket, &messageBuffer[0], messageSize) != static_cast<int>(messageSize))
+    {
+        std::cerr << "Unable to send all data over TCP: " << SDLNet_GetError() << "!" << std::endl;
+        return false;
+    }
+    
+    return true;
+}
+
+bool MessageTranslator::receiveMessageTCP(TCPsocket socket, Message &message)
+{
+    //Receive id.
+    if (SDLNet_TCP_Recv(socket, &messageBuffer[0], sizeof(id_t)) != sizeof(id_t))
+    {
+        std::cerr << "Unable to receive message id over TCP!" << std::endl;
+        return false;
+    }
+    
+    const id_t id = *(id_t *)&messageBuffer[0];
+    std::map<id_t, const MessageType *>::const_iterator i = messageTypes.find(id);
+    
+    if (i == messageTypes.end())
+    {
+        std::cerr << "Unable to find message type with id " << id << "!" << std::endl;
+        return false;
+    }
+    
+    const size_t messageSize = i->second->getSizeInBytes();
+    
+    if (messageSize > messageBuffer.size() || messageSize == 0)
+    {
+        std::cerr << "Message is too large to be sent over TCP (" << messageSize << " bytes)!" << std::endl;
+        return false;
+    }
+    
+    //Receive data.
+    if (SDLNet_TCP_Recv(socket, &messageBuffer[sizeof(id_t)], messageSize - sizeof(id_t)) != static_cast<int>(messageSize - sizeof(id_t)))
+    {
+        std::cerr << "Unable to receive message contents over TCP!" << std::endl;
+        return false;
+    }
+    
+    if (i->second->dataToMessage(&messageBuffer[0], message) != messageSize)
+    {
+        std::cerr << "Unable to convert raw data to message!" << std::endl;
+        return false;
+    }
+    
+    return true;
 }
 
