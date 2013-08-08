@@ -16,38 +16,36 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #pragma once
 
-#include <tiny/math/vec.h>
+#include <iostream>
+#include <string>
+#include <vector>
 
 namespace tiny
 {
 
-namespace os
+namespace net
 {
 
-class Application
+class Console
 {
     public:
-        Application();
-        virtual ~Application();
+        Console();
+        virtual ~Console();
         
-        virtual double pollEvents() = 0;
-        virtual void paint() = 0;
-        virtual int getScreenWidth() const = 0;
-        virtual int getScreenHeight() const = 0;
-        
-        bool isRunning() const;
-        bool isKeyPressed(const int &) const;
-        bool isKeyPressedOnce(const int &);
-        
-        void updateSimpleCamera(const float &, vec3 &, vec4 &) const;
-        
+        void scrollUp();
+        void scrollDown();
+        void scrollDownFull();
+        void keyDown(const int &);
+        void addLine(const std::string &);
+        std::string getText(const int &) const;
+
     protected:
-        void stopRunning();
-        
-        bool pressedKeys[256];
-        
+        virtual void execute(const std::string &);
+
     private:
-        bool running;
+        std::vector<std::string> lines;
+        std::string curLine;
+        int lineScroll;
 };
 
 }

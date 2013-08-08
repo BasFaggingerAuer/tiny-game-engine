@@ -70,6 +70,9 @@ target_link_libraries(test_ComputeTexture ${USED_LIBS})
 add_executable(test_Font src/test_Font.cpp)
 target_link_libraries(test_Font ${USED_LIBS})
 
+add_executable(test_Console src/test_Console.cpp)
+target_link_libraries(test_Console ${USED_LIBS})
+
 add_executable(test_StaticMesh src/test_StaticMesh.cpp)
 target_link_libraries(test_StaticMesh ${USED_LIBS})
 

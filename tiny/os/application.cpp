@@ -41,6 +41,17 @@ bool Application::isKeyPressed(const int &key) const
     return pressedKeys[key];
 }
 
+bool Application::isKeyPressedOnce(const int &key)
+{
+    if (key < 0 || key >= 256) return false;
+    
+    const bool pressed = pressedKeys[key];
+    
+    pressedKeys[key] = false;
+    
+    return pressed;
+}
+
 void Application::stopRunning()
 {
     running = false;

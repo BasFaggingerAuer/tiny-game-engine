@@ -11,6 +11,7 @@ add_library(tinygame
             net/message.cpp
             net/host.cpp
             net/client.cpp
+            net/console.cpp
             img/image.cpp
             img/io/image.cpp
             lod/quadtree.cpp
