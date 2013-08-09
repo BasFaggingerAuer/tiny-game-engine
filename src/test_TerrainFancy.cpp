@@ -332,7 +332,7 @@ void setup()
     
     //Create sky (a simple cube containing the world).
     skyBox = new draw::StaticMesh(mesh::StaticMesh::createCubeMesh(-1.0e6));
-    skyBoxTexture = new draw::RGBTexture2D(img::Image::createSolidImage(16));
+    skyBoxTexture = new draw::RGBTexture2D(img::Image::createSolidImage(16), draw::tf::filter);
     skyBox->setDiffuseTexture(*skyBoxTexture);
     
     //Render using a more advanced shading model.

@@ -75,6 +75,7 @@ void Console::keyDown(const int &key)
 
 void Console::addLine(const std::string &message)
 {
+    std::cerr << "Console: " << message << std::endl;
     lines.push_back(message);
 }
 
@@ -88,12 +89,12 @@ std::string Console::getText(const int &nrLines) const
     std::ostringstream stream;
     std::vector<std::string>::const_reverse_iterator ptr = lines.rbegin() + lineScroll;
     
-    stream << " $ " << curLine << "\\3";
+    stream << " $ " << curLine;
     
     for (int i = 0; i < nrLines && ptr != lines.rend(); ++i)
     {
         stream << std::endl;
-        stream << *ptr++;
+        stream << "\\w\\3" << *ptr++;
     }
     
     return stream.str();

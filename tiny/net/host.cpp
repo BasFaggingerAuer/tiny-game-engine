@@ -22,7 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using namespace tiny::net;
 
 Host::Host(const unsigned int &listenPort, MessageTranslator *a_translator) :
-    lastClientIndex(0),
+    lastClientIndex(1),
     translator(a_translator)
 {
     if (!translator)
