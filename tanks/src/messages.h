@@ -33,6 +33,7 @@ enum mt_t
     help,
     host,
     join,
+    disconnect,
     addPlayer,
     removePlayer,
     welcomePlayer,
@@ -80,10 +81,21 @@ class Join : public tiny::net::MessageType
         ~Join() {}
 };
 
+class Disconnect : public tiny::net::MessageType
+{
+    public:
+        Disconnect() : tiny::net::MessageType(mt::disconnect, "disconnect", "Disconnect the current network game.")
+        {
+            
+        }
+        
+        ~Disconnect() {}
+};
+
 class AddPlayer : public tiny::net::MessageType
 {
     public:
-        AddPlayer() : tiny::net::MessageType(mt::addPlayer, "addPlayer", "Adds a human player to the game, with the given index.")
+        AddPlayer() : tiny::net::MessageType(mt::addPlayer, "addplayer", "Adds a human player to the game, with the given index.")
         {
             addVariableType("index", tiny::net::vt::Integer);
         }
@@ -94,7 +106,7 @@ class AddPlayer : public tiny::net::MessageType
 class RemovePlayer : public tiny::net::MessageType
 {
     public:
-        RemovePlayer() : tiny::net::MessageType(mt::removePlayer, "removePlayer", "Removes a human player to the game, with the given index.")
+        RemovePlayer() : tiny::net::MessageType(mt::removePlayer, "removeplayer", "Removes a human player to the game, with the given index.")
         {
             addVariableType("index", tiny::net::vt::Integer);
         }
@@ -105,7 +117,7 @@ class RemovePlayer : public tiny::net::MessageType
 class WelcomePlayer : public tiny::net::MessageType
 {
     public:
-        WelcomePlayer() : tiny::net::MessageType(mt::welcomePlayer, "welcomePlayer", "Sends the index of a player to its client (host -> client only).")
+        WelcomePlayer() : tiny::net::MessageType(mt::welcomePlayer, "welcomeplayer", "Sends the index of a player to its client (host -> client only).")
         {
             addVariableType("index", tiny::net::vt::Integer);
         }

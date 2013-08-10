@@ -182,10 +182,13 @@ std::string MessageType::getDescription() const
         else if (i->type == vt::Vec3) stream << "vec3";
         else if (i->type == vt::Vec4) stream << "vec4";
         
-        stream << " " << i->name << (i + 1 < variableTypes.end() ? "," : ")");
+        stream << " " << i->name << (i + 1 < variableTypes.end() ? "," : "");
     }
     
-    stream << std::endl << "Message size (bytes): " << getSizeInBytes() << std::endl << usage;
+    stream << ")" << std::endl;
+    
+    //stream << "Message size (bytes): " << getSizeInBytes();
+    stream << usage;
     
     return stream.str();
 }

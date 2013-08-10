@@ -37,6 +37,8 @@ void Console::scrollUp()
     lineScroll += 10;
 
     if (lineScroll >= (int)lines.size()) lineScroll = lines.size() - 1;
+    
+    update();
 }
 
 void Console::scrollDown()
@@ -44,11 +46,15 @@ void Console::scrollDown()
     lineScroll -= 10;
     
     if (lineScroll < 0) lineScroll = 0;
+    
+    update();
 }
 
 void Console::scrollDownFull()
 {
     lineScroll = 0;
+    
+    update();
 }
 
 void Console::keyDown(const int &key)
@@ -71,12 +77,25 @@ void Console::keyDown(const int &key)
     {
         curLine += key;
     }
+    
+    update();
 }
 
 void Console::addLine(const std::string &message)
 {
     std::cerr << "Console: " << message << std::endl;
-    lines.push_back(message);
+    
+    std::istringstream stream(message);
+    
+    while (stream.good())
+    {
+        std::string messageLine;
+        
+        std::getline(stream, messageLine);
+        lines.push_back(messageLine);
+    }
+    
+    update();
 }
 
 void Console::execute(const std::string &)
@@ -98,5 +117,10 @@ std::string Console::getText(const int &nrLines) const
     }
     
     return stream.str();
+}
+
+void Console::update()
+{
+    
 }
 

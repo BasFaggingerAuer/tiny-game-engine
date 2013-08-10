@@ -35,6 +35,7 @@ class TanksConsole : public tiny::net::Console
     
     protected:
         void execute(const std::string &);
+        void update();
         
     private:
         TanksGame * const game;

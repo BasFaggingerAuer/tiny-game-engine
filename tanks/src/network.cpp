@@ -102,3 +102,9 @@ void TanksConsole::execute(const std::string &command)
     }
 }
 
+void TanksConsole::update()
+{
+    game->updateConsole();
+}
+
+

@@ -51,9 +51,11 @@ class TanksGame
         void disconnect();
         void addPlayer(const unsigned int &);
         void removePlayer(const unsigned int &);
+        void updateConsole() const;
         
     private:
         const std::string resourcePath;
+        double aspectRatio;
         tiny::draw::Renderer *renderer;
         tiny::draw::ScreenIconHorde *font;
         tiny::draw::IconTexture2D *fontTexture;
@@ -62,6 +64,7 @@ class TanksGame
         TanksConsole * const console;
         TanksHost *host;
         TanksClient *client;
+        unsigned int clientPlayerIndex;
         
         std::map<unsigned int, Player> players;
 };

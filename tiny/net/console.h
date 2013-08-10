@@ -41,6 +41,7 @@ class Console
 
     protected:
         virtual void execute(const std::string &);
+        virtual void update();
 
     private:
         std::vector<std::string> lines;

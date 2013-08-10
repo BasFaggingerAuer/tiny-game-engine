@@ -141,7 +141,7 @@ int main(int argc, char **argv)
     try
     {
         application = new os::SDLApplication(SCREEN_WIDTH, SCREEN_HEIGHT);
-        setup(argc > 1 ? argv[1] : DATA_DIRECTORY + "mesh/f_walk_01.dae");
+        setup(argc > 1 ? argv[1] : DATA_DIRECTORY + "mesh/cubes.dae");
     }
     catch (std::exception &e)
     {

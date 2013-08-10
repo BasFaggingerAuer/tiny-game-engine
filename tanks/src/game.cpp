@@ -35,21 +35,23 @@ Player::~Player()
 
 TanksGame::TanksGame(const std::string &a_resourcePath) :
     resourcePath(a_resourcePath),
+    aspectRatio(1920.0/1080.0),
     translator(new TanksMessageTranslator()),
     console(new TanksConsole(this)),
     host(0),
-    client(0)
+    client(0),
+    clientPlayerIndex(0)
 {
     std::cerr << "Starting a game of tanks with resources from '" << resourcePath << "'..." << std::endl;
     
     //Read font from disk as a texture.
     fontTexture = new tiny::draw::IconTexture2D(512, 512);
-    fontTexture->packIcons(tiny::img::io::readFont(resourcePath + "font/OpenBaskerville-0.0.75.ttf", 48));
+    fontTexture->packIcons(tiny::img::io::readFont(resourcePath + "font/mensch.ttf", 48));
     
     //Create a drawable font object as a collection of instanced screen icons.
     font = new tiny::draw::ScreenIconHorde(1024);
     font->setIconTexture(*fontTexture);
-    font->setText(-1.0, -1.0, 0.2, 2.0, "Welcome to \\ra Game of Tanks\\w, press <ENTER> to start.", *fontTexture);
+    font->setText(-1.0, -1.0, 0.1, aspectRatio, "Welcome to \\ra Game of Tanks\\w, press <ENTER> to start.", *fontTexture);
     
     //Create a renderer and add the font to it, disabling depth reading and writing.
     renderer = new tiny::draw::Renderer();
@@ -63,27 +65,28 @@ TanksGame::~TanksGame()
     delete translator;
 }
 
+void TanksGame::updateConsole() const
+{
+    //Update the console on screen.
+    font->setText(-1.0, -1.0, 0.05, aspectRatio, console->getText(64), *fontTexture);
+}
+
 void TanksGame::update(tiny::os::Application *application, const double &dt)
 {
+    //Update aspect ratio.
+    aspectRatio = static_cast<double>(application->getScreenWidth())/static_cast<double>(application->getScreenHeight());
+    
     //Exchange network data.
     if (host) host->listen(0.0);
     if (client) client->listen(0.0);
 
     //Update console.
-    bool updateConsole = false;
-    
     for (int i = 0; i < 256; ++i)
     {
         if (application->isKeyPressedOnce(i))
         {
-            updateConsole = true;
             console->keyDown(i);
         }
-    }
-    
-    if (updateConsole)
-    {
-        font->setText(-1.0, -1.0, 0.1, static_cast<double>(application->getScreenWidth())/static_cast<double>(application->getScreenHeight()), console->getText(32), *fontTexture);
     }
 }
 
@@ -107,7 +110,8 @@ bool TanksGame::applyMessage(const unsigned int &playerIndex, const Message &mes
     {
         if (playerIndex == 0)
         {
-            out << "Available commands: " << translator->getMessageTypeNames();
+            out << "\\w\\4==== Available commands:" << std::endl << translator->getMessageTypeNames("\n") << std::endl;
+            out << "\\w\\4==== Full descriptions:" << std::endl << translator->getMessageTypeDescriptions();
         }
     }
     else if (message.id == msg::mt::host)
@@ -125,6 +129,7 @@ bool TanksGame::applyMessage(const unsigned int &playerIndex, const Message &mes
                 }
                 
                 host = new TanksHost(port, this);
+                out << "Hosting game at port " << port << ".";
             }
             catch (std::exception &e)
             {
@@ -165,6 +170,7 @@ bool TanksGame::applyMessage(const unsigned int &playerIndex, const Message &mes
                 }
                 
                 client = new TanksClient(ipAddress.str(), port, this);
+                out << "Joined game at " << ipAddress.str() << ":" << port << ".";
             }
             catch (std::exception &e)
             {
@@ -175,6 +181,56 @@ bool TanksGame::applyMessage(const unsigned int &playerIndex, const Message &mes
         else
         {
             out << "A network game is already in progress, please disconnect first.";
+            ok = false;
+        }
+    }
+    else if (message.id == msg::mt::disconnect)
+    {
+        if (playerIndex == 0)
+        {
+            out << "Disconnecting...";
+            disconnect();
+        }
+        else
+        {
+            out << "Player " << playerIndex << " tried to force us to disconnect!";
+            ok = false;
+        }
+    }
+    else if (message.id == msg::mt::addPlayer)
+    {
+        if (playerIndex == 0 && client)
+        {
+            addPlayer(message.data[0].iv1);
+        }
+        else
+        {
+            out << "Only clients add new players via network messages!";
+            ok = false;
+        }
+    }
+    else if (message.id == msg::mt::removePlayer)
+    {
+        if (playerIndex == 0 && client)
+        {
+            removePlayer(message.data[0].iv1);
+        }
+        else
+        {
+            out << "Only clients remove players via network messages!";
+            ok = false;
+        }
+    }
+    else if (message.id == msg::mt::welcomePlayer)
+    {
+        if (playerIndex == 0 && client)
+        {
+            clientPlayerIndex = message.data[0].iv1;
+            out << "Welcomed to network game as player #" << clientPlayerIndex << ".";
+        }
+        else
+        {
+            out << "Only clients receive welcome messages!";
             ok = false;
         }
     }
@@ -201,6 +257,7 @@ void TanksGame::disconnect()
         delete client;
         
         client = 0;
+        console->addLine("Disconnected client from network.");
     }
     
     if (host)
@@ -208,9 +265,12 @@ void TanksGame::disconnect()
         delete host;
         
         host = 0;
+        console->addLine("Disconnected host from network.");
     }
     
-    console->addLine("Disconnected from network.");
+    //Remove all players.
+    players.clear();
+    clientPlayerIndex = 0;
 }
 
 void TanksGame::addPlayer(const unsigned int &playerIndex)
@@ -232,6 +292,15 @@ void TanksGame::addPlayer(const unsigned int &playerIndex)
                 
                 msg << static_cast<int>(playerIndex);
                 host->sendMessage(msg);
+            }
+            
+            //Send new client a welcome message.
+            if (true)
+            {
+                Message msg(msg::mt::welcomePlayer);
+                
+                msg << static_cast<int>(playerIndex);
+                host->sendPrivateMessage(msg, playerIndex);
             }
             
             //Send all current players to the new client.

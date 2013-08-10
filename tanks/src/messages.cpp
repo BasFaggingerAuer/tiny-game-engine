@@ -24,6 +24,7 @@ TanksMessageTranslator::TanksMessageTranslator() :
     addMessageType(new msg::Help());
     addMessageType(new msg::Host());
     addMessageType(new msg::Join());
+    addMessageType(new msg::Disconnect());
     addMessageType(new msg::AddPlayer());
     addMessageType(new msg::RemovePlayer());
     addMessageType(new msg::WelcomePlayer());

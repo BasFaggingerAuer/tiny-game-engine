@@ -4,6 +4,9 @@ Sources of all included data files
 font/OpenBaskerville-0.0.75.ttf
 From the Open Font Library, http://openfontlibrary.org/font/open-baskerville (SIL Open Font License).
 
+font/mensch.ttf
+Mensch, A coding font, by Robey Pointer, http://robey.lag.net/2010/06/21/mensch-font.html (unknown).
+
 img/sky.png
 From the Ogre3D Caelum project, http://caelum.googlecode.com/hg/main/resources/EarthClearSky2.png (GNU Lesser GPL).
 
