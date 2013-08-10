@@ -37,6 +37,7 @@ enum mt_t
     addPlayer,
     removePlayer,
     welcomePlayer,
+    terrainOffset,
     addTank,
     removeTank,
     updateTank,
@@ -123,6 +124,17 @@ class WelcomePlayer : public tiny::net::MessageType
         }
         
         ~WelcomePlayer() {}
+};
+
+class TerrainOffset : public tiny::net::MessageType
+{
+    public:
+        TerrainOffset() : tiny::net::MessageType(mt::terrainOffset, "terrainoffset", "Shifts the action to a different part of the terrain.")
+        {
+            addVariableType("offset", tiny::net::vt::Vec2);
+        }
+        
+        ~TerrainOffset() {}
 };
 
 } //namespace msg

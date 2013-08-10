@@ -28,6 +28,7 @@ TanksMessageTranslator::TanksMessageTranslator() :
     addMessageType(new msg::AddPlayer());
     addMessageType(new msg::RemovePlayer());
     addMessageType(new msg::WelcomePlayer());
+    addMessageType(new msg::TerrainOffset());
 }
 
 TanksMessageTranslator::~TanksMessageTranslator()

@@ -76,27 +76,33 @@ class TanksGame
         void readTerrainResources(const std::string &, TiXmlElement *);
         
         void setTerrainOffset(const tiny::vec2 &);
+        void calculateTerrainType(const tiny::draw::FloatTexture2D &, tiny::draw::RGBATexture2D &, const float &) const;
         
+        //Renderer.
         const double aspectRatio;
         tiny::draw::WorldRenderer *renderer;
         
         tiny::vec3 cameraPosition;
         tiny::vec4 cameraOrientation;
         
+        //Console and font.
         bool consoleMode;
         tiny::draw::ScreenIconHorde *font;
         tiny::draw::IconTexture2D *fontTexture;
         
+        //Sky and atmosphere.
         tiny::draw::StaticMesh *skyBoxMesh;
         tiny::draw::RGBTexture2D *skyBoxDiffuseTexture;
         tiny::draw::RGBTexture2D *skyGradientTexture;
         tiny::draw::effects::SunSky *skyEffect;
         
+        //Terrain.
         tiny::draw::Terrain *terrain;
         tiny::vec2 terrainScale;
         tiny::ivec2 terrainFarScale;
         tiny::vec2 terrainDetailScale;
         tiny::vec2 terrainFarOffset;
+        std::string terrainAttributeShader;
         tiny::draw::FloatTexture2D *terrainHeightTexture;
         tiny::draw::FloatTexture2D *terrainFarHeightTexture;
         tiny::draw::RGBTexture2D *terrainNormalTexture;
@@ -109,6 +115,7 @@ class TanksGame
         tiny::draw::RGBTexture2DArray *biomeDiffuseTextures;
         tiny::draw::RGBTexture2DArray *biomeNormalTextures;
         
+        //Networking.
         TanksMessageTranslator * const translator;
         TanksConsole * const console;
         TanksHost *host;
