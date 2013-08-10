@@ -30,6 +30,10 @@ set(TANKS_LIBS
               ${SDLNET_LIBRARY}
               ${TINYXML_LIBRARY})
 
-add_executable(tanks src/tanks.cpp src/messages.cpp)
+add_executable(tanks src/tanks.cpp
+                     src/messages.cpp
+                     src/network.cpp
+                     src/game.cpp)
+
 target_link_libraries(tanks ${TANKS_LIBS})
 
