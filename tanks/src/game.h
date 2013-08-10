@@ -19,11 +19,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <string>
 #include <map>
 
+#include <tinyxml.h>
+
 #include <tiny/os/application.h>
 #include <tiny/img/io/image.h>
+
 #include <tiny/draw/renderer.h>
+#include <tiny/draw/staticmesh.h>
+#include <tiny/draw/staticmeshhorde.h>
 #include <tiny/draw/icontexture2d.h>
 #include <tiny/draw/iconhorde.h>
+#include <tiny/draw/terrain.h>
+#include <tiny/draw/texture2d.h>
+#include <tiny/draw/texture2darray.h>
+#include <tiny/draw/computetexture.h>
+#include <tiny/draw/heightmap/scale.h>
+#include <tiny/draw/heightmap/resize.h>
+#include <tiny/draw/heightmap/normalmap.h>
+#include <tiny/draw/heightmap/tangentmap.h>
+#include <tiny/draw/heightmap/diamondsquare.h>
+#include <tiny/draw/effects/sunsky.h>
+#include <tiny/draw/worldrenderer.h>
 
 #include "network.h"
 
@@ -40,7 +56,7 @@ class Player
 class TanksGame
 {
     public:
-        TanksGame(const std::string &);
+        TanksGame(const tiny::os::Application *, const std::string &);
         ~TanksGame();
         
         void update(tiny::os::Application *, const double &);
@@ -54,11 +70,44 @@ class TanksGame
         void updateConsole() const;
         
     private:
-        const std::string resourcePath;
-        double aspectRatio;
-        tiny::draw::Renderer *renderer;
+        void readResources(const std::string &);
+        void readConsoleResources(const std::string &, TiXmlElement *);
+        void readSkyResources(const std::string &, TiXmlElement *);
+        void readTerrainResources(const std::string &, TiXmlElement *);
+        
+        void setTerrainOffset(const tiny::vec2 &);
+        
+        const double aspectRatio;
+        tiny::draw::WorldRenderer *renderer;
+        
+        tiny::vec3 cameraPosition;
+        tiny::vec4 cameraOrientation;
+        
+        bool consoleMode;
         tiny::draw::ScreenIconHorde *font;
         tiny::draw::IconTexture2D *fontTexture;
+        
+        tiny::draw::StaticMesh *skyBoxMesh;
+        tiny::draw::RGBTexture2D *skyBoxDiffuseTexture;
+        tiny::draw::RGBTexture2D *skyGradientTexture;
+        tiny::draw::effects::SunSky *skyEffect;
+        
+        tiny::draw::Terrain *terrain;
+        tiny::vec2 terrainScale;
+        tiny::ivec2 terrainFarScale;
+        tiny::vec2 terrainDetailScale;
+        tiny::vec2 terrainFarOffset;
+        tiny::draw::FloatTexture2D *terrainHeightTexture;
+        tiny::draw::FloatTexture2D *terrainFarHeightTexture;
+        tiny::draw::RGBTexture2D *terrainNormalTexture;
+        tiny::draw::RGBTexture2D *terrainFarNormalTexture;
+        tiny::draw::RGBTexture2D *terrainTangentTexture;
+        tiny::draw::RGBTexture2D *terrainFarTangentTexture;
+        tiny::draw::RGBATexture2D *terrainAttributeTexture;
+        tiny::draw::RGBATexture2D *terrainFarAttributeTexture;
+        
+        tiny::draw::RGBTexture2DArray *biomeDiffuseTextures;
+        tiny::draw::RGBTexture2DArray *biomeNormalTextures;
         
         TanksMessageTranslator * const translator;
         TanksConsole * const console;

@@ -50,7 +50,7 @@ int main(int argc, char **argv)
         }
         
         application = new tiny::os::SDLApplication(screenWidth, screenHeight);
-        game = new tanks::TanksGame(argv[1]);
+        game = new tanks::TanksGame(application, argv[1]);
     }
     catch (std::exception &e)
     {

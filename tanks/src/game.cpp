@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include "game.h"
 
 using namespace tanks;
+using namespace tiny;
 
 Player::Player()
 {
@@ -33,29 +34,26 @@ Player::~Player()
 
 }
 
-TanksGame::TanksGame(const std::string &a_resourcePath) :
-    resourcePath(a_resourcePath),
-    aspectRatio(1920.0/1080.0),
+TanksGame::TanksGame(const os::Application *application, const std::string &path) :
+    aspectRatio(static_cast<double>(application->getScreenWidth())/static_cast<double>(application->getScreenHeight())),
     translator(new TanksMessageTranslator()),
     console(new TanksConsole(this)),
     host(0),
     client(0),
     clientPlayerIndex(0)
 {
-    std::cerr << "Starting a game of tanks with resources from '" << resourcePath << "'..." << std::endl;
-    
-    //Read font from disk as a texture.
-    fontTexture = new tiny::draw::IconTexture2D(512, 512);
-    fontTexture->packIcons(tiny::img::io::readFont(resourcePath + "font/mensch.ttf", 48));
-    
-    //Create a drawable font object as a collection of instanced screen icons.
-    font = new tiny::draw::ScreenIconHorde(1024);
-    font->setIconTexture(*fontTexture);
-    font->setText(-1.0, -1.0, 0.1, aspectRatio, "Welcome to \\ra Game of Tanks\\w, press <ENTER> to start.", *fontTexture);
+    readResources(path);
+    cameraPosition = vec3(0.0f, 0.0f, 0.0f);
+    cameraOrientation = vec4(0.0f, 0.0f, 0.0f, 1.0f);
+    consoleMode = false;
     
     //Create a renderer and add the font to it, disabling depth reading and writing.
-    renderer = new tiny::draw::Renderer();
-    renderer->addRenderable(font, false, false, tiny::draw::BlendMix);
+    renderer = new draw::WorldRenderer(application->getScreenWidth(), application->getScreenHeight());
+    
+    renderer->addWorldRenderable(skyBoxMesh);
+    renderer->addWorldRenderable(terrain);
+    renderer->addScreenRenderable(skyEffect, false, false);
+    renderer->addScreenRenderable(font, false, false, draw::BlendMix);
 }
 
 TanksGame::~TanksGame()
@@ -63,30 +61,66 @@ TanksGame::~TanksGame()
     disconnect();
     
     delete translator;
+    delete renderer;
+    
+    delete font;
+    delete fontTexture;
+    
+    delete skyBoxMesh;
+    delete skyBoxDiffuseTexture;
+    delete skyGradientTexture;
+    delete skyEffect;
+    
+    delete terrain;
+    delete terrainHeightTexture;
+    delete terrainFarHeightTexture;
+    delete terrainNormalTexture;
+    delete terrainFarNormalTexture;
+    delete terrainTangentTexture;
+    delete terrainFarTangentTexture;
+    delete terrainAttributeTexture;
+    delete terrainFarAttributeTexture;
+    
+    delete biomeDiffuseTextures;
+    delete biomeNormalTextures;
 }
 
 void TanksGame::updateConsole() const
 {
     //Update the console on screen.
-    font->setText(-1.0, -1.0, 0.05, aspectRatio, console->getText(64), *fontTexture);
+    font->setText(-1.0, -1.0, consoleMode ? 0.05 : 0.025, aspectRatio, console->getText(256), *fontTexture);
 }
 
-void TanksGame::update(tiny::os::Application *application, const double &dt)
+void TanksGame::update(os::Application *application, const double &dt)
 {
-    //Update aspect ratio.
-    aspectRatio = static_cast<double>(application->getScreenWidth())/static_cast<double>(application->getScreenHeight());
-    
     //Exchange network data.
     if (host) host->listen(0.0);
     if (client) client->listen(0.0);
 
-    //Update console.
-    for (int i = 0; i < 256; ++i)
+    if (application->isKeyPressedOnce('`'))
     {
-        if (application->isKeyPressedOnce(i))
+        consoleMode = !consoleMode;
+        updateConsole();
+    }
+    
+    if (consoleMode)
+    {
+        //Update console.
+        for (int i = 0; i < 256; ++i)
         {
-            console->keyDown(i);
+            if (application->isKeyPressedOnce(i))
+            {
+                console->keyDown(i);
+            }
         }
+    }
+    else
+    {
+        //Move the camera around.
+        application->updateSimpleCamera(dt, cameraPosition, cameraOrientation);
+        
+        //Tell the world renderer that the camera has changed.
+        renderer->setCamera(cameraPosition, cameraOrientation);
     }
 }
 
@@ -226,7 +260,7 @@ bool TanksGame::applyMessage(const unsigned int &playerIndex, const Message &mes
         if (playerIndex == 0 && client)
         {
             clientPlayerIndex = message.data[0].iv1;
-            out << "Welcomed to network game as player #" << clientPlayerIndex << ".";
+            out << "Welcomed to network game as player " << clientPlayerIndex << ".";
         }
         else
         {
@@ -345,5 +379,190 @@ void TanksGame::removePlayer(const unsigned int &playerIndex)
     }
     
     console->addLine(out.str());
+}
+
+void TanksGame::readResources(const std::string &path)
+{
+    const std::string worldFileName = path + "tanks.xml";
+    
+    std::cerr << "Reading resources from '" << worldFileName << "'." << std::endl;
+    
+    //Read world description from an XML file.
+    TiXmlDocument doc(worldFileName.c_str());
+    
+    if (!doc.LoadFile())
+    {
+        std::cerr << "Unable to read XML file '" << worldFileName << "'!" << std::endl;
+        throw std::exception();
+    }
+    
+    TiXmlElement *root = doc.FirstChildElement();
+    
+    if (!root)
+    {
+        std::cerr << "No XML root node!" << std::endl;
+        throw std::exception();
+    }
+    
+    if (root->ValueStr() != "tanks")
+    {
+        std::cerr << "This is not a world of tanks world XML file!" << std::endl;
+        throw std::exception();
+    }
+    
+    //Read all parts of the XML file.
+    for (TiXmlElement *el = root->FirstChildElement(); el; el = el->NextSiblingElement())
+    {
+             if (el->ValueStr() == "console") readConsoleResources(path, el);
+        else if (el->ValueStr() == "sky") readSkyResources(path, el);
+        else if (el->ValueStr() == "terrain") readTerrainResources(path, el);
+    }
+}
+
+void TanksGame::readConsoleResources(const std::string &path, TiXmlElement *el)
+{
+    std::cerr << "Reading console resources..." << std::endl;
+    
+    int fontTextureSize = 0;
+    int fontSize = 0;
+    std::string fontFileName = "";
+    
+    assert(el->ValueStr() == "console");
+    
+    el->QueryIntAttribute("texture_size", &fontTextureSize);
+    el->QueryIntAttribute("font_size", &fontSize);
+    el->QueryStringAttribute("font", &fontFileName);
+    
+    //Read font from disk as a texture.
+    fontTexture = new draw::IconTexture2D(fontTextureSize, fontTextureSize);
+    fontTexture->packIcons(img::io::readFont(path + fontFileName, fontSize));
+    
+    //Create a drawable font object as a collection of instanced screen icons.
+    font = new draw::ScreenIconHorde(4096);
+    font->setIconTexture(*fontTexture);
+    font->setText(-1.0, -1.0, 0.1, aspectRatio, "Welcome to \\ra Game of Tanks\\w, press ` to access the console.", *fontTexture);
+}
+
+void TanksGame::readSkyResources(const std::string &path, TiXmlElement *el)
+{
+    std::cerr << "Reading sky resources..." << std::endl;
+    
+    std::string textureFileName = "";
+    
+    assert(el->ValueStr() == "sky");
+    
+    el->QueryStringAttribute("texture", &textureFileName);
+    
+    //Create sky box mesh and read gradient texture.
+    skyBoxMesh = new draw::StaticMesh(mesh::StaticMesh::createCubeMesh(-1.0e6));
+    skyBoxDiffuseTexture = new draw::RGBTexture2D(img::Image::createSolidImage());
+    skyBoxMesh->setDiffuseTexture(*skyBoxDiffuseTexture);
+    
+    skyEffect = new draw::effects::SunSky();
+    skyGradientTexture = new draw::RGBTexture2D(img::io::readImage(path + textureFileName), draw::tf::filter);
+    skyEffect->setSkyTexture(*skyGradientTexture);
+}
+
+void TanksGame::setTerrainOffset(const vec2 &offset)
+{
+    //Shifts the local heightmap to a specific spot in the global heightmap.
+    terrainFarOffset = offset;
+    
+    //Zoom into a small area of the far-away heightmap.
+    draw::computeResizedTexture(*terrainFarHeightTexture, *terrainHeightTexture,
+                                vec2(1.0f/static_cast<float>(terrainFarScale.x), 1.0f/static_cast<float>(terrainFarScale.y)),
+                                offset);
+    
+    //Apply the diamond-square fractal algorithm to make the zoomed-in heightmap a little less boring.
+    draw::computeDiamondSquareRefinement(*terrainHeightTexture, *terrainHeightTexture, terrainFarScale.x);
+    
+    //Calculate normal and tangent maps.
+    draw::computeNormalMap(*terrainFarHeightTexture, *terrainFarNormalTexture, terrainScale.x*terrainFarScale.x);
+    draw::computeNormalMap(*terrainHeightTexture, *terrainNormalTexture, terrainScale.x);
+    draw::computeTangentMap(*terrainFarHeightTexture, *terrainFarTangentTexture, terrainScale.x*terrainFarScale.x);
+    draw::computeTangentMap(*terrainHeightTexture, *terrainTangentTexture, terrainScale.x);
+    
+    //We do this for both the zoomed-in and far-away terrain.
+    
+    //TODO.
+    //computeTerrainTypeFromHeight(*terrainHeightTexture, *terrainAttributeTexture, terrainScale.x);
+    //computeTerrainTypeFromHeight(*terrainFarHeightTexture, *terrainFarAttributeTexture, terrainScale.x*terrainFarScale.x);
+    
+    //Retrieve all generated data.
+    terrainHeightTexture->getFromDevice();
+    terrainAttributeTexture->getFromDevice();
+    
+    //Set proper textures in the terrain.
+    terrain->setFarHeightTextures(*terrainHeightTexture, *terrainFarHeightTexture,
+                                  *terrainTangentTexture, *terrainFarTangentTexture,
+                                  *terrainNormalTexture, *terrainFarNormalTexture,
+                                  terrainScale, terrainFarScale, terrainFarOffset);
+    terrain->setFarDiffuseTextures(*terrainAttributeTexture, *terrainFarAttributeTexture,
+                                   *biomeDiffuseTextures, *biomeNormalTextures,
+                                   terrainDetailScale);
+}
+
+void TanksGame::readTerrainResources(const std::string &path, TiXmlElement *el)
+{
+    std::cerr << "Reading terrain resources..." << std::endl;
+    
+    std::vector<img::Image> diffuseTextures;
+    std::vector<img::Image> normalTextures;
+    img::Image heightMap;
+    std::string attributeMapShader = "";
+    float widthScale = 1.0f;
+    float heightScale = 1.0f;
+    int farScale = 2; 
+    float detailScale = 1.0f;
+    
+    assert(el->ValueStr() == "terrain");
+    
+    el->QueryFloatAttribute("scale_width", &widthScale);
+    el->QueryFloatAttribute("scale_height", &heightScale);
+    el->QueryIntAttribute("scale_far", &farScale);
+    el->QueryFloatAttribute("scale_detail", &detailScale);
+    if (el->Attribute("heightmap")) heightMap = img::io::readImage(path + std::string(el->Attribute("heightmap")));
+    
+    for (TiXmlElement *sl = el->FirstChildElement(); sl; sl = sl->NextSiblingElement())
+    {
+        if (sl->ValueStr() == "biome")
+        {
+            if (sl->Attribute("diffuse")) diffuseTextures.push_back(img::io::readImage(path + std::string(sl->Attribute("diffuse"))));
+            if (sl->Attribute("normal")) normalTextures.push_back(img::io::readImage(path + std::string(sl->Attribute("normal"))));
+        }
+        else if (sl->ValueStr() == "shader")
+        {
+            attributeMapShader = std::string(sl->GetText());
+        }
+    }
+    
+    //Actually construct the terrain using all the data that we have.
+    terrainScale = vec2(widthScale);
+    terrainFarScale = ivec2(farScale);
+    terrainDetailScale = vec2(detailScale);
+    terrainHeightTexture = new draw::FloatTexture2D(heightMap, draw::tf::filter);
+    terrainFarHeightTexture = new draw::FloatTexture2D(terrainHeightTexture->getWidth(), terrainHeightTexture->getHeight(), draw::tf::filter);
+    
+    //Scale vertical range of the far-away heightmap.
+    draw::computeScaledTexture(*terrainHeightTexture, *terrainFarHeightTexture, vec4(heightScale/255.0f), vec4(0.0f));
+    
+    //Create normal maps for the far-away and zoomed-in heightmaps.
+    terrainFarNormalTexture = new draw::RGBTexture2D(terrainHeightTexture->getWidth(), terrainHeightTexture->getHeight());
+    terrainNormalTexture = new draw::RGBTexture2D(terrainHeightTexture->getWidth(), terrainHeightTexture->getHeight());
+    terrainFarTangentTexture = new draw::RGBTexture2D(terrainHeightTexture->getWidth(), terrainHeightTexture->getHeight());
+    terrainTangentTexture = new draw::RGBTexture2D(terrainHeightTexture->getWidth(), terrainHeightTexture->getHeight());
+    
+    //Create an attribute texture that determines the terrain type (forest/grass/mud/stone) based on the altitude and slope.
+    terrainAttributeTexture = new draw::RGBATexture2D(img::Image::createSolidImage(terrainHeightTexture->getWidth(), 0, 0, 0, 0));
+    terrainFarAttributeTexture = new draw::RGBATexture2D(img::Image::createSolidImage(terrainHeightTexture->getWidth()));
+    
+    //Read diffuse textures and make them tileable.
+    biomeDiffuseTextures = new draw::RGBTexture2DArray(diffuseTextures.begin(), diffuseTextures.end());
+    biomeNormalTextures = new draw::RGBTexture2DArray(normalTextures.begin(), normalTextures.end());
+    
+    //Paint the terrain with the zoomed-in and far-away textures.
+    terrain = new draw::Terrain(6, 8);
+    
+    setTerrainOffset(vec2(0.5f));
 }
 

@@ -86,6 +86,20 @@ class Texture2D : public Texture<T, Channels>
 
 //Functions to sample different types of textures.
 template <>
+inline vec4 Texture2D<unsigned char, 3>::operator () (const size_t &a_x, const size_t &a_y) const
+{
+    if (a_x >= width || a_y >= height)
+    {
+        return vec4(0.0f, 0.0f, 0.0f, 1.0f);
+    }
+    
+    return vec4(static_cast<float>(this->hostData[3*(a_x + this->width*a_y) + 0])/255.0f,
+                static_cast<float>(this->hostData[3*(a_x + this->width*a_y) + 1])/255.0f,
+                static_cast<float>(this->hostData[3*(a_x + this->width*a_y) + 2])/255.0f,
+                1.0f);
+}
+
+template <>
 inline vec4 Texture2D<unsigned char, 4>::operator () (const size_t &a_x, const size_t &a_y) const
 {
     if (a_x >= width || a_y >= height)
