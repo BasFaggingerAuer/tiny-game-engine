@@ -41,8 +41,7 @@ enum mt_t
     addTank,
     removeTank,
     updateTank,
-    updateTankControls,
-    updateTankController,
+    setPlayerTank,
     playerSpawnRequest
 };
 

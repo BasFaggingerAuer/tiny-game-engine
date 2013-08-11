@@ -100,8 +100,6 @@ void copyAiMeshVertices(const aiMesh *sourceMesh, MeshType &mesh, const aiMatrix
     
     transformation.Decompose(scaling, rotation, translation);
     
-    std::cout << "TRANSFORM (" << scaling.x << ", " << scaling.y << ", " << scaling.z << "), (" << translation.x << ", " << translation.y << ", " << translation.z << ")" << std::endl;
-    
     const aiMatrix3x3 rotationMatrix = rotation.GetMatrix();
     
     //Copy vertices.

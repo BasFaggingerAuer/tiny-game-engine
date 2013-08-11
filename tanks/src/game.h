@@ -22,9 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tinyxml.h>
 
 #include <tiny/os/application.h>
-#include <tiny/img/io/image.h>
 
-#include <tiny/draw/renderer.h>
 #include <tiny/draw/staticmesh.h>
 #include <tiny/draw/staticmeshhorde.h>
 #include <tiny/draw/icontexture2d.h>
@@ -44,6 +42,29 @@ class Player
     public:
         Player();
         ~Player();
+        
+        unsigned int tankId;
+};
+
+struct TankInstance
+{
+    TankInstance(const unsigned int &a_type = 0) :
+        type(a_type),
+        controls(0),
+        pos(0.0f),
+        ori(0.0f, 0.0f, 0.0f, 1.0f),
+        vel(0.0f),
+        omega(0.0f)
+    {
+
+    }
+    
+    unsigned int type;
+    unsigned int controls;
+    tiny::vec3 pos;
+    tiny::vec4 ori;
+    tiny::vec3 vel;
+    tiny::vec3 omega;
 };
 
 class TankType
@@ -52,7 +73,17 @@ class TankType
         TankType(const std::string &, TiXmlElement *);
         ~TankType();
         
+        void clearInstances();
+        void addInstance(const TankInstance &);
+        void updateInstances();
         
+        std::string name;
+        tiny::draw::StaticMeshHorde *horde;
+        tiny::draw::RGBTexture2D *diffuseTexture;
+        tiny::draw::RGBTexture2D *normalTexture;
+        int nrInstances;
+        int maxNrInstances;
+        std::vector<tiny::draw::StaticMeshInstance> instances;
 };
 
 class TanksGame
@@ -96,12 +127,16 @@ class TanksGame
         
         TanksTerrain *terrain;
         
+        std::map<unsigned int, TankType *> tankTypes;
+        std::map<unsigned int, TankInstance> tanks;
+        unsigned int lastTankIndex;
+        
         //Networking.
         TanksMessageTranslator * const translator;
         TanksConsole * const console;
         TanksHost *host;
         TanksClient *client;
-        unsigned int clientPlayerIndex;
+        unsigned int ownPlayerIndex;
         
         std::map<unsigned int, Player> players;
 };

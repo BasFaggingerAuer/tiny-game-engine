@@ -142,6 +142,7 @@ class UpdateTank : public tiny::net::MessageType
         UpdateTank() : tiny::net::MessageType(mt::updateTank, "updatetank", "Sets the parameters of a tank with a specific index.")
         {
             addVariableType("index", tiny::net::vt::Integer);
+            addVariableType("controls", tiny::net::vt::Integer);
             addVariableType("pos", tiny::net::vt::Vec3);
             addVariableType("ori", tiny::net::vt::Vec4);
             addVariableType("vel", tiny::net::vt::Vec3);
@@ -151,36 +152,23 @@ class UpdateTank : public tiny::net::MessageType
         ~UpdateTank() {}
 };
 
-class UpdateTankControls : public tiny::net::MessageType
+class SetPlayerTank : public tiny::net::MessageType
 {
     public:
-        UpdateTankControls() : tiny::net::MessageType(mt::updateTankControls, "updatetankcontrols", "Sets the controls of a tank with a specific index.")
+        SetPlayerTank() : tiny::net::MessageType(mt::setPlayerTank, "setplayertank", "Sets the controller of a tank to be a certain player.")
         {
-            addVariableType("index", tiny::net::vt::Integer);
-            addVariableType("controls", tiny::net::vt::Integer);
+            addVariableType("player", tiny::net::vt::Integer);
+            addVariableType("tank", tiny::net::vt::Integer);
         }
         
-        ~UpdateTankControls() {}
-};
-
-class UpdateTankController : public tiny::net::MessageType
-{
-    public:
-        UpdateTankController() : tiny::net::MessageType(mt::updateTankController, "updatetankcontroller", "Sets the controller of a tank to be a bot or a player.")
-        {
-            addVariableType("index", tiny::net::vt::Integer);
-            addVariableType("controller", tiny::net::vt::Integer);
-        }
-        
-        ~UpdateTankController() {}
+        ~SetPlayerTank() {}
 };
 
 class PlayerSpawnRequest : public tiny::net::MessageType
 {
     public:
-        PlayerSpawnRequest() : tiny::net::MessageType(mt::playerSpawnRequest, "playerspawnrequest", "A player requests to spawn in a certain tank type.")
+        PlayerSpawnRequest() : tiny::net::MessageType(mt::playerSpawnRequest, "spawn", "A player requests to spawn in a certain tank type.")
         {
-            addVariableType("player", tiny::net::vt::Integer);
             addVariableType("type", tiny::net::vt::Integer);
         }
         
@@ -207,8 +195,7 @@ TanksMessageTranslator::TanksMessageTranslator() :
     addMessageType(new msg::AddTank());
     addMessageType(new msg::RemoveTank());
     addMessageType(new msg::UpdateTank());
-    addMessageType(new msg::UpdateTankControls());
-    addMessageType(new msg::UpdateTankController());
+    addMessageType(new msg::SetPlayerTank());
     addMessageType(new msg::PlayerSpawnRequest());
 }
 

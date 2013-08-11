@@ -69,11 +69,8 @@ StaticMesh tiny::mesh::io::readStaticMesh(const std::string &fileName, const std
         for (unsigned int j = 0; j < i->second->mNumMeshes; ++j)
         {
             //Does this node apply to this mesh?
-            std::cout << "CHECK: " << scene->mMeshes[i->second->mMeshes[j]] << " == " << sourceMesh << std::endl;
-            
             if (scene->mMeshes[i->second->mMeshes[j]] == sourceMesh)
             {
-                std::cout << "FOUND (" << i->first << ")!" << std::endl;
                 transformation = nodeNameToMatrix[i->first];
                 break;
             }
