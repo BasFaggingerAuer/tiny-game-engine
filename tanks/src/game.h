@@ -29,19 +29,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/draw/staticmeshhorde.h>
 #include <tiny/draw/icontexture2d.h>
 #include <tiny/draw/iconhorde.h>
-#include <tiny/draw/terrain.h>
 #include <tiny/draw/texture2d.h>
-#include <tiny/draw/texture2darray.h>
-#include <tiny/draw/computetexture.h>
-#include <tiny/draw/heightmap/scale.h>
-#include <tiny/draw/heightmap/resize.h>
-#include <tiny/draw/heightmap/normalmap.h>
-#include <tiny/draw/heightmap/tangentmap.h>
-#include <tiny/draw/heightmap/diamondsquare.h>
 #include <tiny/draw/effects/sunsky.h>
 #include <tiny/draw/worldrenderer.h>
 
 #include "network.h"
+#include "terrain.h"
 
 namespace tanks
 {
@@ -51,6 +44,15 @@ class Player
     public:
         Player();
         ~Player();
+};
+
+class TankType
+{
+    public:
+        TankType(const std::string &, TiXmlElement *);
+        ~TankType();
+        
+        
 };
 
 class TanksGame
@@ -73,10 +75,6 @@ class TanksGame
         void readResources(const std::string &);
         void readConsoleResources(const std::string &, TiXmlElement *);
         void readSkyResources(const std::string &, TiXmlElement *);
-        void readTerrainResources(const std::string &, TiXmlElement *);
-        
-        void setTerrainOffset(const tiny::vec2 &);
-        void calculateTerrainType(const tiny::draw::FloatTexture2D &, tiny::draw::RGBATexture2D &, const float &) const;
         
         //Renderer.
         const double aspectRatio;
@@ -96,24 +94,7 @@ class TanksGame
         tiny::draw::RGBTexture2D *skyGradientTexture;
         tiny::draw::effects::SunSky *skyEffect;
         
-        //Terrain.
-        tiny::draw::Terrain *terrain;
-        tiny::vec2 terrainScale;
-        tiny::ivec2 terrainFarScale;
-        tiny::vec2 terrainDetailScale;
-        tiny::vec2 terrainFarOffset;
-        std::string terrainAttributeShader;
-        tiny::draw::FloatTexture2D *terrainHeightTexture;
-        tiny::draw::FloatTexture2D *terrainFarHeightTexture;
-        tiny::draw::RGBTexture2D *terrainNormalTexture;
-        tiny::draw::RGBTexture2D *terrainFarNormalTexture;
-        tiny::draw::RGBTexture2D *terrainTangentTexture;
-        tiny::draw::RGBTexture2D *terrainFarTangentTexture;
-        tiny::draw::RGBATexture2D *terrainAttributeTexture;
-        tiny::draw::RGBATexture2D *terrainFarAttributeTexture;
-        
-        tiny::draw::RGBTexture2DArray *biomeDiffuseTextures;
-        tiny::draw::RGBTexture2DArray *biomeNormalTextures;
+        TanksTerrain *terrain;
         
         //Networking.
         TanksMessageTranslator * const translator;

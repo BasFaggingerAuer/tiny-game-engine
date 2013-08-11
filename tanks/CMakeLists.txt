@@ -33,6 +33,7 @@ set(TANKS_LIBS
 add_executable(tanks src/tanks.cpp
                      src/messages.cpp
                      src/network.cpp
+                     src/terrain.cpp
                      src/game.cpp)
 
 target_link_libraries(tanks ${TANKS_LIBS})
