@@ -140,39 +140,6 @@ void copyAiMeshBones(const aiMesh *sourceMesh, AnimatedMesh &mesh)
 #endif
 }
 
-void setAiNodePointers(const aiNode *node, std::map<std::string, const aiNode *> &nodeNameToPointer)
-{
-    //Does the node name already exist?
-    if (!nodeNameToPointer.insert(std::make_pair(node->mName.data, node)).second)
-    {
-        std::cerr << "Node name '" << node->mName.data << "' is not unique!" << std::endl;
-        throw std::exception();
-    }
-    
-    for (unsigned int i = 0; i < node->mNumChildren; ++i)
-    {
-        setAiNodePointers(node->mChildren[i], nodeNameToPointer);
-    }
-}
-
-void updateAiNodeMatrices(aiNode *node, const aiMatrix4x4 &transformation, std::map<std::string, aiMatrix4x4> &nodeNameToMatrix)
-{
-    assert(node);
-    
-    std::map<std::string, aiMatrix4x4>::iterator nodeIterator = nodeNameToMatrix.find(node->mName.data);
-    
-    assert(nodeIterator != nodeNameToMatrix.end());
-    
-    const aiMatrix4x4 newTransformation = transformation*nodeIterator->second;
-    
-    nodeIterator->second = newTransformation;
-    
-    for (unsigned int i = 0; i < node->mNumChildren; ++i)
-    {
-        updateAiNodeMatrices(node->mChildren[i], newTransformation, nodeNameToMatrix);
-    }
-}
-
 size_t getAiNrAnimationFrames(const aiAnimation *animation)
 {
     size_t nrFrames = 0;
@@ -269,7 +236,8 @@ void copyAiAnimation(const aiScene *scene, const aiMesh *sourceMesh, const unsig
             if (boneIterator != boneNameToIndex.end())
             {
                 const unsigned int boneIndex = boneIterator->second;
-                const aiMatrix4x4 finalTransformation = inverseGlobalTransformation*i->second*sourceMesh->mBones[boneIndex]->mOffsetMatrix;
+                //const aiMatrix4x4 finalTransformation = inverseGlobalTransformation*i->second*sourceMesh->mBones[boneIndex]->mOffsetMatrix;
+                const aiMatrix4x4 finalTransformation = i->second*sourceMesh->mBones[boneIndex]->mOffsetMatrix;
                 
                 aiVector3D scale(1.0f, 1.0f, 1.0f);
                 aiQuaternion rotate(1.0f, 0.0f, 0.0f, 0.0f);
@@ -355,7 +323,7 @@ AnimatedMesh tiny::mesh::io::readAnimatedMesh(const std::string &fileName, const
     AnimatedMesh mesh;
     
     assert(sourceMesh);
-    detail::copyAiMeshVertices<AnimatedMesh, AnimatedMeshVertex>(sourceMesh, mesh);
+    detail::copyAiMeshVertices<AnimatedMesh, AnimatedMeshVertex>(sourceMesh, mesh, aiMatrix4x4());
     detail::copyAiMeshIndices(sourceMesh, mesh);
     detail::copyAiMeshBones(sourceMesh, mesh);
     

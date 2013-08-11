@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <exception>
 #include <string>
 #include <vector>
+#include <map>
 
 #include <assimp/scene.h>
 #include <assimp/postprocess.h>
@@ -90,17 +91,32 @@ const aiMesh *getAiMesh(const aiScene *scene, const std::string &meshName)
 }
 
 template<typename MeshType, typename MeshVertexType>
-void copyAiMeshVertices(const aiMesh *sourceMesh, MeshType &mesh)
+void copyAiMeshVertices(const aiMesh *sourceMesh, MeshType &mesh, const aiMatrix4x4 &transformation)
 {
+    //Find rotation for normals and tangents.
+    aiVector3D scaling;
+    aiQuaternion rotation;
+    aiVector3D translation;
+    
+    transformation.Decompose(scaling, rotation, translation);
+    
+    std::cout << "TRANSFORM (" << scaling.x << ", " << scaling.y << ", " << scaling.z << "), (" << translation.x << ", " << translation.y << ", " << translation.z << ")" << std::endl;
+    
+    const aiMatrix3x3 rotationMatrix = rotation.GetMatrix();
+    
     //Copy vertices.
     mesh.vertices.resize(sourceMesh->mNumVertices);
     
     for (unsigned int i = 0; i < mesh.vertices.size(); ++i)
     {
+        const aiVector3D t = rotationMatrix*sourceMesh->mTangents[i];
+        const aiVector3D n = rotationMatrix*sourceMesh->mNormals[i];
+        const aiVector3D v = transformation*sourceMesh->mVertices[i];
+        
         mesh.vertices[i] = MeshVertexType(vec2(sourceMesh->mTextureCoords[0][i].x, sourceMesh->mTextureCoords[0][i].y),
-                                          vec3(sourceMesh->mTangents[i].x, sourceMesh->mTangents[i].y, sourceMesh->mTangents[i].z),
-                                          vec3(sourceMesh->mNormals[i].x, sourceMesh->mNormals[i].y, sourceMesh->mNormals[i].z),
-                                          vec3(sourceMesh->mVertices[i].x, sourceMesh->mVertices[i].y, sourceMesh->mVertices[i].z));
+                                          vec3(t.x, t.y, t.z),
+                                          vec3(n.x, n.y, n.z),
+                                          vec3(v.x, v.y, v.z));
     }
 }
 
@@ -123,6 +139,39 @@ void copyAiMeshIndices(const aiMesh *sourceMesh, MeshType &mesh)
         mesh.indices[3*i + 0] = face->mIndices[0];
         mesh.indices[3*i + 1] = face->mIndices[1];
         mesh.indices[3*i + 2] = face->mIndices[2];
+    }
+}
+
+void setAiNodePointers(const aiNode *node, std::map<std::string, const aiNode *> &nodeNameToPointer)
+{
+    //Does the node name already exist?
+    if (!nodeNameToPointer.insert(std::make_pair(node->mName.data, node)).second)
+    {
+        std::cerr << "Node name '" << node->mName.data << "' is not unique!" << std::endl;
+        throw std::exception();
+    }
+    
+    for (unsigned int i = 0; i < node->mNumChildren; ++i)
+    {
+        setAiNodePointers(node->mChildren[i], nodeNameToPointer);
+    }
+}
+
+void updateAiNodeMatrices(aiNode *node, const aiMatrix4x4 &transformation, std::map<std::string, aiMatrix4x4> &nodeNameToMatrix)
+{
+    assert(node);
+    
+    std::map<std::string, aiMatrix4x4>::iterator nodeIterator = nodeNameToMatrix.find(node->mName.data);
+    
+    assert(nodeIterator != nodeNameToMatrix.end());
+    
+    const aiMatrix4x4 newTransformation = transformation*nodeIterator->second;
+    
+    nodeIterator->second = newTransformation;
+    
+    for (unsigned int i = 0; i < node->mNumChildren; ++i)
+    {
+        updateAiNodeMatrices(node->mChildren[i], newTransformation, nodeNameToMatrix);
     }
 }
 

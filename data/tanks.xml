@@ -8,4 +8,5 @@
         <biome diffuse="img/terrain/dirt.jpg" normal="img/terrain/dirt_normal.jpg" />
         <biome diffuse="img/terrain/rocks.jpg" normal="img/terrain/rocks_normal.jpg" />
     </terrain>
+    <tank name="Tank1" mesh="mesh/tank1.dae" diffuse="img/tank1.png" max_instances="256"/>
 </tanks>

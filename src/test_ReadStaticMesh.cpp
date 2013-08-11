@@ -49,10 +49,10 @@ draw::Renderable *screenEffect = 0;
 vec3 cameraPosition = vec3(0.0f, 0.0f, 3.0f);
 vec4 cameraOrientation = vec4(0.0f, 0.0f, 0.0f, 1.0f);
 
-void setup()
+void setup(const std::string &fileName)
 {
     //Create a test mesh and paint it with a texture.
-    testMesh = new draw::StaticMesh(mesh::io::readStaticMesh(DATA_DIRECTORY + "mesh/tree0_trunk.obj"));
+    testMesh = new draw::StaticMesh(mesh::io::readStaticMesh(fileName));
     testDiffuseTexture = new draw::RGBTexture2D(img::io::readImage(DATA_DIRECTORY + "img/tree0_trunk.png"));
     testNormalTexture = new draw::RGBTexture2D(img::io::readImage(DATA_DIRECTORY + "img/tree0_trunk_normal.png"));
     testMesh->setDiffuseTexture(*testDiffuseTexture);
@@ -93,12 +93,12 @@ void render()
     worldRenderer->render();
 }
 
-int main(int, char **)
+int main(int argc, char **argv)
 {
     try
     {
         application = new os::SDLApplication(SCREEN_WIDTH, SCREEN_HEIGHT);
-        setup();
+        setup(argc == 2 ? argv[1] : DATA_DIRECTORY + "mesh/tree0_trunk.obj");
     }
     catch (std::exception &e)
     {

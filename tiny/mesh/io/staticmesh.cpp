@@ -39,11 +39,49 @@ StaticMesh tiny::mesh::io::readStaticMesh(const std::string &fileName, const std
         throw std::exception();
     }
     
+    //Create map from node names to their pointers.
+    std::map<std::string, const aiNode *> nodeNameToPointer;
+    
+    detail::setAiNodePointers(scene->mRootNode, nodeNameToPointer);
+    
+    //We need to keep track of all transformation matrices.
+    std::map<std::string, aiMatrix4x4> nodeNameToMatrix;
+    
+    for (std::map<std::string, const aiNode *>::const_iterator i = nodeNameToPointer.begin(); i != nodeNameToPointer.end(); ++i)
+    {
+        nodeNameToMatrix.insert(std::make_pair(i->first, nodeNameToPointer[i->first]->mTransformation));
+    }
+    
+    //Find transformations recursively.
+    detail::updateAiNodeMatrices(scene->mRootNode, aiMatrix4x4(), nodeNameToMatrix);
+    
+    //Retrieve mesh.
     const aiMesh *sourceMesh = detail::getAiMesh(scene, meshName);
     StaticMesh mesh;
     
     assert(sourceMesh);
-    detail::copyAiMeshVertices<StaticMesh, StaticMeshVertex>(sourceMesh, mesh);
+    
+    //Find transformation corresponding to this mesh.
+    aiMatrix4x4 transformation;
+    
+    for (std::map<std::string, const aiNode *>::const_iterator i = nodeNameToPointer.begin(); i != nodeNameToPointer.end(); ++i)
+    {
+        for (unsigned int j = 0; j < i->second->mNumMeshes; ++j)
+        {
+            //Does this node apply to this mesh?
+            std::cout << "CHECK: " << scene->mMeshes[i->second->mMeshes[j]] << " == " << sourceMesh << std::endl;
+            
+            if (scene->mMeshes[i->second->mMeshes[j]] == sourceMesh)
+            {
+                std::cout << "FOUND (" << i->first << ")!" << std::endl;
+                transformation = nodeNameToMatrix[i->first];
+                break;
+            }
+        }
+    }
+    
+    //Read mesh and apply the found transformation.
+    detail::copyAiMeshVertices<StaticMesh, StaticMeshVertex>(sourceMesh, mesh, transformation);
     detail::copyAiMeshIndices(sourceMesh, mesh);
     
     std::cerr << "Read mesh '" << meshName << "' with " << mesh.vertices.size() << " vertices and " << mesh.indices.size()/3 << " triangles from '" << fileName << "'." << std::endl;
