@@ -51,20 +51,20 @@ struct TankInstance
     TankInstance(const unsigned int &a_type = 0) :
         type(a_type),
         controls(0),
-        pos(0.0f),
-        ori(0.0f, 0.0f, 0.0f, 1.0f),
-        vel(0.0f),
-        omega(0.0f)
+        x(0.0f),
+        q(0.0f, 0.0f, 0.0f, 1.0f),
+        P(0.0f),
+        L(0.0f)
     {
 
     }
     
     unsigned int type;
     unsigned int controls;
-    tiny::vec3 pos;
-    tiny::vec4 ori;
-    tiny::vec3 vel;
-    tiny::vec3 omega;
+    tiny::vec3 x; //position
+    tiny::vec4 q; //orientation
+    tiny::vec3 P; //linear momentum
+    tiny::vec3 L; //angular momentum
 };
 
 class TankType
@@ -78,6 +78,13 @@ class TankType
         void updateInstances();
         
         std::string name;
+        float mass;
+        float inertia;
+        float radius1;
+        float radius2;
+        tiny::vec3 thrust_pos[4];
+        tiny::vec3 thrust_force[4];
+        
         tiny::draw::StaticMeshHorde *horde;
         tiny::draw::RGBTexture2D *diffuseTexture;
         tiny::draw::RGBTexture2D *normalTexture;
@@ -92,7 +99,7 @@ class TanksGame
         TanksGame(const tiny::os::Application *, const std::string &);
         ~TanksGame();
         
-        void update(tiny::os::Application *, const double &);
+        void update(tiny::os::Application *, const float &);
         void render();
         
         TanksMessageTranslator *getTranslator() const;

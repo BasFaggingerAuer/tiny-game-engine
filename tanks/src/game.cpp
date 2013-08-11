@@ -46,6 +46,10 @@ TankType::TankType(const std::string &path, TiXmlElement *el)
     assert(el->ValueStr() == "tank");
     
     name = "";
+    mass = 1.0f;
+    radius1 = 1.0f;
+    radius2 = 2.0f;
+    
     nrInstances = 0;
     maxNrInstances = 0;
      
@@ -54,10 +58,46 @@ TankType::TankType(const std::string &path, TiXmlElement *el)
     std::string meshFileName = "";
     
     el->QueryStringAttribute("name", &name);
+    el->QueryFloatAttribute("mass", &mass);
+    el->QueryFloatAttribute("solid_radius", &radius1);
+    el->QueryFloatAttribute("shield_radius", &radius2);
+    
     el->QueryStringAttribute("diffuse", &diffuseFileName);
     el->QueryStringAttribute("normal", &normalFileName);
     el->QueryStringAttribute("mesh", &meshFileName);
     el->QueryIntAttribute("max_instances", &maxNrInstances);
+    
+    //Read thrusters.
+    for (TiXmlElement *sl = el->FirstChildElement(); sl; sl = sl->NextSiblingElement())
+    {
+        if (sl->ValueStr() == "thruster")
+        {
+            std::string id = "";
+            std::istringstream stream(sl->GetText());
+            int i = 0;
+            
+            sl->QueryStringAttribute("id", &id);
+            
+                 if (id == "left") i = 0;
+            else if (id == "right") i = 1;
+            else if (id == "up") i = 2;
+            else if (id == "down") i = 3;
+            else i = -1;
+            
+            if (i >= 0 && i < 4)
+            {
+                stream >> thrust_pos[i].x >> thrust_pos[i].y >> thrust_pos[i].z;
+                stream >> thrust_force[i].x >> thrust_force[i].y >> thrust_force[i].z;
+            }
+            else
+            {
+                std::cerr << "Unknown thruster id '" << id << "'!" << std::endl;
+            }
+        }
+    }
+    
+    //Inertia for a solid sphere (2/5)*m*r^2.
+    inertia = 0.4f*mass*radius1*radius1;
     
     //Read mesh and textures.
     diffuseTexture = new draw::RGBTexture2D(diffuseFileName.empty() ? img::Image::createSolidImage() : img::io::readImage(path + diffuseFileName));
@@ -86,7 +126,7 @@ void TankType::addInstance(const TankInstance &tank)
 {
     if (nrInstances < maxNrInstances)
     {
-        instances[nrInstances++] = draw::StaticMeshInstance(vec4(tank.pos.x, tank.pos.y, tank.pos.z, 1.0f), tank.ori);
+        instances[nrInstances++] = draw::StaticMeshInstance(vec4(tank.x.x, tank.x.y, tank.x.z, 1.0f), tank.q);
     }
 }
 
@@ -153,12 +193,111 @@ void TanksGame::updateConsole() const
     font->setText(-1.0, -1.0, consoleMode ? 0.05 : 0.025, aspectRatio, console->getText(256), *fontTexture);
 }
 
-void TanksGame::update(os::Application *application, const double &dt)
+void TanksGame::update(os::Application *application, const float &dt)
 {
     //Exchange network data.
     if (host) host->listen(0.0);
     if (client) client->listen(0.0);
 
+    //Update all tanks.
+    for (std::map<unsigned int, TankInstance>::iterator i = tanks.begin(); i != tanks.end(); ++i)
+    {
+        TankInstance &t = i->second;
+        const TankType *tt = tankTypes[t.type];
+        vec3 F(0.0f); //force
+        vec3 tau(0.0f); //torque
+        
+        //Thrusters.
+        if (t.controls != 0)
+        {
+            const mat4 ori(t.q);
+            
+            for (int j = 0; j < 4; ++j)
+            {
+                if (t.controls & (1 << j))
+                {
+                    F += ori*tt->thrust_force[j];
+                    tau += cross(ori*tt->thrust_pos[j], ori*tt->thrust_force[j]);
+                }
+            }
+        }
+        else
+        {
+            //Spinning dampeners.
+        }
+        
+        //Gravity acts depending on the height above the terrain.
+        float height = t.x.y - terrain->getHeight(vec2(t.x.x, t.x.z));
+        float gravityFactor = 1.0f;
+        
+        if (height <= tt->radius1)
+        {
+            //Tank rests on solid core, normal force counters gravity.
+            gravityFactor = 0.0f;
+        }
+        else if (height <= tt->radius2)
+        {
+            //Dampening field counters gravity via a spring-like force.
+            gravityFactor = 1.0f - (height - tt->radius1)/(tt->radius2 - tt->radius1);
+        }
+        
+        F += vec3(0.0f, -9.81f*gravityFactor*tt->mass, 0.0f);
+        
+        //The normal force countering gravity causes drag (average metal-wood static friction coefficient is 0.4).
+        //TODO: Calculate normal to the terrain and do proper dry friction. Some terrain types are slippery?
+        F -= (1.0f - gravityFactor)*0.4f*t.P;
+        
+        //Air friction causes drag.
+        //F_drag = 0.5*air density*velocity^2*drag coefficient*cross section area.
+        //air density ~ 1.3 kg/m^3
+        //drag coefficient ~ 0.5
+        //cross section = pi*r^2.
+        const vec3 v = t.P/tt->mass;
+        
+        F -= (0.5f*1.3f*length2(v)*0.5f*3.1415f*tt->radius1*tt->radius1)*normalize(v);
+        
+        //Air friction also causes rotational drag.
+        //tau_drag = -8*pi*r^3*air viscosity*angular velocity.
+        //air viscosity ~ 1.5e-5 kg/(m*s).
+        const vec3 omega = t.L/tt->inertia;
+        
+        tau -= (8.0f*3.1415f*tt->radius1*tt->radius1*tt->radius1*static_cast<float>(1.5e-5))*omega;
+        
+        //Integrate forces via the semi-implicit Euler integrator (which is symplectic).
+        t.P += dt*F;
+        t.L += dt*tau;
+        t.x += (dt/tt->mass)*t.P;
+        t.q += (0.5f*dt/tt->inertia)*quatmul(vec4(t.L.x, t.L.y, t.L.z), t.q);
+        t.q = normalize(t.q);
+        
+        //Tanks may never go beneath the terrain.
+        height = terrain->getHeight(vec2(t.x.x, t.x.z)) + tt->radius1;
+        
+        if (height > t.x.y)
+        {
+            t.x.y = height;
+            //Bounce off the terrain if we are crashing into it too fast.
+            if (t.P.y < 0.0f) t.P.y *= -0.5f;
+        }
+    }
+
+    //Draw all tanks.
+    for (std::map<unsigned int, TankType *>::iterator i = tankTypes.begin(); i != tankTypes.end(); ++i)
+    {
+        i->second->clearInstances();
+    }
+    
+    for (std::map<unsigned int, TankInstance>::const_iterator i = tanks.begin(); i != tanks.end(); ++i)
+    {
+        assert(tankTypes.find(i->second.type) != tankTypes.end());
+        tankTypes[i->second.type]->addInstance(i->second);
+    }
+    
+    for (std::map<unsigned int, TankType *>::iterator i = tankTypes.begin(); i != tankTypes.end(); ++i)
+    {
+        i->second->updateInstances();
+    }
+    //Toggle console.
     if (application->isKeyPressedOnce('`'))
     {
         consoleMode = !consoleMode;
@@ -167,7 +306,7 @@ void TanksGame::update(os::Application *application, const double &dt)
     
     if (consoleMode)
     {
-        //Update console.
+        //Update console input.
         for (int i = 0; i < 256; ++i)
         {
             if (application->isKeyPressedOnce(i))
@@ -205,14 +344,10 @@ void TanksGame::update(os::Application *application, const double &dt)
             //Update the controls of our tank and send these to the host if we are a client.
             unsigned int controls = 0;
             
-            if (application->isKeyPressed('w')) controls |=   1;
-            if (application->isKeyPressed('s')) controls |=   2;
-            if (application->isKeyPressed('a')) controls |=   4;
-            if (application->isKeyPressed('d')) controls |=   8;
-            if (application->isKeyPressed('i')) controls |=  16;
-            if (application->isKeyPressed('j')) controls |=  32;
-            if (application->isKeyPressed('k')) controls |=  64;
-            if (application->isKeyPressed('l')) controls |= 128;
+            if (application->isKeyPressed('a')) controls |=   1;
+            if (application->isKeyPressed('d')) controls |=   2;
+            if (application->isKeyPressed('w')) controls |=   4;
+            if (application->isKeyPressed('s')) controls |=   8;
             
             TankInstance &tank = tanks[tankId];
             
@@ -225,7 +360,7 @@ void TanksGame::update(os::Application *application, const double &dt)
                 {
                     Message msg(msg::mt::updateTank);
                     
-                    msg << static_cast<int>(tankId) << static_cast<int>(tank.controls) << tank.pos << tank.ori << tank.vel << tank.omega;
+                    msg << tankId << tank.controls << tank.x << tank.q << tank.P << tank.L;
                     
                     if (client) client->sendMessage(msg);
                     if (host) host->sendMessage(msg);
@@ -233,38 +368,12 @@ void TanksGame::update(os::Application *application, const double &dt)
             }
             
             //Look from our tank.
-            cameraPosition = tank.pos;
-            cameraOrientation = tank.ori;
+            cameraPosition = tank.x;
+            cameraOrientation = tank.q;
         }
         
         //Tell the world renderer that the camera has changed.
         renderer->setCamera(cameraPosition, cameraOrientation);
-    }
-    
-    //Update all tanks.
-    for (std::map<unsigned int, TankInstance>::iterator i = tanks.begin(); i != tanks.end(); ++i)
-    {
-        TankInstance &t = i->second;
-        
-        if (t.controls & 1) t.pos.x += 4.0f*dt;
-        if (t.controls & 2) t.pos.x -= 4.0f*dt;
-    }
-
-    //Draw all tanks.
-    for (std::map<unsigned int, TankType *>::iterator i = tankTypes.begin(); i != tankTypes.end(); ++i)
-    {
-        i->second->clearInstances();
-    }
-    
-    for (std::map<unsigned int, TankInstance>::const_iterator i = tanks.begin(); i != tanks.end(); ++i)
-    {
-        assert(tankTypes.find(i->second.type) != tankTypes.end());
-        tankTypes[i->second.type]->addInstance(i->second);
-    }
-    
-    for (std::map<unsigned int, TankType *>::iterator i = tankTypes.begin(); i != tankTypes.end(); ++i)
-    {
-        i->second->updateInstances();
     }
 }
 
@@ -451,7 +560,7 @@ bool TanksGame::applyMessage(const unsigned int &playerIndex, const Message &mes
             {
                 TankInstance tank(tankType);
                 
-                tank.pos = vec3(tankPos.x, terrain->getHeight(tankPos), tankPos.y);
+                tank.x = vec3(tankPos.x, terrain->getHeight(tankPos), tankPos.y);
                 tanks[tankId] = tank;
                 out << "Added tank with id " << tankId << " of type " << tankType << ".";
                 broadcast = true;
@@ -504,10 +613,10 @@ bool TanksGame::applyMessage(const unsigned int &playerIndex, const Message &mes
             {
                 //Update tank status.
                 i->second.controls = message.data[1].iv1;
-                i->second.pos = message.data[2].v3;
-                i->second.ori = message.data[3].v4;
-                i->second.vel = message.data[4].v3;
-                i->second.omega = message.data[5].v3;
+                i->second.x = message.data[2].v3;
+                i->second.q = message.data[3].v4;
+                i->second.P = message.data[4].v3;
+                i->second.L = message.data[5].v3;
                 broadcast = true;
             }
         }
@@ -559,17 +668,22 @@ bool TanksGame::applyMessage(const unsigned int &playerIndex, const Message &mes
                 const unsigned int tankId = lastTankIndex++;
                 Message msg1(msg::mt::addTank);
                 
-                msg1 << static_cast<int>(tankId) << static_cast<int>(tankTypeId) << vec2(0.0f, 0.0f);
+                msg1 << tankId << tankTypeId << vec2(0.0f, 0.0f);
                 applyMessage(0, msg1);
                 
                 //Assign this player to that tank.
                 Message msg2(msg::mt::setPlayerTank);
                 
-                msg2 << static_cast<int>(playerIndex) << static_cast<int>(tankId);
+                msg2 << playerIndex << tankId;
                 applyMessage(0, msg2);
                 
                 out << "Spawned player " << playerIndex << " in tank " << tankId << " of type " << tankTypeId << ".";
             }
+        }
+        else if (client)
+        {
+            //Forward message to host.
+            client->sendMessage(message);
         }
         else
         {
@@ -621,6 +735,9 @@ void TanksGame::disconnect()
     //Remove all players.
     players.clear();
     ownPlayerIndex = 0;
+    
+    //Remove all tanks.
+    tanks.clear();
 }
 
 void TanksGame::addPlayer(const unsigned int &playerIndex)
@@ -640,7 +757,7 @@ void TanksGame::addPlayer(const unsigned int &playerIndex)
             {
                 Message msg(msg::mt::addPlayer);
                 
-                msg << static_cast<int>(playerIndex);
+                msg << playerIndex;
                 host->sendMessage(msg);
             }
             
@@ -649,7 +766,7 @@ void TanksGame::addPlayer(const unsigned int &playerIndex)
             {
                 Message msg(msg::mt::welcomePlayer);
                 
-                msg << static_cast<int>(playerIndex);
+                msg << playerIndex;
                 host->sendPrivateMessage(msg, playerIndex);
             }
             
@@ -658,7 +775,7 @@ void TanksGame::addPlayer(const unsigned int &playerIndex)
             {
                 Message msg(msg::mt::addPlayer);
                 
-                msg << static_cast<int>(j->first);
+                msg << j->first;
                 host->sendPrivateMessage(msg, playerIndex);
             }
         }
@@ -684,10 +801,16 @@ void TanksGame::removePlayer(const unsigned int &playerIndex)
         if (host)
         {
             //Broadcast removal of this player.
-            Message msg(msg::mt::removePlayer);
+            Message msg1(msg::mt::removePlayer);
             
-            msg << static_cast<int>(playerIndex);
-            host->sendMessage(msg);
+            msg1 << playerIndex;
+            host->sendMessage(msg1);
+            
+            //And of the player's tank.
+            Message msg2(msg::mt::removeTank);
+            
+            msg2 << i->second.tankId;
+            applyMessage(0, msg2);
         }
     
         players.erase(i);

@@ -63,6 +63,7 @@ struct VariableData
 {
     VariableData();
     VariableData(const int &);
+    VariableData(const unsigned int &);
     VariableData(const ivec2 &);
     VariableData(const ivec3 &);
     VariableData(const ivec4 &);

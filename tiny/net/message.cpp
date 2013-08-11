@@ -55,6 +55,19 @@ VariableData::VariableData(const int &a) :
 
 }
 
+VariableData::VariableData(const unsigned int &a) :
+    iv1(a),
+    iv2(0, 0),
+    iv3(0, 0, 0),
+    iv4(0, 0, 0, 0),
+    v1(0.0f),
+    v2(0.0f, 0.0f),
+    v3(0.0f, 0.0f, 0.0f),
+    v4(0.0f, 0.0f, 0.0f, 0.0f)
+{
+
+}
+
 VariableData::VariableData(const ivec2 &a) :
     iv1(0),
     iv2(a),

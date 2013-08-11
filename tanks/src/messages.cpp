@@ -143,10 +143,10 @@ class UpdateTank : public tiny::net::MessageType
         {
             addVariableType("index", tiny::net::vt::Integer);
             addVariableType("controls", tiny::net::vt::Integer);
-            addVariableType("pos", tiny::net::vt::Vec3);
-            addVariableType("ori", tiny::net::vt::Vec4);
-            addVariableType("vel", tiny::net::vt::Vec3);
-            addVariableType("angvel", tiny::net::vt::Vec3);
+            addVariableType("x", tiny::net::vt::Vec3);
+            addVariableType("q", tiny::net::vt::Vec4);
+            addVariableType("P", tiny::net::vt::Vec3);
+            addVariableType("L", tiny::net::vt::Vec3);
         }
         
         ~UpdateTank() {}
