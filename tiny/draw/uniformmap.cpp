@@ -151,10 +151,13 @@ void UniformMap::setUniformsAndTexturesInProgram(const ShaderProgram &program, c
         if (location < 0)
         {
             std::cerr << "Warning: texture '" << uniform.name << "' does not exist in the GLSL program!" << std::endl;
-            continue;
         }
-        
-        GL_CHECK(glUniform1i(location, textureBindPoint++));
+        else
+        {
+            GL_CHECK(glUniform1i(location, textureBindPoint));
+        }
+
+        ++textureBindPoint;
     }
 }
 
