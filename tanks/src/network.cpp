@@ -98,13 +98,18 @@ void TanksConsole::execute(const std::string &command)
 {
     Message message;
     
-    if (command.empty()) return;
+    if (command.empty())
+    {
+        return;
+    }
     
     if (!game->getTranslator()->textToMessage(command, message))
     {
         addLine("Unknown command or parameters!");
+        return;
     }
-    else if (!game->applyMessage(0, message))
+    
+    if (!game->userMessage(message))
     {
         addLine("Invalid command!");
     }

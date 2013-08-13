@@ -66,6 +66,8 @@ TanksGame::TanksGame(const os::Application *application, const std::string &path
     
     renderer->addScreenRenderable(skyEffect, false, false);
     renderer->addScreenRenderable(font, false, false, draw::BlendMix);
+    
+    clear();
 }
 
 TanksGame::~TanksGame()
@@ -287,11 +289,6 @@ void TanksGame::render()
     renderer->render();
 }
 
-TanksMessageTranslator *TanksGame::getTranslator() const
-{
-    return translator;
-}
-
 void TanksGame::clear()
 {
     //Stops any running game and clears all data.
@@ -313,12 +310,19 @@ void TanksGame::clear()
         console->addLine("Disconnected host from network.");
     }
     
-    //Remove all players.
+    //Remove all players except the current user.
     players.clear();
     ownPlayerIndex = 0;
+    players.insert(std::make_pair(ownPlayerIndex, Player()));
     
     //Remove all tanks.
     tanks.clear();
+    lastTankIndex = 1;
+}
+
+TanksMessageTranslator *TanksGame::getTranslator() const
+{
+    return translator;
 }
 
 void TanksGame::readResources(const std::string &path)

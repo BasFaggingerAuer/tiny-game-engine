@@ -25,6 +25,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using namespace tanks;
 using namespace tiny;
 
+bool TanksGame::msgHelp(const unsigned int &, std::ostream &out, bool &)
+{
+    out << "\\w\\4==== Available commands:" << std::endl << translator->getMessageTypeNames("\n") << std::endl;
+    out << "\\w\\4==== Full descriptions:" << std::endl << translator->getMessageTypeDescriptions();
+    return true;
+}
+
 bool TanksGame::msgHost(const unsigned int &, std::ostream &out, bool &, const unsigned int &port)
 {
     if (!host && !client)
@@ -35,9 +42,6 @@ bool TanksGame::msgHost(const unsigned int &, std::ostream &out, bool &, const u
             host = new TanksHost(port, this);
             out << "Hosting game at port " << port << ".";
             
-            //Enter the game as own player.
-            ownPlayerIndex = 0;
-            players.insert(std::make_pair(ownPlayerIndex, Player()));
         }
         catch (std::exception &e)
         {
@@ -67,6 +71,7 @@ bool TanksGame::msgJoin(const unsigned int &, std::ostream &out, bool &, const u
                       << ((ipLo/1000) % 1000) << "." << (ipLo % 1000);
             
             clear();
+            players.clear();
             client = new TanksClient(ipAddress.str(), port, this);
             out << "Joined game at " << ipAddress.str() << ":" << port << ".";
         }
@@ -85,126 +90,97 @@ bool TanksGame::msgJoin(const unsigned int &, std::ostream &out, bool &, const u
     return true;
 }
 
-bool TanksGame::msgDisconnect(const unsigned int &playerIndex, std::ostream &out, bool &)
+bool TanksGame::msgDisconnect(const unsigned int &, std::ostream &out, bool &)
 {
-    if (playerIndex == 0)
-    {
-        out << "Disconnecting...";
-        clear();
-    }
-    else
-    {
-        out << "Player " << playerIndex << " tried to force us to disconnect!";
-        return false;
-    }
+    out << "Disconnecting...";
+    clear();
     
     return true;
 }
 
-bool TanksGame::msgAddPlayer(const unsigned int &playerIndex, std::ostream &out, bool &, const unsigned int &newPlayerIndex)
+bool TanksGame::msgAddPlayer(const unsigned int &, std::ostream &out, bool &, const unsigned int &newPlayerIndex)
 {
-    if (playerIndex == 0)
+    if (players.find(newPlayerIndex) != players.end())
     {
-        if (players.find(newPlayerIndex) != players.end())
+        out << "Player with index " << newPlayerIndex << " will not be added, this player already exists!";
+        return false;
+    }
+    
+    if (host)
+    {
+        //Send this player to all other clients.
+        if (true)
         {
-            out << "Player with index " << newPlayerIndex << " will not be added, this player already exists!";
-            return false;
+            Message msg(msg::mt::addPlayer);
+            
+            msg << newPlayerIndex;
+            host->sendMessage(msg);
         }
-        else
-        {
-            if (host)
-            {
-                //Send this player to all other clients.
-                if (true)
-                {
-                    Message msg(msg::mt::addPlayer);
-                    
-                    msg << newPlayerIndex;
-                    host->sendMessage(msg);
-                }
-                
-                //Send new client a welcome message.
-                if (true)
-                {
-                    Message msg(msg::mt::welcomePlayer);
-                    
-                    msg << newPlayerIndex;
-                    host->sendPrivateMessage(msg, newPlayerIndex);
-                }
-                
-                //Send all current players to the new client.
-                for (std::map<unsigned int, Player>::const_iterator j = players.begin(); j != players.end(); ++j)
-                {
-                    Message msg(msg::mt::addPlayer);
-                    
-                    msg << j->first;
-                    host->sendPrivateMessage(msg, newPlayerIndex);
-                }
-                
-                //TODO: Send game state to the new client.
-            }
         
-            players.insert(std::make_pair(newPlayerIndex, Player()));
-            out << "Added player with index " << newPlayerIndex << ".";
+        //Send new client a welcome message.
+        if (true)
+        {
+            Message msg(msg::mt::welcomePlayer);
+            
+            msg << newPlayerIndex;
+            host->sendPrivateMessage(msg, newPlayerIndex);
         }
-    }
-    else
-    {
-        out << "Only the host can add players!";
-        return false;
-    }
-    
-    return true;
-}
-
-bool TanksGame::msgRemovePlayer(const unsigned int &playerIndex, std::ostream &out, bool &, const unsigned int &oldPlayerIndex)
-{
-    if (playerIndex == 0)
-    {
-        std::map<unsigned int, Player>::iterator i = players.find(oldPlayerIndex);
         
-        if (i == players.end())
+        //Send all current players to the new client.
+        for (std::map<unsigned int, Player>::const_iterator j = players.begin(); j != players.end(); ++j)
         {
-            out << "Player with index " << oldPlayerIndex << " will not be removed, this player does not exist!";
-            return false;
+            Message msg(msg::mt::addPlayer);
+            
+            msg << j->first;
+            host->sendPrivateMessage(msg, newPlayerIndex);
         }
-        else
-        {
-            if (host)
-            {
-                //Broadcast removal of this player.
-                Message msg(msg::mt::removePlayer);
-                
-                msg << oldPlayerIndex;
-                host->sendMessage(msg);
-            }
-            
-            //Remove the player's tank.
-            if (i->second.tankIndex > 0)
-            {
-                Message msg(msg::mt::removeTank);
-                
-                msg << i->second.tankIndex;
-                applyMessage(0, msg);
-            }
-            
-            players.erase(i);
-            
-            out << "Removed player with index " << oldPlayerIndex << ".";
-        }
+        
+        //TODO: Send game state to the new client.
     }
-    else
-    {
-        out << "Only the host can remove players!";
-        return false;
-    }
+
+    players.insert(std::make_pair(newPlayerIndex, Player()));
+    out << "Added player with index " << newPlayerIndex << ".";
     
     return true;
 }
 
-bool TanksGame::msgWelcomePlayer(const unsigned int &playerIndex, std::ostream &out, bool &, const unsigned int &newPlayerIndex)
+bool TanksGame::msgRemovePlayer(const unsigned int &, std::ostream &out, bool &, const unsigned int &oldPlayerIndex)
 {
-    if (playerIndex == 0 && client)
+    std::map<unsigned int, Player>::iterator i = players.find(oldPlayerIndex);
+    
+    if (i == players.end())
+    {
+        out << "Player with index " << oldPlayerIndex << " will not be removed, this player does not exist!";
+        return false;
+    }
+    
+    if (host)
+    {
+        //Broadcast removal of this player.
+        Message msg(msg::mt::removePlayer);
+        
+        msg << oldPlayerIndex;
+        host->sendMessage(msg);
+    }
+    
+    //Remove the player's tank.
+    if (i->second.tankIndex > 0)
+    {
+        Message msg(msg::mt::removeTank);
+        
+        msg << i->second.tankIndex;
+        applyMessage(0, msg);
+    }
+    
+    players.erase(i);
+    out << "Removed player with index " << oldPlayerIndex << ".";
+    
+    return true;
+}
+
+bool TanksGame::msgWelcomePlayer(const unsigned int &, std::ostream &out, bool &, const unsigned int &newPlayerIndex)
+{
+    if (client)
     {
         ownPlayerIndex = newPlayerIndex;
         out << "Welcomed to network game as player " << ownPlayerIndex << ".";
@@ -218,219 +194,167 @@ bool TanksGame::msgWelcomePlayer(const unsigned int &playerIndex, std::ostream &
     return true;
 }
 
-bool TanksGame::msgTerrainOffset(const unsigned int &playerIndex, std::ostream &out, bool &broadcast, const vec2 &offset)
+bool TanksGame::msgTerrainOffset(const unsigned int &, std::ostream &out, bool &broadcast, const vec2 &offset)
 {
-    if (playerIndex == 0)
-    {
-        broadcast = true;
-        terrain->setOffset(offset);
-        out << "Set terrain offset to " << offset << ".";
-    }
-    else
-    {
-        out << "Only the host can change the terrain offset!";
-        return false;
-    }
+    terrain->setOffset(offset);
+    out << "Set terrain offset to " << offset << ".";
+    broadcast = true;
     
     return true;
 }
 
-bool TanksGame::msgAddTank(const unsigned int &playerIndex, std::ostream &out, bool &broadcast, const unsigned int &tankIndex, const unsigned int &tankType, const vec2 &position)
+bool TanksGame::msgAddTank(const unsigned int &, std::ostream &out, bool &broadcast, const unsigned int &tankIndex, const unsigned int &tankType, const vec2 &position)
 {
-    if (playerIndex == 0)
+    if (tankTypes.find(tankType) == tankTypes.end() || tanks.find(tankIndex) != tanks.end())
     {
-        if (tankTypes.find(tankType) == tankTypes.end() || tanks.find(tankIndex) != tanks.end())
-        {
-            out << "Unknown tank type " << tankType << " or tank index " << tankIndex << " already in use!";
-            return false;
-        }
-        else
-        {
-            TankInstance tank(tankType);
-            
-            tank.x = vec3(position.x, terrain->getHeight(position), position.y);
-            tanks[tankIndex] = tank;
-            if (lastTankIndex < tankIndex) lastTankIndex = tankIndex;
-            
-            out << "Added tank with index " << tankIndex << " of type " << tankType << ".";
-            broadcast = true;
-        }
-    }
-    else
-    {
-        out << "Only the host can create new tanks!";
+        out << "Unknown tank type " << tankType << " or tank index " << tankIndex << " already in use!";
         return false;
     }
+    
+    TankInstance tank(tankType);
+    
+    tank.x = vec3(position.x, terrain->getHeight(position), position.y);
+    tanks[tankIndex] = tank;
+    if (lastTankIndex < tankIndex) lastTankIndex = tankIndex;
+    
+    out << "Added tank with index " << tankIndex << " of type " << tankType << ".";
+    broadcast = true;
     
     return true;
 }
 
-bool TanksGame::msgRemoveTank(const unsigned int &playerIndex, std::ostream &out, bool &broadcast, const unsigned int &tankIndex)
+bool TanksGame::msgRemoveTank(const unsigned int &, std::ostream &out, bool &broadcast, const unsigned int &tankIndex)
 {
-    if (playerIndex == 0 || client)
+    if (tanks.find(tankIndex) == tanks.end())
     {
-        if (tanks.find(tankIndex) == tanks.end())
-        {
-            out << "Tank with index " << tankIndex << " does not exist!";
-            return false;
-        }
-        else
-        {
-            //TODO: Update tankIndex in Player.
-            tanks.erase(tanks.find(tankIndex));
-            out << "Removed tank with index " << tankIndex << ".";
-            broadcast = true;
-        }
-    }
-    else
-    {
-        out << "Only the host can remove tanks!";
+        out << "Tank with index " << tankIndex << " does not exist!";
         return false;
     }
+    
+    //TODO: Update tankIndex in Player.
+    tanks.erase(tanks.find(tankIndex));
+    out << "Removed tank with index " << tankIndex << ".";
+    broadcast = true;
     
     return true;
 }
 
-bool TanksGame::msgUpdateTank(const unsigned int &playerIndex, std::ostream &out, bool &broadcast, const unsigned int &tankIndex,
+bool TanksGame::msgUpdateTank(const unsigned int &senderIndex, std::ostream &out, bool &broadcast, const unsigned int &tankIndex,
                               const unsigned int &controls, const vec3 &x, const vec4 &q, const vec3 &P, const vec3 &L)
 {
     //Clients are only permitted to modify the status of their own tanks.
-    if (playerIndex == 0 || players[playerIndex].tankIndex == tankIndex)
+    if (senderIndex != 0 && players[senderIndex].tankIndex != tankIndex)
     {
-        std::map<unsigned int, TankInstance>::iterator i = tanks.find(tankIndex);
-        
-        if (i == tanks.end())
-        {
-            out << "Tank with index " << tankIndex << " does not exist!";
-            return false;
-        }
-        else
-        {
-            //Update tank status.
-            i->second.controls = controls;
-            i->second.x = x;
-            i->second.q = q;
-            i->second.P = P;
-            i->second.L = L;
-            broadcast = true;
-        }
-    }
-    else
-    {
-        out << "Clients cannot update tanks other than their own!";
+        out << "Player tried to send update for wrong tank!";
         return false;
     }
+    
+    std::map<unsigned int, TankInstance>::iterator i = tanks.find(tankIndex);
+    
+    if (i == tanks.end())
+    {
+        out << "Tank with index " << tankIndex << " does not exist!";
+        return false;
+    }
+    
+    //Update tank status.
+    i->second.controls = controls;
+    i->second.x = x;
+    i->second.q = q;
+    i->second.P = P;
+    i->second.L = L;
+    broadcast = true;
     
     return true;
 }
 
-bool TanksGame::msgSetPlayerTank(const unsigned int &playerIndex, std::ostream &out, bool &broadcast, const unsigned int &tankPlayerIndex, const unsigned int &tankIndex)
+bool TanksGame::msgSetPlayerTank(const unsigned int &, std::ostream &out, bool &broadcast, const unsigned int &tankPlayerIndex, const unsigned int &tankIndex)
 {
-    if (playerIndex == 0)
+    if (tanks.find(tankIndex) == tanks.end() || players.find(tankPlayerIndex) == players.end())
     {
-        if (tanks.find(tankIndex) == tanks.end() || players.find(tankPlayerIndex) == players.end())
-        {
-            out << "Player with index " << playerIndex << " or tank with index " << tankIndex << " does not exist!";
-            return false;
-        }
-        else
-        {
-            players[tankPlayerIndex].tankIndex = tankIndex;
-            out << "Assigned player " << tankPlayerIndex << " to tank " << tankIndex << ".";
-            broadcast = true;
-        }
-    }
-    else
-    {
-        out << "Only the host can reassign tank controllers!";
+        out << "Player with index " << tankPlayerIndex << " or tank with index " << tankIndex << " does not exist!";
         return false;
     }
+    
+    players[tankPlayerIndex].tankIndex = tankIndex;
+    out << "Assigned player " << tankPlayerIndex << " to tank " << tankIndex << ".";
+    broadcast = true;
     
     return true;
 }
 
-bool TanksGame::msgPlayerSpawnRequest(const unsigned int &playerIndex, std::ostream &out, bool &, const unsigned int &tankType)
+bool TanksGame::msgPlayerSpawnRequest(const unsigned int &senderIndex, std::ostream &out, bool &, const unsigned int &tankType)
 {
-    if ((playerIndex == 0 || host) && !client)
+    if (tankTypes.find(tankType) == tankTypes.end())
     {
-        if (tankTypes.find(tankType) == tankTypes.end())
-        {
-            out << "Tank type " << tankType << " does not exist!";
-            return false;
-        }
-        else
-        {
-            //Create a new tank.
-            const unsigned int tankIndex = lastTankIndex++;
-            Message msg1(msg::mt::addTank);
-            
-            msg1 << tankIndex << tankType << vec2(0.0f, 0.0f);
-            applyMessage(0, msg1);
-            
-            //Assign this player to that tank.
-            Message msg2(msg::mt::setPlayerTank);
-            
-            msg2 << playerIndex << tankIndex;
-            applyMessage(0, msg2);
-            
-            out << "Spawned player " << playerIndex << " in tank " << tankIndex << " of type " << tankType << ".";
-        }
-    }
-    else
-    {
-        out << "Only the host can spawn players!";
+        out << "Tank type " << tankType << " does not exist!";
         return false;
     }
+    
+    //Create a new tank.
+    const unsigned int tankIndex = lastTankIndex++;
+    Message msg1(msg::mt::addTank);
+    
+    msg1 << tankIndex << tankType << vec2(0.0f, 0.0f);
+    applyMessage(0, msg1);
+    
+    //Assign this player to that tank.
+    Message msg2(msg::mt::setPlayerTank);
+    
+    msg2 << senderIndex << tankIndex;
+    applyMessage(0, msg2);
+    
+    out << "Spawned player " << senderIndex << " in tank " << tankIndex << " of type " << tankType << ".";
     
     return true;
 }
 
-bool TanksGame::applyMessage(const unsigned int &playerIndex, const Message &message)
+bool TanksGame::applyMessage(const unsigned int &senderIndex, const Message &message)
 {
     std::ostringstream out;
     bool ok = true;
     //Do we want to send this message to all clients if we are the host?
     bool broadcast = false;
     
-    if (host) assert(players.find(playerIndex) != players.end());
+#ifndef NDEBUG
+    if (host)
+    {
+        //The host should always have the indices of all players.
+        assert(players.find(senderIndex) != players.end());
+    }
+#endif
     
-    if (message.id == msg::mt::none)
+    //Commands that only the host can give.
+    if (senderIndex == 0)
     {
-        out << "No-operation message should never be sent.";
-        ok = false;
-    }
-    else if (message.id == msg::mt::help)
-    {
-        if (playerIndex == 0)
-        {
-            out << "\\w\\4==== Available commands:" << std::endl << translator->getMessageTypeNames("\n") << std::endl;
-            out << "\\w\\4==== Full descriptions:" << std::endl << translator->getMessageTypeDescriptions();
-        }
-    }
-    else if (message.id == msg::mt::host) ok = msgHost(playerIndex, out, broadcast, message.data[0].iv1);
-    else if (message.id == msg::mt::join) ok = msgJoin(playerIndex, out, broadcast, message.data[0].iv1, message.data[1].iv1, message.data[2].iv1);
-    else if (message.id == msg::mt::disconnect) ok = msgDisconnect(playerIndex, out, broadcast);
-    else if (message.id == msg::mt::addPlayer) ok = msgAddPlayer(playerIndex, out, broadcast, message.data[0].iv1);
-    else if (message.id == msg::mt::removePlayer) ok = msgRemovePlayer(playerIndex, out, broadcast, message.data[0].iv1);
-    else if (message.id == msg::mt::welcomePlayer) ok = msgWelcomePlayer(playerIndex, out, broadcast, message.data[0].iv1);
-    else if (message.id == msg::mt::terrainOffset) ok = msgTerrainOffset(playerIndex, out, broadcast, message.data[0].v2);
-    else if (message.id == msg::mt::addTank) ok = msgAddTank(playerIndex, out, broadcast, message.data[0].iv1, message.data[1].iv1, message.data[2].v2);
-    else if (message.id == msg::mt::removeTank) ok = msgRemoveTank(playerIndex, out, broadcast, message.data[0].iv1);
-    else if (message.id == msg::mt::updateTank) ok = msgUpdateTank(playerIndex, out, broadcast, message.data[0].iv1, message.data[1].iv1, message.data[2].v3, message.data[3].v4, message.data[4].v3, message.data[5].v3);
-    else if (message.id == msg::mt::setPlayerTank) ok = msgSetPlayerTank(playerIndex, out, broadcast, message.data[0].iv1, message.data[1].iv1);
-    else if (message.id == msg::mt::playerSpawnRequest)
-    {
-        //Forward message to host if we are a client.
-        if (client) client->sendMessage(message);
-        else ok = msgPlayerSpawnRequest(playerIndex, out, broadcast, message.data[0].iv1);
+             if (message.id == msg::mt::help) ok = msgHelp(senderIndex, out, broadcast);
+        else if (message.id == msg::mt::host) ok = msgHost(senderIndex, out, broadcast, message.data[0].iv1);
+        else if (message.id == msg::mt::join) ok = msgJoin(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].iv1, message.data[2].iv1);
+        else if (message.id == msg::mt::disconnect) ok = msgDisconnect(senderIndex, out, broadcast);
+        else if (message.id == msg::mt::addPlayer) ok = msgAddPlayer(senderIndex, out, broadcast, message.data[0].iv1);
+        else if (message.id == msg::mt::removePlayer) ok = msgRemovePlayer(senderIndex, out, broadcast, message.data[0].iv1);
+        else if (message.id == msg::mt::welcomePlayer) ok = msgWelcomePlayer(senderIndex, out, broadcast, message.data[0].iv1);
+        else if (message.id == msg::mt::terrainOffset) ok = msgTerrainOffset(senderIndex, out, broadcast, message.data[0].v2);
+        else if (message.id == msg::mt::addTank) ok = msgAddTank(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].iv1, message.data[2].v2);
+        else if (message.id == msg::mt::removeTank) ok = msgRemoveTank(senderIndex, out, broadcast, message.data[0].iv1);
+        else if (message.id == msg::mt::updateTank) ok = msgUpdateTank(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].iv1, message.data[2].v3, message.data[3].v4, message.data[4].v3, message.data[5].v3);
+        else if (message.id == msg::mt::setPlayerTank) ok = msgSetPlayerTank(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].iv1);
+        else if (message.id == msg::mt::playerSpawnRequest) msgPlayerSpawnRequest(senderIndex, out, broadcast, message.data[0].iv1);
     }
     else
     {
-        out << "Message has unknown identifier " << message.id << "!";
-        ok = false;
+        //Host messages received from clients.
+        assert(host && !client);
+        
+             if (message.id == msg::mt::updateTank) ok = msgUpdateTank(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].iv1, message.data[2].v3, message.data[3].v4, message.data[4].v3, message.data[5].v3);
+        else if (message.id == msg::mt::playerSpawnRequest) msgPlayerSpawnRequest(senderIndex, out, broadcast, message.data[0].iv1);
     }
     
-    if (!out.str().empty()) console->addLine(out.str());
+    //Add message output to the console.
+    if (!out.str().empty())
+    {
+        console->addLine(out.str());
+    }
     
     if (broadcast && host)
     {
@@ -440,5 +364,22 @@ bool TanksGame::applyMessage(const unsigned int &playerIndex, const Message &mes
     }
     
     return ok;
+}
+
+bool TanksGame::userMessage(const Message &message)
+{
+    //Receive a command from the user.
+    if (client)
+    {
+        //If we are a client, it is sent to the host.
+        client->sendMessage(message);
+    }
+    else
+    {
+        //Otherwise, we apply it directly to the game and (possibly) let the host distribute it to the connected clients.
+        return applyMessage(0, message);
+    }
+    
+    return true;
 }
 

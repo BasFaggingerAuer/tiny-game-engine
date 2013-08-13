@@ -57,10 +57,12 @@ class TanksGame
         
         TanksMessageTranslator *getTranslator() const;
         bool applyMessage(const unsigned int &, const Message &);
+        bool userMessage(const Message &);
         void clear();
         void updateConsole() const;
         
     private:
+        bool msgHelp(const unsigned int &, std::ostream &, bool &);
         bool msgHost(const unsigned int &, std::ostream &, bool &, const unsigned int &);
         bool msgJoin(const unsigned int &, std::ostream &, bool &, const unsigned int &, const unsigned int &, const unsigned int &);
         bool msgDisconnect(const unsigned int &, std::ostream &, bool &);
