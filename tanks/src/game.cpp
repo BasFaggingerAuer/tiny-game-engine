@@ -29,7 +29,7 @@ using namespace tanks;
 using namespace tiny;
 
 Player::Player() :
-    tankId(0)
+    tankIndex(0)
 {
 
 }
@@ -37,102 +37,6 @@ Player::Player() :
 Player::~Player()
 {
 
-}
-
-TankType::TankType(const std::string &path, TiXmlElement *el)
-{
-    std::cerr << "Reading tank type resource..." << std::endl;
-   
-    assert(el->ValueStr() == "tank");
-    
-    name = "";
-    mass = 1.0f;
-    radius1 = 1.0f;
-    radius2 = 2.0f;
-    
-    nrInstances = 0;
-    maxNrInstances = 0;
-     
-    std::string diffuseFileName = "";
-    std::string normalFileName = "";
-    std::string meshFileName = "";
-    
-    el->QueryStringAttribute("name", &name);
-    el->QueryFloatAttribute("mass", &mass);
-    el->QueryFloatAttribute("solid_radius", &radius1);
-    el->QueryFloatAttribute("shield_radius", &radius2);
-    
-    el->QueryStringAttribute("diffuse", &diffuseFileName);
-    el->QueryStringAttribute("normal", &normalFileName);
-    el->QueryStringAttribute("mesh", &meshFileName);
-    el->QueryIntAttribute("max_instances", &maxNrInstances);
-    
-    //Read thrusters.
-    for (TiXmlElement *sl = el->FirstChildElement(); sl; sl = sl->NextSiblingElement())
-    {
-        if (sl->ValueStr() == "thruster")
-        {
-            std::string id = "";
-            std::istringstream stream(sl->GetText());
-            int i = 0;
-            
-            sl->QueryStringAttribute("id", &id);
-            
-                 if (id == "left") i = 0;
-            else if (id == "right") i = 1;
-            else if (id == "up") i = 2;
-            else if (id == "down") i = 3;
-            else i = -1;
-            
-            if (i >= 0 && i < 4)
-            {
-                stream >> thrust_pos[i].x >> thrust_pos[i].y >> thrust_pos[i].z;
-                stream >> thrust_force[i].x >> thrust_force[i].y >> thrust_force[i].z;
-            }
-            else
-            {
-                std::cerr << "Unknown thruster id '" << id << "'!" << std::endl;
-            }
-        }
-    }
-    
-    //Inertia for a solid sphere (2/5)*m*r^2.
-    inertia = 0.4f*mass*radius1*radius1;
-    
-    //Read mesh and textures.
-    diffuseTexture = new draw::RGBTexture2D(diffuseFileName.empty() ? img::Image::createSolidImage() : img::io::readImage(path + diffuseFileName));
-    normalTexture = new draw::RGBTexture2D(normalFileName.empty() ? img::Image::createSolidImage() : img::io::readImage(path + normalFileName));
-    horde = new draw::StaticMeshHorde(mesh::io::readStaticMesh(path + meshFileName), maxNrInstances);
-    horde->setDiffuseTexture(*diffuseTexture);
-    horde->setNormalTexture(*normalTexture);
-    instances.resize(maxNrInstances);
-    
-    std::cerr << "Added '" << name << "' tank type." << std::endl;
-}
-
-TankType::~TankType()
-{
-    delete horde;
-    delete diffuseTexture;
-    delete normalTexture;
-}
-
-void TankType::clearInstances()
-{
-    nrInstances = 0;
-}
-
-void TankType::addInstance(const TankInstance &tank)
-{
-    if (nrInstances < maxNrInstances)
-    {
-        instances[nrInstances++] = draw::StaticMeshInstance(vec4(tank.x.x, tank.x.y, tank.x.z, 1.0f), tank.q);
-    }
-}
-
-void TankType::updateInstances()
-{
-    horde->setMeshes(instances.begin(), instances.begin() + nrInstances);
 }
 
 TanksGame::TanksGame(const os::Application *application, const std::string &path) :
@@ -166,7 +70,7 @@ TanksGame::TanksGame(const os::Application *application, const std::string &path
 
 TanksGame::~TanksGame()
 {
-    disconnect();
+    clear();
     
     delete translator;
     delete renderer;
@@ -318,21 +222,21 @@ void TanksGame::update(os::Application *application, const float &dt)
     else
     {
         //Do we control a tank?
-        unsigned int tankId = 0;
+        unsigned int tankIndex = 0;
         
         if (players.find(ownPlayerIndex) != players.end())
         {
-            tankId = players[ownPlayerIndex].tankId;
+            tankIndex = players[ownPlayerIndex].tankIndex;
             
-            if (tanks.find(tankId) == tanks.end())
+            if (tanks.find(tankIndex) == tanks.end())
             {
                 //If we have received a nonzero tank id, it should always be valid!
-                assert(tankId == 0);
-                tankId = 0;
+                assert(tankIndex == 0);
+                tankIndex = 0;
             }
         }
         
-        if (tankId == 0)
+        if (tankIndex == 0)
         {
             //We do not control a tank: control the camera directly.
             //Move the camera around and collide with the terrain.
@@ -349,7 +253,7 @@ void TanksGame::update(os::Application *application, const float &dt)
             if (application->isKeyPressed('w')) controls |=   4;
             if (application->isKeyPressed('s')) controls |=   8;
             
-            TankInstance &tank = tanks[tankId];
+            TankInstance &tank = tanks[tankIndex];
             
             if (controls != tank.controls)
             {
@@ -360,7 +264,7 @@ void TanksGame::update(os::Application *application, const float &dt)
                 {
                     Message msg(msg::mt::updateTank);
                     
-                    msg << tankId << tank.controls << tank.x << tank.q << tank.P << tank.L;
+                    msg << tankIndex << tank.controls << tank.x << tank.q << tank.P << tank.L;
                     
                     if (client) client->sendMessage(msg);
                     if (host) host->sendMessage(msg);
@@ -383,339 +287,16 @@ void TanksGame::render()
     renderer->render();
 }
 
-bool TanksGame::applyMessage(const unsigned int &playerIndex, const Message &message)
-{
-    std::ostringstream out;
-    bool ok = true;
-    //Do we want to send this message to all clients if we are the host?
-    bool broadcast = false;
-    
-    if (host) assert(players.find(playerIndex) != players.end());
-    
-    if (message.id == msg::mt::none)
-    {
-        out << "None message should never be sent.";
-        ok = false;
-    }
-    else if (message.id == msg::mt::help)
-    {
-        if (playerIndex == 0)
-        {
-            out << "\\w\\4==== Available commands:" << std::endl << translator->getMessageTypeNames("\n") << std::endl;
-            out << "\\w\\4==== Full descriptions:" << std::endl << translator->getMessageTypeDescriptions();
-        }
-    }
-    else if (message.id == msg::mt::host)
-    {
-        if (!host && !client)
-        {
-            try
-            {
-                unsigned int port = message.data[0].iv1;
-                
-                //Host on port 1234 if nothing is specified.
-                if (port == 0)
-                {
-                    port = 1234;
-                }
-                
-                host = new TanksHost(port, this);
-                out << "Hosting game at port " << port << ".";
-                
-                //Enter the game as own player.
-                ownPlayerIndex = 0;
-                players.insert(std::make_pair(ownPlayerIndex, Player()));
-            }
-            catch (std::exception &e)
-            {
-                out << "Unable to host game!";
-                ok = false;
-            }
-        }
-        else
-        {
-            out << "A network game is already in progress, please disconnect first.";
-            ok = false;
-        }
-    }
-    else if (message.id == msg::mt::join)
-    {
-        if (!host && !client)
-        {
-            try
-            {
-                std::ostringstream ipAddress;
-                unsigned int port = message.data[2].iv1;
-                
-                //Join localhost:1234 if no host is specified.
-                if (port == 0)
-                {
-                    port = 1234;
-                }
-                
-                if (message.data[0].iv1 == 0 && message.data[1].iv1 == 0)
-                {
-                    ipAddress << "localhost";
-                }
-                else
-                {
-                    //Extract IP address from two integers.
-                    ipAddress << ((message.data[0].iv1/1000) % 1000) << "." << (message.data[0].iv1 % 1000) << "."
-                              << ((message.data[1].iv1/1000) % 1000) << "." << (message.data[1].iv1 % 1000);
-                }
-                
-                client = new TanksClient(ipAddress.str(), port, this);
-                out << "Joined game at " << ipAddress.str() << ":" << port << ".";
-            }
-            catch (std::exception &e)
-            {
-                out << "Unable to join game!";
-                ok = false;
-            }
-        }
-        else
-        {
-            out << "A network game is already in progress, please disconnect first.";
-            ok = false;
-        }
-    }
-    else if (message.id == msg::mt::disconnect)
-    {
-        if (playerIndex == 0)
-        {
-            out << "Disconnecting...";
-            disconnect();
-        }
-        else
-        {
-            out << "Player " << playerIndex << " tried to force us to disconnect!";
-            ok = false;
-        }
-    }
-    else if (message.id == msg::mt::addPlayer)
-    {
-        if (playerIndex == 0 && client)
-        {
-            addPlayer(message.data[0].iv1);
-        }
-        else
-        {
-            out << "Only clients add new players via network messages!";
-            ok = false;
-        }
-    }
-    else if (message.id == msg::mt::removePlayer)
-    {
-        if (playerIndex == 0 && client)
-        {
-            removePlayer(message.data[0].iv1);
-        }
-        else
-        {
-            out << "Only clients remove players via network messages!";
-            ok = false;
-        }
-    }
-    else if (message.id == msg::mt::welcomePlayer)
-    {
-        if (playerIndex == 0 && client)
-        {
-            ownPlayerIndex = message.data[0].iv1;
-            out << "Welcomed to network game as player " << ownPlayerIndex << ".";
-        }
-        else
-        {
-            out << "Only clients receive welcome messages!";
-            ok = false;
-        }
-    }
-    else if (message.id == msg::mt::terrainOffset)
-    {
-        if (playerIndex == 0 || client)
-        {
-            broadcast = true;
-            terrain->setOffset(message.data[0].v2);
-            out << "Set terrain offset to " << message.data[0].v2 << ".";
-        }
-        else
-        {
-            out << "Only the host can change the terrain offset!";
-            ok = false;
-        }
-    }
-    else if (message.id == msg::mt::addTank)
-    {
-        if (playerIndex == 0 || client)
-        {
-            const unsigned int tankId = message.data[0].iv1;
-            const unsigned int tankType = message.data[1].iv1;
-            const vec2 tankPos = message.data[2].v2;
-            
-            if (tankTypes.find(tankType) == tankTypes.end() || tanks.find(tankId) != tanks.end())
-            {
-                out << "Unknown tank type " << tankType << " or tank id " << tankId << " already in use!";
-                ok = false;
-            }
-            else
-            {
-                TankInstance tank(tankType);
-                
-                tank.x = vec3(tankPos.x, terrain->getHeight(tankPos), tankPos.y);
-                tanks[tankId] = tank;
-                out << "Added tank with id " << tankId << " of type " << tankType << ".";
-                broadcast = true;
-            }
-        }
-        else
-        {
-            out << "Only the host can create new tanks!";
-            ok = false;
-        }
-    }
-    else if (message.id == msg::mt::removeTank)
-    {
-        if (playerIndex == 0 || client)
-        {
-            const unsigned int tankId = message.data[0].iv1;
-            
-            if (tanks.find(tankId) == tanks.end())
-            {
-                out << "Tank with id " << tankId << " does not exist!";
-                ok = false;
-            }
-            else
-            {
-                //TODO: Update tankId in Player.
-                tanks.erase(tanks.find(tankId));
-                out << "Removed tank with id " << tankId << ".";
-                broadcast = true;
-            }
-        }
-        else
-        {
-            out << "Only the host can remove tanks!";
-            ok = false;
-        }
-    }
-    else if (message.id == msg::mt::updateTank)
-    {
-        //Clients are only permitted to modify the status of their own tanks.
-        if ((client && playerIndex != ownPlayerIndex) || (host && players[playerIndex].tankId == static_cast<unsigned int>(message.data[0].iv1)))
-        {
-            std::map<unsigned int, TankInstance>::iterator i = tanks.find(message.data[0].iv1);
-            
-            if (i == tanks.end())
-            {
-                out << "Tank with id " << message.data[0].iv1 << " does not exist!";
-                ok = false;
-            }
-            else
-            {
-                //Update tank status.
-                i->second.controls = message.data[1].iv1;
-                i->second.x = message.data[2].v3;
-                i->second.q = message.data[3].v4;
-                i->second.P = message.data[4].v3;
-                i->second.L = message.data[5].v3;
-                broadcast = true;
-            }
-        }
-        else
-        {
-            out << "Clients cannot update tanks other than their own!";
-            ok = false;
-        }
-    }
-    else if (message.id == msg::mt::setPlayerTank)
-    {
-        if (playerIndex == 0 || client)
-        {
-            const unsigned int playerId = message.data[0].iv1;
-            const unsigned int tankId = message.data[1].iv1;
-            
-            if ((tanks.find(tankId) == tanks.end() && tankId != 0) || players.find(playerId) == players.end())
-            {
-                out << "Player with id " << playerId << " or tank with id " << tankId << " does not exist!";
-                ok = false;
-            }
-            else
-            {
-                players[playerId].tankId = tankId;
-                out << "Assigned player " << playerId << " to tank " << tankId << ".";
-                broadcast = true;
-            }
-        }
-        else
-        {
-            out << "Only the host can reassign tank controllers!";
-            ok = false;
-        }
-    }
-    else if (message.id == msg::mt::playerSpawnRequest)
-    {
-        if (host)
-        {
-            const unsigned int tankTypeId = message.data[0].iv1;
-            
-            if (tankTypes.find(tankTypeId) == tankTypes.end())
-            {
-                out << "Tank type with id " << tankTypeId << " does not exist!";
-                ok = false;
-            }
-            else
-            {
-                //Create a new tank.
-                const unsigned int tankId = lastTankIndex++;
-                Message msg1(msg::mt::addTank);
-                
-                msg1 << tankId << tankTypeId << vec2(0.0f, 0.0f);
-                applyMessage(0, msg1);
-                
-                //Assign this player to that tank.
-                Message msg2(msg::mt::setPlayerTank);
-                
-                msg2 << playerIndex << tankId;
-                applyMessage(0, msg2);
-                
-                out << "Spawned player " << playerIndex << " in tank " << tankId << " of type " << tankTypeId << ".";
-            }
-        }
-        else if (client)
-        {
-            //Forward message to host.
-            client->sendMessage(message);
-        }
-        else
-        {
-            out << "Only the host can spawn players!";
-            ok = false;
-        }
-    }
-    else
-    {
-        out << "Message has unknown identifier " << message.id << "!";
-        ok = false;
-    }
-    
-    if (!out.str().empty()) console->addLine(out.str());
-    
-    if (broadcast && host)
-    {
-        //Broadcast this message to all clients.
-        assert(ok);
-        host->sendMessage(message);
-    }
-    
-    return ok;
-}
-
 TanksMessageTranslator *TanksGame::getTranslator() const
 {
     return translator;
 }
 
-void TanksGame::disconnect()
+void TanksGame::clear()
 {
+    //Stops any running game and clears all data.
+    
+    //Stop networking.
     if (client)
     {
         delete client;
@@ -738,86 +319,6 @@ void TanksGame::disconnect()
     
     //Remove all tanks.
     tanks.clear();
-}
-
-void TanksGame::addPlayer(const unsigned int &playerIndex)
-{
-    std::ostringstream out;
-    
-    if (players.find(playerIndex) != players.end())
-    {
-        out << "Player with index " << playerIndex << " will not be added, this player already exists!";
-    }
-    else
-    {
-        if (host)
-        {
-            //Send this player to all other clients.
-            if (true)
-            {
-                Message msg(msg::mt::addPlayer);
-                
-                msg << playerIndex;
-                host->sendMessage(msg);
-            }
-            
-            //Send new client a welcome message.
-            if (true)
-            {
-                Message msg(msg::mt::welcomePlayer);
-                
-                msg << playerIndex;
-                host->sendPrivateMessage(msg, playerIndex);
-            }
-            
-            //Send all current players to the new client.
-            for (std::map<unsigned int, Player>::const_iterator j = players.begin(); j != players.end(); ++j)
-            {
-                Message msg(msg::mt::addPlayer);
-                
-                msg << j->first;
-                host->sendPrivateMessage(msg, playerIndex);
-            }
-        }
-    
-        players.insert(std::make_pair(playerIndex, Player()));
-        out << "Added player with index " << playerIndex << ".";
-    }
-    
-    console->addLine(out.str());
-}
-
-void TanksGame::removePlayer(const unsigned int &playerIndex)
-{
-    std::ostringstream out;
-    std::map<unsigned int, Player>::iterator i = players.find(playerIndex);
-    
-    if (i == players.end())
-    {
-        out << "Player with index " << playerIndex << " will not be removed, this player does not exist!";
-    }
-    else
-    {
-        if (host)
-        {
-            //Broadcast removal of this player.
-            Message msg1(msg::mt::removePlayer);
-            
-            msg1 << playerIndex;
-            host->sendMessage(msg1);
-            
-            //And of the player's tank.
-            Message msg2(msg::mt::removeTank);
-            
-            msg2 << i->second.tankId;
-            applyMessage(0, msg2);
-        }
-    
-        players.erase(i);
-        out << "Removed player with index " << playerIndex << ".";
-    }
-    
-    console->addLine(out.str());
 }
 
 void TanksGame::readResources(const std::string &path)

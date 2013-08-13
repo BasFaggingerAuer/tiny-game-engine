@@ -45,7 +45,7 @@ void TanksClient::receiveMessage(const Message &message)
 
 void TanksClient::disconnectedFromHost()
 {
-    game->disconnect();
+    game->clear();
 }
 
 TanksHost::TanksHost(const unsigned int &hostPort, TanksGame *a_game) :
@@ -62,7 +62,11 @@ TanksHost::~TanksHost()
 
 void TanksHost::addClient(const unsigned int &clientIndex)
 {
-    game->addPlayer(clientIndex);
+    Message msg(msg::mt::addPlayer);
+    
+    msg << clientIndex;
+    
+    game->applyMessage(0, msg);
 }
 
 void TanksHost::receiveMessage(const unsigned int &clientIndex, const Message &message)
@@ -72,7 +76,11 @@ void TanksHost::receiveMessage(const unsigned int &clientIndex, const Message &m
 
 void TanksHost::removeClient(const unsigned int &clientIndex)
 {
-    game->removePlayer(clientIndex);
+    Message msg(msg::mt::removePlayer);
+    
+    msg << clientIndex;
+    
+    game->applyMessage(0, msg);
 }
 
 TanksConsole::TanksConsole(TanksGame *a_game) :
