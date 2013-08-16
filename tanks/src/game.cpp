@@ -49,8 +49,6 @@ TanksGame::TanksGame(const os::Application *application, const std::string &path
     ownPlayerIndex(0)
 {
     readResources(path);
-    cameraPosition = vec3(0.0f, 0.0f, 0.0f);
-    cameraOrientation = vec4(0.0f, 0.0f, 0.0f, 1.0f);
     consoleMode = false;
     
     //Create a renderer and add the font to it, disabling depth reading and writing.
@@ -321,6 +319,10 @@ void TanksGame::clear()
     //Remove all tanks.
     tanks.clear();
     lastTankIndex = 1;
+    
+    //Reset camera.
+    cameraPosition = vec3(0.0f, 0.0f, 0.0f);
+    cameraOrientation = vec4(0.0f, 0.0f, 0.0f, 1.0f);
 }
 
 TanksMessageTranslator *TanksGame::getTranslator() const
