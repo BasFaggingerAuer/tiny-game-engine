@@ -39,21 +39,21 @@ TanksTerrain::TanksTerrain(const std::string &path, TiXmlElement *el)
     
     assert(el);
     
-    std::vector<img::Image> diffuseTextures;
-    std::vector<img::Image> normalTextures;
+    std::vector<img::Image> diffuseImages;
+    std::vector<img::Image> normalImages;
     std::string heightMapFileName = "";
     std::string attributeShaderFileName = "";
-    float widthScale = 1.0f;
-    float heightScale = 1.0f;
-    int farScale = 2; 
-    float detailScale = 1.0f;
+    float widthScaleFactor = 1.0f;
+    float heightScaleFactor = 1.0f;
+    int farScaleFactor = 2; 
+    float detailScaleFactor = 1.0f;
     
     assert(el->ValueStr() == "terrain");
     
-    el->QueryFloatAttribute("scale_width", &widthScale);
-    el->QueryFloatAttribute("scale_height", &heightScale);
-    el->QueryIntAttribute("scale_far", &farScale);
-    el->QueryFloatAttribute("scale_detail", &detailScale);
+    el->QueryFloatAttribute("scale_width", &widthScaleFactor);
+    el->QueryFloatAttribute("scale_height", &heightScaleFactor);
+    el->QueryIntAttribute("scale_far", &farScaleFactor);
+    el->QueryFloatAttribute("scale_detail", &detailScaleFactor);
     el->QueryStringAttribute("attribute_shader", &attributeShaderFileName);
     el->QueryStringAttribute("heightmap", &heightMapFileName);
     
@@ -61,8 +61,8 @@ TanksTerrain::TanksTerrain(const std::string &path, TiXmlElement *el)
     {
         if (sl->ValueStr() == "biome")
         {
-            if (sl->Attribute("diffuse")) diffuseTextures.push_back(img::io::readImage(path + std::string(sl->Attribute("diffuse"))));
-            if (sl->Attribute("normal")) normalTextures.push_back(img::io::readImage(path + std::string(sl->Attribute("normal"))));
+            if (sl->Attribute("diffuse")) diffuseImages.push_back(img::io::readImage(path + std::string(sl->Attribute("diffuse"))));
+            if (sl->Attribute("normal")) normalImages.push_back(img::io::readImage(path + std::string(sl->Attribute("normal"))));
         }
     }
     
@@ -77,59 +77,60 @@ TanksTerrain::TanksTerrain(const std::string &path, TiXmlElement *el)
             throw std::exception();
         }
         
-        terrainAttributeShader = std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
+        attributeShaderCode = std::string(std::istreambuf_iterator<char>(file), std::istreambuf_iterator<char>());
         file.close();
     }
     
     //Actually construct the terrain using all the data that we have.
-    terrainScale = vec2(widthScale);
-    terrainFarScale = ivec2(farScale);
-    terrainDetailScale = vec2(detailScale);
+    scale = vec2(widthScaleFactor);
+    farScale = ivec2(farScaleFactor);
+    farOffset = vec2(0.5f);
+    localTextureScale = vec2(detailScaleFactor);
     
     //Create height maps.
-    terrainHeightTexture = new draw::FloatTexture2D(img::io::readImage(path + heightMapFileName), draw::tf::filter);
-    terrainFarHeightTexture = new draw::FloatTexture2D(terrainHeightTexture->getWidth(), terrainHeightTexture->getHeight(), draw::tf::filter);
+    heightTexture = new draw::FloatTexture2D(img::io::readImage(path + heightMapFileName), draw::tf::filter);
+    farHeightTexture = new draw::FloatTexture2D(heightTexture->getWidth(), heightTexture->getHeight(), draw::tf::filter);
     
     //Create normal maps for the far-away and zoomed-in heightmaps.
-    terrainFarNormalTexture = new draw::RGBTexture2D(terrainHeightTexture->getWidth(), terrainHeightTexture->getHeight());
-    terrainNormalTexture = new draw::RGBTexture2D(terrainHeightTexture->getWidth(), terrainHeightTexture->getHeight());
-    terrainFarTangentTexture = new draw::RGBTexture2D(terrainHeightTexture->getWidth(), terrainHeightTexture->getHeight());
-    terrainTangentTexture = new draw::RGBTexture2D(terrainHeightTexture->getWidth(), terrainHeightTexture->getHeight());
+    farTangentTexture = new draw::RGBTexture2D(heightTexture->getWidth(), heightTexture->getHeight());
+    tangentTexture = new draw::RGBTexture2D(heightTexture->getWidth(), heightTexture->getHeight());
+    farNormalTexture = new draw::RGBTexture2D(heightTexture->getWidth(), heightTexture->getHeight());
+    normalTexture = new draw::RGBTexture2D(heightTexture->getWidth(), heightTexture->getHeight());
     
     //Create an attribute texture that determines the terrain type (forest/grass/mud/stone) based on the altitude and slope.
-    terrainAttributeTexture = new draw::RGBATexture2D(img::Image::createSolidImage(terrainHeightTexture->getWidth(), 0, 0, 0, 0));
-    terrainFarAttributeTexture = new draw::RGBATexture2D(img::Image::createSolidImage(terrainHeightTexture->getWidth()));
+    attributeTexture = new draw::RGBATexture2D(img::Image::createSolidImage(heightTexture->getWidth()));
+    farAttributeTexture = new draw::RGBATexture2D(img::Image::createSolidImage(heightTexture->getWidth()));
     
-    //Read diffuse textures and make them tileable.
-    biomeDiffuseTextures = new draw::RGBTexture2DArray(diffuseTextures.begin(), diffuseTextures.end());
-    biomeNormalTextures = new draw::RGBTexture2DArray(normalTextures.begin(), normalTextures.end());
-    
-    //Paint the terrain with the zoomed-in and far-away textures.
-    terrain = new draw::Terrain(6, 8);
+    //Read diffuse textures.
+    //localDiffuseTextures = new draw::RGBTexture2DArray(diffuseImages.begin(), diffuseImages.end());
+    //localNormalTextures = new draw::RGBTexture2DArray(normalImages.begin(), normalImages.end());
+    localDiffuseTextures = new draw::RGBTexture2DArray(img::Image::createSolidImage());
+    localNormalTextures = new draw::RGBTexture2DArray(img::Image::createUpNormalImage());
     
     //Scale vertical range of the far-away heightmap.
-    draw::computeScaledTexture(*terrainHeightTexture, *terrainFarHeightTexture, vec4(heightScale/255.0f), vec4(0.0f));
+    draw::computeScaledTexture(*heightTexture, *farHeightTexture, vec4(heightScaleFactor/255.0f), vec4(0.0f));
     
-    //Zoom in on part of the terrain.
+    //Create the terrain.
+    terrain = new draw::Terrain(6, 8);
     setOffset(vec2(0.5f));
 }
 
 TanksTerrain::~TanksTerrain()
 {
     delete terrain;
-    delete terrainHeightTexture;
-    delete terrainFarHeightTexture;
-    delete terrainNormalTexture;
-    delete terrainFarNormalTexture;
-    delete terrainTangentTexture;
-    delete terrainFarTangentTexture;
-    delete terrainAttributeTexture;
-    delete terrainFarAttributeTexture;
-    delete biomeDiffuseTextures;
-    delete biomeNormalTextures;
+    delete heightTexture;
+    delete farHeightTexture;
+    delete tangentTexture;
+    delete farTangentTexture;
+    delete normalTexture;
+    delete farNormalTexture;
+    delete attributeTexture;
+    delete farAttributeTexture;
+    delete localDiffuseTextures;
+    delete localNormalTextures;
 }
 
-void TanksTerrain::calculateAttributes(const tiny::draw::FloatTexture2D &heightMap, tiny::draw::RGBATexture2D &attributeMap, const float &scale) const
+void TanksTerrain::calculateAttributes(const tiny::draw::FloatTexture2D &heightMap, tiny::draw::RGBATexture2D &attributeMap, const std::string &shaderCode, const float &scale)
 {
     std::vector<std::string> inputTextures;
     std::vector<std::string> outputTextures;
@@ -137,7 +138,7 @@ void TanksTerrain::calculateAttributes(const tiny::draw::FloatTexture2D &heightM
     inputTextures.push_back("source");
     outputTextures.push_back("colour");
 
-    draw::ComputeTexture *computeTexture = new draw::ComputeTexture(inputTextures, outputTextures, terrainAttributeShader);
+    draw::ComputeTexture *computeTexture = new draw::ComputeTexture(inputTextures, outputTextures, shaderCode);
     
     computeTexture->uniformMap().setFloatUniform(2.0f*scale, "mapScale");
     computeTexture->setInput(heightMap, "source");
@@ -150,44 +151,42 @@ void TanksTerrain::calculateAttributes(const tiny::draw::FloatTexture2D &heightM
 
 void TanksTerrain::setOffset(const vec2 &offset)
 {
-    //Shifts the local heightmap to a specific spot in the global heightmap.
-    terrainFarOffset = offset;
+    farOffset = offset;
     
     //Zoom into a small area of the far-away heightmap.
-    draw::computeResizedTexture(*terrainFarHeightTexture, *terrainHeightTexture,
-                                vec2(1.0f/static_cast<float>(terrainFarScale.x), 1.0f/static_cast<float>(terrainFarScale.y)),
-                                offset);
+    draw::computeResizedTexture(*farHeightTexture, *heightTexture,
+                                vec2(1.0f/static_cast<float>(farScale.x), 1.0f/static_cast<float>(farScale.y)),
+                                farOffset);
     
     //Apply the diamond-square fractal algorithm to make the zoomed-in heightmap a little less boring.
-    draw::computeDiamondSquareRefinement(*terrainHeightTexture, *terrainHeightTexture, terrainFarScale.x);
+    draw::computeDiamondSquareRefinement(*heightTexture, *heightTexture, farScale.x);
     
-    //Calculate normal and tangent maps.
-    draw::computeNormalMap(*terrainFarHeightTexture, *terrainFarNormalTexture, terrainScale.x*terrainFarScale.x);
-    draw::computeNormalMap(*terrainHeightTexture, *terrainNormalTexture, terrainScale.x);
-    draw::computeTangentMap(*terrainFarHeightTexture, *terrainFarTangentTexture, terrainScale.x*terrainFarScale.x);
-    draw::computeTangentMap(*terrainHeightTexture, *terrainTangentTexture, terrainScale.x);
+    //Tangent and normal maps.
+    draw::computeTangentMap(*farHeightTexture, *farTangentTexture, scale.x*farScale.x);
+    draw::computeTangentMap(*heightTexture, *tangentTexture, scale.x);
+    draw::computeNormalMap(*farHeightTexture, *farNormalTexture, scale.x*farScale.x);
+    draw::computeNormalMap(*heightTexture, *normalTexture, scale.x);
     
     //Calculate attribute maps for both the zoomed-in and far-away terrain.
-    calculateAttributes(*terrainHeightTexture, *terrainAttributeTexture, terrainScale.x);
-    calculateAttributes(*terrainFarHeightTexture, *terrainFarAttributeTexture, terrainScale.x*terrainFarScale.x);
+    //calculateAttributes(*heightTexture, *attributeTexture, attributeShaderCode, scale.x);
+    //calculateAttributes(*farHeightTexture, *farAttributeTexture, attributeShaderCode, scale.x*farScale.x);
+    //terrain->setFarDiffuseTextures(*attributeTexture, *farAttributeTexture, *localDiffuseTextures, *localNormalTextures, localTextureScale);
+    terrain->setDiffuseTextures(*attributeTexture, *localDiffuseTextures, *localNormalTextures, vec2(1.0f, 1.0f));
     
-    //Set proper textures in the terrain.
-    terrain->setFarHeightTextures(*terrainHeightTexture, *terrainFarHeightTexture,
-                                  *terrainTangentTexture, *terrainFarTangentTexture,
-                                  *terrainNormalTexture, *terrainFarNormalTexture,
-                                  terrainScale, terrainFarScale, terrainFarOffset);
-    terrain->setFarDiffuseTextures(*terrainAttributeTexture, *terrainFarAttributeTexture,
-                                   *biomeDiffuseTextures, *biomeNormalTextures,
-                                   terrainDetailScale);
+    //Paint the terrain with the zoomed-in and far-away textures.
+    terrain->setFarHeightTextures(*heightTexture, *farHeightTexture,
+                                  *tangentTexture, *farTangentTexture,
+                                  *normalTexture, *farNormalTexture,
+                                  scale, farScale, farOffset);
 }
 
 float TanksTerrain::getHeight(const vec2 &a_pos) const
 {
-    return sampleTextureBilinear(*terrainHeightTexture, terrainScale, a_pos).x;
+    return sampleTextureBilinear(*heightTexture, scale, a_pos).x;
 }
 
 vec4 TanksTerrain::getAttributes(const vec2 &a_pos) const
 {
-    return sampleTextureBilinear(*terrainAttributeTexture, terrainScale, a_pos);
+    return sampleTextureBilinear(*attributeTexture, scale, a_pos);
 }
 

@@ -34,30 +34,15 @@ class TanksTerrain
         ~TanksTerrain();
         
         void setOffset(const tiny::vec2 &);
-        void calculateAttributes(const tiny::draw::FloatTexture2D &, tiny::draw::RGBATexture2D &, const float &) const;
         
         float getHeight(const tiny::vec2 &) const;
         tiny::vec4 getAttributes(const tiny::vec2 &) const;
         
         tiny::draw::Terrain *terrain;
-        tiny::vec2 terrainScale;
-        tiny::ivec2 terrainFarScale;
-        tiny::vec2 terrainDetailScale;
-        tiny::vec2 terrainFarOffset;
-        std::string terrainAttributeShader;
-        tiny::draw::FloatTexture2D *terrainHeightTexture;
-        tiny::draw::FloatTexture2D *terrainFarHeightTexture;
-        tiny::draw::RGBTexture2D *terrainNormalTexture;
-        tiny::draw::RGBTexture2D *terrainFarNormalTexture;
-        tiny::draw::RGBTexture2D *terrainTangentTexture;
-        tiny::draw::RGBTexture2D *terrainFarTangentTexture;
-        tiny::draw::RGBATexture2D *terrainAttributeTexture;
-        tiny::draw::RGBATexture2D *terrainFarAttributeTexture;
-        
-        tiny::draw::RGBTexture2DArray *biomeDiffuseTextures;
-        tiny::draw::RGBTexture2DArray *biomeNormalTextures;
         
     private:
+        static void calculateAttributes(const tiny::draw::FloatTexture2D &, tiny::draw::RGBATexture2D &, const std::string &, const float &);
+        
         //A simple bilinear texture sampler, which converts world coordinates to the corresponding texture coordinates on the zoomed-in terrain.
         template<typename TextureType>
         static tiny::vec4 sampleTextureBilinear(const TextureType &texture, const tiny::vec2 &scale, const tiny::vec2 &a_pos)
@@ -74,6 +59,23 @@ class TanksTerrain
             //Interpolate between these four points.
             return delta.y*(delta.x*h11 + (1.0f - delta.x)*h01) + (1.0f - delta.y)*(delta.x*h10 + (1.0f - delta.x)*h00);
         }
+        
+        tiny::vec2 scale;
+        tiny::ivec2 farScale;
+        tiny::vec2 farOffset;
+        tiny::vec2 localTextureScale;
+        std::string attributeShaderCode;
+        
+        tiny::draw::FloatTexture2D *heightTexture;
+        tiny::draw::FloatTexture2D *farHeightTexture;
+        tiny::draw::RGBTexture2D *normalTexture;
+        tiny::draw::RGBTexture2D *farNormalTexture;
+        tiny::draw::RGBTexture2D *tangentTexture;
+        tiny::draw::RGBTexture2D *farTangentTexture;
+        tiny::draw::RGBATexture2D *attributeTexture;
+        tiny::draw::RGBATexture2D *farAttributeTexture;
+        tiny::draw::RGBTexture2DArray *localDiffuseTextures;
+        tiny::draw::RGBTexture2DArray *localNormalTextures;
 };
 
 } //namespace tanks
