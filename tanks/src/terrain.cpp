@@ -101,11 +101,12 @@ TanksTerrain::TanksTerrain(const std::string &path, TiXmlElement *el)
     attributeTexture = new draw::RGBATexture2D(img::Image::createSolidImage(heightTexture->getWidth()));
     farAttributeTexture = new draw::RGBATexture2D(img::Image::createSolidImage(heightTexture->getWidth()));
     
-    //Read diffuse textures.
-    //localDiffuseTextures = new draw::RGBTexture2DArray(diffuseImages.begin(), diffuseImages.end());
-    //localNormalTextures = new draw::RGBTexture2DArray(normalImages.begin(), normalImages.end());
-    localDiffuseTextures = new draw::RGBTexture2DArray(img::Image::createSolidImage());
-    localNormalTextures = new draw::RGBTexture2DArray(img::Image::createUpNormalImage());
+    //Create local diffuse textures.
+    if (diffuseImages.empty()) localDiffuseTextures = new draw::RGBTexture2DArray(img::Image::createSolidImage());
+    else localDiffuseTextures = new draw::RGBTexture2DArray(diffuseImages.begin(), diffuseImages.end());
+    
+    if (normalImages.empty()) localNormalTextures = new draw::RGBTexture2DArray(img::Image::createUpNormalImage());
+    else localNormalTextures = new draw::RGBTexture2DArray(normalImages.begin(), normalImages.end());
     
     //Scale vertical range of the far-away heightmap.
     draw::computeScaledTexture(*heightTexture, *farHeightTexture, vec4(heightScaleFactor/255.0f), vec4(0.0f));
@@ -130,25 +131,6 @@ TanksTerrain::~TanksTerrain()
     delete localNormalTextures;
 }
 
-void TanksTerrain::calculateAttributes(const tiny::draw::FloatTexture2D &heightMap, tiny::draw::RGBATexture2D &attributeMap, const std::string &shaderCode, const float &scale)
-{
-    std::vector<std::string> inputTextures;
-    std::vector<std::string> outputTextures;
-    
-    inputTextures.push_back("source");
-    outputTextures.push_back("colour");
-
-    draw::ComputeTexture *computeTexture = new draw::ComputeTexture(inputTextures, outputTextures, shaderCode);
-    
-    computeTexture->uniformMap().setFloatUniform(2.0f*scale, "mapScale");
-    computeTexture->setInput(heightMap, "source");
-    computeTexture->setOutput(attributeMap, "colour");
-    computeTexture->compute();
-    attributeMap.getFromDevice();
-    
-    delete computeTexture;
-}
-
 void TanksTerrain::setOffset(const vec2 &offset)
 {
     farOffset = offset;
@@ -168,16 +150,37 @@ void TanksTerrain::setOffset(const vec2 &offset)
     draw::computeNormalMap(*heightTexture, *normalTexture, scale.x);
     
     //Calculate attribute maps for both the zoomed-in and far-away terrain.
-    //calculateAttributes(*heightTexture, *attributeTexture, attributeShaderCode, scale.x);
-    //calculateAttributes(*farHeightTexture, *farAttributeTexture, attributeShaderCode, scale.x*farScale.x);
-    //terrain->setFarDiffuseTextures(*attributeTexture, *farAttributeTexture, *localDiffuseTextures, *localNormalTextures, localTextureScale);
-    terrain->setDiffuseTextures(*attributeTexture, *localDiffuseTextures, *localNormalTextures, vec2(1.0f, 1.0f));
+    calculateAttributes(*heightTexture, *attributeTexture, attributeShaderCode, scale.x);
+    calculateAttributes(*farHeightTexture, *farAttributeTexture, attributeShaderCode, scale.x*farScale.x);
+    terrain->setFarDiffuseTextures(*attributeTexture, *farAttributeTexture, *localDiffuseTextures, *localNormalTextures, localTextureScale);
+    //terrain->setDiffuseTextures(*attributeTexture, *localDiffuseTextures, *localNormalTextures, vec2(1.0f, 1.0f));
     
     //Paint the terrain with the zoomed-in and far-away textures.
     terrain->setFarHeightTextures(*heightTexture, *farHeightTexture,
                                   *tangentTexture, *farTangentTexture,
                                   *normalTexture, *farNormalTexture,
                                   scale, farScale, farOffset);
+    //terrain->setHeightTextures(*farHeightTexture, *farTangentTexture, *farNormalTexture, scale);
+    //terrain->setHeightTextures(*heightTexture, *tangentTexture, *normalTexture, scale);
+}
+
+void TanksTerrain::calculateAttributes(const tiny::draw::FloatTexture2D &heightMap, tiny::draw::RGBATexture2D &attributeMap, const std::string &shaderCode, const float &scale)
+{
+    std::vector<std::string> inputTextures;
+    std::vector<std::string> outputTextures;
+    
+    inputTextures.push_back("source");
+    outputTextures.push_back("colour");
+
+    draw::ComputeTexture *computeTexture = new draw::ComputeTexture(inputTextures, outputTextures, shaderCode);
+    
+    computeTexture->uniformMap().setFloatUniform(2.0f*scale, "mapScale");
+    computeTexture->setInput(heightMap, "source");
+    computeTexture->setOutput(attributeMap, "colour");
+    computeTexture->compute();
+    attributeMap.getFromDevice();
+    
+    delete computeTexture;
 }
 
 float TanksTerrain::getHeight(const vec2 &a_pos) const

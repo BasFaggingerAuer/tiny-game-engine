@@ -278,6 +278,9 @@ void TanksGame::update(os::Application *application, const float &dt)
             cameraOrientation = tank.q;
         }
         
+        //Update the terrain with respect to the camera.
+        terrain->terrain->setCameraPosition(cameraPosition);
+        
         //Tell the world renderer that the camera has changed.
         renderer->setCamera(cameraPosition, cameraOrientation);
     }
