@@ -29,7 +29,7 @@ using namespace tanks;
 using namespace tiny;
 
 Player::Player() :
-    tankIndex(0)
+    soldierIndex(0)
 {
 
 }
@@ -39,11 +39,11 @@ Player::~Player()
 
 }
 
-TanksGame::TanksGame(const os::Application *application, const std::string &path) :
+Game::Game(const os::Application *application, const std::string &path) :
     aspectRatio(static_cast<double>(application->getScreenWidth())/static_cast<double>(application->getScreenHeight())),
-    lastTankIndex(1),
-    translator(new TanksMessageTranslator()),
-    console(new TanksConsole(this)),
+    lastSoldierIndex(1),
+    translator(new GameMessageTranslator()),
+    console(new GameConsole(this)),
     host(0),
     client(0),
     ownPlayerIndex(0)
@@ -57,7 +57,7 @@ TanksGame::TanksGame(const os::Application *application, const std::string &path
     renderer->addWorldRenderable(skyBoxMesh);
     renderer->addWorldRenderable(terrain->terrain);
     
-    for (std::map<unsigned int, TankType *>::const_iterator i = tankTypes.begin(); i != tankTypes.end(); ++i)
+    for (std::map<unsigned int, SoldierType *>::const_iterator i = soldierTypes.begin(); i != soldierTypes.end(); ++i)
     {
         renderer->addWorldRenderable(i->second->horde);
     }
@@ -68,7 +68,7 @@ TanksGame::TanksGame(const os::Application *application, const std::string &path
     clear();
 }
 
-TanksGame::~TanksGame()
+Game::~Game()
 {
     clear();
     
@@ -85,119 +85,82 @@ TanksGame::~TanksGame()
     
     delete terrain;
     
-    for (std::map<unsigned int, TankType *>::iterator i = tankTypes.begin(); i != tankTypes.end(); ++i)
+    for (std::map<unsigned int, SoldierType *>::iterator i = soldierTypes.begin(); i != soldierTypes.end(); ++i)
     {
         delete i->second;
     }
 }
 
-void TanksGame::updateConsole() const
+void Game::updateConsole() const
 {
     //Update the console on screen.
     font->setText(-1.0, -1.0, consoleMode ? 0.05 : 0.025, aspectRatio, console->getText(256), *fontTexture);
 }
 
-void TanksGame::update(os::Application *application, const float &dt)
+void Game::update(os::Application *application, const float &dt)
 {
     //Exchange network data.
     if (host) host->listen(0.0);
     if (client) client->listen(0.0);
 
-    //Update all tanks.
-    for (std::map<unsigned int, TankInstance>::iterator i = tanks.begin(); i != tanks.end(); ++i)
+    //Update all soldiers.
+    for (std::map<unsigned int, SoldierInstance>::iterator i = soldiers.begin(); i != soldiers.end(); ++i)
     {
-        TankInstance &t = i->second;
-        const TankType *tt = tankTypes[t.type];
-        vec3 F(0.0f); //force
-        vec3 tau(0.0f); //torque
+        SoldierInstance &t = i->second;
+        const SoldierType *tt = soldierTypes[t.type];
         
-        //Thrusters.
-        if (t.controls != 0)
+        //Get orientation.
+        t.q = normalize(t.q);
+        
+        const mat4 ori(t.q);
+        
+        if (t.x.y <= terrain->getHeight(vec2(t.x.x, t.x.z)) + 0.01f)
         {
-            const mat4 ori(t.q);
-            
-            for (int j = 0; j < 4; ++j)
+            //Are we jumping?
+            if (t.controls & 16 && t.P.y < 0.01f)
             {
-                if (t.controls & (1 << j))
-                {
-                    F += ori*tt->thrust_force[j];
-                    tau += cross(ori*tt->thrust_pos[j], ori*tt->thrust_force[j]);
-                }
+                t.P.y = tt->jump;
+            }
+            else
+            {
+                //We are walking.
+                const vec3 forward = tt->speed*ori*vec3(0.0f, 0.0f, -1.0f);
+                const vec3 right = tt->speed*ori*vec3(1.0f, 0.0f, 0.0f);
+                
+                t.P = vec3(0.0f, 0.0f, 0.0f);
+                
+                if (t.controls & 1) t.P += forward;
+                if (t.controls & 2) t.P -= forward;
+                if (t.controls & 4) t.P += right;
+                if (t.controls & 8) t.P -= right;
             }
         }
         else
         {
-            //Spinning dampeners.
+            //Gravity pulls the player down.
+            t.P.y -= dt*9.81f;
         }
         
-        //Gravity acts depending on the height above the terrain.
-        float height = t.x.y - terrain->getHeight(vec2(t.x.x, t.x.z));
-        float gravityFactor = 1.0f;
+        //Integrate position.
+        t.x += dt*t.P;
         
-        if (height <= tt->radius1)
-        {
-            //Tank rests on solid core, normal force counters gravity.
-            gravityFactor = 0.0f;
-        }
-        else if (height <= tt->radius2)
-        {
-            //Dampening field counters gravity via a spring-like force.
-            gravityFactor = 1.0f - (height - tt->radius1)/(tt->radius2 - tt->radius1);
-        }
-        
-        F += vec3(0.0f, -9.81f*gravityFactor*tt->mass, 0.0f);
-        
-        //The normal force countering gravity causes drag (average metal-wood static friction coefficient is 0.4).
-        //TODO: Calculate normal to the terrain and do proper dry friction. Some terrain types are slippery?
-        F -= (1.0f - gravityFactor)*0.4f*t.P;
-        
-        //Air friction causes drag.
-        //F_drag = 0.5*air density*velocity^2*drag coefficient*cross section area.
-        //air density ~ 1.3 kg/m^3
-        //drag coefficient ~ 0.5
-        //cross section = pi*r^2.
-        const vec3 v = t.P/tt->mass;
-        
-        F -= (0.5f*1.3f*length2(v)*0.5f*3.1415f*tt->radius1*tt->radius1)*normalize(v);
-        
-        //Air friction also causes rotational drag.
-        //tau_drag = -8*pi*r^3*air viscosity*angular velocity.
-        //air viscosity ~ 1.5e-5 kg/(m*s).
-        const vec3 omega = t.L/tt->inertia;
-        
-        tau -= (8.0f*3.1415f*tt->radius1*tt->radius1*tt->radius1*static_cast<float>(1.5e-5))*omega;
-        
-        //Integrate forces via the semi-implicit Euler integrator (which is symplectic).
-        t.P += dt*F;
-        t.L += dt*tau;
-        t.x += (dt/tt->mass)*t.P;
-        t.q += (0.5f*dt/tt->inertia)*quatmul(vec4(t.L.x, t.L.y, t.L.z), t.q);
-        t.q = normalize(t.q);
-        
-        //Tanks may never go beneath the terrain.
-        height = terrain->getHeight(vec2(t.x.x, t.x.z)) + tt->radius1;
-        
-        if (height > t.x.y)
-        {
-            t.x.y = height;
-            //Bounce off the terrain if we are crashing into it too fast.
-            if (t.P.y < 0.0f) t.P.y *= -0.5f;
-        }
+        //The player should never go below the terrain.
+        t.x.y = std::max(t.x.y, terrain->getHeight(vec2(t.x.x, t.x.z)));
     }
 
-    //Draw all tanks.
-    for (std::map<unsigned int, TankType *>::iterator i = tankTypes.begin(); i != tankTypes.end(); ++i)
+    //Draw all soldiers.
+    for (std::map<unsigned int, SoldierType *>::iterator i = soldierTypes.begin(); i != soldierTypes.end(); ++i)
     {
         i->second->clearInstances();
     }
     
-    for (std::map<unsigned int, TankInstance>::const_iterator i = tanks.begin(); i != tanks.end(); ++i)
+    for (std::map<unsigned int, SoldierInstance>::const_iterator i = soldiers.begin(); i != soldiers.end(); ++i)
     {
-        assert(tankTypes.find(i->second.type) != tankTypes.end());
-        tankTypes[i->second.type]->addInstance(i->second);
+        assert(soldierTypes.find(i->second.type) != soldierTypes.end());
+        soldierTypes[i->second.type]->addInstance(i->second);
     }
     
-    for (std::map<unsigned int, TankType *>::iterator i = tankTypes.begin(); i != tankTypes.end(); ++i)
+    for (std::map<unsigned int, SoldierType *>::iterator i = soldierTypes.begin(); i != soldierTypes.end(); ++i)
     {
         i->second->updateInstances();
     }
@@ -221,59 +184,60 @@ void TanksGame::update(os::Application *application, const float &dt)
     }
     else
     {
-        //Do we control a tank?
-        unsigned int tankIndex = 0;
+        //Do we control a soldier?
+        unsigned int soldierIndex = 0;
         
         if (players.find(ownPlayerIndex) != players.end())
         {
-            tankIndex = players[ownPlayerIndex].tankIndex;
+            soldierIndex = players[ownPlayerIndex].soldierIndex;
             
-            if (tanks.find(tankIndex) == tanks.end())
+            if (soldiers.find(soldierIndex) == soldiers.end())
             {
-                //If we have received a nonzero tank id, it should always be valid!
-                assert(tankIndex == 0);
-                tankIndex = 0;
+                //If we have received a nonzero soldier id, it should always be valid!
+                assert(soldierIndex == 0);
+                soldierIndex = 0;
             }
         }
         
-        if (tankIndex == 0)
+        if (soldierIndex == 0)
         {
-            //We do not control a tank: control the camera directly.
+            //We do not control a soldier: control the camera directly.
             //Move the camera around and collide with the terrain.
             application->updateSimpleCamera(dt, cameraPosition, cameraOrientation);
             cameraPosition.y = std::max(cameraPosition.y, terrain->getHeight(vec2(cameraPosition.x, cameraPosition.z)) + 2.0f);
         }
         else
         {
-            //Update the controls of our tank and send these to the host if we are a client.
+            //Update the controls of our soldier and send these to the host if we are a client.
             unsigned int controls = 0;
             
-            if (application->isKeyPressed('a')) controls |=   1;
-            if (application->isKeyPressed('d')) controls |=   2;
-            if (application->isKeyPressed('w')) controls |=   4;
-            if (application->isKeyPressed('s')) controls |=   8;
+            if (application->isKeyPressed('a')) controls |=  1;
+            if (application->isKeyPressed('d')) controls |=  2;
+            if (application->isKeyPressed('w')) controls |=  4;
+            if (application->isKeyPressed('s')) controls |=  8;
+            if (application->isKeyPressed(' ')) controls |= 16;
             
-            TankInstance &tank = tanks[tankIndex];
+            SoldierInstance &soldier = soldiers[soldierIndex];
             
-            if (controls != tank.controls)
+            if (controls != soldier.controls)
             {
-                tank.controls = controls;
+                soldier.controls = controls;
                 
                 //Is this a network game?
                 if (host || client)
                 {
-                    Message msg(msg::mt::updateTank);
+                    Message msg(msg::mt::updateSoldier);
                     
-                    msg << tankIndex << tank.controls << tank.x << tank.q << tank.P << tank.L;
+                    msg << soldierIndex << soldier.controls << soldier.x << soldier.q << soldier.P;
                     
                     if (client) client->sendMessage(msg);
                     if (host) host->sendMessage(msg);
                 }
             }
             
-            //Look from our tank.
-            cameraPosition = tank.x;
-            cameraOrientation = tank.q;
+            //Look from our soldier.
+            cameraPosition = soldier.x;
+            cameraOrientation = soldier.q;
         }
         
         //Update the terrain with respect to the camera.
@@ -284,13 +248,13 @@ void TanksGame::update(os::Application *application, const float &dt)
     }
 }
 
-void TanksGame::render()
+void Game::render()
 {
     renderer->clearTargets();
     renderer->render();
 }
 
-void TanksGame::clear()
+void Game::clear()
 {
     //Stops any running game and clears all data.
     
@@ -316,21 +280,21 @@ void TanksGame::clear()
     ownPlayerIndex = 0;
     players.insert(std::make_pair(ownPlayerIndex, Player()));
     
-    //Remove all tanks.
-    tanks.clear();
-    lastTankIndex = 1;
+    //Remove all soldiers.
+    soldiers.clear();
+    lastSoldierIndex = 1;
     
     //Reset camera.
     cameraPosition = vec3(0.0f, 0.0f, 0.0f);
     cameraOrientation = vec4(0.0f, 0.0f, 0.0f, 1.0f);
 }
 
-TanksMessageTranslator *TanksGame::getTranslator() const
+GameMessageTranslator *Game::getTranslator() const
 {
     return translator;
 }
 
-void TanksGame::readResources(const std::string &path)
+void Game::readResources(const std::string &path)
 {
     const std::string worldFileName = path + "tanks.xml";
     
@@ -364,12 +328,12 @@ void TanksGame::readResources(const std::string &path)
     {
              if (el->ValueStr() == "console") readConsoleResources(path, el);
         else if (el->ValueStr() == "sky") readSkyResources(path, el);
-        else if (el->ValueStr() == "terrain") terrain = new TanksTerrain(path, el);
-        else if (el->ValueStr() == "tank") tankTypes[tankTypes.size()] = new TankType(path, el);
+        else if (el->ValueStr() == "terrain") terrain = new GameTerrain(path, el);
+        else if (el->ValueStr() == "soldier") soldierTypes[soldierTypes.size()] = new SoldierType(path, el);
     }
 }
 
-void TanksGame::readConsoleResources(const std::string &path, TiXmlElement *el)
+void Game::readConsoleResources(const std::string &path, TiXmlElement *el)
 {
     std::cerr << "Reading console resources..." << std::endl;
     
@@ -393,7 +357,7 @@ void TanksGame::readConsoleResources(const std::string &path, TiXmlElement *el)
     font->setText(-1.0, -1.0, 0.1, aspectRatio, "Welcome to \\ra Game of Tanks\\w, press ` to access the console.", *fontTexture);
 }
 
-void TanksGame::readSkyResources(const std::string &path, TiXmlElement *el)
+void Game::readSkyResources(const std::string &path, TiXmlElement *el)
 {
     std::cerr << "Reading sky resources..." << std::endl;
     

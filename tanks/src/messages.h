@@ -38,10 +38,10 @@ enum mt_t
     removePlayer,
     welcomePlayer,
     terrainOffset,
-    addTank,
-    removeTank,
-    updateTank,
-    setPlayerTank,
+    addSoldier,
+    removeSoldier,
+    updateSoldier,
+    setPlayerSoldier,
     playerSpawnRequest
 };
 
@@ -49,11 +49,11 @@ enum mt_t
 
 } //namespace msg
 
-class TanksMessageTranslator : public tiny::net::MessageTranslator
+class GameMessageTranslator : public tiny::net::MessageTranslator
 {
     public:
-        TanksMessageTranslator();
-        ~TanksMessageTranslator();
+        GameMessageTranslator();
+        ~GameMessageTranslator();
 };
 
 } //namespace tanks

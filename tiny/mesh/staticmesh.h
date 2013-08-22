@@ -31,6 +31,7 @@ struct StaticMeshVertex
 {
     StaticMeshVertex() :
         textureCoordinate(0.0f, 0.0f),
+        tangent(1.0f, 0.0f, 0.0f),
         normal(0.0f, 0.0f, 1.0f),
         position(0.0f, 0.0f, 0.0f)
     {
@@ -62,6 +63,7 @@ class StaticMesh
         ~StaticMesh();
         
         static StaticMesh createCubeMesh(const float &);
+        static StaticMesh createCylinderMesh(const float &, const float &);
         
         std::vector<StaticMeshVertex> vertices;
         std::vector<unsigned int> indices;

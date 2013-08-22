@@ -30,7 +30,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 int main(int argc, char **argv)
 {
     tiny::os::Application *application = 0;
-    tanks::TanksGame *game = 0;
+    tanks::Game *game = 0;
     
     try
     {
@@ -50,7 +50,7 @@ int main(int argc, char **argv)
         }
         
         application = new tiny::os::SDLApplication(screenWidth, screenHeight);
-        game = new tanks::TanksGame(application, argv[1]);
+        game = new tanks::Game(application, argv[1]);
     }
     catch (std::exception &e)
     {

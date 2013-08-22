@@ -112,62 +112,61 @@ class TerrainOffset : public tiny::net::MessageType
         ~TerrainOffset() {}
 };
 
-class AddTank : public tiny::net::MessageType
+class AddSoldier : public tiny::net::MessageType
 {
     public:
-        AddTank() : tiny::net::MessageType(mt::addTank, "addtank", "Creates a tank with given index of a given type at a specific spot on the terrain, without a controller.")
+        AddSoldier() : tiny::net::MessageType(mt::addSoldier, "addsoldier", "Creates a soldier with given index of a given type at a specific spot on the terrain, without a controller.")
         {
             addVariableType("index", tiny::net::vt::Integer);
             addVariableType("type", tiny::net::vt::Integer);
             addVariableType("pos", tiny::net::vt::Vec2);
         }
         
-        ~AddTank() {}
+        ~AddSoldier() {}
 };
 
-class RemoveTank : public tiny::net::MessageType
+class RemoveSoldier : public tiny::net::MessageType
 {
     public:
-        RemoveTank() : tiny::net::MessageType(mt::removeTank, "removetank", "Removes a tank with the given index.")
+        RemoveSoldier() : tiny::net::MessageType(mt::removeSoldier, "removesoldier", "Removes a soldier with the given index.")
         {
             addVariableType("index", tiny::net::vt::Integer);
         }
         
-        ~RemoveTank() {}
+        ~RemoveSoldier() {}
 };
 
-class UpdateTank : public tiny::net::MessageType
+class UpdateSoldier : public tiny::net::MessageType
 {
     public:
-        UpdateTank() : tiny::net::MessageType(mt::updateTank, "updatetank", "Sets the parameters of a tank with a specific index.")
+        UpdateSoldier() : tiny::net::MessageType(mt::updateSoldier, "updatesoldier", "Sets the parameters of a soldier with a specific index.")
         {
             addVariableType("index", tiny::net::vt::Integer);
             addVariableType("controls", tiny::net::vt::Integer);
             addVariableType("x", tiny::net::vt::Vec3);
             addVariableType("q", tiny::net::vt::Vec4);
             addVariableType("P", tiny::net::vt::Vec3);
-            addVariableType("L", tiny::net::vt::Vec3);
         }
         
-        ~UpdateTank() {}
+        ~UpdateSoldier() {}
 };
 
-class SetPlayerTank : public tiny::net::MessageType
+class SetPlayerSoldier : public tiny::net::MessageType
 {
     public:
-        SetPlayerTank() : tiny::net::MessageType(mt::setPlayerTank, "setplayertank", "Sets the controller of a tank to be a certain player.")
+        SetPlayerSoldier() : tiny::net::MessageType(mt::setPlayerSoldier, "setplayersoldier", "Sets the controller of a soldier to be a certain player.")
         {
             addVariableType("player", tiny::net::vt::Integer);
-            addVariableType("tank", tiny::net::vt::Integer);
+            addVariableType("soldier", tiny::net::vt::Integer);
         }
         
-        ~SetPlayerTank() {}
+        ~SetPlayerSoldier() {}
 };
 
 class PlayerSpawnRequest : public tiny::net::MessageType
 {
     public:
-        PlayerSpawnRequest() : tiny::net::MessageType(mt::playerSpawnRequest, "spawn", "A player requests to spawn in a certain tank type.")
+        PlayerSpawnRequest() : tiny::net::MessageType(mt::playerSpawnRequest, "spawn", "A player requests to spawn in a certain soldier type.")
         {
             addVariableType("type", tiny::net::vt::Integer);
         }
@@ -181,7 +180,7 @@ class PlayerSpawnRequest : public tiny::net::MessageType
 
 using namespace tanks;
 
-TanksMessageTranslator::TanksMessageTranslator() :
+GameMessageTranslator::GameMessageTranslator() :
     tiny::net::MessageTranslator()
 {
     addMessageType(new msg::Help());
@@ -192,14 +191,14 @@ TanksMessageTranslator::TanksMessageTranslator() :
     addMessageType(new msg::RemovePlayer());
     addMessageType(new msg::WelcomePlayer());
     addMessageType(new msg::TerrainOffset());
-    addMessageType(new msg::AddTank());
-    addMessageType(new msg::RemoveTank());
-    addMessageType(new msg::UpdateTank());
-    addMessageType(new msg::SetPlayerTank());
+    addMessageType(new msg::AddSoldier());
+    addMessageType(new msg::RemoveSoldier());
+    addMessageType(new msg::UpdateSoldier());
+    addMessageType(new msg::SetPlayerSoldier());
     addMessageType(new msg::PlayerSpawnRequest());
 }
 
-TanksMessageTranslator::~TanksMessageTranslator()
+GameMessageTranslator::~GameMessageTranslator()
 {
 
 }

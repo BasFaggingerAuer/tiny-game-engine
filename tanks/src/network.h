@@ -25,27 +25,27 @@ namespace tanks
 
 typedef tiny::net::Message Message;
 
-class TanksGame;
+class Game;
 
-class TanksConsole : public tiny::net::Console
+class GameConsole : public tiny::net::Console
 {
     public:
-        TanksConsole(TanksGame *);
-        ~TanksConsole();
+        GameConsole(Game *);
+        ~GameConsole();
     
     protected:
         void execute(const std::string &);
         void update();
         
     private:
-        TanksGame * const game;
+        Game * const game;
 };
 
-class TanksHost : public tiny::net::Host
+class GameHost : public tiny::net::Host
 {
     public:
-        TanksHost(const unsigned int &, TanksGame *);
-        ~TanksHost();
+        GameHost(const unsigned int &, Game *);
+        ~GameHost();
         
     protected:
         void addClient(const unsigned int &);
@@ -53,21 +53,21 @@ class TanksHost : public tiny::net::Host
         void removeClient(const unsigned int &);
         
     private:
-        TanksGame * const game;
+        Game * const game;
 };
 
-class TanksClient : public tiny::net::Client
+class GameClient : public tiny::net::Client
 {
     public:
-        TanksClient(const std::string &, const unsigned int &, TanksGame *);
-        ~TanksClient();
+        GameClient(const std::string &, const unsigned int &, Game *);
+        ~GameClient();
         
     protected:
         void receiveMessage(const tiny::net::Message &);
         void disconnectedFromHost();
         
     private:
-        TanksGame * const game;
+        Game * const game;
 };
 
 } //namespace tanks

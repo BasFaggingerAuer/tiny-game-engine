@@ -25,21 +25,21 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using namespace tanks;
 using namespace tiny;
 
-bool TanksGame::msgHelp(const unsigned int &, std::ostream &out, bool &)
+bool Game::msgHelp(const unsigned int &, std::ostream &out, bool &)
 {
     out << "\\w\\4==== Available commands:" << std::endl << translator->getMessageTypeNames("\n") << std::endl;
     out << "\\w\\4==== Full descriptions:" << std::endl << translator->getMessageTypeDescriptions();
     return true;
 }
 
-bool TanksGame::msgHost(const unsigned int &, std::ostream &out, bool &, const unsigned int &port)
+bool Game::msgHost(const unsigned int &, std::ostream &out, bool &, const unsigned int &port)
 {
     if (!host && !client)
     {
         try
         {
             clear();
-            host = new TanksHost(port, this);
+            host = new GameHost(port, this);
             out << "Hosting game at port " << port << ".";
             
         }
@@ -58,7 +58,7 @@ bool TanksGame::msgHost(const unsigned int &, std::ostream &out, bool &, const u
     return true;
 }
 
-bool TanksGame::msgJoin(const unsigned int &, std::ostream &out, bool &, const unsigned int &ipHi, const unsigned int &ipLo, const unsigned int &port)
+bool Game::msgJoin(const unsigned int &, std::ostream &out, bool &, const unsigned int &ipHi, const unsigned int &ipLo, const unsigned int &port)
 {
     if (!host && !client)
     {
@@ -72,7 +72,7 @@ bool TanksGame::msgJoin(const unsigned int &, std::ostream &out, bool &, const u
             
             clear();
             players.clear();
-            client = new TanksClient(ipAddress.str(), port, this);
+            client = new GameClient(ipAddress.str(), port, this);
             out << "Joined game at " << ipAddress.str() << ":" << port << ".";
         }
         catch (std::exception &e)
@@ -90,7 +90,7 @@ bool TanksGame::msgJoin(const unsigned int &, std::ostream &out, bool &, const u
     return true;
 }
 
-bool TanksGame::msgDisconnect(const unsigned int &, std::ostream &out, bool &)
+bool Game::msgDisconnect(const unsigned int &, std::ostream &out, bool &)
 {
     out << "Disconnecting...";
     clear();
@@ -98,7 +98,7 @@ bool TanksGame::msgDisconnect(const unsigned int &, std::ostream &out, bool &)
     return true;
 }
 
-bool TanksGame::msgAddPlayer(const unsigned int &, std::ostream &out, bool &, const unsigned int &newPlayerIndex)
+bool Game::msgAddPlayer(const unsigned int &, std::ostream &out, bool &, const unsigned int &newPlayerIndex)
 {
     if (players.find(newPlayerIndex) != players.end())
     {
@@ -144,7 +144,7 @@ bool TanksGame::msgAddPlayer(const unsigned int &, std::ostream &out, bool &, co
     return true;
 }
 
-bool TanksGame::msgRemovePlayer(const unsigned int &, std::ostream &out, bool &, const unsigned int &oldPlayerIndex)
+bool Game::msgRemovePlayer(const unsigned int &, std::ostream &out, bool &, const unsigned int &oldPlayerIndex)
 {
     std::map<unsigned int, Player>::iterator i = players.find(oldPlayerIndex);
     
@@ -163,12 +163,12 @@ bool TanksGame::msgRemovePlayer(const unsigned int &, std::ostream &out, bool &,
         host->sendMessage(msg);
     }
     
-    //Remove the player's tank.
-    if (i->second.tankIndex > 0)
+    //Remove the player's soldier.
+    if (i->second.soldierIndex > 0)
     {
-        Message msg(msg::mt::removeTank);
+        Message msg(msg::mt::removeSoldier);
         
-        msg << i->second.tankIndex;
+        msg << i->second.soldierIndex;
         applyMessage(0, msg);
     }
     
@@ -178,7 +178,7 @@ bool TanksGame::msgRemovePlayer(const unsigned int &, std::ostream &out, bool &,
     return true;
 }
 
-bool TanksGame::msgWelcomePlayer(const unsigned int &, std::ostream &out, bool &, const unsigned int &newPlayerIndex)
+bool Game::msgWelcomePlayer(const unsigned int &, std::ostream &out, bool &, const unsigned int &newPlayerIndex)
 {
     if (client)
     {
@@ -194,7 +194,7 @@ bool TanksGame::msgWelcomePlayer(const unsigned int &, std::ostream &out, bool &
     return true;
 }
 
-bool TanksGame::msgTerrainOffset(const unsigned int &, std::ostream &out, bool &broadcast, const vec2 &offset)
+bool Game::msgTerrainOffset(const unsigned int &, std::ostream &out, bool &broadcast, const vec2 &offset)
 {
     terrain->setOffset(offset);
     out << "Set terrain offset to " << offset << ".";
@@ -203,113 +203,112 @@ bool TanksGame::msgTerrainOffset(const unsigned int &, std::ostream &out, bool &
     return true;
 }
 
-bool TanksGame::msgAddTank(const unsigned int &, std::ostream &out, bool &broadcast, const unsigned int &tankIndex, const unsigned int &tankType, const vec2 &position)
+bool Game::msgAddSoldier(const unsigned int &, std::ostream &out, bool &broadcast, const unsigned int &soldierIndex, const unsigned int &soldierType, const vec2 &position)
 {
-    if (tankTypes.find(tankType) == tankTypes.end() || tanks.find(tankIndex) != tanks.end())
+    if (soldierTypes.find(soldierType) == soldierTypes.end() || soldiers.find(soldierIndex) != soldiers.end())
     {
-        out << "Unknown tank type " << tankType << " or tank index " << tankIndex << " already in use!";
+        out << "Unknown soldier type " << soldierType << " or soldier index " << soldierIndex << " already in use!";
         return false;
     }
     
-    TankInstance tank(tankType);
+    SoldierInstance soldier(soldierType);
     
-    tank.x = vec3(position.x, terrain->getHeight(position), position.y);
-    tanks[tankIndex] = tank;
-    if (lastTankIndex < tankIndex) lastTankIndex = tankIndex;
+    soldier.x = vec3(position.x, terrain->getHeight(position), position.y);
+    soldiers[soldierIndex] = soldier;
+    if (lastSoldierIndex < soldierIndex) lastSoldierIndex = soldierIndex;
     
-    out << "Added tank with index " << tankIndex << " of type " << tankType << ".";
+    out << "Added soldier with index " << soldierIndex << " of type '" << soldierTypes[soldierType]->name << "' (" << soldierType << ").";
     broadcast = true;
     
     return true;
 }
 
-bool TanksGame::msgRemoveTank(const unsigned int &, std::ostream &out, bool &broadcast, const unsigned int &tankIndex)
+bool Game::msgRemoveSoldier(const unsigned int &, std::ostream &out, bool &broadcast, const unsigned int &soldierIndex)
 {
-    if (tanks.find(tankIndex) == tanks.end())
+    if (soldiers.find(soldierIndex) == soldiers.end())
     {
-        out << "Tank with index " << tankIndex << " does not exist!";
+        out << "Soldier with index " << soldierIndex << " does not exist!";
         return false;
     }
     
-    //TODO: Update tankIndex in Player.
-    tanks.erase(tanks.find(tankIndex));
-    out << "Removed tank with index " << tankIndex << ".";
+    //TODO: Update soldierIndex in Player.
+    soldiers.erase(soldiers.find(soldierIndex));
+    out << "Removed soldier with index " << soldierIndex << ".";
     broadcast = true;
     
     return true;
 }
 
-bool TanksGame::msgUpdateTank(const unsigned int &senderIndex, std::ostream &out, bool &broadcast, const unsigned int &tankIndex,
-                              const unsigned int &controls, const vec3 &x, const vec4 &q, const vec3 &P, const vec3 &L)
+bool Game::msgUpdateSoldier(const unsigned int &senderIndex, std::ostream &out, bool &broadcast, const unsigned int &soldierIndex,
+                                 const unsigned int &controls, const vec3 &x, const vec4 &q, const vec3 &P)
 {
-    //Clients are only permitted to modify the status of their own tanks.
-    if (senderIndex != 0 && players[senderIndex].tankIndex != tankIndex)
+    //Clients are only permitted to modify the status of their own soldiers.
+    if (senderIndex != 0 && players[senderIndex].soldierIndex != soldierIndex)
     {
-        out << "Player tried to send update for wrong tank!";
+        out << "Player tried to send update for wrong soldier!";
         return false;
     }
     
-    std::map<unsigned int, TankInstance>::iterator i = tanks.find(tankIndex);
+    std::map<unsigned int, SoldierInstance>::iterator i = soldiers.find(soldierIndex);
     
-    if (i == tanks.end())
+    if (i == soldiers.end())
     {
-        out << "Tank with index " << tankIndex << " does not exist!";
+        out << "Soldier with index " << soldierIndex << " does not exist!";
         return false;
     }
     
-    //Update tank status.
+    //Update soldier status.
     i->second.controls = controls;
     i->second.x = x;
     i->second.q = q;
     i->second.P = P;
-    i->second.L = L;
     broadcast = true;
     
     return true;
 }
 
-bool TanksGame::msgSetPlayerTank(const unsigned int &, std::ostream &out, bool &broadcast, const unsigned int &tankPlayerIndex, const unsigned int &tankIndex)
+bool Game::msgSetPlayerSoldier(const unsigned int &, std::ostream &out, bool &broadcast, const unsigned int &soldierPlayerIndex, const unsigned int &soldierIndex)
 {
-    if (tanks.find(tankIndex) == tanks.end() || players.find(tankPlayerIndex) == players.end())
+    if (soldiers.find(soldierIndex) == soldiers.end() || players.find(soldierPlayerIndex) == players.end())
     {
-        out << "Player with index " << tankPlayerIndex << " or tank with index " << tankIndex << " does not exist!";
+        out << "Player with index " << soldierPlayerIndex << " or soldier with index " << soldierIndex << " does not exist!";
         return false;
     }
     
-    players[tankPlayerIndex].tankIndex = tankIndex;
-    out << "Assigned player " << tankPlayerIndex << " to tank " << tankIndex << ".";
+    players[soldierPlayerIndex].soldierIndex = soldierIndex;
+    out << "Assigned player " << soldierPlayerIndex << " to soldier " << soldierIndex << ".";
     broadcast = true;
     
     return true;
 }
 
-bool TanksGame::msgPlayerSpawnRequest(const unsigned int &senderIndex, std::ostream &out, bool &, const unsigned int &tankType)
+bool Game::msgPlayerSpawnRequest(const unsigned int &senderIndex, std::ostream &out, bool &, const unsigned int &soldierType)
 {
-    if (tankTypes.find(tankType) == tankTypes.end())
+    if (soldierTypes.find(soldierType) == soldierTypes.end())
     {
-        out << "Tank type " << tankType << " does not exist!";
+        out << "Soldier type " << soldierType << " does not exist!";
         return false;
     }
     
-    //Create a new tank.
-    const unsigned int tankIndex = lastTankIndex++;
-    Message msg1(msg::mt::addTank);
+    //Create a new soldier.
+    const unsigned int soldierIndex = lastSoldierIndex++;
+    Message msg1(msg::mt::addSoldier);
     
-    msg1 << tankIndex << tankType << vec2(0.0f, 0.0f);
+    msg1 << soldierIndex << soldierType << vec2(0.0f, 0.0f);
     applyMessage(0, msg1);
     
-    //Assign this player to that tank.
-    Message msg2(msg::mt::setPlayerTank);
+    //Assign this player to that soldier.
+    Message msg2(msg::mt::setPlayerSoldier);
     
-    msg2 << senderIndex << tankIndex;
+    msg2 << senderIndex << soldierIndex;
     applyMessage(0, msg2);
     
-    out << "Spawned player " << senderIndex << " in tank " << tankIndex << " of type " << tankType << ".";
+    out << "Spawned player " << senderIndex << " in soldier " << soldierIndex << " of type '" << soldierTypes[soldierType]->name << "' (" << soldierType << ").";
     
     return true;
 }
 
-bool TanksGame::applyMessage(const unsigned int &senderIndex, const Message &message)
+bool Game::applyMessage(const unsigned int &senderIndex, const Message &message)
 {
     std::ostringstream out;
     bool ok = true;
@@ -335,10 +334,10 @@ bool TanksGame::applyMessage(const unsigned int &senderIndex, const Message &mes
         else if (message.id == msg::mt::removePlayer) ok = msgRemovePlayer(senderIndex, out, broadcast, message.data[0].iv1);
         else if (message.id == msg::mt::welcomePlayer) ok = msgWelcomePlayer(senderIndex, out, broadcast, message.data[0].iv1);
         else if (message.id == msg::mt::terrainOffset) ok = msgTerrainOffset(senderIndex, out, broadcast, message.data[0].v2);
-        else if (message.id == msg::mt::addTank) ok = msgAddTank(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].iv1, message.data[2].v2);
-        else if (message.id == msg::mt::removeTank) ok = msgRemoveTank(senderIndex, out, broadcast, message.data[0].iv1);
-        else if (message.id == msg::mt::updateTank) ok = msgUpdateTank(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].iv1, message.data[2].v3, message.data[3].v4, message.data[4].v3, message.data[5].v3);
-        else if (message.id == msg::mt::setPlayerTank) ok = msgSetPlayerTank(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].iv1);
+        else if (message.id == msg::mt::addSoldier) ok = msgAddSoldier(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].iv1, message.data[2].v2);
+        else if (message.id == msg::mt::removeSoldier) ok = msgRemoveSoldier(senderIndex, out, broadcast, message.data[0].iv1);
+        else if (message.id == msg::mt::updateSoldier) ok = msgUpdateSoldier(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].iv1, message.data[2].v3, message.data[3].v4, message.data[4].v3);
+        else if (message.id == msg::mt::setPlayerSoldier) ok = msgSetPlayerSoldier(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].iv1);
         else if (message.id == msg::mt::playerSpawnRequest) ok = msgPlayerSpawnRequest(senderIndex, out, broadcast, message.data[0].iv1);
     }
     else
@@ -346,7 +345,7 @@ bool TanksGame::applyMessage(const unsigned int &senderIndex, const Message &mes
         //Host messages received from clients.
         assert(host && !client);
         
-             if (message.id == msg::mt::updateTank) ok = msgUpdateTank(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].iv1, message.data[2].v3, message.data[3].v4, message.data[4].v3, message.data[5].v3);
+             if (message.id == msg::mt::updateSoldier) ok = msgUpdateSoldier(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].iv1, message.data[2].v3, message.data[3].v4, message.data[4].v3);
         else if (message.id == msg::mt::playerSpawnRequest) ok = msgPlayerSpawnRequest(senderIndex, out, broadcast, message.data[0].iv1);
     }
     
@@ -366,7 +365,7 @@ bool TanksGame::applyMessage(const unsigned int &senderIndex, const Message &mes
     return ok;
 }
 
-bool TanksGame::userMessage(const Message &message)
+bool Game::userMessage(const Message &message)
 {
     //Receive a command from the user.
     if (client)

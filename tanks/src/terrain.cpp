@@ -33,7 +33,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using namespace tanks;
 using namespace tiny;
 
-TanksTerrain::TanksTerrain(const std::string &path, TiXmlElement *el)
+GameTerrain::GameTerrain(const std::string &path, TiXmlElement *el)
 {
     std::cerr << "Reading terrain resources..." << std::endl;
     
@@ -116,7 +116,7 @@ TanksTerrain::TanksTerrain(const std::string &path, TiXmlElement *el)
     setOffset(vec2(0.5f));
 }
 
-TanksTerrain::~TanksTerrain()
+GameTerrain::~GameTerrain()
 {
     delete terrain;
     delete heightTexture;
@@ -131,7 +131,7 @@ TanksTerrain::~TanksTerrain()
     delete localNormalTextures;
 }
 
-void TanksTerrain::setOffset(const vec2 &offset)
+void GameTerrain::setOffset(const vec2 &offset)
 {
     farOffset = offset;
     
@@ -164,7 +164,7 @@ void TanksTerrain::setOffset(const vec2 &offset)
     //terrain->setHeightTextures(*heightTexture, *tangentTexture, *normalTexture, scale);
 }
 
-void TanksTerrain::calculateAttributes(const tiny::draw::FloatTexture2D &heightMap, tiny::draw::RGBATexture2D &attributeMap, const std::string &shaderCode, const float &scale)
+void GameTerrain::calculateAttributes(const tiny::draw::FloatTexture2D &heightMap, tiny::draw::RGBATexture2D &attributeMap, const std::string &shaderCode, const float &scale)
 {
     std::vector<std::string> inputTextures;
     std::vector<std::string> outputTextures;
@@ -183,12 +183,12 @@ void TanksTerrain::calculateAttributes(const tiny::draw::FloatTexture2D &heightM
     delete computeTexture;
 }
 
-float TanksTerrain::getHeight(const vec2 &a_pos) const
+float GameTerrain::getHeight(const vec2 &a_pos) const
 {
     return sampleTextureBilinear(*heightTexture, scale, a_pos).x;
 }
 
-vec4 TanksTerrain::getAttributes(const vec2 &a_pos) const
+vec4 GameTerrain::getAttributes(const vec2 &a_pos) const
 {
     return sampleTextureBilinear(*attributeTexture, scale, a_pos);
 }

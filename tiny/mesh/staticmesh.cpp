@@ -109,3 +109,49 @@ StaticMesh StaticMesh::createCubeMesh(const float &size)
     return mesh;
 }
 
+StaticMesh StaticMesh::createCylinderMesh(const float &radius, const float &height)
+{
+    const int n = 12;
+    
+    StaticMesh mesh;
+    
+    for (int i = 0; i <= n; ++i)
+    {
+        const float ifrac = static_cast<float>(i)/static_cast<float>(n);
+        const float ca = cos(2.0f*M_PI*ifrac), sa = sin(2.0f*M_PI*ifrac);
+        
+        mesh.vertices.push_back(StaticMeshVertex(vec2(ifrac, 0.0f), vec3(sa, 0.0f, -ca), vec3(ca, 0.0f, sa), vec3(radius*ca, 0.0f, radius*sa)));
+        mesh.vertices.push_back(StaticMeshVertex(vec2(ifrac, 1.0f), vec3(sa, 0.0f, -ca), vec3(ca, 0.0f, sa), vec3(radius*ca, height, radius*sa)));
+    }
+    
+    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 0.0f), vec3(1.0f, 0.0f, 0.0f), vec3(0.0f, -1.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 1.0f), vec3(1.0f, 0.0f, 0.0f), vec3(0.0f,  1.0f, 0.0f), vec3(0.0f, height, 0.0f)));
+    
+    for (int i = 0; i < n; ++i)
+    {
+        mesh.indices.push_back(2*i + 1);
+        mesh.indices.push_back(2*i + 2);
+        mesh.indices.push_back(2*i);
+        
+        mesh.indices.push_back(2*i + 1);
+        mesh.indices.push_back(2*i + 3);
+        mesh.indices.push_back(2*i + 2);
+    }
+        
+    for (int i = 0; i < n; ++i)
+    {
+        mesh.indices.push_back(2*n + 2);
+        mesh.indices.push_back(2*i);
+        mesh.indices.push_back(2*i + 2);
+    }
+    
+    for (int i = 0; i < n; ++i)
+    {
+        mesh.indices.push_back(2*i + 3);
+        mesh.indices.push_back(2*i + 1);
+        mesh.indices.push_back(2*n + 3);
+    }
+    
+    return mesh;
+}
+

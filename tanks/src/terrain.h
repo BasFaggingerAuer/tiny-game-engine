@@ -27,11 +27,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace tanks
 {
 
-class TanksTerrain
+class GameTerrain
 {
     public:
-        TanksTerrain(const std::string &, TiXmlElement *);
-        ~TanksTerrain();
+        GameTerrain(const std::string &, TiXmlElement *);
+        ~GameTerrain();
         
         void setOffset(const tiny::vec2 &);
         

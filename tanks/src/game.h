@@ -32,7 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "network.h"
 #include "terrain.h"
-#include "tank.h"
+#include "soldier.h"
 
 namespace tanks
 {
@@ -43,19 +43,19 @@ class Player
         Player();
         ~Player();
         
-        unsigned int tankIndex;
+        unsigned int soldierIndex;
 };
 
-class TanksGame
+class Game
 {
     public:
-        TanksGame(const tiny::os::Application *, const std::string &);
-        ~TanksGame();
+        Game(const tiny::os::Application *, const std::string &);
+        ~Game();
         
         void update(tiny::os::Application *, const float &);
         void render();
         
-        TanksMessageTranslator *getTranslator() const;
+        GameMessageTranslator *getTranslator() const;
         bool applyMessage(const unsigned int &, const Message &);
         bool userMessage(const Message &);
         void clear();
@@ -70,10 +70,10 @@ class TanksGame
         bool msgRemovePlayer(const unsigned int &, std::ostream &, bool &, const unsigned int &);
         bool msgWelcomePlayer(const unsigned int &, std::ostream &, bool &, const unsigned int &);
         bool msgTerrainOffset(const unsigned int &, std::ostream &, bool &, const tiny::vec2 &);
-        bool msgAddTank(const unsigned int &, std::ostream &, bool &, const unsigned int &, const unsigned int &, const tiny::vec2 &);
-        bool msgRemoveTank(const unsigned int &, std::ostream &, bool &, const unsigned int &);
-        bool msgUpdateTank(const unsigned int &, std::ostream &, bool &, const unsigned int &, const unsigned int &, const tiny::vec3 &, const tiny::vec4 &, const tiny::vec3 &, const tiny::vec3 &);
-        bool msgSetPlayerTank(const unsigned int &, std::ostream &, bool &, const unsigned int &, const unsigned int &);
+        bool msgAddSoldier(const unsigned int &, std::ostream &, bool &, const unsigned int &, const unsigned int &, const tiny::vec2 &);
+        bool msgRemoveSoldier(const unsigned int &, std::ostream &, bool &, const unsigned int &);
+        bool msgUpdateSoldier(const unsigned int &, std::ostream &, bool &, const unsigned int &, const unsigned int &, const tiny::vec3 &, const tiny::vec4 &, const tiny::vec3 &);
+        bool msgSetPlayerSoldier(const unsigned int &, std::ostream &, bool &, const unsigned int &, const unsigned int &);
         bool msgPlayerSpawnRequest(const unsigned int &, std::ostream &, bool &, const unsigned int &);
         
         void readResources(const std::string &);
@@ -98,17 +98,17 @@ class TanksGame
         tiny::draw::RGBTexture2D *skyGradientTexture;
         tiny::draw::effects::SunSky *skyEffect;
         
-        TanksTerrain *terrain;
+        GameTerrain *terrain;
         
-        std::map<unsigned int, TankType *> tankTypes;
-        std::map<unsigned int, TankInstance> tanks;
-        unsigned int lastTankIndex;
+        std::map<unsigned int, SoldierType *> soldierTypes;
+        std::map<unsigned int, SoldierInstance> soldiers;
+        unsigned int lastSoldierIndex;
         
         //Networking.
-        TanksMessageTranslator * const translator;
-        TanksConsole * const console;
-        TanksHost *host;
-        TanksClient *client;
+        GameMessageTranslator * const translator;
+        GameConsole * const console;
+        GameHost *host;
+        GameClient *client;
         unsigned int ownPlayerIndex;
         
         std::map<unsigned int, Player> players;

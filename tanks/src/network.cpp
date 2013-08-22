@@ -26,41 +26,41 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using namespace tanks;
 
-TanksClient::TanksClient(const std::string &hostName, const unsigned int &hostPort, TanksGame *a_game) :
+GameClient::GameClient(const std::string &hostName, const unsigned int &hostPort, Game *a_game) :
     tiny::net::Client(hostName, hostPort, a_game->getTranslator()),
     game(a_game)
 {
 
 }
 
-TanksClient::~TanksClient()
+GameClient::~GameClient()
 {
 
 }
 
-void TanksClient::receiveMessage(const Message &message)
+void GameClient::receiveMessage(const Message &message)
 {
     game->applyMessage(0, message);
 }
 
-void TanksClient::disconnectedFromHost()
+void GameClient::disconnectedFromHost()
 {
     game->clear();
 }
 
-TanksHost::TanksHost(const unsigned int &hostPort, TanksGame *a_game) :
+GameHost::GameHost(const unsigned int &hostPort, Game *a_game) :
     tiny::net::Host(hostPort, a_game->getTranslator()),
     game(a_game)
 {
 
 }
 
-TanksHost::~TanksHost()
+GameHost::~GameHost()
 {
 
 }
 
-void TanksHost::addClient(const unsigned int &clientIndex)
+void GameHost::addClient(const unsigned int &clientIndex)
 {
     Message msg(msg::mt::addPlayer);
     
@@ -69,12 +69,12 @@ void TanksHost::addClient(const unsigned int &clientIndex)
     game->applyMessage(0, msg);
 }
 
-void TanksHost::receiveMessage(const unsigned int &clientIndex, const Message &message)
+void GameHost::receiveMessage(const unsigned int &clientIndex, const Message &message)
 {
     game->applyMessage(clientIndex, message);
 }
 
-void TanksHost::removeClient(const unsigned int &clientIndex)
+void GameHost::removeClient(const unsigned int &clientIndex)
 {
     Message msg(msg::mt::removePlayer);
     
@@ -83,18 +83,18 @@ void TanksHost::removeClient(const unsigned int &clientIndex)
     game->applyMessage(0, msg);
 }
 
-TanksConsole::TanksConsole(TanksGame *a_game) :
+GameConsole::GameConsole(Game *a_game) :
     game(a_game)
 {
 
 }
 
-TanksConsole::~TanksConsole()
+GameConsole::~GameConsole()
 {
 
 }
 
-void TanksConsole::execute(const std::string &command)
+void GameConsole::execute(const std::string &command)
 {
     Message message;
     
@@ -115,7 +115,7 @@ void TanksConsole::execute(const std::string &command)
     }
 }
 
-void TanksConsole::update()
+void GameConsole::update()
 {
     game->updateConsole();
 }
