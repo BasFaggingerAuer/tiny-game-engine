@@ -82,6 +82,7 @@ class Game
         
         //Renderer.
         const double aspectRatio;
+        const float mouseSensitivity;
         tiny::draw::WorldRenderer *renderer;
         
         tiny::vec3 cameraPosition;

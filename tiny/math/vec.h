@@ -137,6 +137,8 @@ template <typename t> typed3vector<t> max(const typed3vector<t> &a, const typed3
 template <typename t> typed4vector<t> min(const typed4vector<t> &a, const typed4vector<t> &b) {return typed4vector<t>(std::min(a.x, b.x), std::min(a.y, b.y), std::min(a.z, b.z), std::min(a.w, b.w));}
 template <typename t> typed4vector<t> max(const typed4vector<t> &a, const typed4vector<t> &b) {return typed4vector<t>(std::max(a.x, b.x), std::max(a.y, b.y), std::max(a.z, b.z), std::max(a.w, b.w));}
 
+template <typename t> t clamp(const t &a, const t &b, const t &c) {return (a < b ? b : (a > c ? c : a));}
+
 template <typename t> t dot(const typed2vector<t> &a, const typed2vector<t> &b) {return a.x*b.x + a.y*b.y;}
 template <typename t> t dot(const typed3vector<t> &a, const typed3vector<t> &b) {return a.x*b.x + a.y*b.y + a.z*b.z;}
 template <typename t> t dot(const typed4vector<t> &a, const typed4vector<t> &b) {return a.x*b.x + a.y*b.y + a.z*b.z + a.w*b.w;}

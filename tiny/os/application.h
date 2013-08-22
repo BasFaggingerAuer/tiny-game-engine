@@ -24,6 +24,31 @@ namespace tiny
 namespace os
 {
 
+struct MouseState
+{
+    MouseState() :
+        x(0.0f),
+        y(0.0f),
+        buttons(0)
+    {
+
+    }
+    
+    MouseState(const float &a_x,
+               const float &a_y,
+               const unsigned int &a_buttons) :
+        x(a_x),
+        y(a_y),
+        buttons(a_buttons)
+    {
+
+    }
+    
+    float x;
+    float y;
+    unsigned int buttons;
+};
+
 class Application
 {
     public:
@@ -34,6 +59,7 @@ class Application
         virtual void paint() = 0;
         virtual int getScreenWidth() const = 0;
         virtual int getScreenHeight() const = 0;
+        virtual MouseState getMouseState(const bool &) = 0;
         
         bool isRunning() const;
         bool isKeyPressed(const int &) const;

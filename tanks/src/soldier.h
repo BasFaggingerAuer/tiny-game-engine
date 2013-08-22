@@ -32,6 +32,7 @@ struct SoldierInstance
     SoldierInstance(const unsigned int &a_type = 0) :
         type(a_type),
         controls(0),
+        angles(0.0f, 0.0f),
         x(0.0f),
         q(0.0f, 0.0f, 0.0f, 1.0f),
         P(0.0f)
@@ -41,9 +42,10 @@ struct SoldierInstance
     
     unsigned int type;
     unsigned int controls;
-    tiny::vec3 x; //position
-    tiny::vec4 q; //orientation
-    tiny::vec3 P; //linear momentum
+    tiny::vec2 angles;
+    tiny::vec3 x;
+    tiny::vec4 q;
+    tiny::vec3 P;
 };
 
 class SoldierType

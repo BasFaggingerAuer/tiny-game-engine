@@ -41,6 +41,7 @@ Player::~Player()
 
 Game::Game(const os::Application *application, const std::string &path) :
     aspectRatio(static_cast<double>(application->getScreenWidth())/static_cast<double>(application->getScreenHeight())),
+    mouseSensitivity(48.0),
     lastSoldierIndex(1),
     translator(new GameMessageTranslator()),
     console(new GameConsole(this)),
@@ -113,39 +114,58 @@ void Game::update(os::Application *application, const float &dt)
         t.q = normalize(t.q);
         
         const mat4 ori(t.q);
+        bool airborne = false;
         
         if (t.x.y <= terrain->getHeight(vec2(t.x.x, t.x.z)) + 0.01f)
         {
             //Are we jumping?
-            if (t.controls & 16 && t.P.y < 0.01f)
+            if ((t.controls & 16) && t.P.y < 0.01f)
             {
                 t.P.y = tt->jump;
+                airborne = true;
+            }
+            else if (t.controls & 15)
+            {
+                //We are walking.
+                vec2 move = vec2(0.0f, 0.0f);
+                const vec2 forward = vec2(ori.v02, ori.v22);
+                const vec2 right = vec2(ori.v00, ori.v20);
+                
+                if (t.controls & 1) move -= forward;
+                if (t.controls & 2) move += forward;
+                if (t.controls & 4) move -= right;
+                if (t.controls & 8) move += right;
+                
+                move = tt->speed*normalize(move);
+                t.P.x = move.x;
+                t.P.z = move.y;
             }
             else
             {
-                //We are walking.
-                const vec3 forward = tt->speed*ori*vec3(0.0f, 0.0f, -1.0f);
-                const vec3 right = tt->speed*ori*vec3(1.0f, 0.0f, 0.0f);
-                
-                t.P = vec3(0.0f, 0.0f, 0.0f);
-                
-                if (t.controls & 1) t.P += forward;
-                if (t.controls & 2) t.P -= forward;
-                if (t.controls & 4) t.P += right;
-                if (t.controls & 8) t.P -= right;
+                //Stop moving.
+                t.P.x = 0.0f;
+                t.P.z = 0.0f;
             }
         }
         else
         {
             //Gravity pulls the player down.
             t.P.y -= dt*9.81f;
+            airborne = true;
         }
         
         //Integrate position.
         t.x += dt*t.P;
         
         //The player should never go below the terrain.
-        t.x.y = std::max(t.x.y, terrain->getHeight(vec2(t.x.x, t.x.z)));
+        if (airborne)
+        {
+            t.x.y = std::max(t.x.y, terrain->getHeight(vec2(t.x.x, t.x.z)));
+        }
+        else
+        {
+            t.x.y = terrain->getHeight(vec2(t.x.x, t.x.z));
+        }
     }
 
     //Draw all soldiers.
@@ -209,15 +229,22 @@ void Game::update(os::Application *application, const float &dt)
         else
         {
             //Update the controls of our soldier and send these to the host if we are a client.
+            const tiny::os::MouseState mouseState = application->getMouseState(true);
+            const vec2 mouseDelta = vec2(mouseState.x, mouseState.y);
             unsigned int controls = 0;
             
-            if (application->isKeyPressed('a')) controls |=  1;
-            if (application->isKeyPressed('d')) controls |=  2;
-            if (application->isKeyPressed('w')) controls |=  4;
-            if (application->isKeyPressed('s')) controls |=  8;
+            if (application->isKeyPressed('w')) controls |=  1;
+            if (application->isKeyPressed('s')) controls |=  2;
+            if (application->isKeyPressed('a')) controls |=  4;
+            if (application->isKeyPressed('d')) controls |=  8;
             if (application->isKeyPressed(' ')) controls |= 16;
             
             SoldierInstance &soldier = soldiers[soldierIndex];
+            
+            //Update orientation.
+            soldier.angles += mouseSensitivity*dt*mouseDelta;
+            soldier.angles.y = clamp(soldier.angles.y, -1.2f, 1.2f);
+		    soldier.q = quatmul(quatrot(soldier.angles.y, vec3(1.0f, 0.0f, 0.0f)), quatrot(soldier.angles.x, vec3(0.0f, 1.0f, 0.0f)));
             
             if (controls != soldier.controls)
             {
@@ -236,7 +263,7 @@ void Game::update(os::Application *application, const float &dt)
             }
             
             //Look from our soldier.
-            cameraPosition = soldier.x;
+            cameraPosition = soldier.x + soldierTypes[soldier.type]->cameraPosition;
             cameraOrientation = soldier.q;
         }
         

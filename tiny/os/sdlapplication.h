@@ -36,6 +36,7 @@ class SDLApplication : public Application
         void paint();
         int getScreenWidth() const;
         int getScreenHeight() const;
+        MouseState getMouseState(const bool &);
         
     private:
         void initOpenGL();

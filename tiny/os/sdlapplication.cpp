@@ -269,3 +269,18 @@ int SDLApplication::getScreenHeight() const
     return screenHeight;
 }
 
+MouseState SDLApplication::getMouseState(const bool &reposition)
+{
+    int mouseX = 0, mouseY = 0;
+    const int mouseButtons = SDL_GetMouseState(&mouseX, &mouseY);
+    
+    if (reposition) SDL_WarpMouse(screenWidth/2, screenHeight/2);
+    
+    mouseX -= screenWidth/2;
+    mouseY -= screenHeight/2;
+    
+    return MouseState(static_cast<float>(2*mouseX)/static_cast<float>(screenWidth),
+                      static_cast<float>(2*mouseY)/static_cast<float>(screenHeight),
+                      (mouseButtons & SDL_BUTTON(1) ? 1 : 0) | (mouseButtons & SDL_BUTTON(3) ? 2 : 0) | (mouseButtons & SDL_BUTTON(2) ? 4 : 0));
+}
+
