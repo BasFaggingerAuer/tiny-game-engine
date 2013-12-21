@@ -11,4 +11,5 @@
     <soldier name="Standard" radius="0.3" height="1.8" camera_height="1.7" mass="80" jump="4" speed="2" max_instances="1024">
         <jumpjet thrust="5000" fuel="100" recharge="5" />
     </soldier>
+    <bullet name="Plasma" radius="0.05" icon="img/bullet/plasma.png" />
 </tanks>

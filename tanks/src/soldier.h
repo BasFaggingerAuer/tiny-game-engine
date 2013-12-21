@@ -27,6 +27,29 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace tanks
 {
 
+struct BulletInstance
+{
+    BulletInstance(const unsigned int &a_type = 0) :
+        type(a_type),
+        x(0.0f),
+        v(0.0f)
+    {
+
+    }
+    
+    unsigned int type;
+    tiny::vec3 x;
+    tiny::vec3 v;
+};
+
+class BulletType
+{
+    public:
+        BulletType(const std::string &, TiXmlElement *);
+        ~BulletType();
+        
+};
+
 struct SoldierInstance
 {
     SoldierInstance(const unsigned int &a_type = 0) :

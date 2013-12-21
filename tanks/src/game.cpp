@@ -244,7 +244,7 @@ void Game::update(os::Application *application, const float &dt)
             //Update orientation.
             soldier.angles += mouseSensitivity*dt*mouseDelta;
             soldier.angles.y = clamp(soldier.angles.y, -1.2f, 1.2f);
-		    soldier.q = quatmul(quatrot(soldier.angles.y, vec3(1.0f, 0.0f, 0.0f)), quatrot(soldier.angles.x, vec3(0.0f, 1.0f, 0.0f)));
+            soldier.q = quatrot(soldier.angles.x, vec3(0.0f, 1.0f, 0.0f));
             
             if (controls != soldier.controls)
             {
@@ -264,7 +264,7 @@ void Game::update(os::Application *application, const float &dt)
             
             //Look from our soldier.
             cameraPosition = soldier.x + soldierTypes[soldier.type]->cameraPosition;
-            cameraOrientation = soldier.q;
+            cameraOrientation = quatmul(quatrot(soldier.angles.y, vec3(1.0f, 0.0f, 0.0f)), soldier.q);
         }
         
         //Update the terrain with respect to the camera.
