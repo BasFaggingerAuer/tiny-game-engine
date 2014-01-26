@@ -203,21 +203,24 @@ bool Game::msgTerrainOffset(const unsigned int &, std::ostream &out, bool &broad
     return true;
 }
 
-bool Game::msgAddSoldier(const unsigned int &, std::ostream &out, bool &broadcast, const unsigned int &soldierIndex, const unsigned int &soldierType, const vec2 &position)
+bool Game::msgAddSoldier(const unsigned int &, std::ostream &out, bool &broadcast, const unsigned int &soldierIndex, const unsigned int &soldierTypeIndex, const vec2 &position)
 {
-    if (soldierTypes.find(soldierType) == soldierTypes.end() || soldiers.find(soldierIndex) != soldiers.end())
+    if (soldierTypes.find(soldierTypeIndex) == soldierTypes.end() || soldiers.find(soldierIndex) != soldiers.end())
     {
-        out << "Unknown soldier type " << soldierType << " or soldier index " << soldierIndex << " already in use!";
+        out << "Unknown soldier type " << soldierTypeIndex << " or soldier index " << soldierIndex << " already in use!";
         return false;
     }
     
-    SoldierInstance soldier(soldierType);
+    SoldierInstance soldier(soldierTypeIndex);
+    const SoldierType *soldierType = soldierTypes[soldierTypeIndex];
     
     soldier.x = vec3(position.x, terrain->getHeight(position), position.y);
+    soldier.weaponRechargeTimes.assign(soldierType->weapons.size(), 0.0f);
+    
     soldiers[soldierIndex] = soldier;
     if (lastSoldierIndex < soldierIndex) lastSoldierIndex = soldierIndex;
     
-    out << "Added soldier with index " << soldierIndex << " of type '" << soldierTypes[soldierType]->name << "' (" << soldierType << ").";
+    out << "Added soldier with index " << soldierIndex << " of type '" << soldierType->name << "' (" << soldierTypeIndex << ").";
     broadcast = true;
     
     return true;
@@ -308,15 +311,8 @@ bool Game::msgPlayerSpawnRequest(const unsigned int &senderIndex, std::ostream &
     return true;
 }
 
-bool Game::msgPlayerShootRequest(const unsigned int &senderIndex, std::ostream &out, bool &, const unsigned int &bulletType)
+bool Game::msgPlayerShootRequest(const unsigned int &senderIndex, std::ostream &out, bool &, const unsigned int &weaponIndex)
 {
-    //Does the bullet type exist?
-    if (bulletTypes.find(bulletType) == bulletTypes.end())
-    {
-        out << "Bullet type " << bulletType << " does not exist!";
-        return false;
-    }
-    
     //Does the player control a soldier which can fire bullets of this type?
     const unsigned int soldierIndex = players[senderIndex].soldierIndex;
     
@@ -330,7 +326,30 @@ bool Game::msgPlayerShootRequest(const unsigned int &senderIndex, std::ostream &
     SoldierInstance &soldier = soldiers[soldierIndex];
     const SoldierType *soldierType = soldierTypes[soldier.type];
     
-    //TODO: Check that the soldier is capable of firing these bullets (weapon type, cooldown, etc.).
+    if (weaponIndex >= static_cast<int>(soldierType->weapons.size()))
+    {
+        out << "Player " << senderIndex << " sent a shoot request for an invalid weapon index " << weaponIndex << "!";
+        return false;
+    }
+    
+    const unsigned int bulletType = soldierType->weapons[weaponIndex].bulletType;
+    
+    //Does the bullet type exist?
+    if (bulletTypes.find(bulletType) == bulletTypes.end())
+    {
+        out << "Bullet type " << bulletType << " does not exist!";
+        return false;
+    }
+    
+    //Is the weapon charged?
+    if (soldier.weaponRechargeTimes[weaponIndex] > 0.0f)
+    {
+        out << "Player " << senderIndex << " sent a shoot request for an uncharged weapon " << soldier.weaponRechargeTimes[weaponIndex] << "!";
+        return false;
+    }
+    
+    //Fire bullet.
+    soldier.weaponRechargeTimes[weaponIndex] = soldierType->weapons[weaponIndex].rechargeTime;
     
     //Create a new bullet.
     const unsigned int bulletIndex = lastBulletIndex++;
@@ -343,7 +362,8 @@ bool Game::msgPlayerShootRequest(const unsigned int &senderIndex, std::ostream &
     const mat4 ori = mat4(soldierType->getCameraOrientation(soldier));
     
     msg1 << (pos + ori*bulletTypes[bulletType]->position);
-    msg1 << (ori*bulletTypes[bulletType]->velocity);
+    msg1 << ((soldier.P/soldierType->mass) + ori*bulletTypes[bulletType]->velocity);
+    msg1 << (ori*bulletTypes[bulletType]->acceleration);
     
     applyMessage(0, msg1);
     
@@ -352,7 +372,7 @@ bool Game::msgPlayerShootRequest(const unsigned int &senderIndex, std::ostream &
     return true;
 }
 
-bool Game::msgAddBullet(const unsigned int &, std::ostream &out, bool &broadcast, const unsigned int &bulletIndex, const unsigned int &bulletType, const vec3 &position, const vec3 &velocity)
+bool Game::msgAddBullet(const unsigned int &, std::ostream &out, bool &broadcast, const unsigned int &bulletIndex, const unsigned int &bulletType, const vec3 &position, const vec3 &velocity, const vec3 &acceleration)
 {
     if (bulletTypes.find(bulletType) == bulletTypes.end() || bullets.find(bulletIndex) != bullets.end())
     {
@@ -364,6 +384,7 @@ bool Game::msgAddBullet(const unsigned int &, std::ostream &out, bool &broadcast
     
     bullet.x = position;
     bullet.v = velocity;
+    bullet.a = acceleration;
     
     bullets[bulletIndex] = bullet;
     
@@ -407,7 +428,7 @@ bool Game::applyMessage(const unsigned int &senderIndex, const Message &message)
         else if (message.id == msg::mt::setPlayerSoldier) ok = msgSetPlayerSoldier(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].iv1);
         else if (message.id == msg::mt::playerSpawnRequest) ok = msgPlayerSpawnRequest(senderIndex, out, broadcast, message.data[0].iv1);
         else if (message.id == msg::mt::playerShootRequest) ok = msgPlayerShootRequest(senderIndex, out, broadcast, message.data[0].iv1);
-        else if (message.id == msg::mt::addBullet) ok = msgAddBullet(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].iv1, message.data[2].v3, message.data[3].v3);
+        else if (message.id == msg::mt::addBullet) ok = msgAddBullet(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].iv1, message.data[2].v3, message.data[3].v3, message.data[4].v3);
     }
     else
     {

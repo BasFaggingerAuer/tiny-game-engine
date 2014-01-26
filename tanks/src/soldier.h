@@ -42,6 +42,7 @@ struct BulletInstance
     unsigned int type;
     tiny::vec3 x;
     tiny::vec3 v;
+    tiny::vec3 a;
 };
 
 class BulletType
@@ -68,7 +69,8 @@ struct SoldierInstance
         angles(0.0f, 0.0f),
         x(0.0f),
         q(0.0f, 0.0f, 0.0f, 1.0f),
-        P(0.0f)
+        P(0.0f),
+        weaponRechargeTimes()
     {
 
     }
@@ -79,6 +81,19 @@ struct SoldierInstance
     tiny::vec3 x;
     tiny::vec4 q;
     tiny::vec3 P;
+    std::vector<float> weaponRechargeTimes;
+};
+
+class SoldierWeapon
+{
+    public:
+        SoldierWeapon(const std::string &, TiXmlElement *);
+        ~SoldierWeapon();
+        
+        std::string name;
+        float rechargeTime;
+        std::string bulletName;
+        unsigned int bulletType;
 };
 
 class SoldierType
@@ -106,6 +121,8 @@ class SoldierType
         float jumpjetThrust;
         float jumpjetFuel;
         float jumpjetCharge;
+        
+        std::vector<SoldierWeapon> weapons;
         
         tiny::draw::StaticMeshHorde *horde;
         tiny::draw::RGBTexture2D *diffuseTexture;

@@ -44,6 +44,12 @@ BulletType::BulletType(const std::string &path, TiXmlElement *el)
     el->QueryFloatAttribute("radius", &radius);
     el->QueryFloatAttribute("mass", &mass);
     el->QueryStringAttribute("emit", &emitFileName);
+    el->QueryFloatAttribute("vel_x", &velocity.x);
+    el->QueryFloatAttribute("vel_y", &velocity.y);
+    el->QueryFloatAttribute("vel_z", &velocity.z);
+    el->QueryFloatAttribute("acc_x", &acceleration.x);
+    el->QueryFloatAttribute("acc_y", &acceleration.y);
+    el->QueryFloatAttribute("acc_z", &acceleration.z);
     
     bulletImage = new tiny::img::Image(emitFileName.empty() ? img::Image::createSolidImage() : img::io::readImage(path + emitFileName));
     icon = vec4(0.0f, 0.0f, 0.0f, 0.0f);
@@ -54,7 +60,28 @@ BulletType::~BulletType()
     delete bulletImage;
 }
 
-SoldierType::SoldierType(const std::string &, TiXmlElement *el)
+SoldierWeapon::SoldierWeapon(const std::string &, TiXmlElement *el)
+{
+    assert(el->ValueStr() == "weapon");
+    
+    name = "";
+    rechargeTime = 1.0f;
+    bulletName = "";
+    bulletType = 0;
+    
+    el->QueryStringAttribute("name", &name);
+    el->QueryFloatAttribute("recharge_time", &rechargeTime);
+    el->QueryStringAttribute("bullet", &bulletName);
+    
+    std::cerr << "Added '" << name << "' soldier weapon type." << std::endl;
+}
+
+SoldierWeapon::~SoldierWeapon()
+{
+
+}
+
+SoldierType::SoldierType(const std::string &path, TiXmlElement *el)
 {
     std::cerr << "Reading soldier type resource..." << std::endl;
    
@@ -97,12 +124,16 @@ SoldierType::SoldierType(const std::string &, TiXmlElement *el)
     //Read thrusters.
     for (TiXmlElement *sl = el->FirstChildElement(); sl; sl = sl->NextSiblingElement())
     {
-        if (sl->ValueStr() == "jumpjet")
+             if (sl->ValueStr() == "jumpjet")
         {
             jumpjet = true;
             sl->QueryFloatAttribute("thrust", &jumpjetThrust);
             sl->QueryFloatAttribute("fuel", &jumpjetFuel);
             sl->QueryFloatAttribute("charge", &jumpjetCharge);
+        }
+        else if (sl->ValueStr() == "weapon")
+        {
+            weapons.push_back(SoldierWeapon(path, sl));
         }
     }
     

@@ -10,7 +10,8 @@
     </terrain>
     <soldier name="Standard" radius="0.3" height="1.8" camera_height="1.7" mass="80" jump="4" speed="2" max_instances="1024">
         <jumpjet thrust="5000" fuel="100" recharge="5" />
+        <weapon name="Plasma rifle" recharge_time="0.5" bullet="Plasma"/>
     </soldier>
     <bullethorde max_instances="4096" texture_size="2048"/>
-    <bullet name="Plasma" radius="0.5" mass="0.0" emit="img/bullet/plasma.png" vel_x="0.0" vel_y="0.0" vel_z="-1.0"/>
+    <bullet name="Plasma" radius="0.5" mass="0.0" emit="img/bullet/plasma.png" vel_x="0.0" vel_y="0.0" vel_z="-10.0" acc_x="0.0" acc_y="-10.0" acc_z="-1.0"/>
 </tanks>

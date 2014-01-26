@@ -312,7 +312,7 @@ void setup()
     treeLeavesMeshes->setDiffuseTexture(*treeLeavesDiffuseTexture);
     
     //Read and paint the sprites for far-away trees.
-    treeSprites = new draw::WorldIconHorde(maxNrLowDetailTrees);
+    treeSprites = new draw::WorldIconHorde(maxNrLowDetailTrees, false);
     treeSpriteTexture = new draw::RGBATexture2D(img::io::readImage(DATA_DIRECTORY + "img/tree0_sprite.png"));
     treeSprites->setIconTexture(*treeSpriteTexture);
     

@@ -132,7 +132,7 @@ class WorldIconVertexBufferInterpreter : public VertexBufferInterpreter<WorldIco
 class WorldIconHorde : public Renderable
 {
     public:
-        WorldIconHorde(const size_t &);
+        WorldIconHorde(const size_t &, const bool &);
         ~WorldIconHorde();
         
         std::string getVertexShaderCode() const;
@@ -164,6 +164,7 @@ class WorldIconHorde : public Renderable
         void render(const ShaderProgram &) const;
         
     private:
+        const bool fullIconRotation;
         const size_t maxNrIcons;
         size_t nrIcons;
         WorldIconVertexBufferInterpreter icons;

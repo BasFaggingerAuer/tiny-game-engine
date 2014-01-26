@@ -49,7 +49,7 @@ vec4 cameraOrientation = vec4(0.0f, 0.0f, 0.0f, 1.0f);
 void setup()
 {
     //Create a icon mesh and paint it with a texture.
-    iconHorde = new draw::WorldIconHorde(1024);
+    iconHorde = new draw::WorldIconHorde(1024, true);
     iconIconTexture = new draw::RGBATexture2D(img::Image::createTestImage());
     iconHorde->setIconTexture(*iconIconTexture);
     

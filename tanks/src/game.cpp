@@ -64,7 +64,7 @@ Game::Game(const os::Application *application, const std::string &path) :
         renderer->addWorldRenderable(i->second->horde);
     }
     
-    renderer->addWorldRenderable(bulletHorde);
+    renderer->addWorldRenderable(bulletHorde); //, true, false, tiny::draw::BlendAdd);
     
     renderer->addScreenRenderable(skyEffect, false, false);
     renderer->addScreenRenderable(font, false, false, draw::BlendMix);
@@ -178,6 +178,14 @@ void Game::update(os::Application *application, const float &dt)
         {
             t.x.y = terrain->getHeight(vec2(t.x.x, t.x.z));
         }
+        
+        //Decrease weapon recharge times.
+        assert(t.weaponRechargeTimes.size() == tt->weapons.size());
+        
+        for (std::vector<float>::iterator j = t.weaponRechargeTimes.begin(); j != t.weaponRechargeTimes.end(); ++j)
+        {
+            if (*j > 0.0f) *j -= dt;
+        }
     }
 
     //Draw soldiers.
@@ -201,9 +209,8 @@ void Game::update(os::Application *application, const float &dt)
     for (std::map<unsigned int, BulletInstance>::iterator i = bullets.begin(); i != bullets.end(); ++i)
     {
         BulletInstance &t = i->second;
-        const BulletType *tt = bulletTypes[t.type];
         
-        t.v += dt*tt->acceleration;
+        t.v += dt*t.a;
         t.x += dt*t.v;
     }
     
@@ -219,11 +226,6 @@ void Game::update(os::Application *application, const float &dt)
     }
     
     bulletHorde->setIcons(bulletInstances.begin(), bulletInstances.begin() + nrBulletInstances);
-    
-    if (nrBulletInstances > 0)
-    {
-        std::cout << "DRAW " << nrBulletInstances << " BULLETS." << std::endl;
-    }
     
     //Toggle console.
     if (application->isKeyPressedOnce('`'))
@@ -305,20 +307,25 @@ void Game::update(os::Application *application, const float &dt)
             }
             
             //Do we want to shoot?
-            if (mouseState.buttons != 0)
+            if (mouseState.buttons != 0 && !soldier.weaponRechargeTimes.empty())
             {
-                std::cout << "SHOOT!" << std::endl;
+                //Is our weapon charged?
+                const unsigned int w = 0;
                 
-                Message msg(msg::mt::playerShootRequest);
-                
-                msg << 0;
-                
-                userMessage(msg);
+                if (soldier.weaponRechargeTimes[w] <= 0.0f)
+                {
+                    Message msg(msg::mt::playerShootRequest);
+                    
+                    msg << w;
+                    
+                    userMessage(msg);
+                    soldier.weaponRechargeTimes[w] = soldierType->weapons[w].rechargeTime;
+                }
             }
             
             //Look from our soldier.
-            cameraPosition = soldierType->getCameraPosition(soldier); //soldier.x + soldierTypes[soldier.type]->cameraPosition;
-            cameraOrientation = soldierType->getCameraOrientation(soldier); //quatmul(quatrot(soldier.angles.y, vec3(1.0f, 0.0f, 0.0f)), soldier.q);
+            cameraPosition = soldierType->getCameraPosition(soldier);
+            cameraOrientation = soldierType->getCameraOrientation(soldier);
         }
         
         //Update the terrain with respect to the camera.
@@ -424,6 +431,37 @@ void Game::readResources(const std::string &path)
     {
         i->second->icon = bulletIconTexture->packIcon(*(i->second->bulletImage));
     }
+    
+    //Match soldier weapons to read bullet types.
+    for (std::map<unsigned int, SoldierType *>::iterator i = soldierTypes.begin(); i != soldierTypes.end(); ++i)
+    {
+        for (std::vector<SoldierWeapon>::iterator j = i->second->weapons.begin(); j != i->second->weapons.end(); ++j)
+        {
+            bool found = false;
+            unsigned int index = 0;
+            
+            for (std::map<unsigned int, BulletType *>::iterator k = bulletTypes.begin(); k != bulletTypes.end() && !found; ++k)
+            {
+                if (k->second->name == j->bulletName)
+                {
+                    found = true;
+                    index = k->first;
+                }
+            }
+            
+            if (!found)
+            {
+                std::cerr << "Unable to find bullet type '" << j->bulletName << "' for weapon '" << j->name << "' of soldier type '" << i->second->name << "'!" << std::endl;
+                
+                //Erase weapon.
+                j = i->second->weapons.erase(j);
+            }
+            else
+            {
+                j->bulletType = index;
+            }
+        }
+    }
 }
 
 void Game::readConsoleResources(const std::string &path, TiXmlElement *el)
@@ -486,7 +524,7 @@ void Game::readBulletHordeResources(const std::string &, TiXmlElement *el)
     
     //Create bullet icon texture and horde.
     bulletIconTexture = new tiny::draw::IconTexture2D(bulletTextureSize, bulletTextureSize);
-    bulletHorde = new tiny::draw::WorldIconHorde(maxNrBulletInstances);
+    bulletHorde = new tiny::draw::WorldIconHorde(maxNrBulletInstances, true);
     bulletHorde->setIconTexture(*bulletIconTexture);
     bulletInstances.resize(maxNrBulletInstances);
 }

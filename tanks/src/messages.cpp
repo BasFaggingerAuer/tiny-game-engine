@@ -174,6 +174,32 @@ class PlayerSpawnRequest : public tiny::net::MessageType
         ~PlayerSpawnRequest() {}
 };
 
+class PlayerShootRequest : public tiny::net::MessageType
+{
+    public:
+        PlayerShootRequest() : tiny::net::MessageType(mt::playerShootRequest, "shoot", "A player requests to shoot with a certain weapon.")
+        {
+            addVariableType("weapon", tiny::net::vt::Integer);
+        }
+        
+        ~PlayerShootRequest() {}
+};
+
+class AddBullet : public tiny::net::MessageType
+{
+    public:
+        AddBullet() : tiny::net::MessageType(mt::addBullet, "addbullet", "Creates a bullet with given index of a given type at a specific spot with specific velocity and acceleration.")
+        {
+            addVariableType("index", tiny::net::vt::Integer);
+            addVariableType("type", tiny::net::vt::Integer);
+            addVariableType("pos", tiny::net::vt::Vec3);
+            addVariableType("vel", tiny::net::vt::Vec3);
+            addVariableType("acc", tiny::net::vt::Vec3);
+        }
+        
+        ~AddBullet() {}
+};
+
 } //namespace msg
 
 } //namespace tanks
@@ -196,6 +222,8 @@ GameMessageTranslator::GameMessageTranslator() :
     addMessageType(new msg::UpdateSoldier());
     addMessageType(new msg::SetPlayerSoldier());
     addMessageType(new msg::PlayerSpawnRequest());
+    addMessageType(new msg::PlayerShootRequest());
+    addMessageType(new msg::AddBullet());
 }
 
 GameMessageTranslator::~GameMessageTranslator()
