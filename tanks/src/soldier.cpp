@@ -27,7 +27,34 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using namespace tanks;
 using namespace tiny;
 
-SoldierType::SoldierType(const std::string &path, TiXmlElement *el)
+BulletType::BulletType(const std::string &path, TiXmlElement *el)
+{
+    std::cerr << "Reading bullet type resource..." << std::endl;
+    
+    assert(el->ValueStr() == "bullet");
+    
+    name = "";
+    radius = 0.1f;
+    position = vec3(0.0f, 0.0f, 0.0f);
+    velocity = vec3(0.0f, 0.0f, -1.0f);
+    acceleration = vec3(0.0f, 0.0f, 0.0f);
+    std::string emitFileName = "";
+    
+    el->QueryStringAttribute("name", &name);
+    el->QueryFloatAttribute("radius", &radius);
+    el->QueryFloatAttribute("mass", &mass);
+    el->QueryStringAttribute("emit", &emitFileName);
+    
+    bulletImage = new tiny::img::Image(emitFileName.empty() ? img::Image::createSolidImage() : img::io::readImage(path + emitFileName));
+    icon = vec4(0.0f, 0.0f, 0.0f, 0.0f);
+}
+
+BulletType::~BulletType()
+{
+    delete bulletImage;
+}
+
+SoldierType::SoldierType(const std::string &, TiXmlElement *el)
 {
     std::cerr << "Reading soldier type resource..." << std::endl;
    
@@ -101,6 +128,18 @@ SoldierType::~SoldierType()
     delete horde;
     delete diffuseTexture;
     delete normalTexture;
+}
+
+vec3 SoldierType::getCameraPosition(const SoldierInstance &soldier) const
+{
+    //Return the soldier's camera position.
+    return soldier.x + cameraPosition;
+}
+
+vec4 SoldierType::getCameraOrientation(const SoldierInstance &soldier) const
+{
+    //Return the soldier's camera orientation.
+    return quatmul(quatrot(soldier.angles.y, vec3(1.0f, 0.0f, 0.0f)), quatrot(soldier.angles.x, vec3(0.0f, 1.0f, 0.0f)));
 }
 
 void SoldierType::clearInstances()

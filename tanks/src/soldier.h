@@ -21,7 +21,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <tinyxml.h>
 
+#include <tiny/img/image.h>
 #include <tiny/draw/texture2d.h>
+#include <tiny/draw/iconhorde.h>
 #include <tiny/draw/staticmeshhorde.h>
 
 namespace tanks
@@ -48,6 +50,14 @@ class BulletType
         BulletType(const std::string &, TiXmlElement *);
         ~BulletType();
         
+        std::string name;
+        float radius;
+        float mass;
+        tiny::vec3 position;
+        tiny::vec3 velocity;
+        tiny::vec3 acceleration;
+        tiny::img::Image *bulletImage;
+        tiny::vec4 icon;
 };
 
 struct SoldierInstance
@@ -80,6 +90,9 @@ class SoldierType
         void clearInstances();
         void addInstance(const SoldierInstance &);
         void updateInstances();
+        
+        tiny::vec3 getCameraPosition(const SoldierInstance &) const;
+        tiny::vec4 getCameraOrientation(const SoldierInstance &) const;
         
         std::string name;
         float radius;

@@ -308,6 +308,73 @@ bool Game::msgPlayerSpawnRequest(const unsigned int &senderIndex, std::ostream &
     return true;
 }
 
+bool Game::msgPlayerShootRequest(const unsigned int &senderIndex, std::ostream &out, bool &, const unsigned int &bulletType)
+{
+    //Does the bullet type exist?
+    if (bulletTypes.find(bulletType) == bulletTypes.end())
+    {
+        out << "Bullet type " << bulletType << " does not exist!";
+        return false;
+    }
+    
+    //Does the player control a soldier which can fire bullets of this type?
+    const unsigned int soldierIndex = players[senderIndex].soldierIndex;
+    
+    if (soldiers.find(soldierIndex) == soldiers.end())
+    {
+        out << "Player " << senderIndex << " sent a shoot request while not controlling a soldier!";
+        return false;
+    }
+    
+    //Retrieve soldier.
+    SoldierInstance &soldier = soldiers[soldierIndex];
+    const SoldierType *soldierType = soldierTypes[soldier.type];
+    
+    //TODO: Check that the soldier is capable of firing these bullets (weapon type, cooldown, etc.).
+    
+    //Create a new bullet.
+    const unsigned int bulletIndex = lastBulletIndex++;
+    Message msg1(msg::mt::addBullet);
+    
+    msg1 << bulletIndex << bulletType;
+    
+    //Obtain current viewing direction and position of the soldier.
+    const vec3 pos = soldierType->getCameraPosition(soldier);
+    const mat4 ori = mat4(soldierType->getCameraOrientation(soldier));
+    
+    msg1 << (pos + ori*bulletTypes[bulletType]->position);
+    msg1 << (ori*bulletTypes[bulletType]->velocity);
+    
+    applyMessage(0, msg1);
+    
+    out << "Shot bullet of type '" << bulletTypes[bulletType]->name << "' (" << bulletType << ") for player " << senderIndex << " from soldier " << soldierIndex << ".";
+    
+    return true;
+}
+
+bool Game::msgAddBullet(const unsigned int &, std::ostream &out, bool &broadcast, const unsigned int &bulletIndex, const unsigned int &bulletType, const vec3 &position, const vec3 &velocity)
+{
+    if (bulletTypes.find(bulletType) == bulletTypes.end() || bullets.find(bulletIndex) != bullets.end())
+    {
+        out << "Unknown bullet type " << bulletType << " or bullet index " << bulletIndex << " already in use!";
+        return false;
+    }
+    
+    BulletInstance bullet(bulletType);
+    
+    bullet.x = position;
+    bullet.v = velocity;
+    
+    bullets[bulletIndex] = bullet;
+    
+    if (lastBulletIndex < bulletIndex) lastBulletIndex = bulletIndex;
+    
+    out << "Added bullet with index " << bulletIndex << " of type '" << bulletTypes[bulletType]->name << "' (" << bulletType << ").";
+    broadcast = true;
+    
+    return true;
+}
+
 bool Game::applyMessage(const unsigned int &senderIndex, const Message &message)
 {
     std::ostringstream out;
@@ -339,6 +406,8 @@ bool Game::applyMessage(const unsigned int &senderIndex, const Message &message)
         else if (message.id == msg::mt::updateSoldier) ok = msgUpdateSoldier(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].iv1, message.data[2].v3, message.data[3].v4, message.data[4].v3);
         else if (message.id == msg::mt::setPlayerSoldier) ok = msgSetPlayerSoldier(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].iv1);
         else if (message.id == msg::mt::playerSpawnRequest) ok = msgPlayerSpawnRequest(senderIndex, out, broadcast, message.data[0].iv1);
+        else if (message.id == msg::mt::playerShootRequest) ok = msgPlayerShootRequest(senderIndex, out, broadcast, message.data[0].iv1);
+        else if (message.id == msg::mt::addBullet) ok = msgAddBullet(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].iv1, message.data[2].v3, message.data[3].v3);
     }
     else
     {

@@ -43,6 +43,7 @@ Game::Game(const os::Application *application, const std::string &path) :
     aspectRatio(static_cast<double>(application->getScreenWidth())/static_cast<double>(application->getScreenHeight())),
     mouseSensitivity(48.0),
     lastSoldierIndex(1),
+    lastBulletIndex(1),
     translator(new GameMessageTranslator()),
     console(new GameConsole(this)),
     host(0),
@@ -62,6 +63,8 @@ Game::Game(const os::Application *application, const std::string &path) :
     {
         renderer->addWorldRenderable(i->second->horde);
     }
+    
+    renderer->addWorldRenderable(bulletHorde);
     
     renderer->addScreenRenderable(skyEffect, false, false);
     renderer->addScreenRenderable(font, false, false, draw::BlendMix);
@@ -90,6 +93,14 @@ Game::~Game()
     {
         delete i->second;
     }
+    
+    for (std::map<unsigned int, BulletType *>::iterator i = bulletTypes.begin(); i != bulletTypes.end(); ++i)
+    {
+        delete i->second;
+    }
+    
+    delete bulletHorde;
+    delete bulletIconTexture;
 }
 
 void Game::updateConsole() const
@@ -104,13 +115,14 @@ void Game::update(os::Application *application, const float &dt)
     if (host) host->listen(0.0);
     if (client) client->listen(0.0);
 
-    //Update all soldiers.
+    //Update soldiers.
     for (std::map<unsigned int, SoldierInstance>::iterator i = soldiers.begin(); i != soldiers.end(); ++i)
     {
         SoldierInstance &t = i->second;
         const SoldierType *tt = soldierTypes[t.type];
         
         //Get orientation.
+        //TODO: Express this in terms of t.angles?
         t.q = normalize(t.q);
         
         const mat4 ori(t.q);
@@ -168,7 +180,7 @@ void Game::update(os::Application *application, const float &dt)
         }
     }
 
-    //Draw all soldiers.
+    //Draw soldiers.
     for (std::map<unsigned int, SoldierType *>::iterator i = soldierTypes.begin(); i != soldierTypes.end(); ++i)
     {
         i->second->clearInstances();
@@ -184,6 +196,35 @@ void Game::update(os::Application *application, const float &dt)
     {
         i->second->updateInstances();
     }
+    
+    //Update bullets.
+    for (std::map<unsigned int, BulletInstance>::iterator i = bullets.begin(); i != bullets.end(); ++i)
+    {
+        BulletInstance &t = i->second;
+        const BulletType *tt = bulletTypes[t.type];
+        
+        t.v += dt*tt->acceleration;
+        t.x += dt*t.v;
+    }
+    
+    //Draw bullets.
+    unsigned int nrBulletInstances = 0;
+    
+    for (std::map<unsigned int, BulletInstance>::const_iterator i = bullets.begin(); i != bullets.end() && nrBulletInstances < bulletInstances.size(); ++i)
+    {
+        assert(bulletTypes.find(i->second.type) != bulletTypes.end());
+        const BulletType *tt = bulletTypes[i->second.type];
+        
+        bulletInstances[nrBulletInstances++] = tiny::draw::WorldIconInstance(i->second.x, tiny::vec2(2.0f*tt->radius, 2.0f*tt->radius), tt->icon, tiny::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+    }
+    
+    bulletHorde->setIcons(bulletInstances.begin(), bulletInstances.begin() + nrBulletInstances);
+    
+    if (nrBulletInstances > 0)
+    {
+        std::cout << "DRAW " << nrBulletInstances << " BULLETS." << std::endl;
+    }
+    
     //Toggle console.
     if (application->isKeyPressedOnce('`'))
     {
@@ -240,6 +281,7 @@ void Game::update(os::Application *application, const float &dt)
             if (application->isKeyPressed(' ')) controls |= 16;
             
             SoldierInstance &soldier = soldiers[soldierIndex];
+            const SoldierType *soldierType = soldierTypes[soldier.type];
             
             //Update orientation.
             soldier.angles += mouseSensitivity*dt*mouseDelta;
@@ -262,9 +304,21 @@ void Game::update(os::Application *application, const float &dt)
                 }
             }
             
+            //Do we want to shoot?
+            if (mouseState.buttons != 0)
+            {
+                std::cout << "SHOOT!" << std::endl;
+                
+                Message msg(msg::mt::playerShootRequest);
+                
+                msg << 0;
+                
+                userMessage(msg);
+            }
+            
             //Look from our soldier.
-            cameraPosition = soldier.x + soldierTypes[soldier.type]->cameraPosition;
-            cameraOrientation = quatmul(quatrot(soldier.angles.y, vec3(1.0f, 0.0f, 0.0f)), soldier.q);
+            cameraPosition = soldierType->getCameraPosition(soldier); //soldier.x + soldierTypes[soldier.type]->cameraPosition;
+            cameraOrientation = soldierType->getCameraOrientation(soldier); //quatmul(quatrot(soldier.angles.y, vec3(1.0f, 0.0f, 0.0f)), soldier.q);
         }
         
         //Update the terrain with respect to the camera.
@@ -311,6 +365,10 @@ void Game::clear()
     soldiers.clear();
     lastSoldierIndex = 1;
     
+    //Remove all bullets.
+    bullets.clear();
+    lastBulletIndex = 1;
+    
     //Reset camera.
     cameraPosition = vec3(0.0f, 0.0f, 0.0f);
     cameraOrientation = vec4(0.0f, 0.0f, 0.0f, 1.0f);
@@ -346,7 +404,7 @@ void Game::readResources(const std::string &path)
     
     if (root->ValueStr() != "tanks")
     {
-        std::cerr << "This is not a world of tanks world XML file!" << std::endl;
+        std::cerr << "This is not a valid tanks XML file!" << std::endl;
         throw std::exception();
     }
     
@@ -357,6 +415,14 @@ void Game::readResources(const std::string &path)
         else if (el->ValueStr() == "sky") readSkyResources(path, el);
         else if (el->ValueStr() == "terrain") terrain = new GameTerrain(path, el);
         else if (el->ValueStr() == "soldier") soldierTypes[soldierTypes.size()] = new SoldierType(path, el);
+        else if (el->ValueStr() == "bullethorde") readBulletHordeResources(path, el);
+        else if (el->ValueStr() == "bullet") bulletTypes[bulletTypes.size()] = new BulletType(path, el);
+    }
+    
+    //Pack all bullet images into a single large texture.
+    for (std::map<unsigned int, BulletType *>::iterator i = bulletTypes.begin(); i != bulletTypes.end(); ++i)
+    {
+        i->second->icon = bulletIconTexture->packIcon(*(i->second->bulletImage));
     }
 }
 
@@ -381,7 +447,7 @@ void Game::readConsoleResources(const std::string &path, TiXmlElement *el)
     //Create a drawable font object as a collection of instanced screen icons.
     font = new draw::ScreenIconHorde(4096);
     font->setIconTexture(*fontTexture);
-    font->setText(-1.0, -1.0, 0.1, aspectRatio, "Welcome to \\ra Game of Tanks\\w, press ` to access the console.", *fontTexture);
+    font->setText(-1.0, -1.0, 0.1, aspectRatio, "Welcome to \\rTanks\\w, press ` to access the console.", *fontTexture);
 }
 
 void Game::readSkyResources(const std::string &path, TiXmlElement *el)
@@ -402,5 +468,26 @@ void Game::readSkyResources(const std::string &path, TiXmlElement *el)
     skyEffect = new draw::effects::SunSky();
     skyGradientTexture = new draw::RGBTexture2D(img::io::readImage(path + textureFileName), draw::tf::filter);
     skyEffect->setSkyTexture(*skyGradientTexture);
+}
+
+void Game::readBulletHordeResources(const std::string &, TiXmlElement *el)
+{
+    std::cerr << "Reading bullet horde resources..." << std::endl;
+    
+    std::string textureFileName = "";
+    
+    assert(el->ValueStr() == "bullethorde");
+    
+    int bulletTextureSize = 0;
+    int maxNrBulletInstances = 0;
+    
+    el->QueryIntAttribute("texture_size", &bulletTextureSize);
+    el->QueryIntAttribute("max_instances", &maxNrBulletInstances);
+    
+    //Create bullet icon texture and horde.
+    bulletIconTexture = new tiny::draw::IconTexture2D(bulletTextureSize, bulletTextureSize);
+    bulletHorde = new tiny::draw::WorldIconHorde(maxNrBulletInstances);
+    bulletHorde->setIconTexture(*bulletIconTexture);
+    bulletInstances.resize(maxNrBulletInstances);
 }
 

@@ -42,7 +42,9 @@ enum mt_t
     removeSoldier,
     updateSoldier,
     setPlayerSoldier,
-    playerSpawnRequest
+    playerSpawnRequest,
+    playerShootRequest,
+    addBullet
 };
 
 } //namespace mt

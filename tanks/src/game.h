@@ -75,10 +75,13 @@ class Game
         bool msgUpdateSoldier(const unsigned int &, std::ostream &, bool &, const unsigned int &, const unsigned int &, const tiny::vec3 &, const tiny::vec4 &, const tiny::vec3 &);
         bool msgSetPlayerSoldier(const unsigned int &, std::ostream &, bool &, const unsigned int &, const unsigned int &);
         bool msgPlayerSpawnRequest(const unsigned int &, std::ostream &, bool &, const unsigned int &);
+        bool msgPlayerShootRequest(const unsigned int &, std::ostream &, bool &, const unsigned int &);
+        bool msgAddBullet(const unsigned int &, std::ostream &, bool &, const unsigned int &, const unsigned int &, const tiny::vec3 &, const tiny::vec3 &);
         
         void readResources(const std::string &);
         void readConsoleResources(const std::string &, TiXmlElement *);
         void readSkyResources(const std::string &, TiXmlElement *);
+        void readBulletHordeResources(const std::string &, TiXmlElement *);
         
         //Renderer.
         const double aspectRatio;
@@ -101,9 +104,19 @@ class Game
         
         GameTerrain *terrain;
         
+        //Soldiers.
         std::map<unsigned int, SoldierType *> soldierTypes;
         std::map<unsigned int, SoldierInstance> soldiers;
         unsigned int lastSoldierIndex;
+
+        //Bullets.
+        std::map<unsigned int, BulletType *> bulletTypes;
+        std::map<unsigned int, BulletInstance> bullets;
+        std::vector<tiny::draw::WorldIconInstance> bulletInstances;
+        unsigned int lastBulletIndex;
+        
+        tiny::draw::IconTexture2D *bulletIconTexture;
+        tiny::draw::WorldIconHorde *bulletHorde;
         
         //Networking.
         GameMessageTranslator * const translator;
