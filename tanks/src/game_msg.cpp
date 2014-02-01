@@ -260,7 +260,12 @@ bool Game::msgUpdateSoldier(const unsigned int &senderIndex, std::ostream &out, 
         return false;
     }
     
-    //Update soldier status.
+    //Update soldier status, but only if it is a soldier different from the one you control as a client.
+    if (senderIndex == 0 && players[ownPlayerIndex].soldierIndex == soldierIndex)
+    {
+        return true;
+    }
+    
     i->second.controls = controls;
     i->second.angles = angles;
     i->second.x = x;

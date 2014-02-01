@@ -217,12 +217,31 @@ void Game::update(os::Application *application, const float &dt)
     //Draw bullets.
     unsigned int nrBulletInstances = 0;
     
-    for (std::map<unsigned int, BulletInstance>::const_iterator i = bullets.begin(); i != bullets.end() && nrBulletInstances < bulletInstances.size(); ++i)
+    for (std::map<unsigned int, BulletInstance>::iterator i = bullets.begin(); i != bullets.end() && nrBulletInstances < bulletInstances.size(); ++i)
     {
         assert(bulletTypes.find(i->second.type) != bulletTypes.end());
         const BulletType *tt = bulletTypes[i->second.type];
+        bool destroyed = false;
         
-        bulletInstances[nrBulletInstances++] = tiny::draw::WorldIconInstance(i->second.x, tiny::vec2(2.0f*tt->radius, 2.0f*tt->radius), tt->icon, tiny::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+        //Destroy the bullet if it is below the terrain.
+        if (i->second.x.y < terrain->getHeight(vec2(i->second.x.x, i->second.x.z)) + tt->radius)
+        {
+            destroyed = true;
+        }
+        
+        if (!destroyed)
+        {
+            bulletInstances[nrBulletInstances++] = tiny::draw::WorldIconInstance(i->second.x, tiny::vec2(2.0f*tt->radius, 2.0f*tt->radius), tt->icon, tiny::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+        }
+        else
+        {
+            //Delete bullet.
+            std::map<unsigned int, BulletInstance>::iterator ii = i++;
+            
+            bullets.erase(ii);
+            
+            if (i == bullets.end()) break;
+        }
     }
     
     bulletHorde->setIcons(bulletInstances.begin(), bulletInstances.begin() + nrBulletInstances);
