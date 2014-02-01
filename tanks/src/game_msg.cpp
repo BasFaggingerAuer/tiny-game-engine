@@ -437,6 +437,7 @@ bool Game::applyMessage(const unsigned int &senderIndex, const Message &message)
         
              if (message.id == msg::mt::updateSoldier) ok = msgUpdateSoldier(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].iv1, message.data[2].v3, message.data[3].v4, message.data[4].v3);
         else if (message.id == msg::mt::playerSpawnRequest) ok = msgPlayerSpawnRequest(senderIndex, out, broadcast, message.data[0].iv1);
+        else if (message.id == msg::mt::playerShootRequest) ok = msgPlayerShootRequest(senderIndex, out, broadcast, message.data[0].iv1);
     }
     
     //Add message output to the console.
