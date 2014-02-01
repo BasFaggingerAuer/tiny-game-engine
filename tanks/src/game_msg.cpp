@@ -243,7 +243,7 @@ bool Game::msgRemoveSoldier(const unsigned int &, std::ostream &out, bool &broad
 }
 
 bool Game::msgUpdateSoldier(const unsigned int &senderIndex, std::ostream &out, bool &broadcast, const unsigned int &soldierIndex,
-                                 const unsigned int &controls, const vec3 &x, const vec4 &q, const vec3 &P)
+                                 const unsigned int &controls, const vec2 &angles, const vec3 &x, const vec4 &q, const vec3 &P)
 {
     //Clients are only permitted to modify the status of their own soldiers.
     if (senderIndex != 0 && players[senderIndex].soldierIndex != soldierIndex)
@@ -262,6 +262,7 @@ bool Game::msgUpdateSoldier(const unsigned int &senderIndex, std::ostream &out, 
     
     //Update soldier status.
     i->second.controls = controls;
+    i->second.angles = angles;
     i->second.x = x;
     i->second.q = q;
     i->second.P = P;
@@ -326,7 +327,7 @@ bool Game::msgPlayerShootRequest(const unsigned int &senderIndex, std::ostream &
     SoldierInstance &soldier = soldiers[soldierIndex];
     const SoldierType *soldierType = soldierTypes[soldier.type];
     
-    if (weaponIndex >= static_cast<int>(soldierType->weapons.size()))
+    if (weaponIndex >= soldierType->weapons.size())
     {
         out << "Player " << senderIndex << " sent a shoot request for an invalid weapon index " << weaponIndex << "!";
         return false;
@@ -424,7 +425,7 @@ bool Game::applyMessage(const unsigned int &senderIndex, const Message &message)
         else if (message.id == msg::mt::terrainOffset) ok = msgTerrainOffset(senderIndex, out, broadcast, message.data[0].v2);
         else if (message.id == msg::mt::addSoldier) ok = msgAddSoldier(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].iv1, message.data[2].v2);
         else if (message.id == msg::mt::removeSoldier) ok = msgRemoveSoldier(senderIndex, out, broadcast, message.data[0].iv1);
-        else if (message.id == msg::mt::updateSoldier) ok = msgUpdateSoldier(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].iv1, message.data[2].v3, message.data[3].v4, message.data[4].v3);
+        else if (message.id == msg::mt::updateSoldier) ok = msgUpdateSoldier(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].iv1, message.data[2].v2, message.data[3].v3, message.data[4].v4, message.data[5].v3);
         else if (message.id == msg::mt::setPlayerSoldier) ok = msgSetPlayerSoldier(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].iv1);
         else if (message.id == msg::mt::playerSpawnRequest) ok = msgPlayerSpawnRequest(senderIndex, out, broadcast, message.data[0].iv1);
         else if (message.id == msg::mt::playerShootRequest) ok = msgPlayerShootRequest(senderIndex, out, broadcast, message.data[0].iv1);
@@ -435,7 +436,7 @@ bool Game::applyMessage(const unsigned int &senderIndex, const Message &message)
         //Host messages received from clients.
         assert(host && !client);
         
-             if (message.id == msg::mt::updateSoldier) ok = msgUpdateSoldier(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].iv1, message.data[2].v3, message.data[3].v4, message.data[4].v3);
+             if (message.id == msg::mt::updateSoldier) ok = msgUpdateSoldier(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].iv1, message.data[2].v2, message.data[3].v3, message.data[4].v4, message.data[5].v3);
         else if (message.id == msg::mt::playerSpawnRequest) ok = msgPlayerSpawnRequest(senderIndex, out, broadcast, message.data[0].iv1);
         else if (message.id == msg::mt::playerShootRequest) ok = msgPlayerShootRequest(senderIndex, out, broadcast, message.data[0].iv1);
     }

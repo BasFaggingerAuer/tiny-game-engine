@@ -290,7 +290,7 @@ void Game::update(os::Application *application, const float &dt)
             soldier.angles.y = clamp(soldier.angles.y, -1.2f, 1.2f);
             soldier.q = quatrot(soldier.angles.x, vec3(0.0f, 1.0f, 0.0f));
             
-            if (controls != soldier.controls)
+            if (controls != soldier.controls || length2(mouseDelta) > 0.0f)
             {
                 soldier.controls = controls;
                 
@@ -299,7 +299,7 @@ void Game::update(os::Application *application, const float &dt)
                 {
                     Message msg(msg::mt::updateSoldier);
                     
-                    msg << soldierIndex << soldier.controls << soldier.x << soldier.q << soldier.P;
+                    msg << soldierIndex << soldier.controls << soldier.angles << soldier.x << soldier.q << soldier.P;
                     
                     if (client) client->sendMessage(msg);
                     if (host) host->sendMessage(msg);

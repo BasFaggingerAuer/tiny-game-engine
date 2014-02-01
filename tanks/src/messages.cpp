@@ -143,6 +143,7 @@ class UpdateSoldier : public tiny::net::MessageType
         {
             addVariableType("index", tiny::net::vt::Integer);
             addVariableType("controls", tiny::net::vt::Integer);
+            addVariableType("angles", tiny::net::vt::Vec2);
             addVariableType("x", tiny::net::vt::Vec3);
             addVariableType("q", tiny::net::vt::Vec4);
             addVariableType("P", tiny::net::vt::Vec3);
