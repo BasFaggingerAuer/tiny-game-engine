@@ -28,6 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/draw/iconhorde.h>
 #include <tiny/draw/texture2d.h>
 #include <tiny/draw/effects/sunsky.h>
+#include <tiny/draw/effects/solid.h>
 #include <tiny/draw/worldrenderer.h>
 
 #include "network.h"
@@ -93,6 +94,7 @@ class Game
         
         //Console and font.
         bool consoleMode;
+        tiny::draw::effects::Solid *consoleBackground;
         tiny::draw::ScreenIconHorde *font;
         tiny::draw::IconTexture2D *fontTexture;
         

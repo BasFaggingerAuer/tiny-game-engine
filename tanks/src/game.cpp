@@ -67,6 +67,7 @@ Game::Game(const os::Application *application, const std::string &path) :
     renderer->addWorldRenderable(bulletHorde); //, true, false, tiny::draw::BlendAdd);
     
     renderer->addScreenRenderable(skyEffect, false, false);
+    renderer->addScreenRenderable(consoleBackground, false, false, draw::BlendMix);
     renderer->addScreenRenderable(font, false, false, draw::BlendMix);
     
     clear();
@@ -79,6 +80,7 @@ Game::~Game()
     delete translator;
     delete renderer;
     
+    delete consoleBackground;
     delete font;
     delete fontTexture;
     
@@ -107,6 +109,7 @@ void Game::updateConsole() const
 {
     //Update the console on screen.
     font->setText(-1.0, -1.0, consoleMode ? 0.05 : 0.025, aspectRatio, console->getText(256), *fontTexture);
+    consoleBackground->setColour(consoleMode ? vec4(0.0f, 0.0f, 0.0f, 0.8f) : vec4(1.0f, 1.0f, 1.0f, 0.0f));
 }
 
 void Game::update(os::Application *application, const float &dt)
@@ -217,7 +220,7 @@ void Game::update(os::Application *application, const float &dt)
     //Draw bullets.
     unsigned int nrBulletInstances = 0;
     
-    for (std::map<unsigned int, BulletInstance>::iterator i = bullets.begin(); i != bullets.end() && nrBulletInstances < bulletInstances.size(); ++i)
+    for (std::map<unsigned int, BulletInstance>::iterator i = bullets.begin(); i != bullets.end() && nrBulletInstances < bulletInstances.size(); )
     {
         assert(bulletTypes.find(i->second.type) != bulletTypes.end());
         const BulletType *tt = bulletTypes[i->second.type];
@@ -232,15 +235,11 @@ void Game::update(os::Application *application, const float &dt)
         if (!destroyed)
         {
             bulletInstances[nrBulletInstances++] = tiny::draw::WorldIconInstance(i->second.x, tiny::vec2(2.0f*tt->radius, 2.0f*tt->radius), tt->icon, tiny::vec4(1.0f, 1.0f, 1.0f, 1.0f));
+            ++i;
         }
         else
         {
-            //Delete bullet.
-            std::map<unsigned int, BulletInstance>::iterator ii = i++;
-            
-            bullets.erase(ii);
-            
-            if (i == bullets.end()) break;
+            bullets.erase(i++);
         }
     }
     
@@ -505,6 +504,7 @@ void Game::readConsoleResources(const std::string &path, TiXmlElement *el)
     font = new draw::ScreenIconHorde(4096);
     font->setIconTexture(*fontTexture);
     font->setText(-1.0, -1.0, 0.1, aspectRatio, "Welcome to \\rTanks\\w, press ` to access the console.", *fontTexture);
+    consoleBackground = new draw::effects::Solid();
 }
 
 void Game::readSkyResources(const std::string &path, TiXmlElement *el)
