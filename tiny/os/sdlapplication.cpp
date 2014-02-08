@@ -25,6 +25,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <SDL_image.h>
 #include <SDL_ttf.h>
 #include <SDL_net.h>
+#include <SDL_mixer.h>
 
 #include <tiny/os/sdlapplication.h>
 
@@ -33,7 +34,12 @@ using namespace tiny::os;
 SDLApplication::SDLApplication(const int &a_screenWidth,
                                const int &a_screenHeight,
                                const int &a_screenBPP,
-                               const int &a_screenDepthBPP) :
+                               const int &a_screenDepthBPP,
+                               const int &a_audioRate,
+                               const int &a_audioFormat,
+                               const int &a_audioChannels,
+                               const int &a_audioMixChannels,
+                               const int &a_audioBuffer) :
     Application(),
     screenWidth(a_screenWidth),
     screenHeight(a_screenHeight),
@@ -41,7 +47,12 @@ SDLApplication::SDLApplication(const int &a_screenWidth,
     screenDepthBPP(a_screenDepthBPP),
     screenFlags(0),
     screen(0),
-    wireframe(false)
+    wireframe(false),
+    audioRate(a_audioRate),
+    audioFormat(a_audioFormat),
+    audioChannels(a_audioChannels),
+    audioMixChannels(a_audioMixChannels),
+    audioBuffer(a_audioBuffer)
 {
     //Initialise SDL.
     std::cerr << "Initialising SDL..." << std::endl;
@@ -122,6 +133,26 @@ SDLApplication::SDLApplication(const int &a_screenWidth,
         throw std::exception();
     }
     
+    //Initialise sound.
+    std::cerr << "Initialising sound..." << std::endl;
+    
+    if (Mix_OpenAudio(audioRate, audioFormat, audioChannels, audioBuffer) < 0)
+    {
+        std::cerr << "Unable to initialise SDL_mixer: " << Mix_GetError() << "!" << std::endl;
+        throw std::exception();
+    }
+    
+    if (Mix_Init(MIX_INIT_OGG | MIX_INIT_MOD) == 0)
+    {
+        std::cerr << "Unable to initialise SDL_mixer plugins: " << Mix_GetError() << "!" << std::endl;
+        throw std::exception();
+    }
+    
+    //Allocate the desired number of mixing channels and set the volume to the maximum.
+    std::cerr << "Playing sound at " << audioRate << "Hz in " << audioChannels << " channels, " << audioMixChannels << " mixing channels, with a buffer size of " << audioBuffer << "..." << std::endl;
+    Mix_AllocateChannels(audioMixChannels);
+    Mix_Volume(-1, MIX_MAX_VOLUME);
+    
     //Start main loop.
     std::cerr << "Initialisation complete." << std::endl;
     
@@ -134,6 +165,8 @@ SDLApplication::~SDLApplication()
     //Shut down everything.
     std::cerr << "Shutting down SDL..." << std::endl;
     
+    Mix_Quit();
+    Mix_CloseAudio();
     SDLNet_Quit();
     TTF_Quit();
     IMG_Quit();

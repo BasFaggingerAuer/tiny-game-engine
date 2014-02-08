@@ -28,6 +28,7 @@ set(TANKS_LIBS
               ${SDLIMAGE_LIBRARY}
               ${SDLTTF_LIBRARY}
               ${SDLNET_LIBRARY}
+              ${SDLMIXER_LIBRARY}
               ${TINYXML_LIBRARIES})
 
 add_executable(tanks src/tanks.cpp

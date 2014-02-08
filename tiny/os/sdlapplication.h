@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <SDL.h>
+#include <SDL_mixer.h>
 
 #include <tiny/os/application.h>
 
@@ -29,7 +30,7 @@ namespace os
 class SDLApplication : public Application
 {
     public:
-        SDLApplication(const int &, const int &, const int & = 0, const int & = 24);
+        SDLApplication(const int &, const int &, const int & = 0, const int & = 24, const int & = 44100, const int & = MIX_DEFAULT_FORMAT, const int & = 2, const int & = 16, const int & = 4096);
         ~SDLApplication();
         
         double pollEvents();
@@ -49,6 +50,12 @@ class SDLApplication : public Application
         SDL_Surface *screen;
         Uint32 lastCount, curCount;
         bool wireframe;
+        
+        int audioRate;
+        int audioFormat;
+        int audioChannels;
+        int audioMixChannels;
+        int audioBuffer;
 };
 
 }

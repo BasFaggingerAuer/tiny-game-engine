@@ -4,6 +4,8 @@ include_directories(${ASSIMP_INCLUDE_DIR})
 include_directories(${SDL_INCLUDE_DIR})
 include_directories(${SDL_IMAGE_INCLUDE_DIR})
 include_directories(${SDL_TTF_INCLUDE_DIR})
+include_directories(${SDL_NET_INCLUDE_DIR})
+include_directories(${SDL_MIXER_INCLUDE_DIR})
 include_directories(${CMAKE_SOURCE_DIR})
 
 add_library(tinygame
@@ -14,6 +16,8 @@ add_library(tinygame
             net/console.cpp
             img/image.cpp
             img/io/image.cpp
+            snd/sample.cpp
+            snd/io/sample.cpp
             lod/quadtree.cpp
             mesh/staticmesh.cpp
             mesh/animatedmesh.cpp
