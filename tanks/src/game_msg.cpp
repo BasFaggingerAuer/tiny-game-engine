@@ -399,6 +399,14 @@ bool Game::msgAddBullet(const unsigned int &, std::ostream &out, bool &broadcast
     out << "Added bullet with index " << bulletIndex << " of type '" << bulletTypes[bulletType]->name << "' (" << bulletType << ").";
     broadcast = true;
     
+    //Create sound effect.
+    const tiny::snd::Sample *sound = bulletTypes[bulletType]->shootSound;
+    
+    if (sound)
+    {
+        tiny::snd::playSample(*sound, -1, 0);
+    }
+    
     return true;
 }
 

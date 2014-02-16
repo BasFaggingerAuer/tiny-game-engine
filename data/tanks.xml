@@ -3,15 +3,15 @@
     <console font="font/mensch.ttf" texture_size="512" font_size="48" />
     <sky texture="img/sky.png" />
     <terrain heightmap="img/tasmania.png" scale_width="3" scale_height="1617" scale_far="16" scale_detail="1024" attribute_shader="shader/desert.glsl">
-        <biome diffuse="img/terrain/desert_lakebed_dry_b.png" normal="img/terrain/desert_lakebed_dry_b_norm.png" />
-        <biome diffuse="img/terrain/desert_sand_smooth_b.png" normal="img/terrain/desert_sand_smooth_b_norm.png" />
-        <biome diffuse="img/terrain/desert_sand_stones.png" normal="img/terrain/desert_sand_stones_norm.png" />
-        <biome diffuse="img/terrain/desert_cliff_egypt_2.png" normal="img/terrain/desert_cliff_egypt_2_norm.png" />
+        <biome diffuse="img/terrain/desert_lakebed_dry_b.png" normal="img/terrain/desert_lakebed_dry_b_norm.png" sound="sound/wind.ogg"/>
+        <biome diffuse="img/terrain/desert_sand_smooth_b.png" normal="img/terrain/desert_sand_smooth_b_norm.png" sound="sound/crickets.ogg"/>
+        <biome diffuse="img/terrain/desert_sand_stones.png" normal="img/terrain/desert_sand_stones_norm.png" sound="sound/forest.ogg"/>
+        <biome diffuse="img/terrain/desert_cliff_egypt_2.png" normal="img/terrain/desert_cliff_egypt_2_norm.png" sound="sound/sheep.ogg"/>
     </terrain>
     <soldier name="Standard" radius="0.3" height="1.8" camera_height="1.7" mass="80" jump="4" speed="2" max_instances="1024">
         <jumpjet thrust="5000" fuel="100" recharge="5" />
         <weapon name="Plasma rifle" recharge_time="0.5" bullet="Plasma"/>
     </soldier>
     <bullethorde max_instances="4096" texture_size="2048"/>
-    <bullet name="Plasma" radius="0.5" mass="0.0" emit="img/bullet/plasma.png" vel_x="0.0" vel_y="0.0" vel_z="-10.0" acc_x="0.0" acc_y="-10.0" acc_z="-1.0"/>
+    <bullet name="Plasma" radius="0.5" mass="0.0" emit="img/bullet/plasma.png" vel_x="0.0" vel_y="0.0" vel_z="-10.0" acc_x="0.0" acc_y="-10.0" acc_z="-1.0" shoot_sound="sound/newton.wav"/>
 </tanks>

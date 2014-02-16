@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <tiny/img/io/image.h>
 #include <tiny/mesh/io/staticmesh.h>
+#include <tiny/snd/io/sample.h>
 
 #include "soldier.h"
 
@@ -38,7 +39,9 @@ BulletType::BulletType(const std::string &path, TiXmlElement *el)
     position = vec3(0.0f, 0.0f, 0.0f);
     velocity = vec3(0.0f, 0.0f, -1.0f);
     acceleration = vec3(0.0f, 0.0f, 0.0f);
+    shootSound = 0;
     std::string emitFileName = "";
+    std::string shootSoundFileName = "";
     
     el->QueryStringAttribute("name", &name);
     el->QueryFloatAttribute("radius", &radius);
@@ -50,14 +53,18 @@ BulletType::BulletType(const std::string &path, TiXmlElement *el)
     el->QueryFloatAttribute("acc_x", &acceleration.x);
     el->QueryFloatAttribute("acc_y", &acceleration.y);
     el->QueryFloatAttribute("acc_z", &acceleration.z);
+    el->QueryStringAttribute("shoot_sound", &shootSoundFileName);
     
     bulletImage = new tiny::img::Image(emitFileName.empty() ? img::Image::createSolidImage() : img::io::readImage(path + emitFileName));
     icon = vec4(0.0f, 0.0f, 0.0f, 0.0f);
+    
+    if (!shootSoundFileName.empty()) shootSound = snd::io::readSample(path + shootSoundFileName);
 }
 
 BulletType::~BulletType()
 {
     delete bulletImage;
+    if (shootSound) delete shootSound;
 }
 
 SoldierWeapon::SoldierWeapon(const std::string &, TiXmlElement *el)
@@ -78,7 +85,7 @@ SoldierWeapon::SoldierWeapon(const std::string &, TiXmlElement *el)
 
 SoldierWeapon::~SoldierWeapon()
 {
-
+    
 }
 
 SoldierType::SoldierType(const std::string &path, TiXmlElement *el)

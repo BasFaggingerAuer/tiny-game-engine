@@ -24,14 +24,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using namespace tiny::snd;
 
-Sample tiny::snd::io::readSample(const std::string &fileName)
+Sample *tiny::snd::io::readSample(const std::string &fileName)
 {
     //Read sample from disk.
-    Sample sample;
+    Sample *sample = new Sample();
     
-    sample.chunk = Mix_LoadWAV(fileName.c_str());
+    sample->chunk = Mix_LoadWAV(fileName.c_str());
     
-    if (!sample.chunk)
+    if (!sample->chunk)
     {
         std::cerr << "Unable to read '" << fileName << "': " << Mix_GetError() << "!" << std::endl;
         throw std::exception();

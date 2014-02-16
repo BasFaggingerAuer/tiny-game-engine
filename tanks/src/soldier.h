@@ -26,6 +26,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/draw/iconhorde.h>
 #include <tiny/draw/staticmeshhorde.h>
 
+#include <tiny/snd/sample.h>
+
 namespace tanks
 {
 
@@ -59,6 +61,7 @@ class BulletType
         tiny::vec3 acceleration;
         tiny::img::Image *bulletImage;
         tiny::vec4 icon;
+        tiny::snd::Sample *shootSound;
 };
 
 struct SoldierInstance

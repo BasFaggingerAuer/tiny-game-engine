@@ -30,7 +30,7 @@ namespace snd
 namespace io
 {
 
-tiny::snd::Sample readSample(const std::string &);
+tiny::snd::Sample *readSample(const std::string &);
 
 }
 

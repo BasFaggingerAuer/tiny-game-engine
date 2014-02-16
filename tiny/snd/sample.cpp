@@ -29,19 +29,45 @@ Sample::Sample() :
     
 }
 
-Sample::~Sample()
+Sample::Sample(const Sample &) :
+    chunk(0)
 {
-    
+
 }
 
-void tiny::snd::playSample(const Sample &sample, const int &channel, const int &nrLoops)
+Sample::~Sample()
+{
+    if (chunk) Mix_FreeChunk(chunk);
+}
+
+int tiny::snd::playSample(const Sample &sample, const int &channel, const int &nrLoops)
 {
     //Play a given sample at a desired channel.
-    if (!sample.chunk) return;
+    if (!sample.chunk)
+    {
+        return -1;
+    }
     
-    if (Mix_PlayChannel(channel, sample.chunk, nrLoops) == -1)
+    const int playChannel = Mix_PlayChannel(channel, sample.chunk, nrLoops);
+    
+    if (playChannel == -1)
     {
         std::cerr << "Unable to play sample: " << Mix_GetError() << "!";
+    }
+    else
+    {
+        Mix_Volume(playChannel, MIX_MAX_VOLUME);
+    }
+    
+    return playChannel;
+}
+
+void tiny::snd::setChannelVolume(const int &channel, const float &volume)
+{
+    if (channel >= 0)
+    {
+        //Set volume of a single channel.
+        Mix_Volume(channel, static_cast<int>(MIX_MAX_VOLUME*volume));
     }
 }
 

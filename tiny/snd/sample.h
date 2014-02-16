@@ -34,9 +34,13 @@ class Sample
         ~Sample();
     
         Mix_Chunk *chunk;
+        
+    private:
+        Sample(const Sample &);
 };
 
-void playSample(const Sample &, const int &, const int &);
+int playSample(const Sample &, const int &, const int &);
+void setChannelVolume(const int &, const float &);
 
 }
 

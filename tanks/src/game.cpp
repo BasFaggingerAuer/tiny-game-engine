@@ -348,6 +348,7 @@ void Game::update(os::Application *application, const float &dt)
         
         //Update the terrain with respect to the camera.
         terrain->terrain->setCameraPosition(cameraPosition);
+        terrain->updateSoundVolume(vec2(cameraPosition.x, cameraPosition.z));
         
         //Tell the world renderer that the camera has changed.
         renderer->setCamera(cameraPosition, cameraOrientation);
