@@ -64,9 +64,9 @@ Game::Game(const os::Application *application, const std::string &path) :
         renderer->addWorldRenderable(i->second->horde);
     }
     
-    renderer->addWorldRenderable(bulletHorde); //, true, false, tiny::draw::BlendAdd);
     
     renderer->addScreenRenderable(skyEffect, false, false);
+    renderer->addScreenRenderable(bulletHorde, true, false, tiny::draw::BlendAdd);
     renderer->addScreenRenderable(consoleBackground, false, false, draw::BlendMix);
     renderer->addScreenRenderable(font, false, false, draw::BlendMix);
     
@@ -213,6 +213,7 @@ void Game::update(os::Application *application, const float &dt)
     {
         BulletInstance &t = i->second;
         
+        t.lifetime -= dt;
         t.v += dt*t.a;
         t.x += dt*t.v;
     }
@@ -227,7 +228,7 @@ void Game::update(os::Application *application, const float &dt)
         bool destroyed = false;
         
         //Destroy the bullet if it is below the terrain.
-        if (i->second.x.y < terrain->getHeight(vec2(i->second.x.x, i->second.x.z)) + tt->radius)
+        if (i->second.x.y < terrain->getHeight(vec2(i->second.x.x, i->second.x.z)) + tt->radius || i->second.lifetime <= 0.0f)
         {
             destroyed = true;
         }

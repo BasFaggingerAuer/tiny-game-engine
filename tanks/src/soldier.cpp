@@ -45,8 +45,8 @@ BulletType::BulletType(const std::string &path, TiXmlElement *el)
     
     el->QueryStringAttribute("name", &name);
     el->QueryFloatAttribute("radius", &radius);
-    el->QueryFloatAttribute("mass", &mass);
     el->QueryStringAttribute("emit", &emitFileName);
+    el->QueryFloatAttribute("lifetime", &lifetime);
     el->QueryFloatAttribute("vel_x", &velocity.x);
     el->QueryFloatAttribute("vel_y", &velocity.y);
     el->QueryFloatAttribute("vel_z", &velocity.z);

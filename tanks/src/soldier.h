@@ -31,6 +31,19 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace tanks
 {
 
+struct ExplosionType
+{
+    public:
+        ExplosionType(const std::string &, TiXmlElement *);
+        ~ExplosionType();
+        
+        float minRadius;
+        float maxRadius;
+        float expansionSpeed;
+        float push;
+        float damage;
+};
+
 struct BulletInstance
 {
     BulletInstance(const unsigned int &a_type = 0) :
@@ -42,6 +55,7 @@ struct BulletInstance
     }
     
     unsigned int type;
+    float lifetime;
     tiny::vec3 x;
     tiny::vec3 v;
     tiny::vec3 a;
@@ -55,7 +69,7 @@ class BulletType
         
         std::string name;
         float radius;
-        float mass;
+        float lifetime;
         tiny::vec3 position;
         tiny::vec3 velocity;
         tiny::vec3 acceleration;

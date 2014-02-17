@@ -387,7 +387,9 @@ bool Game::msgAddBullet(const unsigned int &, std::ostream &out, bool &broadcast
     }
     
     BulletInstance bullet(bulletType);
+    const BulletType *type = bulletTypes[bulletType];
     
+    bullet.lifetime = type->lifetime;
     bullet.x = position;
     bullet.v = velocity;
     bullet.a = acceleration;
@@ -400,7 +402,7 @@ bool Game::msgAddBullet(const unsigned int &, std::ostream &out, bool &broadcast
     broadcast = true;
     
     //Create sound effect.
-    const tiny::snd::Sample *sound = bulletTypes[bulletType]->shootSound;
+    const tiny::snd::Sample *sound = type->shootSound;
     
     if (sound)
     {
