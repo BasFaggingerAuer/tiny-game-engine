@@ -31,23 +31,43 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace tanks
 {
 
+struct ExplosionInstance
+{
+    ExplosionInstance(const unsigned int &a_type = 0) :
+        type(a_type),
+        x(0.0f),
+        r(0.0f)
+    {
+
+    }
+    
+    unsigned int type;
+    tiny::vec3 x;
+    float r;
+};
+
 struct ExplosionType
 {
     public:
         ExplosionType(const std::string &, TiXmlElement *);
         ~ExplosionType();
         
+        std::string name;
         float minRadius;
         float maxRadius;
         float expansionSpeed;
         float push;
         float damage;
+        tiny::img::Image *explodeImage;
+        tiny::snd::Sample *explodeSound;
+        tiny::vec4 icon;
 };
 
 struct BulletInstance
 {
-    BulletInstance(const unsigned int &a_type = 0) :
+    BulletInstance(const unsigned int &a_type = 0, const unsigned int &a_explosionType = 0) :
         type(a_type),
+        explosionType(a_explosionType),
         x(0.0f),
         v(0.0f)
     {
@@ -55,6 +75,7 @@ struct BulletInstance
     }
     
     unsigned int type;
+    unsigned int explosionType;
     float lifetime;
     tiny::vec3 x;
     tiny::vec3 v;
@@ -74,8 +95,8 @@ class BulletType
         tiny::vec3 velocity;
         tiny::vec3 acceleration;
         tiny::img::Image *bulletImage;
-        tiny::vec4 icon;
         tiny::snd::Sample *shootSound;
+        tiny::vec4 icon;
 };
 
 struct SoldierInstance
@@ -111,6 +132,8 @@ class SoldierWeapon
         float rechargeTime;
         std::string bulletName;
         unsigned int bulletType;
+        std::string explosionName;
+        unsigned int explosionType;
 };
 
 class SoldierType

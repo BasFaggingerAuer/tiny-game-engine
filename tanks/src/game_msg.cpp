@@ -347,6 +347,15 @@ bool Game::msgPlayerShootRequest(const unsigned int &senderIndex, std::ostream &
         return false;
     }
     
+    const unsigned int explosionType = soldierType->weapons[weaponIndex].explosionType;
+    
+    //Does the explosion type exist?
+    if (explosionTypes.find(explosionType) == explosionTypes.end())
+    {
+        out << "Explosion type " << explosionType << " does not exist!";
+        return false;
+    }
+    
     //Is the weapon charged?
     if (soldier.weaponRechargeTimes[weaponIndex] > 0.0f)
     {
@@ -361,7 +370,7 @@ bool Game::msgPlayerShootRequest(const unsigned int &senderIndex, std::ostream &
     const unsigned int bulletIndex = lastBulletIndex++;
     Message msg1(msg::mt::addBullet);
     
-    msg1 << bulletIndex << bulletType;
+    msg1 << bulletIndex << bulletType << explosionType;
     
     //Obtain current viewing direction and position of the soldier.
     const vec3 pos = soldierType->getCameraPosition(soldier);
@@ -378,7 +387,7 @@ bool Game::msgPlayerShootRequest(const unsigned int &senderIndex, std::ostream &
     return true;
 }
 
-bool Game::msgAddBullet(const unsigned int &, std::ostream &out, bool &broadcast, const unsigned int &bulletIndex, const unsigned int &bulletType, const vec3 &position, const vec3 &velocity, const vec3 &acceleration)
+bool Game::msgAddBullet(const unsigned int &, std::ostream &out, bool &broadcast, const unsigned int &bulletIndex, const unsigned int &bulletType, const unsigned int &explosionType, const vec3 &position, const vec3 &velocity, const vec3 &acceleration)
 {
     if (bulletTypes.find(bulletType) == bulletTypes.end() || bullets.find(bulletIndex) != bullets.end())
     {
@@ -386,7 +395,7 @@ bool Game::msgAddBullet(const unsigned int &, std::ostream &out, bool &broadcast
         return false;
     }
     
-    BulletInstance bullet(bulletType);
+    BulletInstance bullet(bulletType, explosionType);
     const BulletType *type = bulletTypes[bulletType];
     
     bullet.lifetime = type->lifetime;
@@ -398,11 +407,43 @@ bool Game::msgAddBullet(const unsigned int &, std::ostream &out, bool &broadcast
     
     if (lastBulletIndex < bulletIndex) lastBulletIndex = bulletIndex;
     
-    out << "Added bullet with index " << bulletIndex << " of type '" << bulletTypes[bulletType]->name << "' (" << bulletType << ").";
+    out << "Added bullet with index " << bulletIndex << " of type '" << bulletTypes[bulletType]->name << "' (" << bulletType << ") and explosion type '" << explosionTypes[explosionType]->name << "' (" << explosionType << ").";
     broadcast = true;
     
     //Create sound effect.
     const tiny::snd::Sample *sound = type->shootSound;
+    
+    if (sound)
+    {
+        tiny::snd::playSample(*sound, -1, 0);
+    }
+    
+    return true;
+}
+
+bool Game::msgAddExplosion(const unsigned int &, std::ostream &out, bool &broadcast, const unsigned int &explosionIndex, const unsigned int &explosionType, const vec3 &position)
+{
+    if (explosionTypes.find(explosionType) == explosionTypes.end() || explosions.find(explosionIndex) != explosions.end())
+    {
+        out << "Unknown explosion type " << explosionType << " or explosion index " << explosionIndex << " already in use!";
+        return false;
+    }
+    
+    ExplosionInstance explosion(explosionType);
+    const ExplosionType *type = explosionTypes[explosionType];
+    
+    explosion.x = position;
+    explosion.r = 0.0f;
+    
+    explosions[explosionIndex] = explosion;
+    
+    if (lastExplosionIndex < explosionIndex) lastExplosionIndex = explosionIndex;
+    
+    out << "Added explosion with index " << explosionIndex << " of type '" << explosionTypes[explosionType]->name << "' (" << explosionType << ").";
+    broadcast = true;
+    
+    //Create sound effect.
+    const tiny::snd::Sample *sound = type->explodeSound;
     
     if (sound)
     {
@@ -444,7 +485,8 @@ bool Game::applyMessage(const unsigned int &senderIndex, const Message &message)
         else if (message.id == msg::mt::setPlayerSoldier) ok = msgSetPlayerSoldier(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].iv1);
         else if (message.id == msg::mt::playerSpawnRequest) ok = msgPlayerSpawnRequest(senderIndex, out, broadcast, message.data[0].iv1);
         else if (message.id == msg::mt::playerShootRequest) ok = msgPlayerShootRequest(senderIndex, out, broadcast, message.data[0].iv1);
-        else if (message.id == msg::mt::addBullet) ok = msgAddBullet(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].iv1, message.data[2].v3, message.data[3].v3, message.data[4].v3);
+        else if (message.id == msg::mt::addBullet) ok = msgAddBullet(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].iv1, message.data[2].iv1, message.data[3].v3, message.data[4].v3, message.data[5].v3);
+        else if (message.id == msg::mt::addExplosion) ok = msgAddExplosion(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].iv1, message.data[2].v3);
     }
     else
     {

@@ -28,6 +28,43 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using namespace tanks;
 using namespace tiny;
 
+ExplosionType::ExplosionType(const std::string &path, TiXmlElement *el)
+{
+    std::cerr << "Reading explosion type resource..." << std::endl;
+    
+    assert(el->ValueStr() == "explosion");
+    
+    name = "";
+    minRadius = 0.0f;
+    maxRadius = 1.0f;
+    expansionSpeed = 1.0f;
+    push = 0.0f;
+    damage = 0.0f;
+    explodeSound = 0;
+    std::string emitFileName = "";
+    std::string explodeSoundFileName = "";
+    
+    el->QueryStringAttribute("name", &name);
+    el->QueryFloatAttribute("min_radius", &minRadius);
+    el->QueryFloatAttribute("max_radius", &maxRadius);
+    el->QueryStringAttribute("emit", &emitFileName);
+    el->QueryFloatAttribute("expansion_speed", &expansionSpeed);
+    el->QueryFloatAttribute("push", &push);
+    el->QueryFloatAttribute("damage", &damage);
+    el->QueryStringAttribute("explode_sound", &explodeSoundFileName);
+    
+    explodeImage = new tiny::img::Image(emitFileName.empty() ? img::Image::createSolidImage() : img::io::readImage(path + emitFileName));
+    
+    if (!explodeSoundFileName.empty()) explodeSound = snd::io::readSample(path + explodeSoundFileName);
+    
+    icon = vec4(0.0f, 0.0f, 0.0f, 0.0f);
+}
+
+ExplosionType::~ExplosionType()
+{
+    if (explodeSound) delete explodeSound;
+}
+
 BulletType::BulletType(const std::string &path, TiXmlElement *el)
 {
     std::cerr << "Reading bullet type resource..." << std::endl;
@@ -56,9 +93,10 @@ BulletType::BulletType(const std::string &path, TiXmlElement *el)
     el->QueryStringAttribute("shoot_sound", &shootSoundFileName);
     
     bulletImage = new tiny::img::Image(emitFileName.empty() ? img::Image::createSolidImage() : img::io::readImage(path + emitFileName));
-    icon = vec4(0.0f, 0.0f, 0.0f, 0.0f);
     
     if (!shootSoundFileName.empty()) shootSound = snd::io::readSample(path + shootSoundFileName);
+    
+    icon = vec4(0.0f, 0.0f, 0.0f, 0.0f);
 }
 
 BulletType::~BulletType()
@@ -75,10 +113,13 @@ SoldierWeapon::SoldierWeapon(const std::string &, TiXmlElement *el)
     rechargeTime = 1.0f;
     bulletName = "";
     bulletType = 0;
+    explosionName = "";
+    explosionType = 0;
     
     el->QueryStringAttribute("name", &name);
     el->QueryFloatAttribute("recharge_time", &rechargeTime);
     el->QueryStringAttribute("bullet", &bulletName);
+    el->QueryStringAttribute("explosion", &explosionName);
     
     std::cerr << "Added '" << name << "' soldier weapon type." << std::endl;
 }

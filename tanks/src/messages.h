@@ -44,7 +44,8 @@ enum mt_t
     setPlayerSoldier,
     playerSpawnRequest,
     playerShootRequest,
-    addBullet
+    addBullet,
+    addExplosion
 };
 
 } //namespace mt

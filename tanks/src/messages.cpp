@@ -189,16 +189,30 @@ class PlayerShootRequest : public tiny::net::MessageType
 class AddBullet : public tiny::net::MessageType
 {
     public:
-        AddBullet() : tiny::net::MessageType(mt::addBullet, "addbullet", "Creates a bullet with given index of a given type at a specific spot with specific velocity and acceleration.")
+        AddBullet() : tiny::net::MessageType(mt::addBullet, "addbullet", "Creates a bullet with given index of a given bullet and explosion type at a specific spot with specific velocity and acceleration.")
         {
             addVariableType("index", tiny::net::vt::Integer);
             addVariableType("type", tiny::net::vt::Integer);
+            addVariableType("exptype", tiny::net::vt::Integer);
             addVariableType("pos", tiny::net::vt::Vec3);
             addVariableType("vel", tiny::net::vt::Vec3);
             addVariableType("acc", tiny::net::vt::Vec3);
         }
         
         ~AddBullet() {}
+};
+
+class AddExplosion : public tiny::net::MessageType
+{
+    public:
+        AddExplosion() : tiny::net::MessageType(mt::addBullet, "addexplosion", "Creates an explosion with given index of a given type at a specific spot.")
+        {
+            addVariableType("index", tiny::net::vt::Integer);
+            addVariableType("type", tiny::net::vt::Integer);
+            addVariableType("pos", tiny::net::vt::Vec3);
+        }
+        
+        ~AddExplosion() {}
 };
 
 } //namespace msg
@@ -225,6 +239,7 @@ GameMessageTranslator::GameMessageTranslator() :
     addMessageType(new msg::PlayerSpawnRequest());
     addMessageType(new msg::PlayerShootRequest());
     addMessageType(new msg::AddBullet());
+    addMessageType(new msg::AddExplosion());
 }
 
 GameMessageTranslator::~GameMessageTranslator()

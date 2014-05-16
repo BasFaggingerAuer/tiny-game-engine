@@ -77,7 +77,8 @@ class Game
         bool msgSetPlayerSoldier(const unsigned int &, std::ostream &, bool &, const unsigned int &, const unsigned int &);
         bool msgPlayerSpawnRequest(const unsigned int &, std::ostream &, bool &, const unsigned int &);
         bool msgPlayerShootRequest(const unsigned int &, std::ostream &, bool &, const unsigned int &);
-        bool msgAddBullet(const unsigned int &, std::ostream &, bool &, const unsigned int &, const unsigned int &, const tiny::vec3 &, const tiny::vec3 &, const tiny::vec3 &);
+        bool msgAddBullet(const unsigned int &, std::ostream &, bool &, const unsigned int &, const unsigned int &, const unsigned int &, const tiny::vec3 &, const tiny::vec3 &, const tiny::vec3 &);
+        bool msgAddExplosion(const unsigned int &, std::ostream &, bool &, const unsigned int &, const unsigned int &, const tiny::vec3 &);
         
         void readResources(const std::string &);
         void readConsoleResources(const std::string &, TiXmlElement *);
@@ -119,6 +120,11 @@ class Game
         
         tiny::draw::IconTexture2D *bulletIconTexture;
         tiny::draw::WorldIconHorde *bulletHorde;
+        
+        //Explosions.
+        std::map<unsigned int, ExplosionType *> explosionTypes;
+        std::map<unsigned int, ExplosionInstance> explosions;
+        unsigned int lastExplosionIndex;
         
         //Networking.
         GameMessageTranslator * const translator;

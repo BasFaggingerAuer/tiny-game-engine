@@ -44,6 +44,7 @@ Game::Game(const os::Application *application, const std::string &path) :
     mouseSensitivity(48.0),
     lastSoldierIndex(1),
     lastBulletIndex(1),
+    lastExplosionIndex(1),
     translator(new GameMessageTranslator()),
     console(new GameConsole(this)),
     host(0),
@@ -97,6 +98,11 @@ Game::~Game()
     }
     
     for (std::map<unsigned int, BulletType *>::iterator i = bulletTypes.begin(); i != bulletTypes.end(); ++i)
+    {
+        delete i->second;
+    }
+    
+    for (std::map<unsigned int, ExplosionType *>::iterator i = explosionTypes.begin(); i != explosionTypes.end(); ++i)
     {
         delete i->second;
     }
@@ -240,7 +246,50 @@ void Game::update(os::Application *application, const float &dt)
         }
         else
         {
+            //Create an explosion.
+            Message msg(msg::mt::addExplosion);
+            
+            msg << lastExplosionIndex++ << i->second.explosionType << i->second.x;
+            userMessage(msg);
+            
+            //Destroy the bullet instance.
             bullets.erase(i++);
+        }
+    }
+    
+    //Update explosions.
+    for (std::map<unsigned int, ExplosionInstance>::iterator i = explosions.begin(); i != explosions.end(); ++i)
+    {
+        ExplosionInstance &t = i->second;
+        assert(explosionTypes.find(t.type) != explosionTypes.end());
+        const ExplosionType *tt = explosionTypes[t.type];
+        
+        t.r += dt*tt->expansionSpeed;
+    }
+    
+    //Draw explosions.
+    for (std::map<unsigned int, ExplosionInstance>::iterator i = explosions.begin(); i != explosions.end() && nrBulletInstances < bulletInstances.size(); )
+    {
+        assert(explosionTypes.find(i->second.type) != explosionTypes.end());
+        const ExplosionType *tt = explosionTypes[i->second.type];
+        bool destroyed = false;
+        
+        //Destroy the explosion if it has expanded too much.
+        if (i->second.r >= tt->maxRadius)
+        {
+            destroyed = true;
+        }
+        
+        if (!destroyed)
+        {
+            const float a = (i->second.r - tt->minRadius)/(tt->maxRadius - tt->minRadius);
+            
+            bulletInstances[nrBulletInstances++] = tiny::draw::WorldIconInstance(i->second.x, tiny::vec2(2.0f*i->second.r, 2.0f*i->second.r), tt->icon, tiny::vec4(1.0f - a, 1.0f - a, 1.0f - a, 1.0f));
+            ++i;
+        }
+        else
+        {
+            explosions.erase(i++);
         }
     }
     
@@ -396,6 +445,10 @@ void Game::clear()
     bullets.clear();
     lastBulletIndex = 1;
     
+    //Remove all explosions.
+    explosions.clear();
+    lastExplosionIndex = 1;
+    
     //Reset camera.
     cameraPosition = vec3(0.0f, 0.0f, 0.0f);
     cameraOrientation = vec4(0.0f, 0.0f, 0.0f, 1.0f);
@@ -444,12 +497,18 @@ void Game::readResources(const std::string &path)
         else if (el->ValueStr() == "soldier") soldierTypes[soldierTypes.size()] = new SoldierType(path, el);
         else if (el->ValueStr() == "bullethorde") readBulletHordeResources(path, el);
         else if (el->ValueStr() == "bullet") bulletTypes[bulletTypes.size()] = new BulletType(path, el);
+        else if (el->ValueStr() == "explosion") explosionTypes[explosionTypes.size()] = new ExplosionType(path, el);
     }
     
-    //Pack all bullet images into a single large texture.
+    //Pack all bullet and explosion images into a single large texture.
     for (std::map<unsigned int, BulletType *>::iterator i = bulletTypes.begin(); i != bulletTypes.end(); ++i)
     {
         i->second->icon = bulletIconTexture->packIcon(*(i->second->bulletImage));
+    }
+    
+    for (std::map<unsigned int, ExplosionType *>::iterator i = explosionTypes.begin(); i != explosionTypes.end(); ++i)
+    {
+        i->second->icon = bulletIconTexture->packIcon(*(i->second->explodeImage));
     }
     
     //Match soldier weapons to read bullet types.
@@ -457,28 +516,40 @@ void Game::readResources(const std::string &path)
     {
         for (std::vector<SoldierWeapon>::iterator j = i->second->weapons.begin(); j != i->second->weapons.end(); ++j)
         {
-            bool found = false;
-            unsigned int index = 0;
+            bool foundBullet = false;
+            bool foundExplosion = false;
+            unsigned int bulletIndex = 0;
+            unsigned int explosionIndex = 0;
             
-            for (std::map<unsigned int, BulletType *>::iterator k = bulletTypes.begin(); k != bulletTypes.end() && !found; ++k)
+            for (std::map<unsigned int, BulletType *>::iterator k = bulletTypes.begin(); k != bulletTypes.end() && !foundBullet; ++k)
             {
                 if (k->second->name == j->bulletName)
                 {
-                    found = true;
-                    index = k->first;
+                    foundBullet = true;
+                    bulletIndex = k->first;
                 }
             }
             
-            if (!found)
+            for (std::map<unsigned int, ExplosionType *>::iterator k = explosionTypes.begin(); k != explosionTypes.end() && !foundExplosion; ++k)
             {
-                std::cerr << "Unable to find bullet type '" << j->bulletName << "' for weapon '" << j->name << "' of soldier type '" << i->second->name << "'!" << std::endl;
+                if (k->second->name == j->explosionName)
+                {
+                    foundExplosion = true;
+                    explosionIndex = k->first;
+                }
+            }
+            
+            if (!foundBullet || !foundExplosion)
+            {
+                std::cerr << "Unable to find bullet type '" << j->bulletName << "' or explosion '" << j->explosionName << "' for weapon '" << j->name << "' of soldier type '" << i->second->name << "'!" << std::endl;
                 
                 //Erase weapon.
                 j = i->second->weapons.erase(j);
             }
             else
             {
-                j->bulletType = index;
+                j->bulletType = bulletIndex;
+                j->explosionType = explosionIndex;
             }
         }
     }
