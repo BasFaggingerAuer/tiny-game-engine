@@ -141,6 +141,8 @@ SoldierType::SoldierType(const std::string &path, TiXmlElement *el)
     mass = 1.0f;
     jump = 1.0f;
     speed = 1.0f;
+    landFriction = 0.0f;
+    airFriction = 0.0f;
     cameraPosition = vec3(0.0f, 1.0f, 0.0f);
     
     jumpjet = false;
@@ -156,6 +158,8 @@ SoldierType::SoldierType(const std::string &path, TiXmlElement *el)
     el->QueryFloatAttribute("mass", &mass);
     el->QueryFloatAttribute("jump", &jump);
     el->QueryFloatAttribute("speed", &speed);
+    el->QueryFloatAttribute("land_friction", &landFriction);
+    el->QueryFloatAttribute("air_friction", &airFriction);
     el->QueryFloatAttribute("camera_height", &cameraPosition.y);
     
     /*

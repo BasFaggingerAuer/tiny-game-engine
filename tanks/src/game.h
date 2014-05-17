@@ -107,6 +107,8 @@ class Game
         
         GameTerrain *terrain;
         
+        float gravitationalConstant;
+        
         //Soldiers.
         std::map<unsigned int, SoldierType *> soldierTypes;
         std::map<unsigned int, SoldierInstance> soldiers;

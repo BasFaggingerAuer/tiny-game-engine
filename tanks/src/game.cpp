@@ -42,6 +42,7 @@ Player::~Player()
 Game::Game(const os::Application *application, const std::string &path) :
     aspectRatio(static_cast<double>(application->getScreenWidth())/static_cast<double>(application->getScreenHeight())),
     mouseSensitivity(48.0),
+    gravitationalConstant(9.81),
     lastSoldierIndex(1),
     lastBulletIndex(1),
     lastExplosionIndex(1),
@@ -139,13 +140,27 @@ void Game::update(os::Application *application, const float &dt)
         
         if (t.x.y <= terrain->getHeight(vec2(t.x.x, t.x.z)) + 0.01f)
         {
-            //Are we jumping?
-            if ((t.controls & 16) && t.P.y < 0.01f)
+            const float l = length(t.P);
+            
+            if (l > 0.0f)
             {
-                t.P.y = tt->jump;
-                airborne = true;
+                //Decellerate via dry friction.
+                const vec3 frictionForce = -(dt*tt->mass*gravitationalConstant*tt->landFriction/l)*t.P;
+                
+                if (length(frictionForce) >= length(t.P))
+                {
+                    //We come to a standstill.
+                    t.P = vec3(0.0f);
+                }
+                else
+                {
+                    //Apply force.
+                    t.P += frictionForce;
+                }
             }
-            else if (t.controls & 15)
+            
+            //Are we jumping?
+            if (t.controls & 15)
             {
                 //We are walking.
                 vec2 move = vec2(0.0f, 0.0f);
@@ -157,26 +172,29 @@ void Game::update(os::Application *application, const float &dt)
                 if (t.controls & 4) move -= right;
                 if (t.controls & 8) move += right;
                 
-                move = tt->speed*normalize(move);
-                t.P.x = move.x;
-                t.P.z = move.y;
+                move = dt*tt->mass*tt->speed*normalize(move);
+                t.P.x += move.x;
+                t.P.z += move.y;
             }
-            else
+            
+            if ((t.controls & 16) && t.P.y < 0.01f)
             {
-                //Stop moving.
-                t.P.x = 0.0f;
-                t.P.z = 0.0f;
+                t.P.y = tt->mass*tt->jump;
+                airborne = true;
             }
         }
         else
         {
+            //Decellerate via air friction.
+            t.P -= (dt*tt->airFriction*length(t.P))*t.P;
+            
             //Gravity pulls the player down.
-            t.P.y -= dt*9.81f;
+            t.P.y -= dt*tt->mass*gravitationalConstant;
             airborne = true;
         }
         
         //Integrate position.
-        t.x += dt*t.P;
+        t.x += (dt/tt->mass)*t.P;
         
         //The player should never go below the terrain.
         if (airborne)
@@ -194,6 +212,28 @@ void Game::update(os::Application *application, const float &dt)
         for (std::vector<float>::iterator j = t.weaponRechargeTimes.begin(); j != t.weaponRechargeTimes.end(); ++j)
         {
             if (*j > 0.0f) *j -= dt;
+        }
+    }
+    
+    //Let explosions and soldiers interact.
+    //TODO: Do this with a more clever collision scheme.
+    for (std::map<unsigned int, SoldierInstance>::iterator i = soldiers.begin(); i != soldiers.end(); ++i)
+    {
+        SoldierInstance &t = i->second;
+        const SoldierType *tt = soldierTypes[t.type];
+        
+        for (std::map<unsigned int, ExplosionInstance>::iterator j = explosions.begin(); j != explosions.end(); ++j)
+        {
+            ExplosionInstance &e = j->second;
+            assert(explosionTypes.find(e.type) != explosionTypes.end());
+            const ExplosionType *et = explosionTypes[e.type];
+            vec3 delta = t.x - e.x;
+            
+            if (length(delta) <= e.r + tt->radius)
+            {
+                delta = normalize(delta);
+                t.P += dt*et->push*delta;
+            }
         }
     }
 

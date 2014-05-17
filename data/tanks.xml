@@ -8,11 +8,11 @@
         <biome diffuse="img/terrain/desert_sand_stones.png" normal="img/terrain/desert_sand_stones_norm.png" sound="sound/forest.ogg"/>
         <biome diffuse="img/terrain/desert_cliff_egypt_2.png" normal="img/terrain/desert_cliff_egypt_2_norm.png" sound="sound/sheep.ogg"/>
     </terrain>
-    <soldier name="Standard" radius="0.3" height="1.8" camera_height="1.7" mass="80" jump="4" speed="2" max_instances="1024">
+    <soldier name="Standard" radius="0.3" height="1.8" camera_height="1.7" mass="80" jump="4" speed="100" land_friction="10" air_friction="0.001" max_instances="1024">
         <jumpjet thrust="5000" fuel="100" recharge="5" />
         <weapon name="Plasma rifle" recharge_time="0.1" bullet="Plasma" explosion="Plasma"/>
     </soldier>
     <bullethorde max_instances="4096" texture_size="2048"/>
     <bullet name="Plasma" radius="0.5" emit="img/bullet/plasma.png" lifetime="10.0" vel_x="0.0" vel_y="0.0" vel_z="-64.0" acc_x="0.0" acc_y="0.0" acc_z="-4.0" shoot_sound="sound/newton.wav"/>
-    <explosion name="Plasma" min_radius="0.0" max_radius="4.0" emit="img/bullet/plasma.png" expansion_speed="4" push="1.0" damage="1.0" explode_sound="sound/fragmentboom.wav"/>
+    <explosion name="Plasma" min_radius="0.0" max_radius="10.0" emit="img/bullet/plasma.png" expansion_speed="4" push="10000.0" damage="1.0" explode_sound="sound/fragmentboom.wav"/>
 </tanks>

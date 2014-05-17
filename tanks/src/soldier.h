@@ -155,6 +155,8 @@ class SoldierType
         float mass;
         float jump;
         float speed;
+        float landFriction;
+        float airFriction;
         tiny::vec3 cameraPosition;
         
         bool jumpjet;
