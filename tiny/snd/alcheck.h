@@ -14,31 +14,33 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+#pragma once
+
 #include <iostream>
-#include <exception>
+#include <cassert>
 
-#include <SDL.h>
-#include <SDL_mixer.h>
+#include <AL/al.h>
+#include <AL/alc.h>
 
-#include <tiny/snd/io/sample.h>
-
-using namespace tiny::snd;
-
-Sample *tiny::snd::io::readSample(const std::string &fileName)
+//From http://stackoverflow.com/questions/11256470/define-a-macro-to-facilitate-opengl-command-debugging.
+namespace tiny
 {
-    //Read sample from disk.
-    Sample *sample = new Sample();
-    
-    sample->chunk = Mix_LoadWAV(fileName.c_str());
-    
-    if (!sample->chunk)
-    {
-        std::cerr << "Unable to read '" << fileName << "': " << Mix_GetError() << "!" << std::endl;
-        throw std::exception();
-    }
-    
-    std::cerr << "Read a sample from '" << fileName << "'." << std::endl;
-    
-    return sample;
+
+namespace snd
+{
+
+void CheckOpenALError(const char *, const char *, const int);
+
 }
+
+}
+
+#ifndef NDEBUG
+    #define AL_CHECK(statement) do { \
+            statement; \
+            tiny::snd::CheckOpenALError(#statement, __FILE__, __LINE__); \
+        } while (0)
+#else
+    #define AL_CHECK(stmt) stmt
+#endif
 

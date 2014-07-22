@@ -16,10 +16,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #pragma once
 
-#include <string>
+#include <exception>
 #include <vector>
 
-#include <SDL_mixer.h>
+#include <cassert>
+
+#include <AL/al.h>
+#include <AL/alc.h>
 
 namespace tiny
 {
@@ -27,20 +30,22 @@ namespace tiny
 namespace snd
 {
 
-class Sample
+namespace detail
 {
-    public:
-        Sample();
-        ~Sample();
-    
-        Mix_Chunk *chunk;
-        
-    private:
-        Sample(const Sample &);
-};
 
-int playSample(const Sample &, const int &, const int &);
-void setChannelVolume(const int &, const float &);
+template<size_t T, typename S>
+inline ALenum getOpenALBufferFormat() {return AL_FORMAT_MONO8;}
+
+template<>
+inline ALenum getOpenALBufferFormat<1, char>() {return AL_FORMAT_MONO8;}
+template<>
+inline ALenum getOpenALBufferFormat<2, char>() {return AL_FORMAT_STEREO8;}
+template<>
+inline ALenum getOpenALBufferFormat<1, short>() {return AL_FORMAT_MONO16;}
+template<>
+inline ALenum getOpenALBufferFormat<2, short>() {return AL_FORMAT_STEREO16;}
+
+}
 
 }
 

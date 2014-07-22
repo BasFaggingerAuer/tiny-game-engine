@@ -21,11 +21,13 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <GL/glew.h>
 #include <GL/gl.h>
 
+#include <AL/al.h>
+#include <AL/alc.h>
+
 #include <SDL.h>
 #include <SDL_image.h>
 #include <SDL_ttf.h>
 #include <SDL_net.h>
-#include <SDL_mixer.h>
 
 #include <tiny/os/sdlapplication.h>
 
@@ -48,6 +50,8 @@ SDLApplication::SDLApplication(const int &a_screenWidth,
     screenFlags(0),
     screen(0),
     wireframe(false),
+    alDevice(0),
+    alContext(0),
     audioRate(a_audioRate),
     audioFormat(a_audioFormat),
     audioChannels(a_audioChannels),
@@ -134,24 +138,9 @@ SDLApplication::SDLApplication(const int &a_screenWidth,
     }
     
     //Initialise sound.
-    std::cerr << "Initialising sound..." << std::endl;
+    std::cerr << "Initialising OpenAL..." << std::endl;
     
-    if (Mix_OpenAudio(audioRate, audioFormat, audioChannels, audioBuffer) < 0)
-    {
-        std::cerr << "Unable to initialise SDL_mixer: " << Mix_GetError() << "!" << std::endl;
-        throw std::exception();
-    }
-    
-    if (Mix_Init(MIX_INIT_OGG | MIX_INIT_MOD) == 0)
-    {
-        std::cerr << "Unable to initialise SDL_mixer plugins: " << Mix_GetError() << "!" << std::endl;
-        throw std::exception();
-    }
-    
-    //Allocate the desired number of mixing channels and set the volume to the maximum.
-    std::cerr << "Playing sound at " << audioRate << "Hz in " << audioChannels << " channels, " << audioMixChannels << " mixing channels, with a buffer size of " << audioBuffer << "..." << std::endl;
-    Mix_AllocateChannels(audioMixChannels);
-    Mix_Volume(-1, MIX_MAX_VOLUME);
+    initOpenAL();
     
     //Start main loop.
     std::cerr << "Initialisation complete." << std::endl;
@@ -165,12 +154,48 @@ SDLApplication::~SDLApplication()
     //Shut down everything.
     std::cerr << "Shutting down SDL..." << std::endl;
     
-    Mix_Quit();
-    Mix_CloseAudio();
+    exitOpenAL();
     SDLNet_Quit();
     TTF_Quit();
     IMG_Quit();
     SDL_Quit();
+}
+
+void SDLApplication::exitOpenAL()
+{
+    /* Shut down OpenAL. */
+    alcMakeContextCurrent(0);
+    alcDestroyContext(alContext);
+    alcCloseDevice(alDevice);
+}
+
+void SDLApplication::initOpenAL()
+{
+    /* Use the default audio device. */
+    alDevice = alcOpenDevice(0);
+    
+    if (!alDevice)
+    {
+        std::cerr << "Unable to create default OpenAL device!" << std::endl;
+        throw std::exception();
+    }
+    
+    /* List all available audio devices. */
+    if (alcIsExtensionPresent(0, "ALC_ENUMERATION_EXT") == AL_TRUE)
+    {
+        std::cerr << "Available OpenAL devices:" << std::endl << alcGetString(0, ALC_DEVICE_SPECIFIER) << std::endl;
+    }
+    
+    /* Create context and make it default. */
+    alContext = alcCreateContext(alDevice, 0);
+    
+    if (!alContext)
+    {
+        std::cerr << "Unable to create OpenAL context!" << std::endl;
+        throw std::exception();
+    }
+    
+    alcMakeContextCurrent(alContext);
 }
 
 void SDLApplication::initOpenGL()

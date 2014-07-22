@@ -14,27 +14,21 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
-#pragma once
+#include <cstdlib>
 
-#include <string>
-#include <vector>
+#include <tiny/snd/alcheck.h>
 
-#include <tiny/snd/sample.h>
-
-namespace tiny
+void tiny::snd::CheckOpenALError(const char *statement, const char *fileName, const int line)
 {
-
-namespace snd
-{
-
-namespace io
-{
-
-tiny::snd::Sample *readSample(const std::string &);
-
+    const ALCenum error = alGetError();
+    
+    if (error != AL_NO_ERROR)
+    {
+        std::cerr << "OpenAL error " << error << " (" << alGetString(error) << ") at " << fileName << ":" << line << " for '" << statement << "'!" << std::endl;
+        abort();
+    }
+    else
+    {
+        //std::cerr << statement << " OK." << std::endl;
+    }
 }
-
-}
-
-}
-

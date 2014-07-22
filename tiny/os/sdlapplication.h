@@ -16,6 +16,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #pragma once
 
+#include <AL/al.h>
+#include <AL/alc.h>
+
 #include <SDL.h>
 #include <SDL_mixer.h>
 
@@ -41,6 +44,8 @@ class SDLApplication : public Application
         
     private:
         void initOpenGL();
+        void initOpenAL();
+        void exitOpenAL();
         
         int screenWidth;
         int screenHeight;
@@ -50,6 +55,9 @@ class SDLApplication : public Application
         SDL_Surface *screen;
         Uint32 lastCount, curCount;
         bool wireframe;
+        
+        ALCdevice *alDevice;
+        ALCcontext *alContext;
         
         int audioRate;
         int audioFormat;

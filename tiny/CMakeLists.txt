@@ -16,8 +16,8 @@ add_library(tinygame
             net/console.cpp
             img/image.cpp
             img/io/image.cpp
-            snd/sample.cpp
-            snd/io/sample.cpp
+            snd/alcheck.cpp
+            snd/buffer.cpp
             lod/quadtree.cpp
             mesh/staticmesh.cpp
             mesh/animatedmesh.cpp
