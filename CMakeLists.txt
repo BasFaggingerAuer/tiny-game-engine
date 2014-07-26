@@ -88,6 +88,9 @@ target_link_libraries(test_SoundSource ${USED_LIBS})
 add_executable(test_ReadStaticMesh src/test_ReadStaticMesh.cpp)
 target_link_libraries(test_ReadStaticMesh ${USED_LIBS})
 
+add_executable(test_ReadSample src/test_ReadSample.cpp)
+target_link_libraries(test_ReadSample ${USED_LIBS})
+
 add_executable(test_ReadAnimatedMesh src/test_ReadAnimatedMesh.cpp)
 target_link_libraries(test_ReadAnimatedMesh ${USED_LIBS})
 

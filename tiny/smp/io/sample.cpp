@@ -53,12 +53,12 @@ Sample tiny::smp::io::readSample(const std::string &fileName)
     do
     {
         nrBytesRead = ov_read(&file, reinterpret_cast<char *>(&buffer[0]), bufferSize, (SDL_BYTEORDER == SDL_BIG_ENDIAN ? 1 : 0), sizeof(short), 1, &bitStream);
-        sample.data.insert(sample.data.end(), buffer.begin(), buffer.end());
+        sample.data.insert(sample.data.end(), buffer.begin(), buffer.begin() + (nrBytesRead/sizeof(short)));
     } while(nrBytesRead > 0);
     
     ov_clear(&file);
     
-    std::cerr << "Read a " << sample.channels << " channels file at " << sample.frequency << "Hz from '" << fileName << "'." << std::endl;
+    std::cerr << "Read a " << sample.channels << " channel file at " << sample.frequency << "Hz from '" << fileName << "'." << std::endl;
     return sample;
 }
 
