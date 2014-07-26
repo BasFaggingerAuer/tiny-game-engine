@@ -20,6 +20,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${TINY_SOURCE_DIR})
 find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(OpenAL REQUIRED)
+find_package(OggVorbis REQUIRED)
 find_package(SDL REQUIRED)
 find_package(SDL_image REQUIRED)
 find_package(SDL_ttf REQUIRED)
@@ -40,7 +41,7 @@ link_directories(${OPENGL_LIBRARY_DIR})
 include_directories(${GLEW_INCLUDE_DIR})
 link_directories(${GLEW_LIBRARY_DIR})
 include_directories(${OPENAL_INCLUDE_DIR})
-# link_directories(${OPENAL_LIBRARY_DIR})
+include_directories(${OGGVORBIS_INCLUDE_DIR})
 include_directories(${ASSIMP_INCLUDE_DIR})
 link_directories(${ASSIMP_LIBRARY_DIR})
 include_directories(${SDL_INCLUDE_DIR})
@@ -60,6 +61,7 @@ set(USED_LIBS
               ${OPENGL_LIBRARY}
               ${GLEW_LIBRARY}
               ${OPENAL_LIBRARY}
+              ${OGGVORBIS_LIBRARIES}
               ${SDL_LIBRARY}
               ${SDLIMAGE_LIBRARY}
               ${SDLTTF_LIBRARY}
@@ -79,6 +81,9 @@ target_link_libraries(test_Console ${USED_LIBS})
 
 add_executable(test_StaticMesh src/test_StaticMesh.cpp)
 target_link_libraries(test_StaticMesh ${USED_LIBS})
+
+add_executable(test_SoundSource src/test_SoundSource.cpp)
+target_link_libraries(test_SoundSource ${USED_LIBS})
 
 add_executable(test_ReadStaticMesh src/test_ReadStaticMesh.cpp)
 target_link_libraries(test_ReadStaticMesh ${USED_LIBS})

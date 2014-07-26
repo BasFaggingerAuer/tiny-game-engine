@@ -13,6 +13,6 @@
         <weapon name="Plasma rifle" recharge_time="0.1" bullet="Plasma" explosion="Plasma"/>
     </soldier>
     <bullethorde max_instances="4096" texture_size="2048"/>
-    <bullet name="Plasma" radius="0.5" emit="img/bullet/plasma.png" lifetime="10.0" vel_x="0.0" vel_y="0.0" vel_z="-64.0" acc_x="0.0" acc_y="0.0" acc_z="-4.0" shoot_sound="sound/newton.wav"/>
-    <explosion name="Plasma" min_radius="0.0" max_radius="10.0" emit="img/bullet/plasma.png" expansion_speed="4" push="10000.0" damage="1.0" explode_sound="sound/fragmentboom.wav"/>
+    <bullet name="Plasma" radius="0.5" emit="img/bullet/plasma.png" lifetime="10.0" vel_x="0.0" vel_y="0.0" vel_z="-64.0" acc_x="0.0" acc_y="0.0" acc_z="-4.0" shoot_sound="sound/newton.ogg" travel_sound="sound/flyingplasma.ogg"/>
+    <explosion name="Plasma" min_radius="0.0" max_radius="10.0" emit="img/bullet/plasma.png" expansion_speed="4" push="10000.0" damage="1.0" explode_sound="sound/fragmentboom.ogg"/>
 </tanks>

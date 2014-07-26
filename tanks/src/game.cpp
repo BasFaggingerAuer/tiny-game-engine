@@ -22,6 +22,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/img/io/image.h>
 #include <tiny/mesh/io/staticmesh.h>
 
+#include <tiny/snd/worldsounderer.h>
+
 #include "messages.h"
 #include "game.h"
 
@@ -213,6 +215,9 @@ void Game::update(os::Application *application, const float &dt)
         {
             if (*j > 0.0f) *j -= dt;
         }
+        
+        //Update sound.
+        t.soundSource.setPosition(t.x, t.P/tt->mass);
     }
     
     //Let explosions and soldiers interact.
@@ -262,6 +267,7 @@ void Game::update(os::Application *application, const float &dt)
         t.lifetime -= dt;
         t.v += dt*t.a;
         t.x += dt*t.v;
+        t.soundSource.setPosition(t.x, t.v);
     }
     
     //Draw bullets.
@@ -305,6 +311,7 @@ void Game::update(os::Application *application, const float &dt)
         const ExplosionType *tt = explosionTypes[t.type];
         
         t.r += dt*tt->expansionSpeed;
+        t.soundSource.setPosition(t.x, vec3(0.0f, 0.0f, 0.0f));
     }
     
     //Draw explosions.
@@ -438,10 +445,10 @@ void Game::update(os::Application *application, const float &dt)
         
         //Update the terrain with respect to the camera.
         terrain->terrain->setCameraPosition(cameraPosition);
-        terrain->updateSoundVolume(vec2(cameraPosition.x, cameraPosition.z));
         
         //Tell the world renderer that the camera has changed.
         renderer->setCamera(cameraPosition, cameraOrientation);
+        snd::WorldSounderer::setCamera(cameraPosition, cameraOrientation);
     }
 }
 

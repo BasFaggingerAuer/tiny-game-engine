@@ -26,7 +26,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/draw/iconhorde.h>
 #include <tiny/draw/staticmeshhorde.h>
 
-#include <tiny/snd/sample.h>
+#include <tiny/snd/buffer.h>
+#include <tiny/snd/source.h>
 
 namespace tanks
 {
@@ -44,6 +45,7 @@ struct ExplosionInstance
     unsigned int type;
     tiny::vec3 x;
     float r;
+    tiny::snd::Source soundSource;
 };
 
 struct ExplosionType
@@ -59,7 +61,7 @@ struct ExplosionType
         float push;
         float damage;
         tiny::img::Image *explodeImage;
-        tiny::snd::Sample *explodeSound;
+        tiny::snd::MonoSoundBuffer *explodeSound;
         tiny::vec4 icon;
 };
 
@@ -80,6 +82,7 @@ struct BulletInstance
     tiny::vec3 x;
     tiny::vec3 v;
     tiny::vec3 a;
+    tiny::snd::Source soundSource;
 };
 
 class BulletType
@@ -95,7 +98,8 @@ class BulletType
         tiny::vec3 velocity;
         tiny::vec3 acceleration;
         tiny::img::Image *bulletImage;
-        tiny::snd::Sample *shootSound;
+        tiny::snd::MonoSoundBuffer *shootSound;
+        tiny::snd::MonoSoundBuffer *travelSound;
         tiny::vec4 icon;
 };
 
@@ -120,6 +124,7 @@ struct SoldierInstance
     tiny::vec4 q;
     tiny::vec3 P;
     std::vector<float> weaponRechargeTimes;
+    tiny::snd::Source soundSource;
 };
 
 class SoldierWeapon

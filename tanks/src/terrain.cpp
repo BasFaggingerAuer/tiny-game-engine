@@ -20,7 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <exception>
 
 #include <tiny/img/io/image.h>
-#include <tiny/snd/io/sample.h>
 
 #include <tiny/draw/computetexture.h>
 #include <tiny/draw/heightmap/scale.h>
@@ -68,8 +67,8 @@ GameTerrain::GameTerrain(const std::string &path, TiXmlElement *el)
             else missData = true;
             if (sl->Attribute("normal")) normalImages.push_back(img::io::readImage(path + std::string(sl->Attribute("normal"))));
             else missData = true;
-            if (sl->Attribute("sound")) biomeSounds.push_back(snd::io::readSample(path + std::string(sl->Attribute("sound"))));
-            else missData = true;
+            //if (sl->Attribute("sound")) biomeSounds.push_back(snd::io::readSample(path + std::string(sl->Attribute("sound"))));
+            //else missData = true;
             
             if (missData)
             {
@@ -127,13 +126,6 @@ GameTerrain::GameTerrain(const std::string &path, TiXmlElement *el)
     //Create the terrain.
     terrain = new draw::Terrain(6, 8);
     setOffset(vec2(0.5f));
-    
-    //Play biome sounds.
-    for (unsigned int i = 0; i < biomeSounds.size(); ++i)
-    {
-        tiny::snd::playSample(*biomeSounds[i], i, -1);
-        tiny::snd::setChannelVolume(i, 0.0f);
-    }
 }
 
 GameTerrain::~GameTerrain()
@@ -149,11 +141,6 @@ GameTerrain::~GameTerrain()
     delete farAttributeTexture;
     delete localDiffuseTextures;
     delete localNormalTextures;
-    
-    for (std::vector<tiny::snd::Sample *>::iterator i = biomeSounds.begin(); i != biomeSounds.end(); ++i)
-    {
-        delete *i;
-    }
 }
 
 void GameTerrain::setOffset(const vec2 &offset)
@@ -206,30 +193,6 @@ void GameTerrain::calculateAttributes(const tiny::draw::FloatTexture2D &heightMa
     attributeMap.getFromDevice();
     
     delete computeTexture;
-}
-
-void GameTerrain::updateSoundVolume(const vec2 &a_pos) const
-{
-    float att = 256.0f*getAttribute(a_pos);
-    const unsigned int attIndex = static_cast<int>(floor(att));
-    
-    att = att - floor(att);
-    
-    for (unsigned int i = 0; i < biomeSounds.size(); ++i)
-    {
-        if (attIndex == i)
-        {
-            tiny::snd::setChannelVolume(i, 1.0f - att);
-        }
-        else if (attIndex == i - 1)
-        {
-            tiny::snd::setChannelVolume(i, att);
-        }
-        else
-        {
-            tiny::snd::setChannelVolume(i, 0.0f);
-        }
-    }
 }
 
 float GameTerrain::getHeight(const vec2 &a_pos) const

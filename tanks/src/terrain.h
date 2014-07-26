@@ -25,8 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/draw/texture2d.h>
 #include <tiny/draw/texture2darray.h>
 
-#include <tiny/snd/sample.h>
-
 namespace tanks
 {
 
@@ -40,7 +38,6 @@ class GameTerrain
         
         float getHeight(const tiny::vec2 &) const;
         float getAttribute(const tiny::vec2 &) const;
-        void updateSoundVolume(const tiny::vec2 &) const;
         
         tiny::draw::Terrain *terrain;
         
@@ -80,8 +77,6 @@ class GameTerrain
         tiny::draw::RGBATexture2D *farAttributeTexture;
         tiny::draw::RGBTexture2DArray *localDiffuseTextures;
         tiny::draw::RGBTexture2DArray *localNormalTextures;
-        
-        std::vector<tiny::snd::Sample *> biomeSounds;
 };
 
 } //namespace tanks

@@ -25,6 +25,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <AL/al.h>
 #include <AL/alc.h>
 
+#include <tiny/smp/sample.h>
+
 #include <tiny/snd/alcheck.h>
 #include <tiny/snd/detail/formats.h>
 
@@ -42,8 +44,6 @@ class BufferInterface
         virtual ~BufferInterface();
         
         ALuint getIndex() const;
-        void bind() const;
-        void unbind() const;
         
     protected:
         void createDeviceBuffer();
@@ -88,6 +88,56 @@ class Buffer : public BufferInterface
                             a_frequency),
             hostData(first, last)
         {
+            sendToDevice();
+        }
+        
+        Buffer(const tiny::smp::Sample &sample) :
+            BufferInterface((Channels*sample.data.size()/sample.channels)*sizeof(T),
+                            detail::getOpenALBufferFormat<Channels, T>(),
+                            sample.frequency),
+            hostData((Channels*sample.data.size()/sample.channels), T(0))
+        {
+            //Extract data from a read sample and convert it to the desired format.
+            typename std::vector<T>::iterator j = hostData.begin();
+            
+            if (Channels == sample.channels)
+            {
+                for (std::vector<short>::const_iterator i = sample.data.begin(); i != sample.data.end(); ++i)
+                {
+                    *j++ = static_cast<T>(*i);
+                }
+            }
+            else if (Channels > sample.channels)
+            {
+                size_t channelCounter = 0;
+                
+                for (std::vector<short>::const_iterator i = sample.data.begin(); i != sample.data.end(); ++i)
+                {
+                    *j++ = static_cast<T>(*i);
+                    
+                    if (++channelCounter >= sample.channels)
+                    {
+                        j += Channels - sample.channels;
+                        channelCounter = 0;
+                    }
+                }
+            }
+            else if (Channels < sample.channels)
+            {
+                size_t channelCounter = 0;
+                
+                for (std::vector<short>::const_iterator i = sample.data.begin(); i != sample.data.end(); ++i)
+                {
+                    *j++ = static_cast<T>(*i);
+                    
+                    if (++channelCounter >= Channels)
+                    {
+                        i += sample.channels - Channels;
+                        channelCounter = 0;
+                    }
+                }
+            }
+            
             sendToDevice();
         }
         
@@ -169,6 +219,9 @@ class Buffer : public BufferInterface
     protected:
         std::vector<T> hostData;
 };
+
+typedef Buffer<short, 1> MonoSoundBuffer;
+typedef Buffer<short, 2> StereoSoundBuffer;
 
 }
 

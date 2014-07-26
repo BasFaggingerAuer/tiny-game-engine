@@ -411,12 +411,8 @@ bool Game::msgAddBullet(const unsigned int &, std::ostream &out, bool &broadcast
     broadcast = true;
     
     //Create sound effect.
-    const tiny::snd::Sample *sound = type->shootSound;
-    
-    if (sound)
-    {
-        tiny::snd::playSample(*sound, -1, 0);
-    }
+    //if (type->shootSound) bullets[bulletIndex].soundSource.playBuffer(*(type->shootSound), true);
+    if (type->travelSound) bullets[bulletIndex].soundSource.playBuffer(*(type->travelSound), true);
     
     return true;
 }
@@ -443,12 +439,7 @@ bool Game::msgAddExplosion(const unsigned int &, std::ostream &out, bool &broadc
     broadcast = true;
     
     //Create sound effect.
-    const tiny::snd::Sample *sound = type->explodeSound;
-    
-    if (sound)
-    {
-        tiny::snd::playSample(*sound, -1, 0);
-    }
+    if (type->explodeSound) explosions[explosionIndex].soundSource.playBuffer(*(type->explodeSound), true);
     
     return true;
 }

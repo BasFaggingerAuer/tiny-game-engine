@@ -16,8 +16,12 @@ add_library(tinygame
             net/console.cpp
             img/image.cpp
             img/io/image.cpp
+            smp/sample.cpp
+            smp/io/sample.cpp
             snd/alcheck.cpp
             snd/buffer.cpp
+            snd/source.cpp
+            snd/worldsounderer.cpp
             lod/quadtree.cpp
             mesh/staticmesh.cpp
             mesh/animatedmesh.cpp

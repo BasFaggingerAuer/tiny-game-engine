@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <tiny/img/io/image.h>
 #include <tiny/mesh/io/staticmesh.h>
-#include <tiny/snd/io/sample.h>
+#include <tiny/smp/io/sample.h>
 
 #include "soldier.h"
 
@@ -55,7 +55,7 @@ ExplosionType::ExplosionType(const std::string &path, TiXmlElement *el)
     
     explodeImage = new tiny::img::Image(emitFileName.empty() ? img::Image::createSolidImage() : img::io::readImage(path + emitFileName));
     
-    if (!explodeSoundFileName.empty()) explodeSound = snd::io::readSample(path + explodeSoundFileName);
+    if (!explodeSoundFileName.empty()) explodeSound = new snd::MonoSoundBuffer(smp::io::readSample(path + explodeSoundFileName));
     
     icon = vec4(0.0f, 0.0f, 0.0f, 0.0f);
 }
@@ -77,8 +77,10 @@ BulletType::BulletType(const std::string &path, TiXmlElement *el)
     velocity = vec3(0.0f, 0.0f, -1.0f);
     acceleration = vec3(0.0f, 0.0f, 0.0f);
     shootSound = 0;
+    travelSound = 0;
     std::string emitFileName = "";
     std::string shootSoundFileName = "";
+    std::string travelSoundFileName = "";
     
     el->QueryStringAttribute("name", &name);
     el->QueryFloatAttribute("radius", &radius);
@@ -91,10 +93,12 @@ BulletType::BulletType(const std::string &path, TiXmlElement *el)
     el->QueryFloatAttribute("acc_y", &acceleration.y);
     el->QueryFloatAttribute("acc_z", &acceleration.z);
     el->QueryStringAttribute("shoot_sound", &shootSoundFileName);
+    el->QueryStringAttribute("travel_sound", &travelSoundFileName);
     
     bulletImage = new tiny::img::Image(emitFileName.empty() ? img::Image::createSolidImage() : img::io::readImage(path + emitFileName));
     
-    if (!shootSoundFileName.empty()) shootSound = snd::io::readSample(path + shootSoundFileName);
+    if (!shootSoundFileName.empty()) shootSound = new snd::MonoSoundBuffer(smp::io::readSample(path + shootSoundFileName));
+    if (!travelSoundFileName.empty()) travelSound = new snd::MonoSoundBuffer(smp::io::readSample(path + travelSoundFileName));
     
     icon = vec4(0.0f, 0.0f, 0.0f, 0.0f);
 }
@@ -103,6 +107,7 @@ BulletType::~BulletType()
 {
     delete bulletImage;
     if (shootSound) delete shootSound;
+    if (travelSound) delete travelSound;
 }
 
 SoldierWeapon::SoldierWeapon(const std::string &, TiXmlElement *el)

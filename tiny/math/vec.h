@@ -426,6 +426,15 @@ class mat4
         float v01, v11, v21, v31;
         float v02, v12, v22, v32;
         float v03, v13, v23, v33;
+        
+        friend std::ostream & operator << (std::ostream &Out, const mat4 &a)
+        {
+            Out << a.v00 << ", " << a.v01 << ", " << a.v02 << ", " << a.v03 << std::endl
+                << a.v10 << ", " << a.v11 << ", " << a.v12 << ", " << a.v13 << std::endl
+                << a.v20 << ", " << a.v21 << ", " << a.v22 << ", " << a.v23 << std::endl
+                << a.v30 << ", " << a.v31 << ", " << a.v32 << ", " << a.v33;
+            return Out;
+        };
 };
 
 inline mat4 & operator * (mat4 a, const mat4 &b) {return a *= b;}
