@@ -37,7 +37,8 @@ struct ExplosionInstance
     ExplosionInstance(const unsigned int &a_type = 0) :
         type(a_type),
         x(0.0f),
-        r(0.0f)
+        r(0.0f),
+        sound(0)
     {
 
     }
@@ -45,7 +46,7 @@ struct ExplosionInstance
     unsigned int type;
     tiny::vec3 x;
     float r;
-    tiny::snd::Source soundSource;
+    unsigned int sound;
 };
 
 struct ExplosionType
@@ -71,7 +72,8 @@ struct BulletInstance
         type(a_type),
         explosionType(a_explosionType),
         x(0.0f),
-        v(0.0f)
+        v(0.0f),
+        sound(0)
     {
 
     }
@@ -82,7 +84,7 @@ struct BulletInstance
     tiny::vec3 x;
     tiny::vec3 v;
     tiny::vec3 a;
-    tiny::snd::Source soundSource;
+    unsigned int sound;
 };
 
 class BulletType
@@ -112,7 +114,8 @@ struct SoldierInstance
         x(0.0f),
         q(0.0f, 0.0f, 0.0f, 1.0f),
         P(0.0f),
-        weaponRechargeTimes()
+        weaponRechargeTimes(),
+        sound(0)
     {
 
     }
@@ -124,7 +127,7 @@ struct SoldierInstance
     tiny::vec4 q;
     tiny::vec3 P;
     std::vector<float> weaponRechargeTimes;
-    tiny::snd::Source soundSource;
+    unsigned int sound;
 };
 
 class SoldierWeapon

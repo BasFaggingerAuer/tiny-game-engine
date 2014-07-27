@@ -171,6 +171,9 @@ void SDLApplication::exitOpenAL()
 
 void SDLApplication::initOpenAL()
 {
+    if (alGetString(AL_VERSION)) std::cerr << "Using OpenAL version " << alGetString(AL_VERSION) << "." << std::endl;
+    else std::cerr << "Cannot determine OpenAL version!" << std::endl;
+    
     /* Use the default audio device. */
     alDevice = alcOpenDevice(0);
     
@@ -181,10 +184,12 @@ void SDLApplication::initOpenAL()
     }
     
     /* List all available audio devices. */
+    /*
     if (alcIsExtensionPresent(0, "ALC_ENUMERATION_EXT") == AL_TRUE)
     {
         std::cerr << "Available OpenAL devices:" << std::endl << alcGetString(0, ALC_DEVICE_SPECIFIER) << std::endl;
     }
+    */
     
     /* Create context and make it default. */
     alContext = alcCreateContext(alDevice, 0);
@@ -196,6 +201,21 @@ void SDLApplication::initOpenAL()
     }
     
     alcMakeContextCurrent(alContext);
+    
+    const ALfloat ori[] = {0.0f, 0.0f, -1.0f, 0.0f, 1.0f, 0.0f};
+    
+    alListener3f(AL_POSITION, 0.0f, 0.0f, 0.0f);
+    alListener3f(AL_VELOCITY, 0.0f, 0.0f, 0.0f);
+    alListenerfv(AL_ORIENTATION, ori);
+    alListenerf(AL_GAIN, 1.0);
+    
+    alDopplerFactor(1.0);
+    alDopplerVelocity(343.0f);
+    
+    //alDistanceModel(AL_LINEAR_DISTANCE_CLAMPED);
+    
+    //Clear error state.
+    alGetError();
 }
 
 void SDLApplication::initOpenGL()
@@ -236,6 +256,9 @@ void SDLApplication::initOpenGL()
     
     glMatrixMode(GL_MODELVIEW);
     glLoadIdentity();
+    
+    //Clear OpenGL error state.
+    glGetError();
 }
 
 double SDLApplication::pollEvents()

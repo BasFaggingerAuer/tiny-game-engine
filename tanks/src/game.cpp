@@ -45,6 +45,7 @@ Game::Game(const os::Application *application, const std::string &path) :
     aspectRatio(static_cast<double>(application->getScreenWidth())/static_cast<double>(application->getScreenHeight())),
     mouseSensitivity(48.0),
     gravitationalConstant(9.81),
+    lastSoundSourceIndex(1),
     lastSoldierIndex(1),
     lastBulletIndex(1),
     lastExplosionIndex(1),
@@ -215,9 +216,6 @@ void Game::update(os::Application *application, const float &dt)
         {
             if (*j > 0.0f) *j -= dt;
         }
-        
-        //Update sound.
-        t.soundSource.setPosition(t.x, t.P/tt->mass);
     }
     
     //Let explosions and soldiers interact.
@@ -267,7 +265,11 @@ void Game::update(os::Application *application, const float &dt)
         t.lifetime -= dt;
         t.v += dt*t.a;
         t.x += dt*t.v;
-        t.soundSource.setPosition(t.x, t.v);
+        
+        if (soundSources.find(t.sound) != soundSources.end())
+        {
+            soundSources[t.sound]->setPosition(t.x, t.v);
+        }
     }
     
     //Draw bullets.
@@ -298,6 +300,15 @@ void Game::update(os::Application *application, const float &dt)
             msg << lastExplosionIndex++ << i->second.explosionType << i->second.x;
             userMessage(msg);
             
+            //Stop bullet sound.
+            std::map<unsigned int, tiny::snd::Source *>::iterator j = soundSources.find(i->second.sound);
+            
+            if (j != soundSources.end())
+            {
+                delete j->second;
+                soundSources.erase(j);
+            }
+            
             //Destroy the bullet instance.
             bullets.erase(i++);
         }
@@ -311,7 +322,6 @@ void Game::update(os::Application *application, const float &dt)
         const ExplosionType *tt = explosionTypes[t.type];
         
         t.r += dt*tt->expansionSpeed;
-        t.soundSource.setPosition(t.x, vec3(0.0f, 0.0f, 0.0f));
     }
     
     //Draw explosions.
@@ -336,6 +346,15 @@ void Game::update(os::Application *application, const float &dt)
         }
         else
         {
+            //Stop explosion sound.
+            std::map<unsigned int, tiny::snd::Source *>::iterator j = soundSources.find(i->second.sound);
+            
+            if (j != soundSources.end())
+            {
+                delete j->second;
+                soundSources.erase(j);
+            }
+            
             explosions.erase(i++);
         }
     }
@@ -483,6 +502,15 @@ void Game::clear()
     players.clear();
     ownPlayerIndex = 0;
     players.insert(std::make_pair(ownPlayerIndex, Player()));
+    
+    //Remove all sound sources.
+    for (std::map<unsigned int, tiny::snd::Source *>::iterator i = soundSources.begin(); i != soundSources.end(); ++i)
+    {
+        delete i->second;
+    }
+    
+    soundSources.clear();
+    lastSoundSourceIndex = 1;
     
     //Remove all soldiers.
     soldiers.clear();

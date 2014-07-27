@@ -14,28 +14,44 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include <exception>
+
 #include <tiny/snd/source.h>
 
 using namespace tiny::snd;
 
-Source::Source(const vec3 &a_position)
+Source::Source(const vec3 &a_position, const vec3 &a_velocity)
 {
     AL_CHECK(alGenSources(1, &sourceIndex));
-    AL_CHECK(alSource3f(sourceIndex, AL_POSITION, a_position.x, a_position.y, a_position.z));
+    
+    if (!sourceIndex)
+    {
+        throw std::bad_alloc();
+    }
+    
+    AL_CHECK(alSourcei(sourceIndex, AL_SOURCE_RELATIVE, AL_FALSE));
+    setPosition(a_position, a_velocity);
+    
+    AL_CHECK(alSourcef(sourceIndex, AL_ROLLOFF_FACTOR, 0.1f));
+    //AL_CHECK(alSourcef(sourceIndex, AL_REFERENCE_DISTANCE, 4.0f));
+    //AL_CHECK(alSourcef(sourceIndex, AL_MAX_DISTANCE, 128.0f));
 }
 
 Source::~Source()
 {
-    if (sourceIndex != 0)
-    {
-        AL_CHECK(alDeleteSources(1, &sourceIndex));
-    }
+    stopPlaying();
+    AL_CHECK(alDeleteSources(1, &sourceIndex));
+}
+
+Source::Source(const Source &)
+{
+    //Private copy constructor: do not permit source reassignment.
 }
 
 void Source::setPosition(const vec3 &a_position, const vec3 &a_velocity)
 {
     AL_CHECK(alSource3f(sourceIndex, AL_POSITION, a_position.x, a_position.y, a_position.z));
-    AL_CHECK(alSource3f(sourceIndex, AL_POSITION, a_velocity.x, a_velocity.y, a_velocity.z));
+    AL_CHECK(alSource3f(sourceIndex, AL_VELOCITY, a_velocity.x, a_velocity.y, a_velocity.z));
 }
 
 void Source::setPitch(const float &a_pitch)
@@ -50,6 +66,7 @@ void Source::setGain(const float &a_gain)
 
 void Source::stopPlaying()
 {
+    //std::cout << "Stopped playing on source index " << sourceIndex << "." << std::endl;
     AL_CHECK(alSourceStop(sourceIndex));
     AL_CHECK(alSourcei(sourceIndex, AL_BUFFER, 0));
 }

@@ -403,16 +403,23 @@ bool Game::msgAddBullet(const unsigned int &, std::ostream &out, bool &broadcast
     bullet.v = velocity;
     bullet.a = acceleration;
     
+    //Create sound effect.
+    if (type->travelSound)
+    {
+        tiny::snd::Source *sound = new tiny::snd::Source(bullet.x, bullet.v);
+        const unsigned int soundSourceIndex = lastSoundSourceIndex++;
+        
+        bullet.sound = soundSourceIndex;
+        soundSources[soundSourceIndex] = sound;
+        sound->playBuffer(*(type->travelSound), true);
+    }
+    
     bullets[bulletIndex] = bullet;
     
     if (lastBulletIndex < bulletIndex) lastBulletIndex = bulletIndex;
     
     out << "Added bullet with index " << bulletIndex << " of type '" << bulletTypes[bulletType]->name << "' (" << bulletType << ") and explosion type '" << explosionTypes[explosionType]->name << "' (" << explosionType << ").";
     broadcast = true;
-    
-    //Create sound effect.
-    //if (type->shootSound) bullets[bulletIndex].soundSource.playBuffer(*(type->shootSound), true);
-    if (type->travelSound) bullets[bulletIndex].soundSource.playBuffer(*(type->travelSound), true);
     
     return true;
 }
@@ -431,15 +438,23 @@ bool Game::msgAddExplosion(const unsigned int &, std::ostream &out, bool &broadc
     explosion.x = position;
     explosion.r = 0.0f;
     
+    //Create sound effect.
+    if (type->explodeSound)
+    {
+        tiny::snd::Source *sound = new tiny::snd::Source(explosion.x);
+        const unsigned int soundSourceIndex = lastSoundSourceIndex++;
+        
+        explosion.sound = soundSourceIndex;
+        soundSources[soundSourceIndex] = sound;
+        sound->playBuffer(*(type->explodeSound), false);
+    }
+    
     explosions[explosionIndex] = explosion;
     
     if (lastExplosionIndex < explosionIndex) lastExplosionIndex = explosionIndex;
     
     out << "Added explosion with index " << explosionIndex << " of type '" << explosionTypes[explosionType]->name << "' (" << explosionType << ").";
     broadcast = true;
-    
-    //Create sound effect.
-    if (type->explodeSound) explosions[explosionIndex].soundSource.playBuffer(*(type->explodeSound), true);
     
     return true;
 }

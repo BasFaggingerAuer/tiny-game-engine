@@ -39,7 +39,7 @@ namespace snd
 class Source
 {
     public:
-        Source(const vec3 &a_position = vec3(0.0f, 0.0f, 0.0f));
+        Source(const vec3 &a_position = vec3(0.0f, 0.0f, 0.0f), const vec3 &a_velocity = vec3(0.0f, 0.0f, 0.0f));
         ~Source();
         
         void setPosition(const vec3 &a_position, const vec3 &a_velocity = vec3(0.0f, 0.0f, 0.0f));
@@ -54,11 +54,15 @@ class Source
             AL_CHECK(alSourcef(sourceIndex, AL_SEC_OFFSET, a_offset));
             AL_CHECK(alSourcei(sourceIndex, AL_BUFFER, a_buffer.getIndex()));
             AL_CHECK(alSourcePlay(sourceIndex));
+            
+            //std::cout << "Playing buffer with " << a_buffer.size() << " samples, looping " << a_looping << " on source " << sourceIndex << "." << std::endl;
         }
         
         void stopPlaying();
         
     private:
+        Source(const Source &);
+        
         ALuint sourceIndex;
 };
 

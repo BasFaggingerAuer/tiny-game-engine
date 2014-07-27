@@ -41,8 +41,8 @@ void WorldSounderer::setCamera(const vec3 &position, const vec4 &orientation, co
     const vec3 up = m*vec3(0.0f, 1.0f, 0.0f);
     const ALfloat ori[] = {at.x, at.y, at.z, up.x, up.y, up.z};
     
-    alListener3f(AL_POSITION, position.x, position.y, position.z);
-    alListener3f(AL_VELOCITY, velocity.x, velocity.y, velocity.z);
-    alListenerfv(AL_ORIENTATION, ori);
+    AL_CHECK(alListener3f(AL_POSITION, position.x, position.y, position.z));
+    AL_CHECK(alListener3f(AL_VELOCITY, velocity.x, velocity.y, velocity.z));
+    AL_CHECK(alListenerfv(AL_ORIENTATION, ori));
 }
 

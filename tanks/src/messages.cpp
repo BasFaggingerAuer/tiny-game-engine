@@ -205,7 +205,7 @@ class AddBullet : public tiny::net::MessageType
 class AddExplosion : public tiny::net::MessageType
 {
     public:
-        AddExplosion() : tiny::net::MessageType(mt::addBullet, "addexplosion", "Creates an explosion with given index of a given type at a specific spot.")
+        AddExplosion() : tiny::net::MessageType(mt::addExplosion, "addexplosion", "Creates an explosion with given index of a given type at a specific spot.")
         {
             addVariableType("index", tiny::net::vt::Integer);
             addVariableType("type", tiny::net::vt::Integer);

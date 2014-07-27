@@ -31,6 +31,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/draw/effects/solid.h>
 #include <tiny/draw/worldrenderer.h>
 
+#include <tiny/snd/source.h>
+
 #include "network.h"
 #include "terrain.h"
 #include "soldier.h"
@@ -108,6 +110,10 @@ class Game
         GameTerrain *terrain;
         
         float gravitationalConstant;
+        
+        //Sound sources.
+        std::map<unsigned int, tiny::snd::Source *> soundSources;
+        unsigned int lastSoundSourceIndex;
         
         //Soldiers.
         std::map<unsigned int, SoldierType *> soldierTypes;
