@@ -16,11 +16,15 @@ Debian/Ubuntu package names are supplied between parenthesis for convenience.
 
 1.   A sane build environment (build-essential, g++).
 2.   CMake (cmake).
-3.   OpenGL development libraries.
+3.   OpenGL libraries.
 4.   GLEW OpenGL Extension Wrangler Library (libglew-dev).
-5.   SDL Simple DirectMedia Layer (libsdl1.2-dev).
-6.   SDL image library (libsdl-image1.2-dev).
-7.   SDL font library (libsdl-ttf2.0-dev).
+5.   OpenAL library (libopenal-dev).
+6.   OGG Vorbis library (libogg-dev, libvorbis-dev).
+7.   SDL Simple DirectMedia Layer (libsdl1.2-dev).
+8.   SDL image library (libsdl-image1.2-dev).
+9.   SDL font library (libsdl-ttf2.0-dev).
+10.  SDL networking library (libsdl-net1.2-dev).
+11.  Asset importer library (libassimp-dev).
 
 Installation
 ------------
@@ -45,9 +49,14 @@ Below is a list of examples, ordered by complexity, together with the particular
 *   [test_SDLApplication](/src/test_SDLApplication.cpp): Create an empty SDL window.
 *   [test_ComputeTexture](/src/test_ComputeTexture.cpp): Example in which a test image is passed through a simple GLSL fragment shader to the screen.
 *   [test_Font](/src/test_Font.cpp): Read a TrueType font and display text on the screen.
+*   [test_Console](/src/test_Console.cpp): Provide a console to provide direct commands to the engine.
 *   [test_StaticMesh](/src/test_StaticMesh.cpp): Render a cube on the screen, viewed through a controllable camera.
+*   [test_SoundSource](/src/test_SoundSource.cpp): Play a 440Hz test tone.
 *   [test_ReadStaticMesh](/src/test_ReadStaticMesh.cpp): Render a mesh read from disk on the screen, viewed through a controllable camera.
+*   [test_ReadAnimatedMesh](/src/test_AnimatedMesh.cpp): Read and render an animated mesh using skeletal animation.
+*   [test_ReadSample](/src/test_ReadSample.cpp): Read and play an OGG audio sample.
 *   [test_StaticMeshHorde](/src/test_StaticMeshHorde.cpp): Render a large number of cube instances on the screen, viewed through a controllable camera.
+*   [test_AnimatedMeshHorde](/src/test_AnimatedMeshHorde.cpp): Same as above, but with skeletal animation.
 *   [test_Terrain](/src/test_Terrain.cpp): Fly over a simple terrain.
 *   [test_TerrainFar](/src/test_TerrainFar.cpp): Fly over a very large terrain.
 *   [test_Quadtree](/src/test_Quadtree.cpp): Example of using a quadtree for level of detail management.
