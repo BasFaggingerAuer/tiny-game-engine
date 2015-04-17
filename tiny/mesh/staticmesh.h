@@ -62,8 +62,8 @@ class StaticMesh
         StaticMesh();
         ~StaticMesh();
         
-        static StaticMesh createCubeMesh(const float &);
-        static StaticMesh createCylinderMesh(const float &, const float &);
+        static StaticMesh createCubeMesh(const float & = 1.0f);
+        static StaticMesh createCylinderMesh(const float & = 1.0f, const float & = 1.0f);
         
         std::vector<StaticMeshVertex> vertices;
         std::vector<unsigned int> indices;

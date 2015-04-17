@@ -94,7 +94,7 @@ void setup()
     //Build quadtree of all cube positions.
     quadtree = new lod::Quadtree();
     
-    quadtree->buildQuadtree(allCubeMeshPositions.begin(), allCubeMeshPositions.end(), 1.4142f);
+    quadtree->buildQuadtree(allCubeMeshPositions.begin(), allCubeMeshPositions.end());
     
     //Render only diffuse colours to the screen.
     screenEffect = new draw::effects::Diffuse();

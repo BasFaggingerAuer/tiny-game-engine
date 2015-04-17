@@ -20,7 +20,7 @@ using namespace tiny::lod;
 
 Quadtree::Quadtree() :
     instances(),
-    instanceRadius(1.0f),
+    instancePositions(),
     nodes()
 {
 
@@ -59,8 +59,6 @@ void Quadtree::splitNode(QuadtreeNode &node, std::vector<int> &idx, const std::v
         
         node.radius = std::max(node.radius, r);
     }
-    
-    node.radius += instanceRadius;
     
     //Clear children for this node.
     for (int i = 0; i < 4; ++i)

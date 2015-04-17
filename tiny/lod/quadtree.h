@@ -20,7 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <exception>
 #include <string>
 #include <vector>
-#include <queue>
+#include <map>
 
 #include <cassert>
 
@@ -71,10 +71,10 @@ class Quadtree
         ~Quadtree();
         
         template <typename Iterator>
-        void buildQuadtree(Iterator first, Iterator last, const float &radius)
+        void buildQuadtree(Iterator first, Iterator last)
         {
-            instanceRadius = radius;
             instances.clear();
+            instancePositions.clear();
             nodes.clear();
             
             std::vector<vec3> temporaryPositions(first, last);
@@ -98,7 +98,7 @@ class Quadtree
             nodes.reserve(instances.size());
             nodes.push_back(QuadtreeNode(0, temporaryInstances.size()));
             splitNode(nodes[0], temporaryInstances, temporaryPositions);
-
+            
 #ifndef NDEBUG
             //Check that we have really created a proper permutation.
             if (true)
@@ -118,6 +118,14 @@ class Quadtree
             }
 #endif
             
+            //Copy instance positions.
+            instancePositions.resize(instances.size());
+            
+            for (unsigned int i = 0; i < instances.size(); ++i)
+            {
+                instancePositions[i] = temporaryPositions[instances[i]];
+            }
+
             std::cerr << "Built quadtree with " << nodes.size() << " nodes." << std::endl;
         }
         
@@ -137,17 +145,18 @@ class Quadtree
             }
             
             //Recursively traverse the quadtree to find the indices of all objects such that their distance lies between the radii.
-            std::queue<int> queue;
+            //Traverse quadtree from near the supplied position to the outside.
+            std::multimap<float, int> remaining;
             
-            queue.push(0);
+            remaining.insert(std::pair<float, int>(length(nodes[0].centre - position), 0));
             
-            while (!queue.empty() && maxNrIndices > 0)
+            while (!remaining.empty() && maxNrIndices > 0)
             {
-                const QuadtreeNode n = nodes[queue.front()];
+                const float distance = remaining.begin()->first;
+                const QuadtreeNode n = nodes[remaining.begin()->second];
                 
-                queue.pop();
+                remaining.erase(remaining.begin());
                 
-                const float distance = length(n.centre - position);
                 const bool hasChildren = (n.children[0] != 0 || n.children[1] != 0 || n.children[2] != 0 || n.children[3] != 0);
                 
                 if (distance + n.radius < minRadius || distance - n.radius >= maxRadius)
@@ -155,7 +164,7 @@ class Quadtree
                     //The node is completely outside the annulus.
                     continue;
                 }
-                else if (distance - n.radius >= minRadius && distance + n.radius <= maxRadius)
+                else if (distance - n.radius >= minRadius && distance + n.radius < maxRadius)
                 {
                     //The node is contained entirely within the annulus.
                     for (int i = n.startIndex; i < n.endIndex && maxNrIndices > 0; ++i)
@@ -171,20 +180,34 @@ class Quadtree
                     {
                         if (n.children[i] != 0)
                         {
-                            queue.push(n.children[i]);
+                            remaining.insert(std::pair<float, int>(length(nodes[n.children[i]].centre - position), n.children[i]));
                         }
                     }
                 }
-                else if (distance >= minRadius && distance < maxRadius)
+                else
                 {
                     //Indivisible partially contained node.
                     for (int i = n.startIndex; i < n.endIndex && maxNrIndices > 0; ++i)
                     {
-                        *indices++ = instances[i];
-                        --maxNrIndices;
+                        const float instanceDistance = length(instancePositions[i] - position);
+                        
+                        if (instanceDistance >= minRadius && instanceDistance < maxRadius)
+                        {
+                            *indices++ = instances[i];
+                            --maxNrIndices;
+                        }
                     }
                 }
             }
+
+/*
+#ifndef NDEBUG
+            if (maxNrIndices <= 0)
+            {
+                std::cerr << "Maximum number of indices exceeded during quadtree traversal!" << std::endl;
+            }
+#endif
+*/
             
             return indices;
         }
@@ -193,7 +216,7 @@ class Quadtree
         void splitNode(QuadtreeNode &, std::vector<int> &, const std::vector<vec3> &);
         
         std::vector<int> instances;
-        float instanceRadius;
+        std::vector<vec3> instancePositions;
         std::vector<QuadtreeNode> nodes;
 };
 

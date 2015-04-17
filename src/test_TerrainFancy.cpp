@@ -328,7 +328,7 @@ void setup()
     visibleTreeLowDetailInstances.resize(maxNrLowDetailTrees);
     
     quadtree = new lod::Quadtree();
-    quadtree->buildQuadtree(tmpTreePositions.begin(), tmpTreePositions.end(), 4.0f);
+    quadtree->buildQuadtree(tmpTreePositions.begin(), tmpTreePositions.end());
     
     //Create sky (a simple cube containing the world).
     skyBox = new draw::StaticMesh(mesh::StaticMesh::createCubeMesh(-1.0e6));

@@ -121,3 +121,5 @@ target_link_libraries(test_Network ${USED_LIBS})
 
 add_subdirectory(${TINY_SOURCE_DIR}/tanks/)
 
+add_subdirectory(${TINY_SOURCE_DIR}/minions/)
+
