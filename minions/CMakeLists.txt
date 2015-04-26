@@ -37,6 +37,7 @@ set(MINIONS_LIBS
 add_executable(minions src/minions.cpp
                      src/terrain.cpp
                      src/forest.cpp
+                     src/minion_type.cpp
                      src/game.cpp)
 
 target_link_libraries(minions ${MINIONS_LIBS})

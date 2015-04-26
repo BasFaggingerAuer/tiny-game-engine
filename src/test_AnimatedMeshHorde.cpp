@@ -55,7 +55,7 @@ void setup()
     //Create a test mesh and paint it with a texture.
     mesh::AnimatedMesh animatedMesh = mesh::io::readAnimatedMesh(DATA_DIRECTORY + "mesh/cubes.dae");
     const size_t nrBones = animatedMesh.skeleton.bones.size();
-    const size_t nrFrames = animatedMesh.skeleton.animations[0].frames.size();
+    const size_t nrFrames = animatedMesh.skeleton.animations.begin()->second.frames.size();
     
     //Create a test mesh and paint it with a texture.
     testMeshHorde = new draw::AnimatedMeshHorde(animatedMesh, 1024);

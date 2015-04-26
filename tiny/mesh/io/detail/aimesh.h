@@ -44,7 +44,7 @@ namespace io
 namespace detail
 {
 
-mat4 aiMatrixToMat4(const aiMatrix4x4 &m)
+inline mat4 aiMatrixToMat4(const aiMatrix4x4 &m)
 {
     return mat4(m.a1, m.a2, m.a3, m.a4,
                 m.b1, m.b2, m.b3, m.b4,
@@ -52,7 +52,7 @@ mat4 aiMatrixToMat4(const aiMatrix4x4 &m)
                 m.d1, m.d2, m.d3, m.d4);
 }
 
-const aiMesh *getAiMesh(const aiScene *scene, const std::string &meshName)
+inline const aiMesh *getAiMesh(const aiScene *scene, const std::string &meshName)
 {
     //Obtain the mesh with the largest number of vertices in the file and the given name.
     if (!scene->HasMeshes())
@@ -140,7 +140,7 @@ void copyAiMeshIndices(const aiMesh *sourceMesh, MeshType &mesh)
     }
 }
 
-void setAiNodePointers(const aiNode *node, std::map<std::string, const aiNode *> &nodeNameToPointer)
+inline void setAiNodePointers(const aiNode *node, std::map<std::string, const aiNode *> &nodeNameToPointer)
 {
     //Does the node name already exist?
     if (!nodeNameToPointer.insert(std::make_pair(node->mName.data, node)).second)
@@ -155,7 +155,7 @@ void setAiNodePointers(const aiNode *node, std::map<std::string, const aiNode *>
     }
 }
 
-void updateAiNodeMatrices(aiNode *node, const aiMatrix4x4 &transformation, std::map<std::string, aiMatrix4x4> &nodeNameToMatrix)
+inline void updateAiNodeMatrices(aiNode *node, const aiMatrix4x4 &transformation, std::map<std::string, aiMatrix4x4> &nodeNameToMatrix)
 {
     assert(node);
     
