@@ -144,9 +144,14 @@ class WorldIconHorde : public Renderable
         {
             uniformMap.setTexture(texture, "iconTexture");
         }
-        
+
+		// Nonstandard method to set instances, preferably use setInstances().
         template <typename Iterator>
-        void setIcons(Iterator first, Iterator last)
+		void setIcons(Iterator first, Iterator last) { setInstances(first,last); }
+
+		// Use same interface as StaticMeshHorde and AnimatedMeshHorde.
+		template <typename Iterator>
+        void setInstances(Iterator first, Iterator last)
         {
             nrIcons = 0;
             
@@ -157,6 +162,7 @@ class WorldIconHorde : public Renderable
             
             icons.sendToDevice();
         }
+
         
         void setText(const float &, const float &, const float &, const std::string &, const IconTexture2D &);
         
