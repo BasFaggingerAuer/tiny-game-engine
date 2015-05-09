@@ -10,6 +10,7 @@ include_directories(${CMAKE_SOURCE_DIR})
 
 add_library(tinygame
             math/vec.cpp
+            hash/md5.cpp
             net/message.cpp
             net/host.cpp
             net/client.cpp

@@ -67,7 +67,7 @@ void Quadtree::splitNode(QuadtreeNode &node, std::vector<int> &idx, const std::v
     }
     
     //Do we want to subdivide this node further?
-    if (node.endIndex - node.startIndex <= 4)
+    if (node.endIndex - node.startIndex <= 16)
     {
         return;
     }
