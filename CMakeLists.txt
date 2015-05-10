@@ -88,6 +88,9 @@ target_link_libraries(test_SoundSource ${USED_LIBS})
 add_executable(test_ReadStaticMesh src/test_ReadStaticMesh.cpp)
 target_link_libraries(test_ReadStaticMesh ${USED_LIBS})
 
+add_executable(test_ShaderHashing src/test_ShaderHashing.cpp)
+target_link_libraries(test_ShaderHashing ${USED_LIBS})
+
 add_executable(test_ReadSample src/test_ReadSample.cpp)
 target_link_libraries(test_ReadSample ${USED_LIBS})
 

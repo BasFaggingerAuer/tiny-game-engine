@@ -16,9 +16,116 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <algorithm>
 
+#include <tiny/hash/md5.h>
 #include <tiny/draw/renderer.h>
 
 using namespace tiny::draw;
+
+detail::BoundProgram::BoundProgram(const std::string &a_vertexShaderCode, const std::string &a_geometryShaderCode, const std::string &a_fragmentShaderCode) :
+    hash(tiny::hash::md5hash(a_vertexShaderCode + a_geometryShaderCode + a_fragmentShaderCode)),
+    vertexShader(0),
+    geometryShader(0),
+    fragmentShader(0),
+    program(0),
+    vertexShaderCode(a_vertexShaderCode),
+    geometryShaderCode(a_geometryShaderCode),
+    fragmentShaderCode(a_fragmentShaderCode)
+{
+
+}
+
+detail::BoundProgram::~BoundProgram()
+{
+    if (program) delete program;
+    if (vertexShader) delete vertexShader;
+    if (geometryShader) delete geometryShader;
+    if (fragmentShader) delete fragmentShader;
+}
+
+void detail::BoundProgram::bind() const
+{
+    assert(program);
+    program->bind();
+}
+
+void detail::BoundProgram::unbind() const
+{
+    assert(program);
+    program->unbind();
+}
+
+void detail::BoundProgram::bindRenderTarget(const unsigned int &index, const std::string &name) const
+{
+    assert(program);
+    GL_CHECK(glBindFragDataLocation(program->getIndex(), index, name.c_str()));
+}
+
+void detail::BoundProgram::setUniforms(const UniformMap &map) const
+{
+    assert(program);
+    map.setUniformsInProgram(*program);
+}
+
+void detail::BoundProgram::setUniformsAndTextures(const UniformMap &map, const int &textureOffset) const
+{
+    assert(program);
+    map.setUniformsAndTexturesInProgram(*program, textureOffset);
+}
+
+const ShaderProgram &detail::BoundProgram::getProgram() const
+{
+    assert(program);
+    return *program;
+}
+
+void detail::BoundProgram::compile()
+{
+    //Create shaders.
+    if (program) delete program;
+    if (vertexShader) delete vertexShader;
+    if (geometryShader) delete geometryShader;
+    if (fragmentShader) delete fragmentShader;
+    
+    vertexShader = new VertexShader();
+    geometryShader = new GeometryShader();
+    fragmentShader = new FragmentShader();
+    program = new ShaderProgram();
+    
+    //Compile shaders.
+    vertexShader->compile(vertexShaderCode);
+    
+    if (geometryShaderCode.empty())
+    {
+        //If the renderable has no geometry shader, remove it.
+        delete geometryShader;
+        
+        geometryShader = 0;
+    }
+    else
+    {
+        geometryShader->compile(geometryShaderCode);
+    }
+    
+    fragmentShader->compile(fragmentShaderCode);
+    
+    //Attach shaders.
+    program->attach(*vertexShader);
+    if (geometryShader) program->attach(*geometryShader);
+    program->attach(*fragmentShader);
+}
+
+void detail::BoundProgram::link()
+{
+    assert(program);
+    program->link();
+}
+
+bool detail::BoundProgram::validate() const
+{
+    if (program) return program->validate();
+    
+    return false;
+}
 
 Renderer::Renderer() :
     frameBufferIndex(0),
@@ -42,12 +149,9 @@ Renderer::Renderer(const Renderer &) :
 Renderer::~Renderer()
 {
     //Free allocated renderable programs.
-    for (std::list<detail::BoundRenderable>::iterator i = renderables.begin(); i != renderables.end(); ++i)
+    for (std::map<unsigned int, detail::BoundProgram *>::iterator i = shaderPrograms.begin(); i != shaderPrograms.end(); ++i)
     {
-        delete i->vertexShader;
-        if (i->geometryShader) delete i->geometryShader;
-        delete i->fragmentShader;
-        delete i->program;
+        delete i->second;
     }
     
     destroyFrameBuffer();
@@ -79,62 +183,46 @@ void Renderer::addRenderable(Renderable *renderable, const bool &readFromDepthTe
 {
     assert(renderable);
     
-    //Create shaders.
-    VertexShader *vertexShader = new VertexShader();
-    GeometryShader *geometryShader = new GeometryShader();
-    FragmentShader *fragmentShader = new FragmentShader();
-    ShaderProgram *program = new ShaderProgram();
-    
-    //Compile shaders.
-    vertexShader->compile(renderable->getVertexShaderCode());
-    
-    if (renderable->getGeometryShaderCode().empty())
-    {
-        //If the renderable has no geometry shader, remove it.
-        delete geometryShader;
-        
-        geometryShader = 0;
-    }
-    else
-    {
-        geometryShader->compile(renderable->getGeometryShaderCode());
-    }
-    
-    fragmentShader->compile(renderable->getFragmentShaderCode());
-    
-    //Attach shaders.
-    program->attach(*vertexShader);
-    if (geometryShader) program->attach(*geometryShader);
-    program->attach(*fragmentShader);
-    
-    //Set program outputs.
-    for (size_t i = 0; i < renderTargetNames.size(); ++i)
-    {
-        std::cerr << "Bound '" << renderTargetNames[i].c_str() << "' to colour number " << i << " for program " << program->getIndex() << "." << std::endl;
-        GL_CHECK(glBindFragDataLocation(program->getIndex(), i, renderTargetNames[i].c_str()));
-    }
-    
-    program->link();
-    
+    detail::BoundProgram *shaderProgram = new detail::BoundProgram(renderable->getVertexShaderCode(), renderable->getGeometryShaderCode(), renderable->getFragmentShaderCode());
+    std::map<unsigned int, detail::BoundProgram *>::iterator j = shaderPrograms.find(shaderProgram->hash);
+
     //Lock texture uniforms to prevent the bindings from changing.
     uniformMap.lockTextures();
     renderable->uniformMap.lockTextures();
-    
-    //Bind uniforms and textures to program.
-    program->bind();
-    uniformMap.setUniformsAndTexturesInProgram(*program);
-    renderable->uniformMap.setUniformsAndTexturesInProgram(*program, uniformMap.getNrTextures());
-    program->unbind();
-
-#ifndef NDEBUG
-    if (!program->validate())
+        
+    //Has this program already been compiled earlier?
+    if (j == shaderPrograms.end())
     {
-        std::cerr << "Unable to validate program!" << std::endl;
-        throw std::exception();
-    }
-#endif
+        //If not, then add it to the list of programs.
+        shaderProgram->compile();
+        
+        //Set program outputs.
+        for (size_t i = 0; i < renderTargetNames.size(); ++i)
+        {
+            std::cerr << "Bound '" << renderTargetNames[i].c_str() << "' to colour number " << i << " for program " << shaderProgram->getProgram().getIndex() << "." << std::endl;
+            shaderProgram->bindRenderTarget(i, renderTargetNames[i]);
+        }
+        
+        shaderProgram->link();
+        
+        //Bind uniforms and textures to program.
+        shaderProgram->bind();
+        shaderProgram->setUniformsAndTextures(uniformMap);
+        shaderProgram->setUniformsAndTextures(renderable->uniformMap, uniformMap.getNrTextures());
+        shaderProgram->unbind();
     
-    renderables.push_back(detail::BoundRenderable(renderable, vertexShader, geometryShader, fragmentShader, program, readFromDepthTexture, writeToDepthTexture, blendMode));
+#ifndef NDEBUG
+        if (!shaderProgram->validate())
+        {
+            std::cerr << "Unable to validate program!" << std::endl;
+            throw std::exception();
+        }
+#endif
+        
+        j = shaderPrograms.insert(shaderPrograms.begin(), std::pair<unsigned int, detail::BoundProgram *>(shaderProgram->hash, shaderProgram));
+    }
+    
+    renderables.push_back(detail::BoundRenderable(renderable, j->first, readFromDepthTexture, writeToDepthTexture, blendMode));
 }
 
 void Renderer::addRenderTarget(const std::string &name)
@@ -210,6 +298,11 @@ void Renderer::render() const
         GL_CHECK(glViewport(0, 0, viewportSize.x, viewportSize.y));
     }
     
+    //Try to minimize shader program switching.
+    unsigned int lastShaderProgramHash = 0;
+    const detail::BoundProgram *shaderProgram = 0;
+    unsigned int nrShaderProgramSwitches = 0;
+    
     uniformMap.bindTextures();
     
     for (std::list<detail::BoundRenderable>::const_iterator i = renderables.begin(); i != renderables.end(); ++i)
@@ -232,12 +325,25 @@ void Renderer::render() const
         }
         
         //TODO: Is this very inefficient? Should we let the rendererable decide whether or not to update the uniforms every frame?
-        i->program->bind();
-        uniformMap.setUniformsInProgram(*i->program);
-        i->renderable->uniformMap.setUniformsInProgram(*i->program);
+        if (i->shaderProgramHash != lastShaderProgramHash)
+        {
+            //If we have a different shader program, bind it.
+            lastShaderProgramHash = i->shaderProgramHash;
+            ++nrShaderProgramSwitches;
+            
+            //We should never have invalid hashes.
+            assert(shaderPrograms.find(lastShaderProgramHash) != shaderPrograms.end());
+            shaderProgram = shaderPrograms.find(lastShaderProgramHash)->second;
+            shaderProgram->bind();
+            shaderProgram->setUniforms(uniformMap);
+        }
+        
+        assert(shaderProgram);
+        
+        shaderProgram->setUniforms(i->renderable->uniformMap);
         
         i->renderable->uniformMap.bindTextures(uniformMap.getNrTextures());
-        i->renderable->render(*i->program);
+        i->renderable->render(shaderProgram->getProgram());
         i->renderable->uniformMap.unbindTextures(uniformMap.getNrTextures());
     }
     
@@ -247,5 +353,9 @@ void Renderer::render() const
     
     GL_CHECK(glPopAttrib());
     GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+    
+#ifndef NDEBUG
+    //std::cerr << "Switched shaders " << nrShaderProgramSwitches << " times for " << renderables.size() << " renderables." << std::endl;
+#endif
 }
 

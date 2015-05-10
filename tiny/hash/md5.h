@@ -62,6 +62,7 @@ public:
   void update(const char *buf, size_type length);
   MD5& finalize();
   std::string hexdigest() const;
+  unsigned int hash() const;
   friend std::ostream& operator<<(std::ostream&, MD5 md5);
  
 private:
@@ -93,6 +94,7 @@ private:
 };
  
 std::string md5(const std::string str);
+unsigned int md5hash(const std::string &str);
 
 } //namespace hash
 

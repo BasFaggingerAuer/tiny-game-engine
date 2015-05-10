@@ -74,7 +74,7 @@ class Shader
                 
                 if (logLength <= 0)
                 {
-                    std::cerr << "Unable to link program and there was no info log available!" << std::endl;
+                    std::cerr << "Unable to compile program and there was no info log available!" << std::endl;
                     return;
                 }
                 
@@ -95,6 +95,7 @@ class Shader
             else
             {
                 //std::cerr << "Successfully compiled shader " << shaderIndex << ":" << std::endl << a_code << std::endl;
+                std::cerr << "Successfully compiled shader " << shaderIndex << "." << std::endl;
             }
 #endif
         }
