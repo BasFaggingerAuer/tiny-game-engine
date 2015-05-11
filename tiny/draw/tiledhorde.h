@@ -127,6 +127,7 @@ namespace draw
 
 			void listNewTiles(vec3 center)
 			{
+				if(lodHordes.size() == 0) return;
 				newTiles.clear();
 				center.y = 0.0f; // ignore vertical distance
 				if(length(center) > 100000*edgeSize() || edgeSize() < 0.1f) { std::cerr << getName() << " : Very small relative edge size, skipping adding tiles. "<<std::endl; return; }

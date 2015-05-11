@@ -31,7 +31,7 @@ namespace algo
 	  * since the float used by vec3 cannot store it - it's reliable up to a few million. For the GridMap that should easily suffice. */
 	inline int convertFloatToInt(float f)
 	{
-		return (f < 0.0f ? int(f*(1.0f+std::numeric_limits<float>::epsilon()))-1 : int(f));
+		return (f < 0.0f ? int(f*(1.0f-std::numeric_limits<float>::epsilon()))-1 : int(f*(1.0f+std::numeric_limits<float>::epsilon())));
 	}
 
 	/** A helper class to define points on a grid (using signed integers to represent them) and compare these as keys for an std::map. 

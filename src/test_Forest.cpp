@@ -1,5 +1,5 @@
 /*
-Copyright 2012, Bas Fagginger Auer.
+Copyright 2015, Matthijs van Dorp.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -77,7 +77,6 @@ draw::RGBATexture2D *terrainFarAttributeTexture = 0;
 draw::TiledHorde * tiledForest = 0;
 const float tileSize = 32.0f;
 
-lod::Quadtree *quadtree = 0;
 const int maxNrHighDetailTrees = 11024;
 const int maxNrLowDetailTrees = 132768;
 const float treeHighDetailRadius = 96.0f;
@@ -89,13 +88,6 @@ draw::RGBTexture2D *treeTrunkDiffuseTexture = 0;
 draw::RGBTexture2D *treeTrunkNormalTexture = 0;
 draw::RGBATexture2D *treeLeavesDiffuseTexture = 0;
 draw::RGBATexture2D *treeSpriteTexture = 0;
-
-//std::vector<draw::StaticMeshInstance> allTreeHighDetailInstances;
-//std::vector<draw::WorldIconInstance> allTreeLowDetailInstances;
-
-//std::vector<int> visibleTreeInstanceIndices;
-//std::vector<draw::StaticMeshInstance> visibleTreeHighDetailInstances;
-//std::vector<draw::WorldIconInstance> visibleTreeLowDetailInstances;
 
 //Sky box and associated atmospherics data.
 draw::StaticMesh *skyBox = 0;
