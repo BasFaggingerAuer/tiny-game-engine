@@ -54,8 +54,8 @@ GameForest::GameForest(const std::string &path, TiXmlElement *el)
     
     el->QueryFloatAttribute("high_detail_radius", &treeHighDetailRadius);
     el->QueryFloatAttribute("low_detail_radius", &treeLowDetailRadius);
-    el->QueryIntAttribute("nr_high_detail_trees", &maxNrHighDetailTrees);
-    el->QueryIntAttribute("nr_low_detail_trees", &maxNrLowDetailTrees);
+    el->QueryIntAttribute("nr_high_detail", &maxNrHighDetailTrees);
+    el->QueryIntAttribute("nr_low_detail", &maxNrLowDetailTrees);
     el->QueryIntAttribute("biome_index", &biomeIndex);
     el->QueryFloatAttribute("sprite_w", &treeSpriteSize.x);
     el->QueryFloatAttribute("sprite_h", &treeSpriteSize.y);

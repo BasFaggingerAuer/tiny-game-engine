@@ -18,7 +18,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <iostream>
 #include <exception>
+#include <vector>
 #include <list>
+#include <map>
 
 #include <cassert>
 
@@ -45,21 +47,44 @@ enum BlendMode
 namespace detail
 {
 
+class BoundProgram
+{
+    public:
+        BoundProgram(const std::string &, const std::string &, const std::string &);
+        ~BoundProgram();
+        
+        void bind() const;
+        void unbind() const;
+        void compile();
+        void link();
+        void bindRenderTarget(const unsigned int &, const std::string &) const;
+        void setUniforms(const UniformMap &) const;
+        void setUniformsAndTextures(const UniformMap &, const int & = 0) const;
+        bool validate() const;
+        const ShaderProgram &getProgram() const;
+        
+        const unsigned int hash;
+        
+    private:
+        VertexShader *vertexShader;
+        GeometryShader *geometryShader;
+        FragmentShader *fragmentShader;
+        ShaderProgram *program;
+        
+        const std::string vertexShaderCode;
+        const std::string geometryShaderCode;
+        const std::string fragmentShaderCode;
+};
+
 struct BoundRenderable
 {
     BoundRenderable(Renderable *a_renderable,
-                    VertexShader *a_vertexShader,
-                    GeometryShader *a_geometryShader,
-                    FragmentShader *a_fragmentShader,
-                    ShaderProgram *a_program,
+                    const unsigned int &a_shaderProgramHash,
                     const bool &a_readFromDepthTexture,
                     const bool &a_writeToDepthTexture,
                     const BlendMode &a_blendMode) :
         renderable(a_renderable),
-        vertexShader(a_vertexShader),
-        geometryShader(a_geometryShader),
-        fragmentShader(a_fragmentShader),
-        program(a_program),
+        shaderProgramHash(a_shaderProgramHash),
         readFromDepthTexture(a_readFromDepthTexture),
         writeToDepthTexture(a_writeToDepthTexture),
         blendMode(a_blendMode)
@@ -68,10 +93,7 @@ struct BoundRenderable
     }
     
     Renderable *renderable;
-    VertexShader *vertexShader;
-    GeometryShader *geometryShader;
-    FragmentShader *fragmentShader;
-    ShaderProgram *program;
+    unsigned int shaderProgramHash;
     bool readFromDepthTexture;
     bool writeToDepthTexture;
     BlendMode blendMode;
@@ -141,6 +163,7 @@ class Renderer
         Renderer(const Renderer &renderer);
         
         std::list<detail::BoundRenderable> renderables;
+        std::map<unsigned int, detail::BoundProgram *> shaderPrograms;
         GLuint frameBufferIndex;
         std::vector<std::string> renderTargetNames;
         std::vector<GLuint> renderTargetTextures;

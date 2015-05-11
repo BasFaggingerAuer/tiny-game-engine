@@ -23,7 +23,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <tiny/os/application.h>
 
-#include <tiny/draw/staticmesh.h>
+#include <tiny/mesh/staticmesh.h>
+#include <tiny/mesh/animatedmesh.h>
+#include <tiny/draw/animatedmeshhorde.h>
 #include <tiny/draw/icontexture2d.h>
 #include <tiny/draw/iconhorde.h>
 #include <tiny/draw/texture2d.h>
@@ -35,6 +37,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "terrain.h"
 #include "forest.h"
+#include "minion_type.h"
 
 namespace minions
 {
@@ -68,6 +71,8 @@ class Game
         
         GameTerrain *terrain;
         GameForest *forest;
+        std::map<std::string, MinionType *> minionTypes;
+        std::map<unsigned int, Minion> minions;
 };
 
 } //namespace minions

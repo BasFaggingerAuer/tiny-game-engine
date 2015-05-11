@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string>
 #include <vector>
+#include <map>
 
 #include <tiny/math/vec.h>
 
@@ -140,7 +141,7 @@ class Skeleton
         ~Skeleton();
         
         std::vector<Bone> bones;
-        std::vector<Animation> animations;
+        std::map<std::string, Animation> animations;
 };
 
 class AnimatedMesh

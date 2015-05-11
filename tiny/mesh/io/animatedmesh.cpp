@@ -163,10 +163,12 @@ void copyAiAnimation(const aiScene *scene, const aiMesh *sourceMesh, const unsig
     Skeleton &skeleton)
 {
     const aiAnimation *sourceAnimation = scene->mAnimations[animationIndex];
-    Animation *animation = &skeleton.animations[animationIndex];
+    const std::string animationName = std::string(sourceAnimation->mName.data);
+    skeleton.animations.insert(std::pair<std::string, Animation>(animationName, Animation()));
+    Animation *animation = &skeleton.animations[animationName];
     const size_t nrFrames = getAiNrAnimationFrames(sourceAnimation);
     
-    animation->name = std::string(sourceAnimation->mName.data);
+    animation->name = animationName;
     animation->frames.assign(nrFrames*skeleton.bones.size(), KeyFrame());
     
     if (sourceAnimation->mNumChannels != skeleton.bones.size())
@@ -291,9 +293,9 @@ void copyAiAnimations(const aiScene *scene, const aiMesh *sourceMesh, Skeleton &
     }
     
     //Process all animations.
-    skeleton.animations.resize(scene->mNumAnimations);
+    skeleton.animations.clear();
     
-    for (unsigned int i = 0; i < skeleton.animations.size(); ++i)
+    for (unsigned int i = 0; i < scene->mNumAnimations; ++i)
     {
         copyAiAnimation(scene, sourceMesh, i, boneNameToIndex, nodeNameToPointer, nodeNameToMatrix, skeleton);
     }

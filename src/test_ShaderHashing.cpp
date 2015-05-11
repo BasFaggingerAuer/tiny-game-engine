@@ -25,11 +25,12 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/os/sdlapplication.h>
 
 #include <tiny/img/image.h>
-#include <tiny/mesh/animatedmesh.h>
-#include <tiny/mesh/io/animatedmesh.h>
+#include <tiny/img/io/image.h>
+#include <tiny/mesh/staticmesh.h>
+#include <tiny/mesh/io/staticmesh.h>
 
-#include <tiny/draw/animatedmeshhorde.h>
-#include <tiny/draw/effects/diffuse.h>
+#include <tiny/draw/staticmesh.h>
+#include <tiny/draw/effects/lambert.h>
 #include <tiny/draw/worldrenderer.h>
 
 using namespace std;
@@ -39,56 +40,48 @@ os::Application *application = 0;
 
 draw::WorldRenderer *worldRenderer = 0;
 
-std::vector<draw::AnimatedMeshInstance> testMeshInstances;
-draw::AnimatedMeshHorde *testMeshHorde = 0;
-draw::AnimationTextureBuffer *testAnimations = 0;
-draw::RGBTexture2D *testDiffuseTexture = 0;
-draw::RGBTexture2D *testNormalTexture = 0;
+const unsigned int N = 3;
+draw::StaticMesh *testMeshes[N];
+draw::RGBTexture2D *testDiffuseTextures[N];
+draw::RGBTexture2D *testNormalTextures[N];
 
 draw::Renderable *screenEffect = 0;
 
-vec3 cameraPosition = vec3(0.0f, 0.0f, 10.0f);
+vec3 cameraPosition = vec3(0.0f, 0.0f, 3.0f);
 vec4 cameraOrientation = vec4(0.0f, 0.0f, 0.0f, 1.0f);
 
 void setup()
 {
-    //Create a test mesh and paint it with a texture.
-    mesh::AnimatedMesh animatedMesh = mesh::io::readAnimatedMesh(DATA_DIRECTORY + "mesh/cubes.dae");
-    const size_t nrBones = animatedMesh.skeleton.bones.size();
-    const size_t nrFrames = animatedMesh.skeleton.animations.begin()->second.frames.size();
+    //Create a test meshes.
+    testMeshes[0] = new draw::StaticMesh(mesh::io::readStaticMesh(DATA_DIRECTORY + "mesh/tree0_trunk.obj"));
+    testDiffuseTextures[0] = new draw::RGBTexture2D(img::io::readImage(DATA_DIRECTORY + "img/tree0_trunk.png"));
+    testNormalTextures[0] = new draw::RGBTexture2D(img::io::readImage(DATA_DIRECTORY + "img/tree0_trunk_normal.png"));
     
-    //Create a test mesh and paint it with a texture.
-    testMeshHorde = new draw::AnimatedMeshHorde(animatedMesh, 1024);
-    testAnimations = new draw::AnimationTextureBuffer();
-    testAnimations->setAnimations(animatedMesh.skeleton.animations.begin(), animatedMesh.skeleton.animations.end());
-    testDiffuseTexture = new draw::RGBTexture2D(img::Image::createTestImage(64));
-    testNormalTexture = new draw::RGBTexture2D(img::Image::createUpNormalImage());
-    testMeshHorde->setAnimationTexture(*testAnimations);
-    testMeshHorde->setDiffuseTexture(*testDiffuseTexture);
-    testMeshHorde->setNormalTexture(*testNormalTexture);
+    testMeshes[1] = new draw::StaticMesh(mesh::io::readStaticMesh(DATA_DIRECTORY + "mesh/tank1.dae"));
+    testDiffuseTextures[1] = new draw::RGBTexture2D(img::Image::createTestImage());
+    testNormalTextures[1] = new draw::RGBTexture2D(img::Image::createUpNormalImage());
     
-    //Create instances of the tests in a grid.
-    const float meshSpacing = 2.0f;
+    testMeshes[2] = new draw::StaticMesh(mesh::io::readStaticMesh(DATA_DIRECTORY + "mesh/cubes.dae"));
+    testDiffuseTextures[2] = new draw::RGBTexture2D(img::Image::createSolidImage());
+    testNormalTextures[2] = new draw::RGBTexture2D(img::Image::createUpNormalImage());
     
-    for (int i = -4; i <= 4; ++i)
+    for (unsigned int i = 0; i < N; ++i)
     {
-        for (int j = -4; j <= 4; ++j)
-        {
-            for (int k = -4; k <= 4; ++k)
-            {
-                testMeshInstances.push_back(draw::AnimatedMeshInstance(vec4(meshSpacing*i, meshSpacing*j, meshSpacing*k, 1.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), ivec2(3*nrBones*(rand() % nrFrames), 0)));
-            }
-        }
+        testMeshes[i]->setDiffuseTexture(*testDiffuseTextures[i]);
+        testMeshes[i]->setNormalTexture(*testNormalTextures[i]);
     }
     
-    testMeshHorde->setMeshes(testMeshInstances.begin(), testMeshInstances.end());
-    
     //Render only diffuse colours to the screen.
-    screenEffect = new draw::effects::Diffuse();
+    screenEffect = new draw::effects::Lambert();
     
     //Create a renderer and add the test and the diffuse rendering effect to it.
     worldRenderer = new draw::WorldRenderer(application->getScreenWidth(), application->getScreenHeight());
-    worldRenderer->addWorldRenderable(testMeshHorde);
+    
+    for (unsigned int i = 0; i < N; ++i)
+    {
+        worldRenderer->addWorldRenderable(testMeshes[i]);
+    }
+    
     worldRenderer->addScreenRenderable(screenEffect, false, false);
 }
 
@@ -98,10 +91,12 @@ void cleanup()
     
     delete screenEffect;
     
-    delete testMeshHorde;
-    delete testAnimations;
-    delete testDiffuseTexture;
-    delete testNormalTexture;
+    for (unsigned int i = 0; i < N; ++i)
+    {
+        delete testMeshes[i];
+        delete testDiffuseTextures[i];
+        delete testNormalTextures[i];
+    }
 }
 
 void update(const double &dt)

@@ -77,11 +77,11 @@ void setup(const std::string &fileName)
             }
         }
         
-        animatedMesh.skeleton.animations.push_back(animation);
+        animatedMesh.skeleton.animations[animation.name] = animation;
     }
     else
     {
-        testNrFrames = std::max<int>(1, animatedMesh.skeleton.animations[0].frames.size()/animatedMesh.skeleton.bones.size());
+        testNrFrames = std::max<int>(1, animatedMesh.skeleton.animations.begin()->second.frames.size()/animatedMesh.skeleton.bones.size());
     }
     
     testMesh = new draw::AnimatedMesh(animatedMesh);

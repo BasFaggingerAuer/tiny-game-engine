@@ -59,7 +59,7 @@ class GameForest
         tiny::draw::RGBTexture2D *treeTrunkNormalTexture;
         tiny::draw::RGBATexture2D *treeLeavesDiffuseTexture;
         tiny::draw::RGBATexture2D *treeSpriteTexture;
-	tiny::vec2 treeSpriteSize;
+        tiny::vec2 treeSpriteSize;
 
         std::vector<tiny::draw::StaticMeshInstance> allTreeHighDetailInstances;
         std::vector<tiny::draw::WorldIconInstance> allTreeLowDetailInstances;

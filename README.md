@@ -53,6 +53,7 @@ Below is a list of examples, ordered by complexity, together with the particular
 *   [test_StaticMesh](/src/test_StaticMesh.cpp): Render a cube on the screen, viewed through a controllable camera.
 *   [test_SoundSource](/src/test_SoundSource.cpp): Play a 440Hz test tone.
 *   [test_ReadStaticMesh](/src/test_ReadStaticMesh.cpp): Render a mesh read from disk on the screen, viewed through a controllable camera.
+*   [test_ShaderHashing](/src/test_ShaderHashing.cpp): Test hashing functionality of shader programs for multiple different meshes rendered with the same shader program.
 *   [test_ReadAnimatedMesh](/src/test_AnimatedMesh.cpp): Read and render an animated mesh using skeletal animation.
 *   [test_ReadSample](/src/test_ReadSample.cpp): Read and play an OGG audio sample.
 *   [test_StaticMeshHorde](/src/test_StaticMeshHorde.cpp): Render a large number of cube instances on the screen, viewed through a controllable camera.
@@ -61,4 +62,6 @@ Below is a list of examples, ordered by complexity, together with the particular
 *   [test_TerrainFar](/src/test_TerrainFar.cpp): Fly over a very large terrain.
 *   [test_Quadtree](/src/test_Quadtree.cpp): Example of using a quadtree for level of detail management.
 *   [test_TerrainFancy](/src/test_TerrainFancy.cpp): Fly over a very large terrain with advanced texturing, atmospherics, and a forest.
+*   [test_Network](/src/test_Network.cpp): Basic networking functionality.
+*   [test_WorldIconHorde](/src/test_WorldIconHorde.cpp): Draw a large number of player-facing sprites.
 

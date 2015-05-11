@@ -65,7 +65,7 @@ class AnimationTextureBuffer : public Vec4TextureBuffer
             
             for (Iterator i = first; i != last; ++i)
             {
-                nrFrames += i->frames.size();
+                nrFrames += i->second.frames.size();
             }
             
             //Copy all frames to the vertex buffer.
@@ -74,9 +74,9 @@ class AnimationTextureBuffer : public Vec4TextureBuffer
             
             for (Iterator i = first; i != last; ++i)
             {
-                for (size_t j = 0; j < i->frames.size(); ++j)
+                for (size_t j = 0; j < i->second.frames.size(); ++j)
                 {
-                    keyFrameBuffer[nrFrames++] = i->frames[j];
+                    keyFrameBuffer[nrFrames++] = i->second.frames[j];
                 }
             }
             
