@@ -426,7 +426,7 @@ void cleanup()
 	delete skyBoxTexture;
 	delete skyGradientTexture;
 	
-	delete quadtree;
+//	delete quadtree;
 	delete treeTrunkMeshes;
 	delete treeLeavesMeshes;
 	delete treeSprites;
