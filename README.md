@@ -3,6 +3,13 @@ tiny-game-engine
 
 A small OpenGL game engine, created by Bas Fagginger Auer.
 
+#### Fork structure
+
+This fork (takenu/tiny-game-engine) is organized as follows:
+* branch **master**: This is the branch used by the takenu/chathran and takenu/strata. Use it if you want to link these repositories against tiny-game-engine (rather than the original repository which may not (yet) contain all required functionality).
+* branch **tinybase**: This branch follows the original repository and is used as the base for creating new branches.
+* All other branches: Branches with different names are intended for pull requests towards the original repository. These branches are typically more similar to the original repository than to this fork.
+
 Copyright
 ---------
 
