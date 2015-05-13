@@ -47,17 +47,24 @@ vec3 cameraPosition = vec3(0.0f, 0.0f, 3.0f);
 vec4 cameraOrientation = vec4(0.0f, 0.0f, 0.0f, 1.0f);
 
 float currentTime = 0.0f;
-float flickerTime = 0.0f;
+float flickerTime = 0.01f;
 bool meshExists = false;
 
 void createMesh()
 {
     //Create a cube mesh and paint it with a texture.
     cubeMesh = new draw::StaticMesh(mesh::StaticMesh::createCubeMesh(0.5f));
-    cubeDiffuseTexture = new draw::RGBATexture2D(img::Image::createTestImage());
     cubeMesh->setDiffuseTexture(*cubeDiffuseTexture);
     
     worldRenderer->addWorldRenderable(cubeMesh);
+	meshExists = true;
+}
+
+void deleteMesh()
+{
+	worldRenderer->freeRenderable(cubeMesh);
+	delete cubeMesh; cubeMesh = 0;
+	meshExists = false;
 }
 
 void setup()
@@ -69,6 +76,7 @@ void setup()
     worldRenderer = new draw::WorldRenderer(application->getScreenWidth(), application->getScreenHeight());
     worldRenderer->addScreenRenderable(screenEffect, false, false);
 
+    cubeDiffuseTexture = new draw::RGBATexture2D(img::Image::createTestImage());
 	createMesh();
 }
 
@@ -89,6 +97,14 @@ void update(const double &dt)
     
     //Tell the world renderer that the camera has changed.
     worldRenderer->setCamera(cameraPosition, cameraOrientation);
+
+	currentTime += dt;
+	if( (int(currentTime/flickerTime) % 2) == 0 && !meshExists) createMesh();
+	else if( (int(currentTime/flickerTime) % 2) == 1 && meshExists)
+	{
+		deleteMesh();
+//		for(unsigned int i = 0; i < 20; i++) { createMesh(); deleteMesh(); }
+	}
 }
 
 void render()
