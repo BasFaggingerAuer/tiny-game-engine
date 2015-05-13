@@ -67,6 +67,12 @@ void WorldRenderer::addScreenRenderable(Renderable *renderable, const bool &read
     screenToColourRenderer.addRenderable(renderable, readFromDepthTexture, writeToDepthTexture, blendMode);
 }
 
+void WorldRenderer::freeRenderable(Renderable *renderable)
+{
+    if(!worldToScreenRenderer.freeRenderable(renderable) && !screenToColourRenderer.freeRenderable(renderable))
+		std::cerr << " WorldRenderer::freeRenderable() : Unable to free a renderable! "<<std::endl;
+}
+
 void WorldRenderer::clearTargets() const
 {
     worldToScreenRenderer.clearTargets();

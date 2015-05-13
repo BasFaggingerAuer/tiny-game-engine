@@ -44,6 +44,8 @@ class WorldRenderer
         
         void addWorldRenderable(Renderable *, const bool & = true, const bool & = true, const BlendMode & = BlendReplace);
         void addScreenRenderable(Renderable *, const bool & = true, const bool & = true, const BlendMode & = BlendReplace);
+
+		void freeRenderable(Renderable *);
         
         void clearTargets() const;
         void render() const;

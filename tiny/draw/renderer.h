@@ -110,6 +110,8 @@ class Renderer
         virtual ~Renderer();
         
         void addRenderable(Renderable *, const bool & = true, const bool & = true, const BlendMode & = BlendReplace);
+
+		bool freeRenderable(Renderable *);
         
         void setDepthTextureTarget(const DepthTexture2D &texture)
         {
