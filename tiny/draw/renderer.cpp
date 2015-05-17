@@ -221,6 +221,10 @@ void Renderer::addRenderable(Renderable *renderable, const bool &readFromDepthTe
         
         j = shaderPrograms.insert(shaderPrograms.begin(), std::pair<unsigned int, detail::BoundProgram *>(shaderProgram->hash, shaderProgram));
     }
+    else
+    {
+        delete shaderProgram;
+    }
     
     renderables.push_back(detail::BoundRenderable(renderable, j->first, readFromDepthTexture, writeToDepthTexture, blendMode));
 }
