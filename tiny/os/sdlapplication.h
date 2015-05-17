@@ -42,6 +42,9 @@ class SDLApplication : public Application
         int getScreenHeight() const;
         MouseState getMouseState(const bool &);
         
+        virtual void keyDownCallback(const int &);
+        virtual void keyUpCallback(const int &);
+        
     private:
         void initOpenGL();
         void initOpenAL();
