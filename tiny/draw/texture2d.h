@@ -16,6 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #pragma once
 
+#include <tiny/math/vec.h>
 #include <tiny/draw/texture.h>
 #include <tiny/img/image.h>
 

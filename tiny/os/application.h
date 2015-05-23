@@ -61,15 +61,17 @@ class Application
         virtual int getScreenHeight() const = 0;
         virtual MouseState getMouseState(const bool &) = 0;
         
+        void stopRunning();
         bool isRunning() const;
         bool isKeyPressed(const int &) const;
         bool isKeyPressedOnce(const int &);
         
+        virtual void keyDownCallback(const int &);
+        virtual void keyUpCallback(const int &);
+        
         void updateSimpleCamera(const float &, vec3 &, vec4 &) const;
         
     protected:
-        void stopRunning();
-        
         bool pressedKeys[256];
         
     private:
