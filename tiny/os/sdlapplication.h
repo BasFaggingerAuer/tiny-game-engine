@@ -34,13 +34,16 @@ class SDLApplication : public Application
 {
     public:
         SDLApplication(const int &, const int &, const int & = 0, const int & = 24, const int & = 44100, const int & = MIX_DEFAULT_FORMAT, const int & = 2, const int & = 16, const int & = 4096);
-        ~SDLApplication();
+        virtual ~SDLApplication();
         
         double pollEvents();
         void paint();
         int getScreenWidth() const;
         int getScreenHeight() const;
         MouseState getMouseState(const bool &);
+        
+        virtual void keyDownCallback(const int &);
+        virtual void keyUpCallback(const int &);
         
     private:
         void initOpenGL();

@@ -261,6 +261,52 @@ void SDLApplication::initOpenGL()
     glGetError();
 }
 
+void SDLApplication::keyDownCallback(const int &keyIndex)
+{
+    //Default callback for keypresses.
+    const SDLKey k = static_cast<SDLKey>(keyIndex);
+    
+    if (k == SDLK_ESCAPE)
+    {
+        stopRunning();
+    }
+    else if (k == SDLK_F1)
+    {
+        //Enable wireframe view.
+        wireframe = !wireframe;
+        
+        if (wireframe)
+        {
+            glPolygonMode(GL_FRONT, GL_LINE);
+            glPolygonMode(GL_BACK, GL_LINE);
+        }
+        else
+        {
+            glPolygonMode(GL_FRONT, GL_FILL);
+            glPolygonMode(GL_BACK, GL_FILL);
+        }
+    }
+    else if (k == SDLK_PRINT)
+    {
+        //Save a screenshot.
+        SDL_Surface *image = SDL_CreateRGBSurface(SDL_SWSURFACE, screenWidth, screenHeight, 24, 255 << 0, 255 << 8, 255 << 16, 0);
+
+        if (image)
+        {
+            glFlush();
+            glReadBuffer(GL_BACK);
+            glReadPixels(0, 0, screenWidth, screenHeight, GL_RGB, GL_UNSIGNED_BYTE, image->pixels);
+            SDL_SaveBMP(image, "screenshot.bmp");
+            SDL_FreeSurface(image);
+        }
+    }
+}
+
+void SDLApplication::keyUpCallback(const int &)
+{
+    
+}
+
 double SDLApplication::pollEvents()
 {
     //Poll pending events.
@@ -272,44 +318,12 @@ double SDLApplication::pollEvents()
         {
             const SDLKey k = event.key.keysym.sym;
             
-            if (k == SDLK_ESCAPE)
-            {
-                stopRunning();
-            }
-            else if (k == SDLK_F1)
-            {
-                //Enable wireframe view.
-                wireframe = !wireframe;
-                
-                if (wireframe)
-                {
-                    glPolygonMode(GL_FRONT, GL_LINE);
-                    glPolygonMode(GL_BACK, GL_LINE);
-                }
-                else
-                {
-                    glPolygonMode(GL_FRONT, GL_FILL);
-                    glPolygonMode(GL_BACK, GL_FILL);
-                }
-            }
-            else if (k == SDLK_PRINT)
-            {
-                //Save a screenshot.
-                SDL_Surface *image = SDL_CreateRGBSurface(SDL_SWSURFACE, screenWidth, screenHeight, 24, 255 << 0, 255 << 8, 255 << 16, 0);
-
-                if (image)
-                {
-                    glFlush();
-                    glReadBuffer(GL_BACK);
-                    glReadPixels(0, 0, screenWidth, screenHeight, GL_RGB, GL_UNSIGNED_BYTE, image->pixels);
-                    SDL_SaveBMP(image, "screenshot.bmp");
-                    SDL_FreeSurface(image);
-                }
-            }
-            else if (k >= 0 && k < 256)
+            if (k >= 0 && k < 256)
             {
                 pressedKeys[k] = true;
             }
+            
+            this->keyDownCallback(static_cast<int>(k));
         }
         else if (event.type == SDL_KEYUP)
         {
@@ -319,6 +333,8 @@ double SDLApplication::pollEvents()
             {
                 pressedKeys[k] = false;
             }
+            
+            this->keyUpCallback(static_cast<int>(k));
         }
         else if (event.type == SDL_QUIT)
         {

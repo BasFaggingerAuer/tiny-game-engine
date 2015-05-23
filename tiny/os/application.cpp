@@ -52,6 +52,16 @@ bool Application::isKeyPressedOnce(const int &key)
     return pressed;
 }
 
+void Application::keyDownCallback(const int &)
+{
+    
+}
+
+void Application::keyUpCallback(const int &)
+{
+    
+}
+
 void Application::stopRunning()
 {
     running = false;
