@@ -191,6 +191,11 @@ namespace algo
 					std::cerr << " Error: TypeClusterObject() : Key "<<key<<" is not allowed in TypeCluster "<<typeCluster.getName()<<"! Cannot add! "<<std::endl;
 				}
 			}
+
+			const K & getKey(void) const
+			{
+				return key;
+			}
 		public:
 	};
 } // end namespace algo
