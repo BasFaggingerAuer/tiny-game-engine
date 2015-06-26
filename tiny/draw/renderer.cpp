@@ -130,14 +130,14 @@ bool detail::BoundProgram::validate() const
 void detail::BoundProgram::addRenderable(Renderable * renderable)
 {
 #ifndef NDEBUG
-	assert(renderables.count(renderable) == 0);
+    assert(renderables.count(renderable) == 0);
 #endif
-	renderables.insert(renderable);
+    renderables.insert(renderable);
 }
 
 void detail::BoundProgram::freeRenderable(Renderable * renderable)
 {
-	assert(renderables.erase(renderable));
+    assert(renderables.erase(renderable));
 }
 
 Renderer::Renderer() :
@@ -239,31 +239,31 @@ void Renderer::addRenderable(Renderable *renderable, const bool &readFromDepthTe
         delete shaderProgram;
     }
     
-	j->second->addRenderable(renderable);
+    j->second->addRenderable(renderable);
     renderables.insert(detail::BoundRenderable(renderable, j->first, readFromDepthTexture, writeToDepthTexture, blendMode));
 }
 
 bool Renderer::freeRenderable(Renderable * renderable)
 {
-	detail::BoundRenderable dummy(renderable, 0, 0, 0, BlendReplace);
-	std::set<detail::BoundRenderable>::iterator k = renderables.find(dummy);
-	if(renderable == 0 || k == renderables.end()) return false;
-	unsigned int boundProgHash = k->shaderProgramHash;
-	std::map<unsigned int, detail::BoundProgram *>::iterator j = shaderPrograms.find(boundProgHash);
+    detail::BoundRenderable dummy(renderable, 0, 0, 0, BlendReplace);
+    std::set<detail::BoundRenderable>::iterator k = renderables.find(dummy);
+    if(renderable == 0 || k == renderables.end()) return false;
+    unsigned int boundProgHash = k->shaderProgramHash;
+    std::map<unsigned int, detail::BoundProgram *>::iterator j = shaderPrograms.find(boundProgHash);
 #ifndef NDEBUG
-	assert(j != shaderPrograms.end());
+    assert(j != shaderPrograms.end());
 #endif
-	j->second->freeRenderable(renderable);
-	renderables.erase(k);
-	if(j->second->numRenderables() == 0)
-	{
-		delete j->second;
-		shaderPrograms.erase(j);
-	}
+    j->second->freeRenderable(renderable);
+    renderables.erase(k);
+    if(j->second->numRenderables() == 0)
+    {
+        delete j->second;
+        shaderPrograms.erase(j);
+    }
 
-	std::cout << " Freed renderable, there are "<<shaderPrograms.size()<<" programs and "<<renderables.size()<<" renderables. "<<std::endl;
+    std::cout << " Freed renderable, there are "<<shaderPrograms.size()<<" programs and "<<renderables.size()<<" renderables. "<<std::endl;
 
-	return true;
+    return true;
 }
 
 void Renderer::addRenderTarget(const std::string &name)

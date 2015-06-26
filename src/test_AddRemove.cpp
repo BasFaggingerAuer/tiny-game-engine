@@ -57,14 +57,14 @@ void createMesh()
     cubeMesh->setDiffuseTexture(*cubeDiffuseTexture);
     
     worldRenderer->addWorldRenderable(cubeMesh);
-	meshExists = true;
+    meshExists = true;
 }
 
 void deleteMesh()
 {
-	worldRenderer->freeRenderable(cubeMesh);
-	delete cubeMesh; cubeMesh = 0;
-	meshExists = false;
+    worldRenderer->freeRenderable(cubeMesh);
+    delete cubeMesh; cubeMesh = 0;
+    meshExists = false;
 }
 
 void setup()
@@ -77,7 +77,7 @@ void setup()
     worldRenderer->addScreenRenderable(screenEffect, false, false);
 
     cubeDiffuseTexture = new draw::RGBATexture2D(img::Image::createTestImage());
-	createMesh();
+    createMesh();
 }
 
 void cleanup()
@@ -98,13 +98,13 @@ void update(const double &dt)
     //Tell the world renderer that the camera has changed.
     worldRenderer->setCamera(cameraPosition, cameraOrientation);
 
-	currentTime += dt;
-	if( (int(currentTime/flickerTime) % 2) == 0 && !meshExists) createMesh();
-	else if( (int(currentTime/flickerTime) % 2) == 1 && meshExists)
-	{
-		deleteMesh();
-//		for(unsigned int i = 0; i < 20; i++) { createMesh(); deleteMesh(); }
-	}
+    currentTime += dt;
+    if( (int(currentTime/flickerTime) % 2) == 0 && !meshExists) createMesh();
+    else if( (int(currentTime/flickerTime) % 2) == 1 && meshExists)
+    {
+        deleteMesh();
+//        for(unsigned int i = 0; i < 20; i++) { createMesh(); deleteMesh(); }
+    }
 }
 
 void render()

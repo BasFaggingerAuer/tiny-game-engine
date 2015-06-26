@@ -66,9 +66,9 @@ class BoundProgram
         
         const unsigned int hash;
         
-		void addRenderable(Renderable * renderable);
-		void freeRenderable(Renderable * renderable);
-		unsigned int numRenderables(void) const { return renderables.size(); }
+        void addRenderable(Renderable * renderable);
+        void freeRenderable(Renderable * renderable);
+        unsigned int numRenderables(void) const { return renderables.size(); }
     private:
         VertexShader *vertexShader;
         GeometryShader *geometryShader;
@@ -79,7 +79,7 @@ class BoundProgram
         const std::string geometryShaderCode;
         const std::string fragmentShaderCode;
 
-		std::set<Renderable*> renderables;
+        std::set<Renderable*> renderables;
 };
 
 struct BoundRenderable
@@ -104,7 +104,7 @@ struct BoundRenderable
     bool writeToDepthTexture;
     BlendMode blendMode;
 
-	bool operator< (const BoundRenderable &other) const { return renderable < other.renderable; }
+    bool operator< (const BoundRenderable &other) const { return renderable < other.renderable; }
 };
 
 }
@@ -119,7 +119,7 @@ class Renderer
         
         void addRenderable(Renderable *, const bool & = true, const bool & = true, const BlendMode & = BlendReplace);
 
-		bool freeRenderable(Renderable *);
+        bool freeRenderable(Renderable *);
         
         void setDepthTextureTarget(const DepthTexture2D &texture)
         {
