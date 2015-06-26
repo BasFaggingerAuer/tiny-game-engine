@@ -1,5 +1,5 @@
 /*
-Copyright 2012, Bas Fagginger Auer.
+Copyright 2012-2015, Bas Fagginger Auer and Matthijs van Dorp.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -127,6 +127,19 @@ bool detail::BoundProgram::validate() const
     return false;
 }
 
+void detail::BoundProgram::addRenderable(Renderable * renderable)
+{
+#ifndef NDEBUG
+    assert(renderables.count(renderable) == 0);
+#endif
+    renderables.insert(renderable);
+}
+
+void detail::BoundProgram::freeRenderable(Renderable * renderable)
+{
+    assert(renderables.erase(renderable));
+}
+
 Renderer::Renderer() :
     frameBufferIndex(0),
     renderTargetNames(),
@@ -219,14 +232,38 @@ void Renderer::addRenderable(Renderable *renderable, const bool &readFromDepthTe
         }
 #endif
         
-        j = shaderPrograms.insert(shaderPrograms.begin(), std::pair<unsigned int, detail::BoundProgram *>(shaderProgram->hash, shaderProgram));
+        j = shaderPrograms.insert( std::make_pair(shaderProgram->hash, shaderProgram)).first;
     }
     else
     {
         delete shaderProgram;
     }
     
-    renderables.push_back(detail::BoundRenderable(renderable, j->first, readFromDepthTexture, writeToDepthTexture, blendMode));
+    j->second->addRenderable(renderable);
+    renderables.insert(detail::BoundRenderable(renderable, j->first, readFromDepthTexture, writeToDepthTexture, blendMode));
+}
+
+bool Renderer::freeRenderable(Renderable * renderable)
+{
+    detail::BoundRenderable dummy(renderable, 0, 0, 0, BlendReplace);
+    std::set<detail::BoundRenderable>::iterator k = renderables.find(dummy);
+    if(renderable == 0 || k == renderables.end()) return false;
+    unsigned int boundProgHash = k->shaderProgramHash;
+    std::map<unsigned int, detail::BoundProgram *>::iterator j = shaderPrograms.find(boundProgHash);
+#ifndef NDEBUG
+    assert(j != shaderPrograms.end());
+#endif
+    j->second->freeRenderable(renderable);
+    renderables.erase(k);
+    if(j->second->numRenderables() == 0)
+    {
+        delete j->second;
+        shaderPrograms.erase(j);
+    }
+
+    std::cout << " Freed renderable, there are "<<shaderPrograms.size()<<" programs and "<<renderables.size()<<" renderables. "<<std::endl;
+
+    return true;
 }
 
 void Renderer::addRenderTarget(const std::string &name)
@@ -309,7 +346,7 @@ void Renderer::render() const
     
     uniformMap.bindTextures();
     
-    for (std::list<detail::BoundRenderable>::const_iterator i = renderables.begin(); i != renderables.end(); ++i)
+    for (std::set<detail::BoundRenderable>::const_iterator i = renderables.begin(); i != renderables.end(); ++i)
     {
         if (i->readFromDepthTexture) GL_CHECK(glEnable(GL_DEPTH_TEST));
         else GL_CHECK(glDisable(GL_DEPTH_TEST));

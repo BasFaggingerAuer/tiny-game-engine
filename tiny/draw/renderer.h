@@ -1,5 +1,5 @@
 /*
-Copyright 2012, Bas Fagginger Auer.
+Copyright 2012-2015, Bas Fagginger Auer and Matthijs van Dorp.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 #include <list>
 #include <map>
+#include <set>
 
 #include <cassert>
 
@@ -65,6 +66,9 @@ class BoundProgram
         
         const unsigned int hash;
         
+        void addRenderable(Renderable * renderable);
+        void freeRenderable(Renderable * renderable);
+        unsigned int numRenderables(void) const { return renderables.size(); }
     private:
         VertexShader *vertexShader;
         GeometryShader *geometryShader;
@@ -74,6 +78,8 @@ class BoundProgram
         const std::string vertexShaderCode;
         const std::string geometryShaderCode;
         const std::string fragmentShaderCode;
+
+        std::set<Renderable*> renderables;
 };
 
 struct BoundRenderable
@@ -97,6 +103,8 @@ struct BoundRenderable
     bool readFromDepthTexture;
     bool writeToDepthTexture;
     BlendMode blendMode;
+
+    bool operator< (const BoundRenderable &other) const { return renderable < other.renderable; }
 };
 
 }
@@ -110,6 +118,8 @@ class Renderer
         virtual ~Renderer();
         
         void addRenderable(Renderable *, const bool & = true, const bool & = true, const BlendMode & = BlendReplace);
+
+        bool freeRenderable(Renderable *);
         
         void setDepthTextureTarget(const DepthTexture2D &texture)
         {
@@ -162,7 +172,7 @@ class Renderer
         //This class should not be copied.
         Renderer(const Renderer &renderer);
         
-        std::list<detail::BoundRenderable> renderables;
+        std::set<detail::BoundRenderable> renderables;
         std::map<unsigned int, detail::BoundProgram *> shaderPrograms;
         GLuint frameBufferIndex;
         std::vector<std::string> renderTargetNames;
