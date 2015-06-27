@@ -48,7 +48,7 @@ GameTerrain::GameTerrain(const std::string &path, TiXmlElement *el)
     int farScaleFactor = 2; 
     float detailScaleFactor = 1.0f;
     
-    assert(el->ValueStr() == "terrain");
+    assert(std::string(el->Value()) == "terrain");
     
     el->QueryFloatAttribute("scale_width", &widthScaleFactor);
     el->QueryFloatAttribute("scale_height", &heightScaleFactor);
@@ -59,7 +59,7 @@ GameTerrain::GameTerrain(const std::string &path, TiXmlElement *el)
     
     for (TiXmlElement *sl = el->FirstChildElement(); sl; sl = sl->NextSiblingElement())
     {
-        if (sl->ValueStr() == "biome")
+        if (std::string(sl->Value()) == "biome")
         {
             bool missData = false;
             

@@ -557,7 +557,7 @@ void Game::readResources(const std::string &path)
         throw std::exception();
     }
     
-    if (root->ValueStr() != "tanks")
+    if (std::string(root->Value()) != "tanks")
     {
         std::cerr << "This is not a valid tanks XML file!" << std::endl;
         throw std::exception();
@@ -566,13 +566,13 @@ void Game::readResources(const std::string &path)
     //Read all parts of the XML file.
     for (TiXmlElement *el = root->FirstChildElement(); el; el = el->NextSiblingElement())
     {
-             if (el->ValueStr() == "console") readConsoleResources(path, el);
-        else if (el->ValueStr() == "sky") readSkyResources(path, el);
-        else if (el->ValueStr() == "terrain") terrain = new GameTerrain(path, el);
-        else if (el->ValueStr() == "soldier") soldierTypes[soldierTypes.size()] = new SoldierType(path, el);
-        else if (el->ValueStr() == "bullethorde") readBulletHordeResources(path, el);
-        else if (el->ValueStr() == "bullet") bulletTypes[bulletTypes.size()] = new BulletType(path, el);
-        else if (el->ValueStr() == "explosion") explosionTypes[explosionTypes.size()] = new ExplosionType(path, el);
+             if (std::string(el->Value()) == "console") readConsoleResources(path, el);
+        else if (std::string(el->Value()) == "sky") readSkyResources(path, el);
+        else if (std::string(el->Value()) == "terrain") terrain = new GameTerrain(path, el);
+        else if (std::string(el->Value()) == "soldier") soldierTypes[soldierTypes.size()] = new SoldierType(path, el);
+        else if (std::string(el->Value()) == "bullethorde") readBulletHordeResources(path, el);
+        else if (std::string(el->Value()) == "bullet") bulletTypes[bulletTypes.size()] = new BulletType(path, el);
+        else if (std::string(el->Value()) == "explosion") explosionTypes[explosionTypes.size()] = new ExplosionType(path, el);
     }
     
     //Pack all bullet and explosion images into a single large texture.
@@ -638,7 +638,7 @@ void Game::readConsoleResources(const std::string &path, TiXmlElement *el)
     int fontSize = 0;
     std::string fontFileName = "";
     
-    assert(el->ValueStr() == "console");
+    assert(std::string(el->Value()) == "console");
     
     el->QueryIntAttribute("texture_size", &fontTextureSize);
     el->QueryIntAttribute("font_size", &fontSize);
@@ -661,7 +661,7 @@ void Game::readSkyResources(const std::string &path, TiXmlElement *el)
     
     std::string textureFileName = "";
     
-    assert(el->ValueStr() == "sky");
+    assert(std::string(el->Value()) == "sky");
     
     el->QueryStringAttribute("texture", &textureFileName);
     
@@ -681,7 +681,7 @@ void Game::readBulletHordeResources(const std::string &, TiXmlElement *el)
     
     std::string textureFileName = "";
     
-    assert(el->ValueStr() == "bullethorde");
+    assert(std::string(el->Value()) == "bullethorde");
     
     int bulletTextureSize = 0;
     int maxNrBulletInstances = 0;

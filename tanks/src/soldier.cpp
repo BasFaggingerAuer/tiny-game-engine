@@ -32,7 +32,7 @@ ExplosionType::ExplosionType(const std::string &path, TiXmlElement *el)
 {
     std::cerr << "Reading explosion type resource..." << std::endl;
     
-    assert(el->ValueStr() == "explosion");
+    assert(std::string(el->Value()) == "explosion");
     
     name = "";
     minRadius = 0.0f;
@@ -69,7 +69,7 @@ BulletType::BulletType(const std::string &path, TiXmlElement *el)
 {
     std::cerr << "Reading bullet type resource..." << std::endl;
     
-    assert(el->ValueStr() == "bullet");
+    assert(std::string(el->Value()) == "bullet");
     
     name = "";
     radius = 0.1f;
@@ -112,7 +112,7 @@ BulletType::~BulletType()
 
 SoldierWeapon::SoldierWeapon(const std::string &, TiXmlElement *el)
 {
-    assert(el->ValueStr() == "weapon");
+    assert(std::string(el->Value()) == "weapon");
     
     name = "";
     rechargeTime = 1.0f;
@@ -138,7 +138,7 @@ SoldierType::SoldierType(const std::string &path, TiXmlElement *el)
 {
     std::cerr << "Reading soldier type resource..." << std::endl;
    
-    assert(el->ValueStr() == "soldier");
+    assert(std::string(el->Value()) == "soldier");
     
     name = "";
     radius = 1.0f;
@@ -181,14 +181,14 @@ SoldierType::SoldierType(const std::string &path, TiXmlElement *el)
     //Read thrusters.
     for (TiXmlElement *sl = el->FirstChildElement(); sl; sl = sl->NextSiblingElement())
     {
-             if (sl->ValueStr() == "jumpjet")
+             if (std::string(sl->Value()) == "jumpjet")
         {
             jumpjet = true;
             sl->QueryFloatAttribute("thrust", &jumpjetThrust);
             sl->QueryFloatAttribute("fuel", &jumpjetFuel);
             sl->QueryFloatAttribute("charge", &jumpjetCharge);
         }
-        else if (sl->ValueStr() == "weapon")
+        else if (std::string(sl->Value()) == "weapon")
         {
             weapons.push_back(SoldierWeapon(path, sl));
         }

@@ -36,12 +36,7 @@ using namespace tiny::os;
 SDLApplication::SDLApplication(const int &a_screenWidth,
                                const int &a_screenHeight,
                                const int &a_screenBPP,
-                               const int &a_screenDepthBPP,
-                               const int &a_audioRate,
-                               const int &a_audioFormat,
-                               const int &a_audioChannels,
-                               const int &a_audioMixChannels,
-                               const int &a_audioBuffer) :
+                               const int &a_screenDepthBPP) :
     Application(),
     screenWidth(a_screenWidth),
     screenHeight(a_screenHeight),
@@ -51,12 +46,7 @@ SDLApplication::SDLApplication(const int &a_screenWidth,
     screen(0),
     wireframe(false),
     alDevice(0),
-    alContext(0),
-    audioRate(a_audioRate),
-    audioFormat(a_audioFormat),
-    audioChannels(a_audioChannels),
-    audioMixChannels(a_audioMixChannels),
-    audioBuffer(a_audioBuffer)
+    alContext(0)
 {
     //Initialise SDL.
     std::cerr << "Initialising SDL..." << std::endl;

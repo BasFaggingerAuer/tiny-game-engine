@@ -25,6 +25,7 @@ Debian/Ubuntu package names are supplied between parenthesis for convenience.
 9.   SDL font library (libsdl-ttf2.0-dev).
 10.  SDL networking library (libsdl-net1.2-dev).
 11.  Asset importer library (libassimp-dev).
+12.  Tiny XML library (libtinyxml-dev).
 
 Installation
 ------------
