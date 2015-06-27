@@ -130,17 +130,22 @@ bool Host::listen(const double &dt)
             {
                 //Receive data.
                 Message message;
+                int status = 1;
                 
-                if (!translator->receiveMessageTCP(c->first, message))
+                do
+                {
+                    status = translator->receiveMessageTCP(c->first, message);
+                    
+                    if (status > 0) receiveMessage(c->second, message);
+                }
+                while (status > 0);
+                
+                if (status == 0)
                 {
                     std::cerr << "Lost connection from client " << c->second << "." << std::endl;
                     removeClient(c->second);
                     SDLNet_TCP_Close(c->first);
                     keepClient = false;
-                }
-                else
-                {
-                    receiveMessage(c->second, message);
                 }
             }
             

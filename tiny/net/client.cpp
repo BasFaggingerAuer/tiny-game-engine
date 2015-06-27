@@ -80,15 +80,20 @@ bool Client::listen(const double &dt)
         {
             //Receive data.
             Message message;
+            int status = 1;
             
-            if (!translator->receiveMessageTCP(socket, message))
+            do
+            {
+                status = translator->receiveMessageTCP(socket, message);
+                
+                if (status > 0) receiveMessage(message);
+            }
+            while (status > 0);
+            
+            if (status == 0)
             {
                 std::cerr << "Lost connection to host!" << std::endl;
                 disconnectedFromHost();
-            }
-            else
-            {
-                receiveMessage(message);
             }
         }
     }
