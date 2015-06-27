@@ -104,10 +104,10 @@ void setup()
     
     for (int i = 0; i < NR_DETAIL_LEVELS; ++i)
     {
-        worldRenderer->addWorldRenderable(cubeMeshHorde[i]);
+        worldRenderer->addWorldRenderable(i, cubeMeshHorde[i]);
     }
     
-    worldRenderer->addScreenRenderable(screenEffect, false, false);
+    worldRenderer->addScreenRenderable(0, screenEffect, false, false);
 }
 
 void cleanup()

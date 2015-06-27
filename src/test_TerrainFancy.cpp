@@ -236,8 +236,8 @@ void setup()
     terrain = new draw::Terrain(6, 8);
     
     //Read heightmap for the far-away terrain.
-    terrainHeightTexture = new draw::FloatTexture2D(img::io::readImage(DATA_DIRECTORY + "img/tasmania.png"), draw::tf::filter);
-    terrainFarHeightTexture = new draw::FloatTexture2D(terrainHeightTexture->getWidth(), terrainHeightTexture->getHeight(), draw::tf::filter);
+    terrainHeightTexture = new draw::FloatTexture2D(img::io::readImage(DATA_DIRECTORY + "img/tasmania.png"), draw::tf::none);
+    terrainFarHeightTexture = new draw::FloatTexture2D(terrainHeightTexture->getWidth(), terrainHeightTexture->getHeight(), draw::tf::none);
     
     //Scale vertical range of the far-away heightmap.
     draw::computeScaledTexture(*terrainHeightTexture, *terrainFarHeightTexture, vec4(terrainHeightScale/255.0f), vec4(0.0f));
@@ -343,15 +343,15 @@ void setup()
     //Create a renderer and add the terrain, forest, and the atmospheric rendering effect to it.
     worldRenderer = new draw::WorldRenderer(application->getScreenWidth(), application->getScreenHeight());
     
-    worldRenderer->addWorldRenderable(skyBox);
+    worldRenderer->addWorldRenderable(0, skyBox);
     
-    worldRenderer->addWorldRenderable(terrain);
+    worldRenderer->addWorldRenderable(1, terrain);
     
-    worldRenderer->addWorldRenderable(treeTrunkMeshes);
-    worldRenderer->addWorldRenderable(treeLeavesMeshes);
-    worldRenderer->addWorldRenderable(treeSprites);
+    worldRenderer->addWorldRenderable(2, treeTrunkMeshes);
+    worldRenderer->addWorldRenderable(3, treeLeavesMeshes);
+    worldRenderer->addWorldRenderable(4, treeSprites);
     
-    worldRenderer->addScreenRenderable(sunSky, false, false);
+    worldRenderer->addScreenRenderable(0, sunSky, false, false);
 }
 
 void cleanup()

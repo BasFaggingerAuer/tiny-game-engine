@@ -80,7 +80,10 @@ void BufferInterface::resizeDeviceBuffer(const size_t &a_sizeInBytes)
     //Allocate new buffer if necessary.
     if (bufferIndex == 0) createDeviceBuffer();
     
+    //Older versions of OpenAL require a non-null buffer to be supplied.
+    std::vector<char> tmp(sizeInBytes, 0);
+    
     //Resize buffer.
-    AL_CHECK(alBufferData(bufferIndex, format, 0, sizeInBytes, frequency));
+    AL_CHECK(alBufferData(bufferIndex, format, static_cast<void *>(&tmp[0]), sizeInBytes, frequency));
 }
 

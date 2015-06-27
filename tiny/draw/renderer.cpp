@@ -1,5 +1,5 @@
 /*
-Copyright 2012, Bas Fagginger Auer.
+Copyright 2012-2015, Bas Fagginger Auer and Matthijs van Dorp.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -29,7 +29,8 @@ detail::BoundProgram::BoundProgram(const std::string &a_vertexShaderCode, const 
     program(0),
     vertexShaderCode(a_vertexShaderCode),
     geometryShaderCode(a_geometryShaderCode),
-    fragmentShaderCode(a_fragmentShaderCode)
+    fragmentShaderCode(a_fragmentShaderCode),
+    renderableIndices()
 {
 
 }
@@ -127,6 +128,23 @@ bool detail::BoundProgram::validate() const
     return false;
 }
 
+void detail::BoundProgram::addRenderableIndex(const unsigned int &renderableIndex)
+{
+    assert(renderableIndices.count(renderableIndex) == 0);
+    
+    renderableIndices.insert(renderableIndex);
+}
+
+void detail::BoundProgram::freeRenderableIndex(const unsigned int &renderableIndex)
+{
+    renderableIndices.erase(renderableIndex);
+}
+
+unsigned int detail::BoundProgram::numRenderables() const
+{
+    return renderableIndices.size();
+}
+
 Renderer::Renderer() :
     frameBufferIndex(0),
     renderTargetNames(),
@@ -148,6 +166,12 @@ Renderer::Renderer(const Renderer &) :
 
 Renderer::~Renderer()
 {
+    //Free allocated bound renderables.
+    for (std::map<unsigned int, detail::BoundRenderable *>::iterator i = renderables.begin(); i != renderables.end(); ++i)
+    {
+        delete i->second;
+    }
+    
     //Free allocated renderable programs.
     for (std::map<unsigned int, detail::BoundProgram *>::iterator i = shaderPrograms.begin(); i != shaderPrograms.end(); ++i)
     {
@@ -179,19 +203,28 @@ void Renderer::destroyFrameBuffer()
     frameBufferIndex = 0;
 }
 
-void Renderer::addRenderable(Renderable *renderable, const bool &readFromDepthTexture, const bool &writeToDepthTexture, const BlendMode &blendMode)
+void Renderer::addRenderable(const unsigned int &renderableIndex, Renderable *renderable, const bool &readFromDepthTexture, const bool &writeToDepthTexture, const BlendMode &blendMode)
 {
     assert(renderable);
     
+    //Verify that this index is not yet in use.
+    std::map<unsigned int, detail::BoundRenderable *>::iterator j = renderables.find(renderableIndex);
+    
+    if (j != renderables.end())
+    {
+        std::cerr << "A renderable with index " << renderableIndex << " has already been added to the renderer!" << std::endl;
+        throw std::exception();
+    }
+    
     detail::BoundProgram *shaderProgram = new detail::BoundProgram(renderable->getVertexShaderCode(), renderable->getGeometryShaderCode(), renderable->getFragmentShaderCode());
-    std::map<unsigned int, detail::BoundProgram *>::iterator j = shaderPrograms.find(shaderProgram->hash);
+    std::map<unsigned int, detail::BoundProgram *>::iterator k = shaderPrograms.find(shaderProgram->hash);
 
     //Lock texture uniforms to prevent the bindings from changing.
     uniformMap.lockTextures();
     renderable->uniformMap.lockTextures();
         
     //Has this program already been compiled earlier?
-    if (j == shaderPrograms.end())
+    if (k == shaderPrograms.end())
     {
         //If not, then add it to the list of programs.
         shaderProgram->compile();
@@ -219,14 +252,47 @@ void Renderer::addRenderable(Renderable *renderable, const bool &readFromDepthTe
         }
 #endif
         
-        j = shaderPrograms.insert(shaderPrograms.begin(), std::pair<unsigned int, detail::BoundProgram *>(shaderProgram->hash, shaderProgram));
+        k = shaderPrograms.insert(std::make_pair(shaderProgram->hash, shaderProgram)).first;
     }
     else
     {
         delete shaderProgram;
     }
     
-    renderables.push_back(detail::BoundRenderable(renderable, j->first, readFromDepthTexture, writeToDepthTexture, blendMode));
+    k->second->addRenderableIndex(renderableIndex);
+    renderables.insert(std::make_pair(renderableIndex, new detail::BoundRenderable(renderable, k->first, readFromDepthTexture, writeToDepthTexture, blendMode)));
+}
+
+bool Renderer::freeRenderable(const unsigned int &renderableIndex)
+{
+    std::map<unsigned int, detail::BoundRenderable *>::iterator j = renderables.find(renderableIndex);
+    
+    if (j == renderables.end())
+    {
+        std::cerr << "Unable to find renderable with index " << renderableIndex << "!" << std::endl;
+        return false;
+    }
+    
+    detail::BoundRenderable *renderable = j->second;
+    std::map<unsigned int, detail::BoundProgram *>::iterator k = shaderPrograms.find(renderable->shaderProgramHash);
+    
+    assert(k != shaderPrograms.end());
+    k->second->freeRenderableIndex(renderableIndex);
+    
+    //Remove renderable.
+    delete renderable;
+    renderables.erase(j);
+    
+    //Remove shader program if it is no longer referenced by any renderable.
+    if (k->second->numRenderables() == 0)
+    {
+        delete k->second;
+        shaderPrograms.erase(k);
+    }
+
+    std::cout << "Freed renderable " << renderableIndex << ", there are " << shaderPrograms.size() << " programs and " << renderables.size() << " renderables." << std::endl;
+
+    return true;
 }
 
 void Renderer::addRenderTarget(const std::string &name)
@@ -309,14 +375,16 @@ void Renderer::render() const
     
     uniformMap.bindTextures();
     
-    for (std::list<detail::BoundRenderable>::const_iterator i = renderables.begin(); i != renderables.end(); ++i)
+    for (std::map<unsigned int, detail::BoundRenderable *>::const_iterator i = renderables.begin(); i != renderables.end(); ++i)
     {
-        if (i->readFromDepthTexture) GL_CHECK(glEnable(GL_DEPTH_TEST));
+        const detail::BoundRenderable *renderable = i->second;
+        
+        if (renderable->readFromDepthTexture) GL_CHECK(glEnable(GL_DEPTH_TEST));
         else GL_CHECK(glDisable(GL_DEPTH_TEST));
         
-        GL_CHECK(glDepthMask(i->writeToDepthTexture ? GL_TRUE : GL_FALSE));
+        GL_CHECK(glDepthMask(renderable->writeToDepthTexture ? GL_TRUE : GL_FALSE));
 
-        if (i->blendMode == BlendReplace)
+        if (renderable->blendMode == BlendReplace)
         {
             GL_CHECK(glDisable(GL_BLEND));
         }
@@ -324,15 +392,15 @@ void Renderer::render() const
         {
             GL_CHECK(glEnable(GL_BLEND));
             
-                 if (i->blendMode == BlendAdd) GL_CHECK(glBlendFunc(GL_SRC_ALPHA, GL_ONE));
-            else if (i->blendMode == BlendMix) GL_CHECK(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+                 if (renderable->blendMode == BlendAdd) GL_CHECK(glBlendFunc(GL_SRC_ALPHA, GL_ONE));
+            else if (renderable->blendMode == BlendMix) GL_CHECK(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
         }
         
         //TODO: Is this very inefficient? Should we let the rendererable decide whether or not to update the uniforms every frame?
-        if (i->shaderProgramHash != lastShaderProgramHash)
+        if (renderable->shaderProgramHash != lastShaderProgramHash)
         {
             //If we have a different shader program, bind it.
-            lastShaderProgramHash = i->shaderProgramHash;
+            lastShaderProgramHash = renderable->shaderProgramHash;
             ++nrShaderProgramSwitches;
             
             //We should never have invalid hashes.
@@ -344,11 +412,11 @@ void Renderer::render() const
         
         assert(shaderProgram);
         
-        shaderProgram->setUniforms(i->renderable->uniformMap);
+        shaderProgram->setUniforms(renderable->renderable->uniformMap);
         
-        i->renderable->uniformMap.bindTextures(uniformMap.getNrTextures());
-        i->renderable->render(shaderProgram->getProgram());
-        i->renderable->uniformMap.unbindTextures(uniformMap.getNrTextures());
+        renderable->renderable->uniformMap.bindTextures(uniformMap.getNrTextures());
+        renderable->renderable->render(shaderProgram->getProgram());
+        renderable->renderable->uniformMap.unbindTextures(uniformMap.getNrTextures());
     }
     
     GL_CHECK(glUseProgram(0));

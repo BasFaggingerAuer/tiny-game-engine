@@ -79,10 +79,10 @@ void setup()
     
     for (unsigned int i = 0; i < N; ++i)
     {
-        worldRenderer->addWorldRenderable(testMeshes[i]);
+        worldRenderer->addWorldRenderable(i, testMeshes[i]);
     }
     
-    worldRenderer->addScreenRenderable(screenEffect, false, false);
+    worldRenderer->addScreenRenderable(0, screenEffect, false, false);
 }
 
 void cleanup()

@@ -31,7 +31,7 @@ TankType::TankType(const std::string &path, TiXmlElement *el)
 {
     std::cerr << "Reading tank type resource..." << std::endl;
    
-    assert(el->ValueStr() == "tank");
+    assert(std::string(el->Value()) == "tank");
     
     name = "";
     mass = 1.0f;
@@ -58,7 +58,7 @@ TankType::TankType(const std::string &path, TiXmlElement *el)
     //Read thrusters.
     for (TiXmlElement *sl = el->FirstChildElement(); sl; sl = sl->NextSiblingElement())
     {
-        if (sl->ValueStr() == "thruster")
+        if (std::string(sl->Value()) == "thruster")
         {
             std::string id = "";
             std::istringstream stream(sl->GetText());

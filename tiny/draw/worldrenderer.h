@@ -1,5 +1,5 @@
 /*
-Copyright 2012, Bas Fagginger Auer.
+Copyright 2012-2015, Bas Fagginger Auer and Matthijs van Dorp.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -42,8 +42,10 @@ class WorldRenderer
         void setProjectionMatrix(const mat4 &);
         void setCamera(const vec3 &, const vec4 &);
         
-        void addWorldRenderable(Renderable *, const bool & = true, const bool & = true, const BlendMode & = BlendReplace);
-        void addScreenRenderable(Renderable *, const bool & = true, const bool & = true, const BlendMode & = BlendReplace);
+        void addWorldRenderable(const unsigned int &, Renderable *, const bool & = true, const bool & = true, const BlendMode & = BlendReplace);
+        void addScreenRenderable(const unsigned int &, Renderable *, const bool & = true, const bool & = true, const BlendMode & = BlendReplace);
+        void freeWorldRenderable(const unsigned int &);
+        void freeScreenRenderable(const unsigned int &);
         
         void clearTargets() const;
         void render() const;

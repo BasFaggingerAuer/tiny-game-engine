@@ -82,6 +82,9 @@ target_link_libraries(test_Console ${USED_LIBS})
 add_executable(test_StaticMesh src/test_StaticMesh.cpp)
 target_link_libraries(test_StaticMesh ${USED_LIBS})
 
+add_executable(test_AddRemove src/test_AddRemove.cpp)
+target_link_libraries(test_AddRemove ${USED_LIBS})
+
 add_executable(test_SoundSource src/test_SoundSource.cpp)
 target_link_libraries(test_SoundSource ${USED_LIBS})
 

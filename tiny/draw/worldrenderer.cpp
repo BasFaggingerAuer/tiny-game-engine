@@ -1,5 +1,5 @@
 /*
-Copyright 2012, Bas Fagginger Auer.
+Copyright 2012-2015, Bas Fagginger Auer and Matthijs van Dorp.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -57,14 +57,24 @@ void WorldRenderer::setCamera(const vec3 &position, const vec4 &orientation)
     screenToColourRenderer.setCamera(position, orientation);
 }
 
-void WorldRenderer::addWorldRenderable(Renderable *renderable, const bool &readFromDepthTexture, const bool &writeToDepthTexture, const BlendMode &blendMode)
+void WorldRenderer::addWorldRenderable(const unsigned int &renderableIndex, Renderable *renderable, const bool &readFromDepthTexture, const bool &writeToDepthTexture, const BlendMode &blendMode)
 {
-    worldToScreenRenderer.addRenderable(renderable, readFromDepthTexture, writeToDepthTexture, blendMode);
+    worldToScreenRenderer.addRenderable(renderableIndex, renderable, readFromDepthTexture, writeToDepthTexture, blendMode);
 }
 
-void WorldRenderer::addScreenRenderable(Renderable *renderable, const bool &readFromDepthTexture, const bool &writeToDepthTexture, const BlendMode &blendMode)
+void WorldRenderer::addScreenRenderable(const unsigned int &renderableIndex, Renderable *renderable, const bool &readFromDepthTexture, const bool &writeToDepthTexture, const BlendMode &blendMode)
 {
-    screenToColourRenderer.addRenderable(renderable, readFromDepthTexture, writeToDepthTexture, blendMode);
+    screenToColourRenderer.addRenderable(renderableIndex, renderable, readFromDepthTexture, writeToDepthTexture, blendMode);
+}
+
+void WorldRenderer::freeWorldRenderable(const unsigned int &renderableIndex)
+{
+    worldToScreenRenderer.freeRenderable(renderableIndex);
+}
+
+void WorldRenderer::freeScreenRenderable(const unsigned int &renderableIndex)
+{
+    screenToColourRenderer.freeRenderable(renderableIndex);
 }
 
 void WorldRenderer::clearTargets() const
