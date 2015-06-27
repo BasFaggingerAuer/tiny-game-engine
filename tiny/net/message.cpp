@@ -606,17 +606,13 @@ bool MessageTranslator::sendMessageTCP(const Message &message, TCPsocket socket)
     return true;
 }
 
-int MessageTranslator::receiveMessageTCP(TCPsocket socket, Message &message)
+bool MessageTranslator::receiveMessageTCP(TCPsocket socket, Message &message)
 {
-    int status;
-    
     //Receive id.
-    status = SDLNet_TCP_Recv(socket, &messageBuffer[0], sizeof(id_t));
-    
-    if (status != sizeof(id_t))
+    if (SDLNet_TCP_Recv(socket, &messageBuffer[0], sizeof(id_t)) != sizeof(id_t))
     {
         std::cerr << "Unable to receive message id over TCP!" << std::endl;
-        return status;
+        return false;
     }
     
     const id_t id = *(id_t *)&messageBuffer[0];
@@ -625,7 +621,7 @@ int MessageTranslator::receiveMessageTCP(TCPsocket socket, Message &message)
     if (i == messageTypes.end())
     {
         std::cerr << "Unable to find message type with id " << id << "!" << std::endl;
-        return 0;
+        return false;
     }
     
     const size_t messageSize = i->second->getSizeInBytes();
@@ -633,23 +629,23 @@ int MessageTranslator::receiveMessageTCP(TCPsocket socket, Message &message)
     if (messageSize > messageBuffer.size() || messageSize == 0)
     {
         std::cerr << "Message is too large to be sent over TCP (" << messageSize << " bytes)!" << std::endl;
-        return 0;
+        return false;
     }
     
     //Receive data.
     if (SDLNet_TCP_Recv(socket, &messageBuffer[sizeof(id_t)], messageSize - sizeof(id_t)) != static_cast<int>(messageSize - sizeof(id_t)))
     {
         std::cerr << "Unable to receive message contents over TCP!" << std::endl;
-        return 0;
+        return false;
     }
     
     if (i->second->dataToMessage(&messageBuffer[0], message) != messageSize)
     {
         std::cerr << "Unable to convert raw data to message!" << std::endl;
-        return 0;
+        return false;
     }
     
-    return 1;
+    return true;
 }
 
 std::string MessageTranslator::getMessageTypeNames(const std::string &separator) const

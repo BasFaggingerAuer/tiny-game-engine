@@ -146,7 +146,7 @@ class MessageTranslator
         bool textToMessage(const std::string &, Message &) const;
         bool messageToText(const Message &, std::string &) const;
         bool sendMessageTCP(const Message &, TCPsocket);
-        int receiveMessageTCP(TCPsocket, Message &);
+        bool receiveMessageTCP(TCPsocket, Message &);
         std::string getMessageTypeNames(const std::string & = ", ") const;
         std::string getMessageTypeDescriptions() const;
         
