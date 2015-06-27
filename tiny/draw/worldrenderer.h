@@ -42,10 +42,10 @@ class WorldRenderer
         void setProjectionMatrix(const mat4 &);
         void setCamera(const vec3 &, const vec4 &);
         
-        void addWorldRenderable(Renderable *, const bool & = true, const bool & = true, const BlendMode & = BlendReplace);
-        void addScreenRenderable(Renderable *, const bool & = true, const bool & = true, const BlendMode & = BlendReplace);
-
-        void freeRenderable(Renderable *);
+        void addWorldRenderable(const unsigned int &, Renderable *, const bool & = true, const bool & = true, const BlendMode & = BlendReplace);
+        void addScreenRenderable(const unsigned int &, Renderable *, const bool & = true, const bool & = true, const BlendMode & = BlendReplace);
+        void freeWorldRenderable(const unsigned int &);
+        void freeScreenRenderable(const unsigned int &);
         
         void clearTargets() const;
         void render() const;

@@ -66,9 +66,10 @@ class BoundProgram
         
         const unsigned int hash;
         
-        void addRenderable(Renderable * renderable);
-        void freeRenderable(Renderable * renderable);
-        unsigned int numRenderables(void) const { return renderables.size(); }
+        void addRenderableIndex(const unsigned int &);
+        void freeRenderableIndex(const unsigned int &);
+        unsigned int numRenderables() const;
+
     private:
         VertexShader *vertexShader;
         GeometryShader *geometryShader;
@@ -79,7 +80,7 @@ class BoundProgram
         const std::string geometryShaderCode;
         const std::string fragmentShaderCode;
 
-        std::set<Renderable*> renderables;
+        std::set<unsigned int> renderableIndices;
 };
 
 struct BoundRenderable
@@ -103,8 +104,6 @@ struct BoundRenderable
     bool readFromDepthTexture;
     bool writeToDepthTexture;
     BlendMode blendMode;
-
-    bool operator< (const BoundRenderable &other) const { return renderable < other.renderable; }
 };
 
 }
@@ -117,9 +116,8 @@ class Renderer
         Renderer();
         virtual ~Renderer();
         
-        void addRenderable(Renderable *, const bool & = true, const bool & = true, const BlendMode & = BlendReplace);
-
-        bool freeRenderable(Renderable *);
+        void addRenderable(const unsigned int &, Renderable *, const bool & = true, const bool & = true, const BlendMode & = BlendReplace);
+        bool freeRenderable(const unsigned int &);
         
         void setDepthTextureTarget(const DepthTexture2D &texture)
         {
@@ -172,7 +170,7 @@ class Renderer
         //This class should not be copied.
         Renderer(const Renderer &renderer);
         
-        std::set<detail::BoundRenderable> renderables;
+        std::map<unsigned int, detail::BoundRenderable *> renderables;
         std::map<unsigned int, detail::BoundProgram *> shaderPrograms;
         GLuint frameBufferIndex;
         std::vector<std::string> renderTargetNames;

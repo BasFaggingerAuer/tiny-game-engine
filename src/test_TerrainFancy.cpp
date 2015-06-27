@@ -343,15 +343,15 @@ void setup()
     //Create a renderer and add the terrain, forest, and the atmospheric rendering effect to it.
     worldRenderer = new draw::WorldRenderer(application->getScreenWidth(), application->getScreenHeight());
     
-    worldRenderer->addWorldRenderable(skyBox);
+    worldRenderer->addWorldRenderable(0, skyBox);
     
-    worldRenderer->addWorldRenderable(terrain);
+    worldRenderer->addWorldRenderable(1, terrain);
     
-    worldRenderer->addWorldRenderable(treeTrunkMeshes);
-    worldRenderer->addWorldRenderable(treeLeavesMeshes);
-    worldRenderer->addWorldRenderable(treeSprites);
+    worldRenderer->addWorldRenderable(2, treeTrunkMeshes);
+    worldRenderer->addWorldRenderable(3, treeLeavesMeshes);
+    worldRenderer->addWorldRenderable(4, treeSprites);
     
-    worldRenderer->addScreenRenderable(sunSky, false, false);
+    worldRenderer->addScreenRenderable(0, sunSky, false, false);
 }
 
 void cleanup()

@@ -98,8 +98,8 @@ void setup(const std::string &fileName)
     
     //Create a renderer and add the test and the diffuse rendering effect to it.
     worldRenderer = new draw::WorldRenderer(application->getScreenWidth(), application->getScreenHeight());
-    worldRenderer->addWorldRenderable(testMesh);
-    worldRenderer->addScreenRenderable(screenEffect, false, false);
+    worldRenderer->addWorldRenderable(0, testMesh);
+    worldRenderer->addScreenRenderable(0, screenEffect, false, false);
 }
 
 void cleanup()

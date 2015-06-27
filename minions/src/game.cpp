@@ -37,20 +37,22 @@ Game::Game(const os::Application *application, const std::string &path) :
     
     renderer = new draw::WorldRenderer(application->getScreenWidth(), application->getScreenHeight());
     
-    renderer->addWorldRenderable(skyBoxMesh);
+    unsigned int index = 0;
     
-    renderer->addWorldRenderable(terrain->terrain);
+    renderer->addWorldRenderable(index++, skyBoxMesh);
     
-    renderer->addWorldRenderable(forest->treeTrunkMeshes);
-    renderer->addWorldRenderable(forest->treeLeavesMeshes);
-    renderer->addWorldRenderable(forest->treeSprites);
+    renderer->addWorldRenderable(index++, terrain->terrain);
+    
+    renderer->addWorldRenderable(index++, forest->treeTrunkMeshes);
+    renderer->addWorldRenderable(index++, forest->treeLeavesMeshes);
+    renderer->addWorldRenderable(index++, forest->treeSprites);
     
     for (std::map<std::string, MinionType *>::const_iterator i = minionTypes.begin(); i != minionTypes.end(); ++i)
     {
-        renderer->addWorldRenderable(i->second->horde);
+        renderer->addWorldRenderable(index++, i->second->horde);
     }
     
-    renderer->addScreenRenderable(skyEffect, false, false);
+    renderer->addScreenRenderable(index++, skyEffect, false, false);
     
     clear();
     

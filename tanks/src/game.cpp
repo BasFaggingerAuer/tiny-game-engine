@@ -61,19 +61,20 @@ Game::Game(const os::Application *application, const std::string &path) :
     //Create a renderer and add the font to it, disabling depth reading and writing.
     renderer = new draw::WorldRenderer(application->getScreenWidth(), application->getScreenHeight());
     
-    renderer->addWorldRenderable(skyBoxMesh);
-    renderer->addWorldRenderable(terrain->terrain);
+    unsigned int index = 0;
+    
+    renderer->addWorldRenderable(index++, skyBoxMesh);
+    renderer->addWorldRenderable(index++, terrain->terrain);
     
     for (std::map<unsigned int, SoldierType *>::const_iterator i = soldierTypes.begin(); i != soldierTypes.end(); ++i)
     {
-        renderer->addWorldRenderable(i->second->horde);
+        renderer->addWorldRenderable(index++, i->second->horde);
     }
     
-    
-    renderer->addScreenRenderable(skyEffect, false, false);
-    renderer->addScreenRenderable(bulletHorde, true, false, tiny::draw::BlendAdd);
-    renderer->addScreenRenderable(consoleBackground, false, false, draw::BlendMix);
-    renderer->addScreenRenderable(font, false, false, draw::BlendMix);
+    renderer->addScreenRenderable(index++, skyEffect, false, false);
+    renderer->addScreenRenderable(index++, bulletHorde, true, false, tiny::draw::BlendAdd);
+    renderer->addScreenRenderable(index++, consoleBackground, false, false, draw::BlendMix);
+    renderer->addScreenRenderable(index++, font, false, false, draw::BlendMix);
     
     clear();
 }

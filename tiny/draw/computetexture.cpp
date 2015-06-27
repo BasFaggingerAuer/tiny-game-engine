@@ -103,7 +103,7 @@ ComputeTexture::ComputeTexture(const std::vector<std::string> &inputNames, const
     input(inputNames, fragmentShaderCode),
     output(outputNames)
 {
-    output.addRenderable(&input, false, false);
+    output.addRenderable(0, &input, false, false);
 }
 
 ComputeTexture::~ComputeTexture()

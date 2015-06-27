@@ -56,13 +56,13 @@ void createMesh()
     cubeMesh = new draw::StaticMesh(mesh::StaticMesh::createCubeMesh(0.5f));
     cubeMesh->setDiffuseTexture(*cubeDiffuseTexture);
     
-    worldRenderer->addWorldRenderable(cubeMesh);
+    worldRenderer->addWorldRenderable(0, cubeMesh);
     meshExists = true;
 }
 
 void deleteMesh()
 {
-    worldRenderer->freeRenderable(cubeMesh);
+    worldRenderer->freeWorldRenderable(0);
     delete cubeMesh; cubeMesh = 0;
     meshExists = false;
 }
@@ -74,7 +74,7 @@ void setup()
     
     //Create a renderer and add the cube and the diffuse rendering effect to it.
     worldRenderer = new draw::WorldRenderer(application->getScreenWidth(), application->getScreenHeight());
-    worldRenderer->addScreenRenderable(screenEffect, false, false);
+    worldRenderer->addScreenRenderable(1, screenEffect, false, false);
 
     cubeDiffuseTexture = new draw::RGBATexture2D(img::Image::createTestImage());
     createMesh();
