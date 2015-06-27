@@ -115,7 +115,8 @@ struct SoldierInstance
         q(0.0f, 0.0f, 0.0f, 1.0f),
         P(0.0f),
         weaponRechargeTimes(),
-        sound(0)
+        sound(0),
+        hit(false)
     {
 
     }
@@ -128,6 +129,7 @@ struct SoldierInstance
     tiny::vec3 P;
     std::vector<float> weaponRechargeTimes;
     unsigned int sound;
+    bool hit;
 };
 
 class SoldierWeapon
