@@ -550,7 +550,7 @@ void Game::readResources(const std::string &path)
         throw std::exception();
     }
     
-    TiXmlElement *root = doc.FirstChildElement();
+    TiXmlElement *root = doc.RootElement();
     
     if (!root)
     {
