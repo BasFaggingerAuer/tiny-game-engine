@@ -47,6 +47,7 @@ GameTerrain::GameTerrain(const std::string &path, TiXmlElement *el)
     float heightScaleFactor = 1.0f;
     int farScaleFactor = 2; 
     float detailScaleFactor = 1.0f;
+    vec2 startingOffset(0.5f);
     
     assert(std::string(el->Value()) == "terrain");
     
@@ -56,6 +57,8 @@ GameTerrain::GameTerrain(const std::string &path, TiXmlElement *el)
     el->QueryFloatAttribute("scale_detail", &detailScaleFactor);
     el->QueryStringAttribute("attribute_shader", &attributeShaderFileName);
     el->QueryStringAttribute("heightmap", &heightMapFileName);
+    el->QueryFloatAttribute("offset_x", &startingOffset.x);
+    el->QueryFloatAttribute("offset_y", &startingOffset.y);
     
     for (TiXmlElement *sl = el->FirstChildElement(); sl; sl = sl->NextSiblingElement())
     {
@@ -125,7 +128,7 @@ GameTerrain::GameTerrain(const std::string &path, TiXmlElement *el)
     
     //Create the terrain.
     terrain = new draw::Terrain(6, 8);
-    setOffset(vec2(0.5f));
+    setOffset(startingOffset);
 }
 
 GameTerrain::~GameTerrain()

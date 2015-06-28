@@ -434,8 +434,8 @@ void Game::update(os::Application *application, const float &dt)
             if (soldier.hit)
             {
                 //We have been hit!
-                soldier.x.x = (rand() & 511) - 256;
-                soldier.x.z = (rand() & 511) - 256;
+                soldier.x.x = (rand() & 127) - 64;
+                soldier.x.z = (rand() & 127) - 64;
                 soldier.x.y = terrain->getHeight(vec2(soldier.x.x, soldier.x.z));
                 soldier.hit = false;
                 isHit = true;
