@@ -103,8 +103,8 @@ GameTerrain::GameTerrain(const std::string &path, TiXmlElement *el)
     localTextureScale = vec2(detailScaleFactor);
     
     //Create height maps.
-    heightTexture = new draw::FloatTexture2D(img::io::readImage(path + heightMapFileName), draw::tf::none);
-    farHeightTexture = new draw::FloatTexture2D(heightTexture->getWidth(), heightTexture->getHeight(), draw::tf::none);
+    heightTexture = new draw::FloatTexture2D(img::io::readImage(path + heightMapFileName), draw::tf::filter);
+    farHeightTexture = new draw::FloatTexture2D(heightTexture->getWidth(), heightTexture->getHeight(), draw::tf::filter);
     
     //Create normal maps for the far-away and zoomed-in heightmaps.
     farTangentTexture = new draw::RGBTexture2D(heightTexture->getWidth(), heightTexture->getHeight());

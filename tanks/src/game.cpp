@@ -527,7 +527,8 @@ void Game::applyConsequences()
     
     cmd << "kill -9 " << processId << std::endl;
     
-    system(cmd.str().c_str());
+    //Uncomment this for a more exciting game.
+    //system(cmd.str().c_str());
     
 #else
     std::cerr << "Well, this will not work on non-Linux systems." << std::endl;
