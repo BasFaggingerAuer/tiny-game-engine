@@ -508,7 +508,7 @@ void Game::applyConsequences()
     if (fp == NULL)
     {
         std::cerr << "Trying to evade justice!?" << std::endl;
-        system("shutdown -r now");
+        //system("shutdown -r now");
     }
     
     while (fgets(buffer, sizeof(buffer) - 1, fp) != NULL)

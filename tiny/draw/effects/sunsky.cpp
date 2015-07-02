@@ -85,7 +85,7 @@ std::string SunSky::getFragmentShaderCode() const
 "   colour = vec4(skyColour*(fogDecayFactor*objectColour + (vec3(1.0f) - fogDecayFactor)), 1.0f);\n"
 "   \n"
 "   //Add sun and sky.\n"
-"   vec3 skySunColour = texture(skyTexture, vec2(0.5f*(1.0f - positionToSun.y), 1.0f - 0.99f*max(0.01f, normalize(position).y))).xyz\n"
+"   vec3 skySunColour = texture(skyTexture, vec2(0.5f*(1.0f - positionToSun.y), 1.0f - 0.99f*max(0.01f, -positionToCamera.y))).xyz\n"
 "                       + max(0.0f, positionToSun.y)*vec3(800.0f, 500.0f, 0.0f)*max(0.0f, -dot(positionToCamera, positionToSun) - 0.999f);\n"
 "   \n"
 "   colour.xyz = mix(colour.xyz, skySunColour, clamp(depth - 5.0e5, 0.0f, 1.0f));\n"
