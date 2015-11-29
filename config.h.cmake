@@ -2,8 +2,8 @@
 
 #include <string>
 
-#define SCREEN_WIDTH 1280
-#define SCREEN_HEIGHT 600
+#define SCREEN_WIDTH 1920
+#define SCREEN_HEIGHT 980
 #define DATA_DIRECTORY std::string("${TINY_SOURCE_DIR}/data/")
 
 #ifndef NDEBUG

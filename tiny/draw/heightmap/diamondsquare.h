@@ -29,7 +29,7 @@ namespace draw
 {
 
 template<typename TextureType>
-void computeDiamondSquareRefinement(const TextureType &source, TextureType &dest, const size_t &stepSize)
+void computeDiamondSquareRefinement(const TextureType &source, TextureType &dest, const size_t &stepSize, const float &amplitude = 1.0f)
 {
     if (stepSize >= source.getWidth() || stepSize >= source.getHeight() || stepSize <= 1 || (stepSize & (stepSize - 1)) != 0)
     {
@@ -57,6 +57,7 @@ void computeDiamondSquareRefinement(const TextureType &source, TextureType &dest
 "uniform sampler2D source;\n"
 "uniform vec2 sourceSize;\n"
 "uniform int step;\n"
+"uniform float amplitude;\n"
 "uniform vec2 sourceStep;\n"
 "\n"
 "in vec2 tex;\n"
@@ -83,14 +84,14 @@ void computeDiamondSquareRefinement(const TextureType &source, TextureType &dest
 "	{\n"
 "		float h1 = texture(source, vec2(tex.x - sourceStep.x, tex.y)).x;\n"
 "		float h2 = texture(source, vec2(tex.x + sourceStep.x, tex.y)).x;\n"
-"		colour = vec4(0.5f*(h1 + h2) + (0.5f + abs(h2 - h1))*rand(tex), 0.0f, 0.0f, 0.0f);\n"
+"		colour = vec4(0.5f*(h1 + h2) + amplitude*(0.5f + abs(h2 - h1))*rand(tex), 0.0f, 0.0f, 0.0f);\n"
 "	}\n"
 "	//Are we at a diamond's vertex in a column?\n"
 "	else if (twoStepMod.x == 0 && stepMod.y == 0)\n"
 "	{\n"
 "		float h1 = texture(source, vec2(tex.x, tex.y - sourceStep.y)).x;\n"
 "		float h2 = texture(source, vec2(tex.x, tex.y + sourceStep.y)).x;\n"
-"		colour = vec4(0.5f*(h1 + h2) + (0.5f + abs(h2 - h1))*rand(tex), 0.0f, 0.0f, 0.0f);\n"
+"		colour = vec4(0.5f*(h1 + h2) + amplitude*(0.5f + abs(h2 - h1))*rand(tex), 0.0f, 0.0f, 0.0f);\n"
 "	}\n"
 "	//Otherwise just copy.\n"
 "	else\n"
@@ -106,6 +107,7 @@ void computeDiamondSquareRefinement(const TextureType &source, TextureType &dest
 "uniform sampler2D source;\n"
 "uniform vec2 sourceSize;\n"
 "uniform int step;\n"
+"uniform float amplitude;\n"
 "uniform vec2 sourceStep;\n"
 "\n"
 "in vec2 tex;\n"
@@ -129,7 +131,7 @@ void computeDiamondSquareRefinement(const TextureType &source, TextureType &dest
 "		float h2 = texture(source, vec2(tex.x + sourceStep.x, tex.y)).x;\n"
 "		float h3 = texture(source, vec2(tex.x, tex.y - sourceStep.y)).x;\n"
 "		float h4 = texture(source, vec2(tex.x, tex.y + sourceStep.y)).x;\n"
-"		colour = vec4(0.25f*(h1 + h2 + h3 + h4) + (0.5f + abs(max(h2 - h1, h4 - h3)))*rand(tex), 0.0f, 0.0f, 0.0f);\n"
+"		colour = vec4(0.25f*(h1 + h2 + h3 + h4) + amplitude*(0.5f + abs(max(h2 - h1, h4 - h3)))*rand(tex), 0.0f, 0.0f, 0.0f);\n"
 "	}\n"
 "	//Otherwise just copy.\n"
 "	else\n"
@@ -141,9 +143,11 @@ void computeDiamondSquareRefinement(const TextureType &source, TextureType &dest
     ComputeTexture *diamondComputeTexture = new ComputeTexture(inputTextures, outputTextures, diamondFragmentShader);
     ComputeTexture *squareComputeTexture = new ComputeTexture(inputTextures, outputTextures, squareFragmentShader);
     
+    diamondComputeTexture->uniformMap().setFloatUniform(amplitude, "amplitude");
     diamondComputeTexture->uniformMap().setVec2Uniform(source.getWidth(), source.getHeight(), "sourceSize");
     diamondComputeTexture->setOutput(*tmp[1], "colour");
     
+    squareComputeTexture->uniformMap().setFloatUniform(amplitude, "amplitude");
     squareComputeTexture->uniformMap().setVec2Uniform(source.getWidth(), source.getHeight(), "sourceSize");
     squareComputeTexture->setInput(*tmp[1], "source");
     squareComputeTexture->setOutput(*tmp[0], "colour");

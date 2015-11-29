@@ -1,0 +1,16 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<moba>
+    <sky texture="sky.png" />
+    <terrain heightmap="map.png" scale_width="2" scale_height="300" scale_far="4" scale_detail="1024" offset_x="0.63" offset_y="0.523" attribute_shader="map_attributes.glsl">
+        <biome diffuse="cliff_diffuse.png" normal="cliff_norm.png"/>
+        <biome diffuse="forest_diffuse.png" normal="forest_norm.png"/>
+        <biome diffuse="grass_diffuse.png" normal="grass_norm.png"/>
+        <biome diffuse="dirt_diffuse.png"/>
+        <biome diffuse="tile_diffuse.png" normal="tile_norm.png"/>
+        <attributes biome_index="1" map="map_attr_forest.png"/>
+        <attributes biome_index="3" map="map_attr_dirt.png"/>
+        <attributes biome_index="4" map="map_attr_tile.png"/>
+    </terrain>
+    <forest biome_index="1" high_detail_radius="300" low_detail_radius="4096" nr_planted_trees="131072" nr_high_detail="1024" nr_low_detail="131072" diffuse="pine_diffuse.png" mesh="pine.dae" sprite="pine_sprite.png" sprite_w="7.0" sprite_h="13.0"/>
+    <minion_type name="Wolf" nr_instances="1024" mesh="wolf_run.dae" diffuse="wolf_diffuse.png"/>
+</moba>

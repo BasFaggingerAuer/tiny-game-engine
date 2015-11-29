@@ -155,8 +155,8 @@ void SDLApplication::exitOpenAL()
 {
     /* Shut down OpenAL. */
     alcMakeContextCurrent(0);
-    alcDestroyContext(alContext);
     alcCloseDevice(alDevice);
+    alcDestroyContext(alContext);
 }
 
 void SDLApplication::initOpenAL()

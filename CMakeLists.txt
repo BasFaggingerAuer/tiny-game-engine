@@ -129,3 +129,5 @@ add_subdirectory(${TINY_SOURCE_DIR}/tanks/)
 
 add_subdirectory(${TINY_SOURCE_DIR}/minions/)
 
+add_subdirectory(${TINY_SOURCE_DIR}/moba/)
+
