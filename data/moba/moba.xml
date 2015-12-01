@@ -14,11 +14,35 @@
     <forest biome_index="1" high_detail_radius="300" low_detail_radius="4096" nr_planted_trees="131072" nr_high_detail="1024" nr_low_detail="131072" diffuse="pine_diffuse.png" mesh="pine.dae" sprite="pine_sprite.png" sprite_w="7.0" sprite_h="13.0"/>
     <minion_type name="Wolf" nr_instances="1024" mesh="wolf_run.dae" diffuse="wolf_diffuse.png"/>
     <faction name="Radiant">
-        <towers mesh="radiant_tower.dae" diffuse="radiant_tower_diffuse.png" normal="radiant_tower_norm.png" scale="1.0">
+        <nexus mesh="radiant_nexus.dae" diffuse="radiant_tower_diffuse.png" normal="radiant_tower_norm.png" x="0.6021" y="0.5522" dz="-0.7" r="3.8" scale="1.5" />
+        <towers mesh="radiant_tower.dae" diffuse="radiant_tower_diffuse.png" normal="radiant_tower_norm.png">
             <instance x="0.6006" y="0.5405" r="0.0"/>
             <instance x="0.6084" y="0.5425" r="0.0"/>
             <instance x="0.6133" y="0.5498" r="0.0"/>
             <instance x="0.6030" y="0.5493" r="0.0"/>
+            <instance x="0.6050" y="0.5508" r="0.0"/>
+            <instance x="0.6279" y="0.5547" r="0.0"/>
+            <instance x="0.6528" y="0.5757" r="0.0"/>
+            <instance x="0.5928" y="0.4604" r="0.0"/>
+            <instance x="0.6001" y="0.5288" r="0.0"/>
+            <instance x="0.6138" y="0.5371" r="0.0"/>
+            <instance x="0.6260" y="0.5264" r="0.0"/>
+        </towers>
+    </faction>
+    <faction name="Dire">
+        <nexus mesh="dire_nexus.dae" diffuse="dire_tower_diffuse.png" normal="dire_tower_norm.png" x="0.6611" y="0.4912" dz="-0.8" r="0.0" />
+        <towers mesh="dire_tower.dae" diffuse="dire_tower_diffuse.png" normal="dire_tower_norm.png" scale="1.0">
+            <instance x="0.6484" y="0.4941" r="0.0"/>
+            <instance x="0.6548" y="0.5015" r="0.0"/>
+            <instance x="0.6626" y="0.5044" r="0.0"/>
+            <instance x="0.6592" y="0.4912" r="0.0"/>
+            <instance x="0.6616" y="0.4937" r="0.0"/>
+            <instance x="0.6694" y="0.5801" r="0.0"/>
+            <instance x="0.6650" y="0.5166" r="0.0"/>
+            <instance x="0.6499" y="0.5059" r="0.0"/>
+            <instance x="0.6372" y="0.5186" r="0.0"/>
+            <instance x="0.6382" y="0.4902" r="0.0"/>
+            <instance x="0.6099" y="0.4634" r="0.0"/>
         </towers>
     </faction>
 </moba>

@@ -42,8 +42,14 @@ class Faction
         
         std::string name;
         
+        float nexusScale;
+        tiny::vec4 nexusPosition;
+        tiny::draw::StaticMeshHorde *nexusMesh;
+        tiny::draw::RGBATexture2D *nexusDiffuseTexture;
+        tiny::draw::RGBATexture2D *nexusNormalTexture;
+        
         float towerScale;
-        std::list<tiny::vec3> towers;
+        std::list<tiny::vec4> towerPositions;
         tiny::draw::StaticMeshHorde *towerMeshes;
         tiny::draw::RGBATexture2D *towerDiffuseTexture;
         tiny::draw::RGBATexture2D *towerNormalTexture;

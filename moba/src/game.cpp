@@ -48,6 +48,7 @@ Game::Game(const os::Application *application, const std::string &path) :
     
     for (std::vector<Faction *>::const_iterator i = factions.begin(); i != factions.end(); ++i)
     {
+        renderer->addWorldRenderable(index++, (*i)->nexusMesh);
         renderer->addWorldRenderable(index++, (*i)->towerMeshes);
     }
     
