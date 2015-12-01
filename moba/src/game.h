@@ -18,12 +18,14 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <string>
 #include <map>
+#include <vector>
 
 #include <tinyxml.h>
 
 #include <tiny/os/application.h>
 
 #include <tiny/mesh/staticmesh.h>
+#include <tiny/draw/staticmeshhorde.h>
 #include <tiny/mesh/animatedmesh.h>
 #include <tiny/draw/animatedmeshhorde.h>
 #include <tiny/draw/icontexture2d.h>
@@ -37,6 +39,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "terrain.h"
 #include "forest.h"
+#include "faction.h"
 #include "minion_type.h"
 
 namespace moba
@@ -73,6 +76,7 @@ class Game
         GameForest *forest;
         std::map<std::string, MinionType *> minionTypes;
         std::map<unsigned int, Minion> moba;
+        std::vector<Faction *> factions;
 };
 
 } //namespace moba

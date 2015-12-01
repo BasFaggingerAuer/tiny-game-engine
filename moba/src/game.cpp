@@ -46,6 +46,11 @@ Game::Game(const os::Application *application, const std::string &path) :
     renderer->addWorldRenderable(index++, forest->treeMeshes, true, true, draw::BlendReplace, draw::CullNothing);
     renderer->addWorldRenderable(index++, forest->treeSprites);
     
+    for (std::vector<Faction *>::const_iterator i = factions.begin(); i != factions.end(); ++i)
+    {
+        renderer->addWorldRenderable(index++, (*i)->towerMeshes);
+    }
+    
     for (std::map<std::string, MinionType *>::const_iterator i = minionTypes.begin(); i != minionTypes.end(); ++i)
     {
         renderer->addWorldRenderable(index++, i->second->horde);
@@ -60,6 +65,12 @@ Game::Game(const os::Application *application, const std::string &path) :
     
     //Create a minion.
     moba.insert(std::pair<unsigned int, Minion>(0, Minion("Dummy", "Wolf")));
+    
+    //Create faction structures.
+    for (std::vector<Faction *>::iterator i = factions.begin(); i != factions.end(); ++i)
+    {
+        (*i)->plantBuildings(terrain);
+    }
 }
 
 Game::~Game()
@@ -208,6 +219,10 @@ void Game::readResources(const std::string &path)
             }
             
             minionTypes.insert(std::pair<std::string, MinionType *>(minionType->name, minionType));
+        }
+        else if (el->ValueStr() == "faction")
+        {
+            factions.push_back(new Faction(path, el));
         }
     }
 }

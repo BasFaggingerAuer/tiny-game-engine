@@ -206,6 +206,17 @@ void GameTerrain::setOffset(const vec2 &offset)
     //terrain->setHeightTextures(*heightTexture, *tangentTexture, *normalTexture, scale);
 }
 
+vec3 GameTerrain::getWorldPosition(const float &x, const float &y) const
+{
+    //Convert position within texture (in [0, 1] x [0, 1]) to XYZ world position.
+    vec2 pos = vec2(x - (farOffset.x + 0.5f/static_cast<float>(farScale.x)), y - (farOffset.y + 0.5f/static_cast<float>(farScale.y)));
+    
+    pos.x *= static_cast<float>(heightTexture->getWidth()*farScale.x)*scale.x;
+    pos.y *= static_cast<float>(heightTexture->getHeight()*farScale.y)*scale.y;
+
+    return vec3(pos.x, GameTerrain::sampleTextureBilinear(*heightTexture, scale, pos).x, pos.y);
+}
+
 //Function to generate position samples of a certain attribute map.
 int GameTerrain::createAttributeMapSamples(const int &maxNrSamples, const int &index,
                                            std::vector<draw::StaticMeshInstance> &highDetailInstances, const vec2 &lowDetailInstanceSize, std::vector<draw::WorldIconInstance> &lowDetailInstances, std::vector<vec3> &positions) const

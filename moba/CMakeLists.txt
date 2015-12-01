@@ -38,6 +38,7 @@ add_executable(moba src/moba.cpp
                     src/terrain.cpp
                     src/forest.cpp
                     src/minion_type.cpp
+                    src/faction.cpp
                     src/game.cpp)
 
 target_link_libraries(moba ${MOBA_LIBS})

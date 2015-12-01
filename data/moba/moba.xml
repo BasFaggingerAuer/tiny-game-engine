@@ -1,7 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <moba>
     <sky texture="sky.png" />
-    <terrain heightmap="map.png" scale_width="2" scale_height="300" scale_far="4" scale_detail="1024" offset_x="0.63" offset_y="0.523" attribute_shader="map_attributes.glsl">
+    <terrain heightmap="map.png" scale_width="2" scale_height="300" scale_far="4" scale_detail="512" offset_x="0.63" offset_y="0.523" attribute_shader="map_attributes.glsl">
         <biome diffuse="cliff_diffuse.png" normal="cliff_norm.png"/>
         <biome diffuse="forest_diffuse.png" normal="forest_norm.png"/>
         <biome diffuse="grass_diffuse.png" normal="grass_norm.png"/>
@@ -13,4 +13,12 @@
     </terrain>
     <forest biome_index="1" high_detail_radius="300" low_detail_radius="4096" nr_planted_trees="131072" nr_high_detail="1024" nr_low_detail="131072" diffuse="pine_diffuse.png" mesh="pine.dae" sprite="pine_sprite.png" sprite_w="7.0" sprite_h="13.0"/>
     <minion_type name="Wolf" nr_instances="1024" mesh="wolf_run.dae" diffuse="wolf_diffuse.png"/>
+    <faction name="Radiant">
+        <towers mesh="radiant_tower.dae" diffuse="radiant_tower_diffuse.png" normal="radiant_tower_norm.png" scale="1.0">
+            <instance x="0.6006" y="0.5405" r="0.0"/>
+            <instance x="0.6084" y="0.5425" r="0.0"/>
+            <instance x="0.6133" y="0.5498" r="0.0"/>
+            <instance x="0.6030" y="0.5493" r="0.0"/>
+        </towers>
+    </faction>
 </moba>
