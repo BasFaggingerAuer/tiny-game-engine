@@ -25,6 +25,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/draw/animatedmeshhorde.h>
 #include <tiny/draw/texture2d.h>
 
+#include "terrain.h"
+
 namespace moba
 {
 
@@ -38,6 +40,8 @@ class MinionType
         
         std::string name;
         
+        float maxSpeed;
+        
         int maxNrInstances;
         tiny::mesh::AnimatedMesh mesh;
         tiny::draw::RGBTexture2D *diffuseTexture;
@@ -48,14 +52,29 @@ class MinionType
         std::list<tiny::draw::AnimatedMeshInstance> instances;
 };
 
+class MinionPath
+{
+    public:
+        MinionPath(const std::string &, TiXmlElement *);
+        ~MinionPath();
+        
+        void plantNodes(const GameTerrain *);
+        
+        std::string name;
+        std::vector<tiny::vec2> nodes;
+};
+
 class Minion
 {
     public:
-        Minion(const std::string &, const std::string &);
+        Minion(const std::string &, const std::string &, const tiny::vec2 &);
         ~Minion();
         
         std::string name;
         std::string type;
+        
+        std::string path;
+        unsigned int pathIndex;
         
         tiny::vec2 pos;
         float angle;

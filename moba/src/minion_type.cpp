@@ -36,9 +36,11 @@ MinionType::MinionType(const std::string &path, TiXmlElement *el)
     img::Image normalImage = img::Image::createUpNormalImage();
 
     name = "Unspecified";
+    maxSpeed = 1.0f;
     maxNrInstances = 1024;
     
     el->QueryIntAttribute("nr_instances", &maxNrInstances);
+    el->QueryFloatAttribute("max_speed", &maxSpeed);
     
     if (el->Attribute("name")) name = std::string(el->Attribute("name"));
     if (el->Attribute("mesh")) mesh = mesh::io::readAnimatedMesh(path + std::string(el->Attribute("mesh")));
@@ -67,12 +69,69 @@ MinionType::~MinionType()
     delete diffuseTexture;
 }
 
+MinionPath::MinionPath(const std::string &, TiXmlElement *el) :
+    name("Unspecified"),
+    nodes()
+{
+    std::cerr << "Reading minion path..." << std::endl;
+    
+    assert(el->ValueStr() == "minion_path");
+    
+    el->QueryStringAttribute("name", &name);
+    
+    for (TiXmlElement *sl = el->FirstChildElement(); sl; sl = sl->NextSiblingElement())
+    {
+        if (sl->ValueStr() == "node")
+        {
+            vec2 pos(0.0f, 0.0f);
+            
+            sl->QueryFloatAttribute("x", &pos.x);
+            sl->QueryFloatAttribute("y", &pos.y);
+            nodes.push_back(pos);
+        }
+    }
+    
+    if (nodes.empty())
+    {
+        std::cerr << "Empty path defined!" << std::endl;
+        throw std::exception();
+    }
+    
+    std::cerr << "Added minion path with " << nodes.size() << " nodes." << std::endl;
+}
+
+MinionPath::~MinionPath()
+{
+    
+}
+
+void MinionPath::plantNodes(const GameTerrain *terrain)
+{
+    //Convert path nodes to world coordinates for the current terrain.
+    assert(terrain);
+    
+    for (std::vector<vec2>::iterator i = nodes.begin(); i != nodes.end(); ++i)
+    {
+        const vec3 pos = terrain->getWorldPosition(*i);
+        
+        *i = vec2(pos.x, pos.z);
+    }
+}
+
 void MinionType::updateInstances()
 {
     horde->setMeshes(instances.begin(), instances.end());
 }
 
-Minion::Minion(const std::string &a_name, const std::string &a_type) : name(a_name), type(a_type), pos(0.0f, 0.0f), angle(0.0f), action(""), actionTime(0.0f)
+Minion::Minion(const std::string &a_name, const std::string &a_type, const vec2 &a_pos) :
+                name(a_name),
+                type(a_type),
+                path(""),
+                pathIndex(0),
+                pos(a_pos),
+                angle(0.0f),
+                action(""),
+                actionTime(0.0f)
 {
     
 }

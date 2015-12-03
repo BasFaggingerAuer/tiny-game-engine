@@ -59,6 +59,8 @@ class Game
         void readResources(const std::string &);
         void readSkyResources(const std::string &, TiXmlElement *);
         
+        void spawnMinionAtPath(const std::string &, const std::string &, const std::string &);
+        
         //Renderer.
         const double aspectRatio;
         tiny::draw::WorldRenderer *renderer;
@@ -75,8 +77,10 @@ class Game
         GameTerrain *terrain;
         GameForest *forest;
         std::map<std::string, MinionType *> minionTypes;
-        std::map<unsigned int, Minion> moba;
-        std::vector<Faction *> factions;
+        std::map<std::string, MinionPath *> minionPaths;
+        std::map<unsigned int, Minion> minions;
+        unsigned int minionIndex;
+        std::map<std::string, Faction *> factions;
 };
 
 } //namespace moba

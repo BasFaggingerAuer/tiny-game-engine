@@ -41,7 +41,7 @@ class GameTerrain
         
         void setOffset(const tiny::vec2 &);
         int createAttributeMapSamples(const int &, const int &, std::vector<tiny::draw::StaticMeshInstance> &, const tiny::vec2 &, std::vector<tiny::draw::WorldIconInstance> &, std::vector<tiny::vec3> &) const;
-        tiny::vec3 getWorldPosition(const float &, const float &) const;
+        tiny::vec3 getWorldPosition(const tiny::vec2 &) const;
         
         float getHeight(const tiny::vec2 &) const;
         float getAttribute(const tiny::vec2 &) const;

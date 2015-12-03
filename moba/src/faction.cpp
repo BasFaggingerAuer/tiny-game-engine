@@ -145,7 +145,7 @@ void Faction::plantBuildings(const GameTerrain *terrain)
     vec3 pos;
     
     //Nexus.
-    pos = terrain->getWorldPosition(nexusPosition.x, nexusPosition.y);
+    pos = terrain->getWorldPosition(vec2(nexusPosition.x, nexusPosition.y));
     instances.push_back(draw::StaticMeshInstance(vec4(pos.x, pos.y + nexusPosition.z, pos.z, nexusScale), quatrot(nexusPosition.w, vec3(0.0f, 1.0f, 0.0f))));
     nexusMesh->setMeshes(instances.begin(), instances.end());
     
@@ -154,7 +154,7 @@ void Faction::plantBuildings(const GameTerrain *terrain)
     
     for (std::list<vec4>::const_iterator i = towerPositions.begin(); i != towerPositions.end(); ++i)
     {
-        pos = terrain->getWorldPosition(i->x, i->y);
+        pos = terrain->getWorldPosition(vec2(i->x, i->y));
         instances.push_back(draw::StaticMeshInstance(vec4(pos.x, pos.y + i->z, pos.z, towerScale), quatrot(i->w, vec3(0.0f, 1.0f, 0.0f))));
     }
     

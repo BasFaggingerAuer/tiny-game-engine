@@ -206,10 +206,10 @@ void GameTerrain::setOffset(const vec2 &offset)
     //terrain->setHeightTextures(*heightTexture, *tangentTexture, *normalTexture, scale);
 }
 
-vec3 GameTerrain::getWorldPosition(const float &x, const float &y) const
+vec3 GameTerrain::getWorldPosition(const vec2 &p) const
 {
     //Convert position within texture (in [0, 1] x [0, 1]) to XYZ world position.
-    vec2 pos = vec2(x - (farOffset.x + 0.5f/static_cast<float>(farScale.x)), y - (farOffset.y + 0.5f/static_cast<float>(farScale.y)));
+    vec2 pos = vec2(p.x - (farOffset.x + 0.5f/static_cast<float>(farScale.x)), p.y - (farOffset.y + 0.5f/static_cast<float>(farScale.y)));
     
     pos.x *= static_cast<float>(heightTexture->getWidth()*farScale.x)*scale.x;
     pos.y *= static_cast<float>(heightTexture->getHeight()*farScale.y)*scale.y;

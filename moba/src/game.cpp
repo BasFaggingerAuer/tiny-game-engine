@@ -46,10 +46,10 @@ Game::Game(const os::Application *application, const std::string &path) :
     renderer->addWorldRenderable(index++, forest->treeMeshes, true, true, draw::BlendReplace, draw::CullNothing);
     renderer->addWorldRenderable(index++, forest->treeSprites);
     
-    for (std::vector<Faction *>::const_iterator i = factions.begin(); i != factions.end(); ++i)
+    for (std::map<std::string, Faction *>::const_iterator i = factions.begin(); i != factions.end(); ++i)
     {
-        renderer->addWorldRenderable(index++, (*i)->nexusMesh);
-        renderer->addWorldRenderable(index++, (*i)->towerMeshes);
+        renderer->addWorldRenderable(index++, i->second->nexusMesh);
+        renderer->addWorldRenderable(index++, i->second->towerMeshes);
     }
     
     for (std::map<std::string, MinionType *>::const_iterator i = minionTypes.begin(); i != minionTypes.end(); ++i)
@@ -64,14 +64,36 @@ Game::Game(const os::Application *application, const std::string &path) :
     //Plant some trees.
     forest->plantTrees(terrain);
     
+    //Convert minion paths.
+    for (std::map<std::string, MinionPath *>::iterator i = minionPaths.begin(); i != minionPaths.end(); ++i)
+    {
+        i->second->plantNodes(terrain);
+    }
+    
     //Create a minion.
-    moba.insert(std::pair<unsigned int, Minion>(0, Minion("Dummy", "Wolf")));
+    spawnMinionAtPath("Wolfie", "Wolf", "RadiantMid");
     
     //Create faction structures.
-    for (std::vector<Faction *>::iterator i = factions.begin(); i != factions.end(); ++i)
+    for (std::map<std::string, Faction *>::iterator i = factions.begin(); i != factions.end(); ++i)
     {
-        (*i)->plantBuildings(terrain);
+        i->second->plantBuildings(terrain);
     }
+}
+
+void Game::spawnMinionAtPath(const std::string &name, const std::string &minionType, const std::string &path)
+{
+    //Spawn a minion at the start of a certain path.
+    
+    //Check that we are given valid data.
+    assert(minionTypes.find(minionType) != minionTypes.end());
+    assert(minionPaths.find(path) != minionPaths.end());
+    
+    Minion minion = Minion(name, minionType, minionPaths[path]->nodes[0]);
+    
+    minion.path = path;
+    minions.insert(std::make_pair(minionIndex++, minion));
+
+    std::cerr << "Spawned minion " << name << " of type " << minionType << " at path " << path << "." << std::endl;
 }
 
 Game::~Game()
@@ -90,13 +112,23 @@ Game::~Game()
         delete i->second;
     }
     
+    for (std::map<std::string, MinionPath *>::const_iterator i = minionPaths.begin(); i != minionPaths.end(); ++i)
+    {
+        delete i->second;
+    }
+    
+    for (std::map<std::string, Faction *>::const_iterator i = factions.begin(); i != factions.end(); ++i)
+    {
+        delete i->second;
+    }
+    
     delete terrain;
     delete forest;
 }
 
 void Game::update(os::Application *application, const float &dt)
 {
-    //Update moba.
+    //Update minions.
     
     //Clear all instance lists.
     for (std::map<std::string, MinionType *>::iterator i = minionTypes.begin(); i != minionTypes.end(); ++i)
@@ -104,19 +136,59 @@ void Game::update(os::Application *application, const float &dt)
         i->second->instances.clear();
     }
     
-    //Update moba and fill instance lists.
-    for (std::map<unsigned int, Minion>::iterator i = moba.begin(); i != moba.end(); ++i)
+    //Update minions and fill instance lists.
+    for (std::map<unsigned int, Minion>::iterator i = minions.begin(); i != minions.end(); )
     {
         Minion m = i->second;
         assert(minionTypes.find(m.type) != minionTypes.end());
         MinionType *mt = minionTypes[m.type];
         draw::AnimatedMeshInstance mi;
         
-        //TODO: Separate this into a separate update-minion stage and an update-horde stage.
-        //TODO: Store FPS in animation somehow.
-        const float fps = 10.0f;
+        //Increment action time.
+        bool isErased = false;
         
         m.actionTime += dt;
+        
+        //Follow the assigned path if any.
+        if (m.path != "")
+        {
+            const MinionPath *p = minionPaths[m.path];
+            
+            //Have we reached the current node?
+            if (length(m.pos - p->nodes[m.pathIndex]) < 0.01f)
+            {
+                m.pathIndex++;
+            }
+            
+            if (m.pathIndex >= p->nodes.size())
+            {
+                //We have reached the end of the path --> remove the minion.
+                isErased = true;
+                std::cerr << "Removed minion " << m.name << "." << std::endl;
+            }
+            else
+            {
+                //Head for the next node.
+                const vec2 d = normalize(p->nodes[m.pathIndex] - m.pos);
+                
+                m.angle = atan2f(d.y, d.x) - M_PI/2.0;
+                m.pos += mt->maxSpeed*dt*d;
+            }
+        }
+        
+        if (isErased)
+        {
+            minions.erase(i);
+        }
+        else
+        {
+            i->second = m;
+            ++i;
+        }
+        
+        //TODO: Separate this into a separate update-minion stage and an update-horde stage.
+        //TODO: Store FPS in animation somehow.
+        const float fps = 20.0f;
         
         assert(mt->mesh.skeleton.animations.find(m.action) != mt->mesh.skeleton.animations.end());
         
@@ -124,8 +196,6 @@ void Game::update(os::Application *application, const float &dt)
         const int frame = static_cast<int>(floor(m.actionTime*fps)) % nrAnimationFrames;
         
         mt->instances.push_back(draw::AnimatedMeshInstance(vec4(m.pos.x, terrain->getHeight(m.pos), m.pos.y, 1.0f), quatrot(m.angle, vec3(0.0f, 1.0f, 0.0f)), ivec2(3*mt->mesh.skeleton.bones.size()*frame, 0)));
-        
-        i->second = m;
     }
     
     //Send instances to the GPU.
@@ -162,7 +232,8 @@ void Game::clear()
     cameraPosition = vec3(0.0f, 0.0f, 0.0f);
     cameraOrientation = vec4(0.0f, 0.0f, 0.0f, 1.0f);
     
-    moba.clear();
+    minions.clear();
+    minionIndex = 0;
 }
 
 void Game::readResources(const std::string &path)
@@ -221,9 +292,29 @@ void Game::readResources(const std::string &path)
             
             minionTypes.insert(std::pair<std::string, MinionType *>(minionType->name, minionType));
         }
+        else if (el->ValueStr() == "minion_path")
+        {
+            MinionPath *minionPath = new MinionPath(path, el);
+            
+            if (minionPaths.find(minionPath->name) != minionPaths.end())
+            {
+                std::cerr << "Minion path '" << minionPath->name << "' already exists!" << std::endl;
+                throw std::exception();
+            }
+            
+            minionPaths.insert(std::pair<std::string, MinionPath *>(minionPath->name, minionPath));
+        }
         else if (el->ValueStr() == "faction")
         {
-            factions.push_back(new Faction(path, el));
+            Faction *faction = new Faction(path, el);
+            
+            if (factions.find(faction->name) != factions.end())
+            {
+                std::cerr << "Minion path '" << faction->name << "' already exists!" << std::endl;
+                throw std::exception();
+            }
+            
+            factions.insert(std::pair<std::string, Faction *>(faction->name, faction));
         }
     }
 }

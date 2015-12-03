@@ -11,8 +11,12 @@
         <attributes biome_index="3" map="map_attr_dirt.png"/>
         <attributes biome_index="4" map="map_attr_tile.png"/>
     </terrain>
-    <forest biome_index="1" high_detail_radius="300" low_detail_radius="4096" nr_planted_trees="131072" nr_high_detail="1024" nr_low_detail="131072" diffuse="pine_diffuse.png" mesh="pine.dae" sprite="pine_sprite.png" sprite_w="7.0" sprite_h="13.0"/>
-    <minion_type name="Wolf" nr_instances="1024" mesh="wolf_run.dae" diffuse="wolf_diffuse.png"/>
+    <forest biome_index="1" high_detail_radius="300" low_detail_radius="4096" nr_planted_trees="131072" nr_high_detail="1024" nr_low_detail="131072" diffuse="pine_diffuse.png" mesh="pine.dae" sprite="pine_sprite.png" sprite_w="7.5" sprite_h="13.5"/>
+    <minion_type name="Wolf" max_speed="4" nr_instances="1024" mesh="wolf_run.dae" diffuse="wolf_diffuse.png"/>
+    <minion_path name="RadiantMid" nr_spawn="10" spawn_radius="15" spawn_time="30">
+        <node x="0.6021" y="0.5522"/>
+        <node x="0.6611" y="0.4912"/>
+    </minion_path>
     <faction name="Radiant">
         <nexus mesh="radiant_nexus.dae" diffuse="radiant_tower_diffuse.png" normal="radiant_tower_norm.png" x="0.6021" y="0.5522" dz="-0.7" r="3.8" scale="1.5" />
         <towers mesh="radiant_tower.dae" diffuse="radiant_tower_diffuse.png" normal="radiant_tower_norm.png">
