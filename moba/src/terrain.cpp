@@ -240,7 +240,7 @@ int GameTerrain::createAttributeMapSamples(const int &maxNrSamples, const int &i
     lowDetailInstances.reserve(maxNrSamples);
     positions.reserve(maxNrSamples);
     
-    for (int i = 0; i < maxNrSamples; ++i)
+    while (nrSamples < maxNrSamples)
     {
         //Determine the random spot where we want to place a sample.
         const vec2 samplePlanePosition = randomVec2(maxDistance);
