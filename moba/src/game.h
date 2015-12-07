@@ -59,7 +59,7 @@ class Game
         void readResources(const std::string &);
         void readSkyResources(const std::string &, TiXmlElement *);
         
-        void spawnMinionAtPath(const std::string &, const std::string &, const std::string &);
+        void spawnMinionAtPath(const std::string &, const std::string &, const std::string &, const float & = 0.0f);
         
         //Renderer.
         const double aspectRatio;

@@ -80,7 +80,7 @@ Game::Game(const os::Application *application, const std::string &path) :
     }
 }
 
-void Game::spawnMinionAtPath(const std::string &name, const std::string &minionType, const std::string &path)
+void Game::spawnMinionAtPath(const std::string &name, const std::string &minionType, const std::string &path, const float &radius)
 {
     //Spawn a minion at the start of a certain path.
     
@@ -88,7 +88,7 @@ void Game::spawnMinionAtPath(const std::string &name, const std::string &minionT
     assert(minionTypes.find(minionType) != minionTypes.end());
     assert(minionPaths.find(path) != minionPaths.end());
     
-    Minion minion = Minion(name, minionType, minionPaths[path]->nodes[0]);
+    Minion minion = Minion(name, minionType, minionPaths[path]->nodes[0] + randomVec2(radius));
     
     minion.path = path;
     minions.insert(std::make_pair(minionIndex++, minion));
@@ -136,6 +136,26 @@ void Game::update(os::Application *application, const float &dt)
         i->second->instances.clear();
     }
     
+    //Do we need to spawn minions?
+    for (std::map<std::string, Faction *>::iterator i = factions.begin(); i != factions.end(); ++i)
+    {
+        for (std::list<MinionSpawner>::iterator j = i->second->minionSpawners.begin(); j != i->second->minionSpawners.end(); ++j)
+        {
+            j->currentTime -= dt;
+            
+            //Is it time to spawn a new wave?
+            if (j->currentTime <= 0.0f)
+            {
+                j->currentTime = j->cooldownTime;
+                
+                for (int k = 0; k < j->nrSpawn; ++k)
+                {
+                    spawnMinionAtPath("Unnamed", j->minionType, j->pathName, j->radius);
+                }
+            }
+        }
+    }
+    
     //Update minions and fill instance lists.
     for (std::map<unsigned int, Minion>::iterator i = minions.begin(); i != minions.end(); )
     {
@@ -155,7 +175,7 @@ void Game::update(os::Application *application, const float &dt)
             const MinionPath *p = minionPaths[m.path];
             
             //Have we reached the current node?
-            if (length(m.pos - p->nodes[m.pathIndex]) < 0.01f)
+            if (length(m.pos - p->nodes[m.pathIndex]) < 1.0f)
             {
                 m.pathIndex++;
             }
@@ -178,7 +198,7 @@ void Game::update(os::Application *application, const float &dt)
         
         if (isErased)
         {
-            minions.erase(i);
+            minions.erase(i++);
         }
         else
         {

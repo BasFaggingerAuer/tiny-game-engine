@@ -32,6 +32,20 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace moba
 {
 
+class MinionSpawner
+{
+    public:
+        MinionSpawner(const std::string &, TiXmlElement *);
+        ~MinionSpawner();
+        
+        std::string minionType;
+        std::string pathName;
+        int nrSpawn;
+        float radius;
+        float cooldownTime;
+        float currentTime;
+};
+
 class Faction
 {
     public:
@@ -53,6 +67,8 @@ class Faction
         tiny::draw::StaticMeshHorde *towerMeshes;
         tiny::draw::RGBATexture2D *towerDiffuseTexture;
         tiny::draw::RGBATexture2D *towerNormalTexture;
+        
+        std::list<MinionSpawner> minionSpawners;
 };
 
 } //namespace moba

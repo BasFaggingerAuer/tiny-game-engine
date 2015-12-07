@@ -29,6 +29,31 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using namespace moba;
 using namespace tiny;
 
+MinionSpawner::MinionSpawner(const std::string &, TiXmlElement *el) :
+    minionType(""),
+    pathName(""),
+    nrSpawn(0),
+    radius(1.0f),
+    cooldownTime(1000.0f),
+    currentTime(0.0f)
+{
+    std::cerr << "Reading faction minion spawner..." << std::endl;
+    
+    assert(el);
+    assert(el->ValueStr() == "minion_spawn");
+    
+    el->QueryStringAttribute("type", &minionType);
+    el->QueryStringAttribute("path", &pathName);
+    el->QueryIntAttribute("nr_spawn", &nrSpawn);
+    el->QueryFloatAttribute("radius", &radius);
+    el->QueryFloatAttribute("time", &cooldownTime);
+}
+
+MinionSpawner::~MinionSpawner()
+{
+
+}
+
 Faction::Faction(const std::string &path, TiXmlElement *el)
 {
     std::cerr << "Reading faction resources..." << std::endl;
@@ -123,6 +148,10 @@ Faction::Faction(const std::string &path, TiXmlElement *el)
             towerMeshes = new draw::StaticMeshHorde(mesh, towerPositions.size());
             towerMeshes->setDiffuseTexture(*towerDiffuseTexture);
             towerMeshes->setNormalTexture(*towerNormalTexture);
+        }
+        else if (sl->ValueStr() == "minion_spawn")
+        {
+            minionSpawners.push_back(MinionSpawner(path, sl));
         }
     }
     
