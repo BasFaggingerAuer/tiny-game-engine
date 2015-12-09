@@ -11,7 +11,7 @@
         <attributes biome_index="3" map="map_attr_dirt.png"/>
         <attributes biome_index="4" map="map_attr_tile.png"/>
     </terrain>
-    <forest biome_index="1" high_detail_radius="300" low_detail_radius="4096" nr_planted_trees="10000" nr_high_detail="1024" nr_low_detail="32768" diffuse="pine_diffuse.png" mesh="pine.dae" sprite="pine_sprite.png" sprite_w="7.5" sprite_h="13.5"/>
+    <forest biome_index="1" high_detail_radius="300" low_detail_radius="4096" collision_radius="1.5" nr_planted_trees="10000" nr_high_detail="1024" nr_low_detail="32768" diffuse="pine_diffuse.png" mesh="pine.dae" sprite="pine_sprite.png" sprite_w="7.5" sprite_h="13.5"/>
     <minion_type name="Wolf" max_speed="4" radius="2.0" nr_instances="1024" mesh="wolf_run.dae" diffuse="wolf_diffuse.png"/>
     <minion_path name="RadiantMid">
         <node x="0.6079" y="0.5444"/>

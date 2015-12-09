@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <string>
+#include <list>
 #include <vector>
 
 #include <tinyxml.h>
@@ -39,7 +40,7 @@ class GameForest
         GameForest(const std::string &, TiXmlElement *);
         ~GameForest();
         
-        int plantTrees(const GameTerrain *terrain);
+        std::list<tiny::vec4> plantTrees(const GameTerrain *terrain);
         void setCameraPosition(const tiny::vec3 &);
         
         tiny::draw::StaticMeshHorde *treeMeshes;
@@ -50,6 +51,7 @@ class GameForest
         int maxNrHighDetailTrees;
         int maxNrLowDetailTrees;
         int biomeIndex;
+        float collisionRadius;
         float treeHighDetailRadius;
         float treeLowDetailRadius;
 

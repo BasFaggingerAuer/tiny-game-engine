@@ -82,7 +82,7 @@ void CollisionHashMap::buildCollisionBuckets(const std::vector<tiny::vec4> &coll
         }
     }
     
-    std::cerr << nrEmpty << "/" << buckets.size() << " empty buckets." << std::endl;
+    std::cerr << nrEmpty << "/" << buckets.size() << " empty buckets, " << cylinders.size()/buckets.size() << " cylinders per bucket." << std::endl;
     */
 }
 
@@ -130,7 +130,7 @@ vec2 CollisionHashMap::projectVelocityCylinder(const vec4 &cyl, const vec2 &pos,
 
 Game::Game(const os::Application *application, const std::string &path) :
     aspectRatio(static_cast<double>(application->getScreenWidth())/static_cast<double>(application->getScreenHeight())),
-    collisionHandler(256, 3, 7, 16.0f)
+    collisionHandler(1024, 3, 7, 16.0f)
 {
     readResources(path);
     
@@ -161,7 +161,12 @@ Game::Game(const os::Application *application, const std::string &path) :
     clear();
     
     //Plant some trees.
-    forest->plantTrees(terrain);
+    if (true)
+    {
+        std::list<vec4> collisionEntities = forest->plantTrees(terrain);
+        
+        staticCollisionCylinders.splice(staticCollisionCylinders.end(), collisionEntities);
+    }
     
     //Convert minion paths.
     for (std::map<std::string, MinionPath *>::iterator i = minionPaths.begin(); i != minionPaths.end(); ++i)
@@ -179,7 +184,6 @@ Game::Game(const os::Application *application, const std::string &path) :
         
         staticCollisionCylinders.splice(staticCollisionCylinders.end(), collisionEntities);
     }
-    
 }
 
 void Game::spawnMinionAtPath(const std::string &name, const std::string &minionType, const std::string &path, const float &radius)
@@ -280,7 +284,14 @@ void Game::update(os::Application *application, const float &dt)
     }
     
     //Update collision detection.
-    collisionHandler.buildCollisionBuckets(createCollisionCylinders());
+    if (true)
+    {
+        std::vector<vec4> cylinders = createCollisionCylinders();
+        
+        cylinders.push_back(vec4(cameraPosition.x, cameraPosition.y, cameraPosition.z, 0.5f));
+        
+        collisionHandler.buildCollisionBuckets(cylinders);
+    }
     
     //Update minions and fill instance lists.
     for (std::map<unsigned int, Minion>::iterator i = minions.begin(); i != minions.end(); )
@@ -320,7 +331,7 @@ void Game::update(os::Application *application, const float &dt)
                 
                 vel = collisionHandler.projectVelocity(m.pos, mt->radius, vel);
                 m.pos += vel;
-                m.angle = atan2f(vel.y, vel.x) - M_PI/2.0;
+                m.angle = atan2f(d.y, d.x) - M_PI/2.0;
             }
         }
         
@@ -352,9 +363,33 @@ void Game::update(os::Application *application, const float &dt)
         i->second->updateInstances();
     }
     
-    //Move the camera around and collide with the terrain.
-    application->updateSimpleCamera(dt, cameraPosition, cameraOrientation);
-    cameraPosition.y = std::max(cameraPosition.y, terrain->getHeight(vec2(cameraPosition.x, cameraPosition.z)) + 2.0f);
+    if (true)
+    {
+        //Update the position and orientation of a simple controllable camera.
+        const float ds = (application->isKeyPressed('f') ? 300.0f : 4.0f)*dt;
+        const float dr = 2.1f*dt;
+        
+        if (application->isKeyPressed('i')) cameraOrientation = quatmul(quatrot(dr, vec3(-1.0f, 0.0f, 0.0f)), cameraOrientation);
+        if (application->isKeyPressed('k')) cameraOrientation = quatmul(quatrot(dr, vec3( 1.0f, 0.0f, 0.0f)), cameraOrientation);
+        if (application->isKeyPressed('j')) cameraOrientation = quatmul(quatrot(dr, vec3( 0.0f,-1.0f, 0.0f)), cameraOrientation);
+        if (application->isKeyPressed('l')) cameraOrientation = quatmul(quatrot(dr, vec3( 0.0f, 1.0f, 0.0f)), cameraOrientation);
+        if (application->isKeyPressed('u')) cameraOrientation = quatmul(quatrot(dr, vec3( 0.0f, 0.0f,-1.0f)), cameraOrientation);
+        if (application->isKeyPressed('o')) cameraOrientation = quatmul(quatrot(dr, vec3( 0.0f, 0.0f, 1.0f)), cameraOrientation);
+    
+        normalize(cameraOrientation);
+    
+        vec3 vel = mat4(cameraOrientation)*vec3((application->isKeyPressed('d') && application->isKeyPressed('a')) ? 0.0f : (application->isKeyPressed('d') ? 1.0f : (application->isKeyPressed('a') ? -1.0f : 0.0f)),
+                                                (application->isKeyPressed('q') && application->isKeyPressed('e')) ? 0.0f : (application->isKeyPressed('q') ? 1.0f : (application->isKeyPressed('e') ? -1.0f : 0.0f)),
+                                                (application->isKeyPressed('s') && application->isKeyPressed('w')) ? 0.0f : (application->isKeyPressed('s') ? 1.0f : (application->isKeyPressed('w') ? -1.0f : 0.0f)));
+        
+        vel = ds*normalize(vel);
+        
+        //Perform collision detection.
+        const vec2 vel2 = collisionHandler.projectVelocity(vec2(cameraPosition.x, cameraPosition.z), 0.5f, vec2(vel.x, vel.z));
+        
+        cameraPosition += vec3(vel2.x, vel.y, vel2.y);
+        cameraPosition.y = std::max(cameraPosition.y, terrain->getHeight(vec2(cameraPosition.x, cameraPosition.z)) + 2.0f);
+    }
     
     //Update the terrain with respect to the camera.
     terrain->terrain->setCameraPosition(cameraPosition);

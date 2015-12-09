@@ -45,11 +45,13 @@ GameForest::GameForest(const std::string &path, TiXmlElement *el)
     maxNrHighDetailTrees = 1024;
     maxNrLowDetailTrees = 32768;
     nrPlantedTrees = maxNrLowDetailTrees;
-    treeHighDetailRadius = 128.0;
-    treeLowDetailRadius = 1024.0;
+    collisionRadius = 0.5f;
+    treeHighDetailRadius = 128.0f;
+    treeLowDetailRadius = 1024.0f;
     biomeIndex = 0;
     treeSpriteSize = vec2(4.0f, 4.0f);
     
+    el->QueryFloatAttribute("collision_radius", &collisionRadius);
     el->QueryFloatAttribute("high_detail_radius", &treeHighDetailRadius);
     el->QueryFloatAttribute("low_detail_radius", &treeLowDetailRadius);
     el->QueryIntAttribute("nr_planted_trees", &nrPlantedTrees);
@@ -89,15 +91,23 @@ GameForest::~GameForest()
     delete treeSpriteTexture;
 }
 
-int GameForest::plantTrees(const GameTerrain *terrain)
+std::list<vec4> GameForest::plantTrees(const GameTerrain *terrain)
 {
     //Plan trees on terrain.
     const int maxNrTrees = nrPlantedTrees;
-    const int nrTrees = terrain->createAttributeMapSamples(maxNrTrees, biomeIndex, allTreeHighDetailInstances, treeSpriteSize, allTreeLowDetailInstances, treePositions);
     
+    terrain->createAttributeMapSamples(maxNrTrees, biomeIndex, allTreeHighDetailInstances, treeSpriteSize, allTreeLowDetailInstances, treePositions);
     quadtree->buildQuadtree(treePositions.begin(), treePositions.end());
     
-    return nrTrees;
+    //Add collision cylinders.
+    std::list<vec4> cylinders;
+    
+    for (std::vector<vec3>::const_iterator i = treePositions.begin(); i != treePositions.end(); ++i)
+    {
+        cylinders.push_back(vec4(i->x, i->y, i->z, collisionRadius));
+    }
+    
+    return cylinders;
 }
 
 void GameForest::setCameraPosition(const vec3 &cameraPosition)
