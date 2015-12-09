@@ -45,6 +45,27 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace moba
 {
 
+class CollisionHashMap
+{
+    public:
+        CollisionHashMap(const size_t &, const size_t &, const size_t &, const float &);
+        ~CollisionHashMap();
+        
+        void buildCollisionBuckets(const std::vector<tiny::vec4> &);
+        tiny::vec2 projectVelocity(const tiny::vec2 &, const float &, tiny::vec2) const;
+    
+    private:
+        tiny::vec2 projectVelocityCylinder(const tiny::vec4 &, const tiny::vec2 &, const float &, tiny::vec2) const;
+        
+        const size_t nrBuckets;
+        const size_t p1, p2;
+        const float size;
+        
+        //Collision detection.
+        std::vector<tiny::vec4> cylinders;
+        std::vector<std::list<int> > buckets;
+};
+
 class Game
 {
     public:
@@ -60,6 +81,7 @@ class Game
         void readSkyResources(const std::string &, TiXmlElement *);
         
         void spawnMinionAtPath(const std::string &, const std::string &, const std::string &, const float & = 0.0f);
+        std::vector<tiny::vec4> createCollisionCylinders() const;
         
         //Renderer.
         const double aspectRatio;
@@ -81,6 +103,10 @@ class Game
         std::map<unsigned int, Minion> minions;
         unsigned int minionIndex;
         std::map<std::string, Faction *> factions;
+        
+        std::list<tiny::vec4> staticCollisionCylinders;
+        CollisionHashMap collisionHandler;
+        
 };
 
 } //namespace moba

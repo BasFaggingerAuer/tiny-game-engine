@@ -37,10 +37,12 @@ MinionType::MinionType(const std::string &path, TiXmlElement *el)
 
     name = "Unspecified";
     maxSpeed = 1.0f;
+    radius = 1.0f;
     maxNrInstances = 1024;
     
     el->QueryIntAttribute("nr_instances", &maxNrInstances);
     el->QueryFloatAttribute("max_speed", &maxSpeed);
+    el->QueryFloatAttribute("radius", &radius);
     
     if (el->Attribute("name")) name = std::string(el->Attribute("name"));
     if (el->Attribute("mesh")) mesh = mesh::io::readAnimatedMesh(path + std::string(el->Attribute("mesh")));

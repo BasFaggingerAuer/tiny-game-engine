@@ -30,8 +30,107 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using namespace moba;
 using namespace tiny;
 
+CollisionHashMap::CollisionHashMap(const size_t &a_nrBuckets, const size_t &a_p1, const size_t &a_p2, const float &a_size) :
+    nrBuckets(a_nrBuckets),
+    p1(a_p1),
+    p2(a_p2),
+    size(a_size),
+    cylinders(),
+    buckets()
+{
+
+}
+
+CollisionHashMap::~CollisionHashMap()
+{
+
+}
+
+void CollisionHashMap::buildCollisionBuckets(const std::vector<tiny::vec4> &collisionCylinders)
+{
+    //Allocate collision detection buckets.
+    buckets = std::vector<std::list<int> >(nrBuckets, std::list<int>());
+    
+    //Assign all cylinders to their buckets.
+    cylinders = collisionCylinders;
+    
+    for (std::vector<tiny::vec4>::const_iterator i = collisionCylinders.begin(); i != collisionCylinders.end(); ++i)
+    {
+        //A single cylinder can cover multiple buckets.
+        const int minX = static_cast<int>(floor((i->x - i->w)/size));
+        const int maxX = static_cast<int>(floor((i->x + i->w)/size));
+        const int minY = static_cast<int>(floor((i->z - i->w)/size));
+        const int maxY = static_cast<int>(floor((i->z + i->w)/size));
+        
+        for (int j = minX; j <= maxX; ++j)
+        {
+            for (int k = minY; k <= maxY; ++k)
+            {
+                buckets[(p1*static_cast<size_t>(j) + p2*static_cast<size_t>(k)) & (nrBuckets - 1)].push_back(i - collisionCylinders.begin());
+            }
+        }
+    }
+    
+    /*
+    size_t nrEmpty = 0;
+    
+    for (std::vector<std::list<int> >::const_iterator i = buckets.begin(); i != buckets.end(); ++i)
+    {
+        if (i->empty())
+        {
+            ++nrEmpty;
+        }
+    }
+    
+    std::cerr << nrEmpty << "/" << buckets.size() << " empty buckets." << std::endl;
+    */
+}
+
+vec2 CollisionHashMap::projectVelocity(const vec2 &pos, const float &radius, vec2 vel) const
+{
+    //Project velocity away from cylinders with which we collide.
+    //A single cylinder can cover multiple buckets.
+    const float r = length(vel) + radius;
+    const int minX = static_cast<int>(floor((pos.x - r)/size));
+    const int maxX = static_cast<int>(floor((pos.x + r)/size));
+    const int minY = static_cast<int>(floor((pos.y - r)/size));
+    const int maxY = static_cast<int>(floor((pos.y + r)/size));
+    
+    for (int j = minX; j <= maxX; ++j)
+    {
+        for (int k = minY; k <= maxY; ++k)
+        {
+            const std::list<int> &l = buckets[(p1*static_cast<size_t>(j) + p2*static_cast<size_t>(k)) & (nrBuckets - 1)];
+            
+            for (std::list<int>::const_iterator m = l.begin(); m != l.end(); ++m)
+            {
+                vel = projectVelocityCylinder(cylinders[*m], pos, radius, vel);
+            }
+        }
+    }
+    
+    return vel;
+}
+
+vec2 CollisionHashMap::projectVelocityCylinder(const vec4 &cyl, const vec2 &pos, const float &radius, vec2 vel) const
+{
+    vec2 delta = vec2(cyl.x, cyl.z) - pos;
+    const float r1 = length(delta);
+    const float r2 = cyl.w + radius;
+    
+    if (r1 <= r2 && r1 >= 1.0e-6)
+    {
+        //We are inside the cylinder, so we can only move away from its center.
+        delta = delta/r1;
+        vel = vel - std::max(dot(delta, vel), 0.0f)*delta;
+    }
+    
+    return vel;
+}
+
 Game::Game(const os::Application *application, const std::string &path) :
-    aspectRatio(static_cast<double>(application->getScreenWidth())/static_cast<double>(application->getScreenHeight()))
+    aspectRatio(static_cast<double>(application->getScreenWidth())/static_cast<double>(application->getScreenHeight())),
+    collisionHandler(256, 3, 7, 16.0f)
 {
     readResources(path);
     
@@ -76,8 +175,11 @@ Game::Game(const os::Application *application, const std::string &path) :
     //Create faction structures.
     for (std::map<std::string, Faction *>::iterator i = factions.begin(); i != factions.end(); ++i)
     {
-        i->second->plantBuildings(terrain);
+        std::list<vec4> collisionEntities = i->second->plantBuildings(terrain);
+        
+        staticCollisionCylinders.splice(staticCollisionCylinders.end(), collisionEntities);
     }
+    
 }
 
 void Game::spawnMinionAtPath(const std::string &name, const std::string &minionType, const std::string &path, const float &radius)
@@ -126,6 +228,27 @@ Game::~Game()
     delete forest;
 }
 
+std::vector<vec4> Game::createCollisionCylinders() const
+{
+    //Create a list of all objects that can be collided with.
+    std::vector<vec4> cylinders;
+    
+    cylinders.reserve(staticCollisionCylinders.size() + minions.size());
+    cylinders.insert(cylinders.begin(), staticCollisionCylinders.begin(), staticCollisionCylinders.end());
+    
+    for (std::map<unsigned int, Minion>::const_iterator i = minions.begin(); i != minions.end(); ++i)
+    {
+        const Minion m = i->second;
+        std::map<std::string, MinionType *>::const_iterator j = minionTypes.find(m.type);
+        assert(j != minionTypes.end());
+        const MinionType *mt = j->second;
+        
+        cylinders.push_back(vec4(m.pos.x, terrain->getHeight(m.pos), m.pos.y, mt->radius));
+    }
+    
+    return cylinders;
+}
+
 void Game::update(os::Application *application, const float &dt)
 {
     //Update minions.
@@ -156,6 +279,9 @@ void Game::update(os::Application *application, const float &dt)
         }
     }
     
+    //Update collision detection.
+    collisionHandler.buildCollisionBuckets(createCollisionCylinders());
+    
     //Update minions and fill instance lists.
     for (std::map<unsigned int, Minion>::iterator i = minions.begin(); i != minions.end(); )
     {
@@ -175,7 +301,7 @@ void Game::update(os::Application *application, const float &dt)
             const MinionPath *p = minionPaths[m.path];
             
             //Have we reached the current node?
-            if (length(m.pos - p->nodes[m.pathIndex]) < 1.0f)
+            if (length(m.pos - p->nodes[m.pathIndex]) < 16.0f)
             {
                 m.pathIndex++;
             }
@@ -190,9 +316,11 @@ void Game::update(os::Application *application, const float &dt)
             {
                 //Head for the next node.
                 const vec2 d = normalize(p->nodes[m.pathIndex] - m.pos);
+                vec2 vel = mt->maxSpeed*dt*d;
                 
-                m.angle = atan2f(d.y, d.x) - M_PI/2.0;
-                m.pos += mt->maxSpeed*dt*d;
+                vel = collisionHandler.projectVelocity(m.pos, mt->radius, vel);
+                m.pos += vel;
+                m.angle = atan2f(vel.y, vel.x) - M_PI/2.0;
             }
         }
         

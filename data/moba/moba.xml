@@ -12,7 +12,7 @@
         <attributes biome_index="4" map="map_attr_tile.png"/>
     </terrain>
     <forest biome_index="1" high_detail_radius="300" low_detail_radius="4096" nr_planted_trees="10000" nr_high_detail="1024" nr_low_detail="32768" diffuse="pine_diffuse.png" mesh="pine.dae" sprite="pine_sprite.png" sprite_w="7.5" sprite_h="13.5"/>
-    <minion_type name="Wolf" max_speed="4" nr_instances="1024" mesh="wolf_run.dae" diffuse="wolf_diffuse.png"/>
+    <minion_type name="Wolf" max_speed="4" radius="2.0" nr_instances="1024" mesh="wolf_run.dae" diffuse="wolf_diffuse.png"/>
     <minion_path name="RadiantMid">
         <node x="0.6079" y="0.5444"/>
         <node x="0.6567" y="0.5000"/>
@@ -60,9 +60,9 @@
             <instance x="0.6138" y="0.5371" r="0.0"/>
             <instance x="0.6260" y="0.5264" r="0.0"/>
         </towers>
-        <minion_spawn type="Wolf" path="RadiantMid" nr_spawn="7" radius="20" time="60" />
-        <minion_spawn type="Wolf" path="RadiantTop" nr_spawn="7" radius="20" time="60" />
-        <minion_spawn type="Wolf" path="RadiantBot" nr_spawn="7" radius="20" time="60" />
+        <minion_spawn type="Wolf" path="RadiantMid" nr_spawn="7" radius="40" time="60" />
+        <minion_spawn type="Wolf" path="RadiantTop" nr_spawn="7" radius="40" time="60" />
+        <minion_spawn type="Wolf" path="RadiantBot" nr_spawn="7" radius="40" time="60" />
     </faction>
     <faction name="Dire">
         <nexus mesh="dire_nexus.dae" diffuse="dire_tower_diffuse.png" normal="dire_tower_norm.png" x="0.6611" y="0.4912" dz="-0.8" r="0.0" />

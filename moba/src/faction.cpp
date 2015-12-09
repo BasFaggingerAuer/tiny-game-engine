@@ -61,9 +61,11 @@ Faction::Faction(const std::string &path, TiXmlElement *el)
     assert(el);
     
     nexusScale = 1.0f;
+    nexusRadius = 1.0f;
     nexusMesh = 0;
     nexusPosition = vec4(0.0f, 0.0f, 0.0f, 0.0f);
     towerScale = 1.0f;
+    towerRadius = 1.0f;
     
     assert(el->ValueStr() == "faction");
     
@@ -93,7 +95,7 @@ Faction::Faction(const std::string &path, TiXmlElement *el)
             if (sl->Attribute("diffuse")) diffuseImage = img::io::readImage(path + std::string(sl->Attribute("diffuse")));
             if (sl->Attribute("normal")) normalImage = img::io::readImage(path + std::string(sl->Attribute("normal")));
             
-            //High-detail meshes.
+            nexusRadius = mesh.getSize(vec3(1.0f, 0.0f, 1.0f));
             nexusDiffuseTexture = new draw::RGBATexture2D(diffuseImage);
             nexusNormalTexture = new draw::RGBATexture2D(normalImage);
             nexusMesh = new draw::StaticMeshHorde(mesh, 1);
@@ -142,7 +144,7 @@ Faction::Faction(const std::string &path, TiXmlElement *el)
                 throw std::exception();
             }
             
-            //High-detail meshes.
+            towerRadius = mesh.getSize(vec3(1.0f, 0.0f, 1.0f));
             towerDiffuseTexture = new draw::RGBATexture2D(diffuseImage);
             towerNormalTexture = new draw::RGBATexture2D(normalImage);
             towerMeshes = new draw::StaticMeshHorde(mesh, towerPositions.size());
@@ -168,14 +170,16 @@ Faction::~Faction()
     delete towerDiffuseTexture;
 }
 
-void Faction::plantBuildings(const GameTerrain *terrain)
+std::list<vec4> Faction::plantBuildings(const GameTerrain *terrain)
 {
     std::list<draw::StaticMeshInstance> instances;
+    std::list<vec4> collisionCylinders;
     vec3 pos;
     
     //Nexus.
     pos = terrain->getWorldPosition(vec2(nexusPosition.x, nexusPosition.y));
     instances.push_back(draw::StaticMeshInstance(vec4(pos.x, pos.y + nexusPosition.z, pos.z, nexusScale), quatrot(nexusPosition.w, vec3(0.0f, 1.0f, 0.0f))));
+    collisionCylinders.push_back(vec4(pos.x, pos.y + nexusPosition.z, pos.z, nexusScale*nexusRadius));
     nexusMesh->setMeshes(instances.begin(), instances.end());
     
     //Towers.
@@ -185,9 +189,12 @@ void Faction::plantBuildings(const GameTerrain *terrain)
     {
         pos = terrain->getWorldPosition(vec2(i->x, i->y));
         instances.push_back(draw::StaticMeshInstance(vec4(pos.x, pos.y + i->z, pos.z, towerScale), quatrot(i->w, vec3(0.0f, 1.0f, 0.0f))));
+        collisionCylinders.push_back(vec4(pos.x, pos.y + i->z, pos.z, towerScale*towerRadius));
     }
     
     towerMeshes->setMeshes(instances.begin(), instances.end());
+    
+    return collisionCylinders;
 }
 
 

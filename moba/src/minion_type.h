@@ -41,6 +41,7 @@ class MinionType
         std::string name;
         
         float maxSpeed;
+        float radius;
         
         int maxNrInstances;
         tiny::mesh::AnimatedMesh mesh;

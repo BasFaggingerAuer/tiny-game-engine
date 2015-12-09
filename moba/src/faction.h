@@ -52,17 +52,19 @@ class Faction
         Faction(const std::string &, TiXmlElement *);
         ~Faction();
         
-        void plantBuildings(const GameTerrain *terrain);
+        std::list<tiny::vec4> plantBuildings(const GameTerrain *terrain);
         
         std::string name;
         
         float nexusScale;
+        float nexusRadius;
         tiny::vec4 nexusPosition;
         tiny::draw::StaticMeshHorde *nexusMesh;
         tiny::draw::RGBATexture2D *nexusDiffuseTexture;
         tiny::draw::RGBATexture2D *nexusNormalTexture;
         
         float towerScale;
+        float towerRadius;
         std::list<tiny::vec4> towerPositions;
         tiny::draw::StaticMeshHorde *towerMeshes;
         tiny::draw::RGBATexture2D *towerDiffuseTexture;
