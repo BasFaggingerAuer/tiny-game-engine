@@ -1,5 +1,7 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<moba>
+<moba logo="League_of_Sints_logo.png">
+    <menu_camera position_x="-170.977" position_y="522.945" position_z="1028.93" orientation_x="0.220179" orientation_y="0.185524" orientation_z="0.0450598" orientation_w="0.956588"/>
+    <spawn_camera position_x="-438.289" position_y="43.8942" position_z="456.918" orientation_x="-0.00510771" orientation_y="0.338577" orientation_z="-0.00494226" orientation_w="0.940899" spawn_time="4"/>
     <sky texture="sky.png" />
     <terrain heightmap="map.png" scale_width="2" scale_height="300" scale_far="4" scale_detail="512" offset_x="0.63" offset_y="0.523" attribute_shader="map_attributes.glsl">
         <biome diffuse="cliff_diffuse.png" normal="cliff_norm.png"/>

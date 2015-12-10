@@ -32,7 +32,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/draw/iconhorde.h>
 #include <tiny/draw/texture2d.h>
 #include <tiny/draw/effects/sunsky.h>
-#include <tiny/draw/effects/solid.h>
+#include <tiny/draw/effects/showimage.h>
 #include <tiny/draw/worldrenderer.h>
 
 #include <tiny/snd/source.h>
@@ -89,6 +89,18 @@ class Game
         
         tiny::vec3 cameraPosition;
         tiny::vec4 cameraOrientation;
+        
+        tiny::vec3 menuCameraPosition;
+        tiny::vec4 menuCameraOrientation;
+        tiny::draw::effects::ShowImage *logoLayer;
+        tiny::draw::RGBATexture2D *logoTexture;
+        tiny::draw::RGBATexture2D *giftTexture;
+        
+        tiny::vec3 spawnCameraPosition;
+        tiny::vec4 spawnCameraOrientation;
+        float spawnTime;
+        float currentSpawnTime;
+        int gameMode;
         
         //Sky and atmosphere.
         tiny::draw::StaticMesh *skyBoxMesh;

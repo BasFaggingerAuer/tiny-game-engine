@@ -132,6 +132,12 @@ Game::Game(const os::Application *application, const std::string &path) :
     aspectRatio(static_cast<double>(application->getScreenWidth())/static_cast<double>(application->getScreenHeight())),
     collisionHandler(1024, 3, 7, 16.0f)
 {
+    menuCameraPosition = vec3(0.0f, 0.0f, 0.0f);
+    menuCameraOrientation = vec4(0.0f, 0.0f, 0.0f, 1.0f);
+    spawnCameraPosition = vec3(0.0f, 0.0f, 0.0f);
+    spawnCameraOrientation = vec4(0.0f, 0.0f, 0.0f, 1.0f);
+    spawnTime = 1.0f;
+    
     readResources(path);
     
     renderer = new draw::WorldRenderer(application->getScreenWidth(), application->getScreenHeight());
@@ -157,6 +163,7 @@ Game::Game(const os::Application *application, const std::string &path) :
     }
     
     renderer->addScreenRenderable(index++, skyEffect, false, false);
+    renderer->addScreenRenderable(index++, logoLayer, false, false, draw::BlendMix);
     
     clear();
     
@@ -230,6 +237,10 @@ Game::~Game()
     
     delete terrain;
     delete forest;
+    
+    delete logoLayer;
+    delete logoTexture;
+    delete giftTexture;
 }
 
 std::vector<vec4> Game::createCollisionCylinders() const
@@ -363,10 +374,40 @@ void Game::update(os::Application *application, const float &dt)
         i->second->updateInstances();
     }
     
-    if (true)
+    if (gameMode == 0)
     {
+        //Menu mode.
+        if (application->isKeyPressed(' '))
+        {
+            gameMode = 1;
+        }
+    }
+    else if (gameMode == 1)
+    {
+        //Spawn mode.
+        if (currentSpawnTime < spawnTime)
+        {
+            const float s = currentSpawnTime/spawnTime;
+            
+            logoLayer->setAlpha(1.0f - s);
+            
+            cameraPosition = (1.0f - s)*menuCameraPosition + s*spawnCameraPosition;
+            cameraOrientation = normalize((1.0f - s)*menuCameraOrientation + s*spawnCameraOrientation);
+            
+            currentSpawnTime += dt;
+        }
+        else
+        {
+            gameMode = 2;
+            logoLayer->setImageTexture(*giftTexture);
+        }
+    }
+    else
+    {
+        //Run around mode.
+        
         //Update the position and orientation of a simple controllable camera.
-        const float ds = (application->isKeyPressed('f') ? 300.0f : 4.0f)*dt;
+        const float ds = (application->isKeyPressed('f') ? 32.0f : 8.0f)*dt;
         const float dr = 2.1f*dt;
         
         if (application->isKeyPressed('i')) cameraOrientation = quatmul(quatrot(dr, vec3(-1.0f, 0.0f, 0.0f)), cameraOrientation);
@@ -376,7 +417,7 @@ void Game::update(os::Application *application, const float &dt)
         if (application->isKeyPressed('u')) cameraOrientation = quatmul(quatrot(dr, vec3( 0.0f, 0.0f,-1.0f)), cameraOrientation);
         if (application->isKeyPressed('o')) cameraOrientation = quatmul(quatrot(dr, vec3( 0.0f, 0.0f, 1.0f)), cameraOrientation);
     
-        normalize(cameraOrientation);
+        cameraOrientation = normalize(cameraOrientation);
     
         vec3 vel = mat4(cameraOrientation)*vec3((application->isKeyPressed('d') && application->isKeyPressed('a')) ? 0.0f : (application->isKeyPressed('d') ? 1.0f : (application->isKeyPressed('a') ? -1.0f : 0.0f)),
                                                 (application->isKeyPressed('q') && application->isKeyPressed('e')) ? 0.0f : (application->isKeyPressed('q') ? 1.0f : (application->isKeyPressed('e') ? -1.0f : 0.0f)),
@@ -388,8 +429,25 @@ void Game::update(os::Application *application, const float &dt)
         const vec2 vel2 = collisionHandler.projectVelocity(vec2(cameraPosition.x, cameraPosition.z), 0.5f, vec2(vel.x, vel.z));
         
         cameraPosition += vec3(vel2.x, vel.y, vel2.y);
-        cameraPosition.y = std::max(cameraPosition.y, terrain->getHeight(vec2(cameraPosition.x, cameraPosition.z)) + 2.0f);
+        //cameraPosition.y = std::max(cameraPosition.y, terrain->getHeight(vec2(cameraPosition.x, cameraPosition.z)) + 2.0f);
+        cameraPosition.y = terrain->getHeight(vec2(cameraPosition.x, cameraPosition.z)) + 2.0f;
+        
+        //Did we reach the other nexus?
+        if (true)
+        {
+            float d = length(cameraPosition - vec3(496.0f, 45.5f, -504.0f));
+            
+            d = std::min(std::max(0.0f, 1.1f - (d/30.0f)), 1.0f);
+            logoLayer->setAlpha(d);
+        }
     }
+    
+    /*
+    if (application->isKeyPressed(' '))
+    {
+        std::cout << "position_x=\"" << cameraPosition.x << "\" position_y=\"" << cameraPosition.y << "\" position_z=\"" << cameraPosition.z << "\" orientation_x=\"" << cameraOrientation.x << "\" orientation_y=\"" << cameraOrientation.y << "\" orientation_z=\"" << cameraOrientation.z << "\" orientation_w=\"" << cameraOrientation.w << "\"" << std::endl;
+    }
+    */
     
     //Update the terrain with respect to the camera.
     terrain->terrain->setCameraPosition(cameraPosition);
@@ -412,8 +470,10 @@ void Game::clear()
     //Stops any running game and clears all data.
 
     //Reset camera.
-    cameraPosition = vec3(0.0f, 0.0f, 0.0f);
-    cameraOrientation = vec4(0.0f, 0.0f, 0.0f, 1.0f);
+    gameMode = 0;
+    cameraPosition = menuCameraPosition;
+    cameraOrientation = menuCameraOrientation;
+    currentSpawnTime = 0.0f;
     
     minions.clear();
     minionIndex = 0;
@@ -421,6 +481,7 @@ void Game::clear()
 
 void Game::readResources(const std::string &path)
 {
+    img::Image logoImage = img::Image::createSolidImage();
     const std::string worldFileName = path + "moba.xml";
     
     std::cerr << "Reading resources from '" << worldFileName << "'." << std::endl;
@@ -448,10 +509,42 @@ void Game::readResources(const std::string &path)
         throw std::exception();
     }
     
+    //Read logo.
+    if (root->Attribute("logo")) logoImage = img::io::readImage(path + std::string(root->Attribute("logo")));
+    
+    logoTexture = new tiny::draw::RGBATexture2D(logoImage, tiny::draw::tf::filter);
+    giftTexture = new tiny::draw::RGBATexture2D(img::io::readImage(path + "gift.png"), tiny::draw::tf::filter);
+    logoLayer = new tiny::draw::effects::ShowImage();
+    logoLayer->setImageTexture(*logoTexture);
+    logoLayer->setAspectRatio(aspectRatio);
+    
     //Read all parts of the XML file.
     for (TiXmlElement *el = root->FirstChildElement(); el; el = el->NextSiblingElement())
     {
-        if (el->ValueStr() == "sky")
+        if (el->ValueStr() == "menu_camera")
+        {
+            el->QueryFloatAttribute("position_x", &menuCameraPosition.x);
+            el->QueryFloatAttribute("position_y", &menuCameraPosition.y);
+            el->QueryFloatAttribute("position_z", &menuCameraPosition.z);
+            el->QueryFloatAttribute("orientation_x", &menuCameraOrientation.x);
+            el->QueryFloatAttribute("orientation_y", &menuCameraOrientation.y);
+            el->QueryFloatAttribute("orientation_z", &menuCameraOrientation.z);
+            el->QueryFloatAttribute("orientation_w", &menuCameraOrientation.w);
+            menuCameraOrientation = normalize(menuCameraOrientation);
+        }
+        else if (el->ValueStr() == "spawn_camera")
+        {
+            el->QueryFloatAttribute("position_x", &spawnCameraPosition.x);
+            el->QueryFloatAttribute("position_y", &spawnCameraPosition.y);
+            el->QueryFloatAttribute("position_z", &spawnCameraPosition.z);
+            el->QueryFloatAttribute("orientation_x", &spawnCameraOrientation.x);
+            el->QueryFloatAttribute("orientation_y", &spawnCameraOrientation.y);
+            el->QueryFloatAttribute("orientation_z", &spawnCameraOrientation.z);
+            el->QueryFloatAttribute("orientation_w", &spawnCameraOrientation.w);
+            spawnCameraOrientation = normalize(spawnCameraOrientation);
+            el->QueryFloatAttribute("spawn_time", &spawnTime);
+        }
+        else if (el->ValueStr() == "sky")
         {
             readSkyResources(path, el);
         }
