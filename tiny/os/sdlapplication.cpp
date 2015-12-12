@@ -35,6 +35,7 @@ using namespace tiny::os;
 
 SDLApplication::SDLApplication(const int &a_screenWidth,
                                const int &a_screenHeight,
+                               const bool &fullScreen,
                                const int &a_screenBPP,
                                const int &a_screenDepthBPP) :
     Application(),
@@ -57,6 +58,16 @@ SDLApplication::SDLApplication(const int &a_screenWidth,
         throw std::exception();
     }
     
+    //Create window.
+    std::cerr << "Creating a " << screenWidth << "x" << screenHeight << " window at " << screenBPP << " bits per pixel..." << std::endl;
+    
+    screenFlags |= SDL_OPENGL | SDL_GL_DOUBLEBUFFER | SDL_HWSURFACE | SDL_HWACCEL;
+    
+    if (fullScreen)
+    {
+        screenFlags |= SDL_FULLSCREEN;
+    }
+    
     //Make sure the colour depth is correct.
     if ((screenFlags & SDL_FULLSCREEN) != 0 || screenBPP < 8) screenBPP = SDL_GetVideoInfo()->vfmt->BitsPerPixel;
     //Set depth buffer precision.
@@ -64,10 +75,6 @@ SDLApplication::SDLApplication(const int &a_screenWidth,
     //Enable double buffering.
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     
-    //Create window.
-    std::cerr << "Creating a " << screenWidth << "x" << screenHeight << " window at " << screenBPP << " bits per pixel..." << std::endl;
-    
-    screenFlags |= SDL_OPENGL | SDL_GL_DOUBLEBUFFER | SDL_HWPALETTE | SDL_HWSURFACE | SDL_HWACCEL;
     screen = SDL_SetVideoMode(screenWidth, screenHeight, screenBPP, screenFlags);
     
     if (!screen)
@@ -78,6 +85,11 @@ SDLApplication::SDLApplication(const int &a_screenWidth,
     
     SDL_EnableUNICODE(1);
     SDL_WM_SetCaption(" ", 0);
+    
+    if (fullScreen)
+    {
+        SDL_ShowCursor(SDL_DISABLE);
+    }
     
     //Initialise OpenGL and GLEW.
     std::cerr << "Initialising OpenGL..." << std::endl;

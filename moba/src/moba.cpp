@@ -32,7 +32,7 @@ int main(int argc, char **argv)
     
     try
     {
-        int screenWidth = 1920;
+        int screenWidth = 1280;
         int screenHeight = 960;
         
         if (argc != 2 && argc != 4)
@@ -47,7 +47,7 @@ int main(int argc, char **argv)
             screenHeight = atoi(argv[3]);
         }
         
-        application = new tiny::os::SDLApplication(screenWidth, screenHeight);
+        application = new tiny::os::SDLApplication(screenWidth, screenHeight, true);
     }
     catch (std::exception &e)
     {
