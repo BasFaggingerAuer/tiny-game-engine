@@ -87,6 +87,8 @@ class Game
         void readSkyResources(const std::string &, TiXmlElement *);
         void readBulletHordeResources(const std::string &, TiXmlElement *);
         
+        void applyConsequences();
+        
         //Renderer.
         const double aspectRatio;
         const float mouseSensitivity;

@@ -80,7 +80,7 @@ void Application::updateSimpleCamera(const float &dt, vec3 &cameraPosition, vec4
     if (isKeyPressed('u')) cameraOrientation = quatmul(quatrot(dr, vec3( 0.0f, 0.0f,-1.0f)), cameraOrientation);
     if (isKeyPressed('o')) cameraOrientation = quatmul(quatrot(dr, vec3( 0.0f, 0.0f, 1.0f)), cameraOrientation);
 
-    normalize(cameraOrientation);
+    cameraOrientation = normalize(cameraOrientation);
 
     vec3 vel = mat4(cameraOrientation)*vec3((isKeyPressed('d') && isKeyPressed('a')) ? 0.0f : (isKeyPressed('d') ? 1.0f : (isKeyPressed('a') ? -1.0f : 0.0f)),
                                             (isKeyPressed('q') && isKeyPressed('e')) ? 0.0f : (isKeyPressed('q') ? 1.0f : (isKeyPressed('e') ? -1.0f : 0.0f)),

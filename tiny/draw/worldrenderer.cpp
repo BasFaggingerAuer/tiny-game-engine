@@ -57,14 +57,14 @@ void WorldRenderer::setCamera(const vec3 &position, const vec4 &orientation)
     screenToColourRenderer.setCamera(position, orientation);
 }
 
-void WorldRenderer::addWorldRenderable(const unsigned int &renderableIndex, Renderable *renderable, const bool &readFromDepthTexture, const bool &writeToDepthTexture, const BlendMode &blendMode)
+void WorldRenderer::addWorldRenderable(const unsigned int &renderableIndex, Renderable *renderable, const bool &readFromDepthTexture, const bool &writeToDepthTexture, const BlendMode &blendMode, const CullMode &cullMode)
 {
-    worldToScreenRenderer.addRenderable(renderableIndex, renderable, readFromDepthTexture, writeToDepthTexture, blendMode);
+    worldToScreenRenderer.addRenderable(renderableIndex, renderable, readFromDepthTexture, writeToDepthTexture, blendMode, cullMode);
 }
 
-void WorldRenderer::addScreenRenderable(const unsigned int &renderableIndex, Renderable *renderable, const bool &readFromDepthTexture, const bool &writeToDepthTexture, const BlendMode &blendMode)
+void WorldRenderer::addScreenRenderable(const unsigned int &renderableIndex, Renderable *renderable, const bool &readFromDepthTexture, const bool &writeToDepthTexture, const BlendMode &blendMode, const CullMode &cullMode)
 {
-    screenToColourRenderer.addRenderable(renderableIndex, renderable, readFromDepthTexture, writeToDepthTexture, blendMode);
+    screenToColourRenderer.addRenderable(renderableIndex, renderable, readFromDepthTexture, writeToDepthTexture, blendMode, cullMode);
 }
 
 void WorldRenderer::freeWorldRenderable(const unsigned int &renderableIndex)

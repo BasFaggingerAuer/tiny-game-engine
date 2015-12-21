@@ -94,63 +94,71 @@ bool Host::listen(const double &dt)
     
     //Are any of the sockets active?
     //TODO: Keep doing this until there is no more data available?
-    if (SDLNet_CheckSockets(selector, 1000.0*dt) > 0)
+    bool receivedData = true;
+    
+    while (receivedData)
     {
-        if (SDLNet_SocketReady(hostSocket) != 0)
-        {
-            //New incoming connection.
-            TCPsocket clientSocket = SDLNet_TCP_Accept(hostSocket);
-            
-            if (clientSocket)
-            {
-                IPaddress *clientAddress = SDLNet_TCP_GetPeerAddress(clientSocket);
-                
-                //SDLNet_TCP_AddSocket(selector, clientSocket);
-                
-                std::cerr << "Accepted connection from " << SDLNet_ResolveIP(clientAddress) << " with index " << lastClientIndex << "." << std::endl;
-                
-                clients.insert(std::make_pair(clientSocket, lastClientIndex));
-                addClient(lastClientIndex);
-                lastClientIndex++;
-            }
-            else
-            {
-                std::cerr << "Warning: Unable to accept incoming connection: " << SDLNet_GetError() << "!" << std::endl;
-            }
-        }
+        receivedData = false;
         
-        //Look for data from the clients and remove the clients that have disconnected.
-        std::map<TCPsocket, unsigned int> remainingClients;
-        
-        for (std::map<TCPsocket, unsigned int>::const_iterator c = clients.begin(); c != clients.end(); ++c)
+        if (SDLNet_CheckSockets(selector, 1000.0*dt) > 0)
         {
-            bool keepClient = true;
-            
-            if (SDLNet_SocketReady(c->first) != 0)
+            if (SDLNet_SocketReady(hostSocket) != 0)
             {
-                //Receive data.
-                Message message;
+                //New incoming connection.
+                TCPsocket clientSocket = SDLNet_TCP_Accept(hostSocket);
                 
-                if (!translator->receiveMessageTCP(c->first, message))
+                if (clientSocket)
                 {
-                    std::cerr << "Lost connection from client " << c->second << "." << std::endl;
-                    removeClient(c->second);
-                    SDLNet_TCP_Close(c->first);
-                    keepClient = false;
+                    IPaddress *clientAddress = SDLNet_TCP_GetPeerAddress(clientSocket);
+                    
+                    //SDLNet_TCP_AddSocket(selector, clientSocket);
+                    
+                    std::cerr << "Accepted connection from " << SDLNet_ResolveIP(clientAddress) << " with index " << lastClientIndex << "." << std::endl;
+                    
+                    clients.insert(std::make_pair(clientSocket, lastClientIndex));
+                    addClient(lastClientIndex);
+                    lastClientIndex++;
                 }
                 else
                 {
-                    receiveMessage(c->second, message);
+                    std::cerr << "Warning: Unable to accept incoming connection: " << SDLNet_GetError() << "!" << std::endl;
                 }
             }
             
-            if (keepClient)
+            //Look for data from the clients and remove the clients that have disconnected.
+            std::map<TCPsocket, unsigned int> remainingClients;
+            
+            for (std::map<TCPsocket, unsigned int>::const_iterator c = clients.begin(); c != clients.end(); ++c)
             {
-                remainingClients.insert(*c);
+                bool keepClient = true;
+                
+                if (SDLNet_SocketReady(c->first) != 0)
+                {
+                    //Receive data.
+                    Message message;
+                    
+                    if (!translator->receiveMessageTCP(c->first, message))
+                    {
+                        std::cerr << "Lost connection from client " << c->second << "." << std::endl;
+                        removeClient(c->second);
+                        SDLNet_TCP_Close(c->first);
+                        keepClient = false;
+                    }
+                    else
+                    {
+                        receiveMessage(c->second, message);
+                        receivedData = true;
+                    }
+                }
+                
+                if (keepClient)
+                {
+                    remainingClients.insert(*c);
+                }
             }
+            
+            clients = remainingClients;
         }
-        
-        clients = remainingClients;
     }
     
     //Free socket set.

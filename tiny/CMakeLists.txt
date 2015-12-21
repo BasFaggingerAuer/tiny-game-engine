@@ -54,6 +54,7 @@ add_library(tinygame
             draw/effects/lambert.cpp
             draw/effects/sunsky.cpp
             draw/effects/solid.cpp
+            draw/effects/showimage.cpp
             os/application.cpp
             os/sdlapplication.cpp)
 

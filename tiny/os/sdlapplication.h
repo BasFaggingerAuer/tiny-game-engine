@@ -32,7 +32,7 @@ namespace os
 class SDLApplication : public Application
 {
     public:
-        SDLApplication(const int &, const int &, const int & = 0, const int & = 24);
+        SDLApplication(const int &, const int &, const bool & = false, const int & = 0, const int & = 24);
         virtual ~SDLApplication();
         
         double pollEvents();

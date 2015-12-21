@@ -38,6 +38,13 @@ namespace tiny
 namespace draw
 {
 
+enum CullMode
+{
+    CullBack,
+    CullFront,
+    CullNothing
+};
+
 enum BlendMode
 {
     BlendReplace,
@@ -89,12 +96,14 @@ struct BoundRenderable
                     const unsigned int &a_shaderProgramHash,
                     const bool &a_readFromDepthTexture,
                     const bool &a_writeToDepthTexture,
-                    const BlendMode &a_blendMode) :
+                    const BlendMode &a_blendMode,
+                    const CullMode &a_cullMode) :
         renderable(a_renderable),
         shaderProgramHash(a_shaderProgramHash),
         readFromDepthTexture(a_readFromDepthTexture),
         writeToDepthTexture(a_writeToDepthTexture),
-        blendMode(a_blendMode)
+        blendMode(a_blendMode),
+        cullMode(a_cullMode)
     {
 
     }
@@ -104,6 +113,7 @@ struct BoundRenderable
     bool readFromDepthTexture;
     bool writeToDepthTexture;
     BlendMode blendMode;
+    CullMode cullMode;
 };
 
 }
@@ -116,7 +126,7 @@ class Renderer
         Renderer();
         virtual ~Renderer();
         
-        void addRenderable(const unsigned int &, Renderable *, const bool & = true, const bool & = true, const BlendMode & = BlendReplace);
+        void addRenderable(const unsigned int &, Renderable *, const bool & = true, const bool & = true, const BlendMode & = BlendReplace, const CullMode & = CullBack);
         bool freeRenderable(const unsigned int &);
         
         void setDepthTextureTarget(const DepthTexture2D &texture)

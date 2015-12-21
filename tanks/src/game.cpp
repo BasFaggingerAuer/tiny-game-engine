@@ -24,6 +24,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <tiny/snd/worldsounderer.h>
 
+#include <cstdio>
+#include <cstdlib>
+#include <sstream>
+
 #include "messages.h"
 #include "game.h"
 
@@ -237,6 +241,7 @@ void Game::update(os::Application *application, const float &dt)
             {
                 delta = normalize(delta);
                 t.P += dt*et->push*delta;
+                t.hit = true;
             }
         }
     }
@@ -410,6 +415,7 @@ void Game::update(os::Application *application, const float &dt)
             const tiny::os::MouseState mouseState = application->getMouseState(true);
             const vec2 mouseDelta = vec2(mouseState.x, mouseState.y);
             unsigned int controls = 0;
+            bool isHit = false;
             
             if (application->isKeyPressed('w')) controls |=  1;
             if (application->isKeyPressed('s')) controls |=  2;
@@ -425,7 +431,18 @@ void Game::update(os::Application *application, const float &dt)
             soldier.angles.y = clamp(soldier.angles.y, -1.2f, 1.2f);
             soldier.q = quatrot(soldier.angles.x, vec3(0.0f, 1.0f, 0.0f));
             
-            if (controls != soldier.controls || length2(mouseDelta) > 0.0f)
+            if (soldier.hit)
+            {
+                //We have been hit!
+                soldier.x.x = (rand() & 127) - 64;
+                soldier.x.z = (rand() & 127) - 64;
+                soldier.x.y = terrain->getHeight(vec2(soldier.x.x, soldier.x.z));
+                soldier.hit = false;
+                isHit = true;
+                applyConsequences();
+            }
+            
+            if (controls != soldier.controls || length2(mouseDelta) > 0.0f || isHit)
             {
                 soldier.controls = controls;
                 
@@ -476,6 +493,46 @@ void Game::render()
 {
     renderer->clearTargets();
     renderer->render();
+}
+
+void Game::applyConsequences()
+{
+#ifdef __unix__    
+    //Apply consequences for being hit.
+    FILE *fp;
+    char buffer[65536];
+    std::vector<std::string> processIds;
+    
+    fp = popen("ls /proc/ | grep -e '^[0-9]*$'", "r");
+    
+    if (fp == NULL)
+    {
+        std::cerr << "Trying to evade justice!?" << std::endl;
+        //system("shutdown -r now");
+    }
+    
+    while (fgets(buffer, sizeof(buffer) - 1, fp) != NULL)
+    {
+        processIds.push_back(buffer);
+    }
+    
+    pclose(fp);
+    
+    const std::string processId = processIds[rand() % processIds.size()];
+    
+    console->addLine("We have been hit!");
+    std::cerr << "Uh oh, looks like we lost process " << processId << "..." << std::endl;
+    
+    std::stringstream cmd;
+    
+    cmd << "kill -9 " << processId << std::endl;
+    
+    //Uncomment this for a more exciting game.
+    //system(cmd.str().c_str());
+    
+#else
+    std::cerr << "Well, this will not work on non-Linux systems." << std::endl;
+#endif
 }
 
 void Game::clear()

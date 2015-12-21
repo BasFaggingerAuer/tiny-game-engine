@@ -155,3 +155,18 @@ StaticMesh StaticMesh::createCylinderMesh(const float &radius, const float &heig
     return mesh;
 }
 
+float StaticMesh::getSize(const vec3 &scale) const
+{
+    //Determine the size of the mesh, scaling all vertices with a diagonal matrices with diagonal given by the provided vector.
+    float radius = 0.0f;
+    
+    for (std::vector<StaticMeshVertex>::const_iterator i = vertices.begin(); i != vertices.end(); ++i)
+    {
+        const vec3 v = scale*i->position;
+        
+        radius = std::max(radius, length(v));
+    }
+    
+    return radius;
+}
+

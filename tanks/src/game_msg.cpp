@@ -382,7 +382,7 @@ bool Game::msgPlayerShootRequest(const unsigned int &senderIndex, std::ostream &
     
     applyMessage(0, msg1);
     
-    out << "Shot bullet of type '" << bulletTypes[bulletType]->name << "' (" << bulletType << ") for player " << senderIndex << " from soldier " << soldierIndex << ".";
+    //out << "Shot bullet of type '" << bulletTypes[bulletType]->name << "' (" << bulletType << ") for player " << senderIndex << " from soldier " << soldierIndex << ".";
     
     return true;
 }
@@ -418,7 +418,7 @@ bool Game::msgAddBullet(const unsigned int &, std::ostream &out, bool &broadcast
     
     if (lastBulletIndex < bulletIndex) lastBulletIndex = bulletIndex;
     
-    out << "Added bullet with index " << bulletIndex << " of type '" << bulletTypes[bulletType]->name << "' (" << bulletType << ") and explosion type '" << explosionTypes[explosionType]->name << "' (" << explosionType << ").";
+    //out << "Added bullet with index " << bulletIndex << " of type '" << bulletTypes[bulletType]->name << "' (" << bulletType << ") and explosion type '" << explosionTypes[explosionType]->name << "' (" << explosionType << ").";
     broadcast = true;
     
     return true;
@@ -453,7 +453,7 @@ bool Game::msgAddExplosion(const unsigned int &, std::ostream &out, bool &broadc
     
     if (lastExplosionIndex < explosionIndex) lastExplosionIndex = explosionIndex;
     
-    out << "Added explosion with index " << explosionIndex << " of type '" << explosionTypes[explosionType]->name << "' (" << explosionType << ").";
+    //out << "Added explosion with index " << explosionIndex << " of type '" << explosionTypes[explosionType]->name << "' (" << explosionType << ").";
     broadcast = true;
     
     return true;

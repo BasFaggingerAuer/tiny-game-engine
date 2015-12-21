@@ -2,17 +2,17 @@
 <tanks>
     <console font="font/mensch.ttf" texture_size="512" font_size="48" />
     <sky texture="img/sky.png" />
-    <terrain heightmap="img/tasmania.png" scale_width="3" scale_height="1617" scale_far="16" scale_detail="1024" attribute_shader="shader/desert.glsl">
-        <biome diffuse="img/terrain/desert_lakebed_dry_b.png" normal="img/terrain/desert_lakebed_dry_b_norm.png" sound="sound/wind.ogg"/>
-        <biome diffuse="img/terrain/desert_sand_smooth_b.png" normal="img/terrain/desert_sand_smooth_b_norm.png" sound="sound/crickets.ogg"/>
-        <biome diffuse="img/terrain/desert_sand_stones.png" normal="img/terrain/desert_sand_stones_norm.png" sound="sound/forest.ogg"/>
-        <biome diffuse="img/terrain/desert_cliff_egypt_2.png" normal="img/terrain/desert_cliff_egypt_2_norm.png" sound="sound/sheep.ogg"/>
+    <terrain heightmap="img/tasmania.png" scale_width="3" scale_height="1617" scale_far="16" scale_detail="1024" attribute_shader="shader/desert.glsl" offset_x="0.50" offset_y="0.55">
+        <biome diffuse="img/terrain/forest.jpg" normal="img/terrain/forest_normal.jpg" sound="sound/wind.ogg"/>
+        <biome diffuse="img/terrain/grass.jpg" normal="img/terrain/grass_normal.jpg" sound="sound/crickets.ogg"/>
+        <biome diffuse="img/terrain/dirt.jpg" normal="img/terrain/dirt_normal.jpg" sound="sound/forest.ogg"/>
+        <biome diffuse="img/terrain/rocks.jpg" normal="img/terrain/rocks_normal.jpg" sound="sound/sheep.ogg"/>
     </terrain>
-    <soldier name="Standard" radius="0.3" height="1.8" camera_height="1.7" mass="80" jump="4" speed="100" land_friction="10" air_friction="0.001" max_instances="1024">
+    <soldier name="Standard" radius="3" height="3" camera_height="4" mass="80" jump="4" speed="100" land_friction="10" air_friction="0.001" max_instances="1024">
         <jumpjet thrust="5000" fuel="100" recharge="5" />
-        <weapon name="Plasma rifle" recharge_time="0.1" bullet="Plasma" explosion="Plasma"/>
+        <weapon name="Plasma rifle" recharge_time="0.5" bullet="Plasma" explosion="Plasma"/>
     </soldier>
     <bullethorde max_instances="4096" texture_size="2048"/>
     <bullet name="Plasma" radius="0.5" emit="img/bullet/plasma.png" lifetime="10.0" vel_x="0.0" vel_y="0.0" vel_z="-64.0" acc_x="0.0" acc_y="0.0" acc_z="-4.0" shoot_sound="sound/newton.ogg" travel_sound="sound/flyingplasma.ogg"/>
-    <explosion name="Plasma" min_radius="0.0" max_radius="10.0" emit="img/bullet/plasma.png" expansion_speed="4" push="10000.0" damage="1.0" explode_sound="sound/fragmentboom.ogg"/>
+    <explosion name="Plasma" min_radius="0.0" max_radius="20.0" emit="img/bullet/plasma.png" expansion_speed="10" push="10000.0" damage="1.0" explode_sound="sound/fragmentboom.ogg"/>
 </tanks>

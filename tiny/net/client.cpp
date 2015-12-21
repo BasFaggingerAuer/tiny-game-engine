@@ -74,21 +74,29 @@ bool Client::listen(const double &dt)
     }
     
     //Are any of the sockets active?
-    if (SDLNet_CheckSockets(selector, 1000.0*dt) > 0)
+    bool receivedData = true;
+    
+    while (receivedData)
     {
-        if (SDLNet_SocketReady(socket) != 0)
+        receivedData = false;
+        
+        if (SDLNet_CheckSockets(selector, 1000.0*dt) > 0)
         {
-            //Receive data.
-            Message message;
-            
-            if (!translator->receiveMessageTCP(socket, message))
+            if (SDLNet_SocketReady(socket) != 0)
             {
-                std::cerr << "Lost connection to host!" << std::endl;
-                disconnectedFromHost();
-            }
-            else
-            {
-                receiveMessage(message);
+                //Receive data.
+                Message message;
+                
+                if (!translator->receiveMessageTCP(socket, message))
+                {
+                    std::cerr << "Lost connection to host!" << std::endl;
+                    disconnectedFromHost();
+                }
+                else
+                {
+                    receiveMessage(message);
+                    receivedData = true;
+                }
             }
         }
     }

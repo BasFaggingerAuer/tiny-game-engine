@@ -203,7 +203,7 @@ void Renderer::destroyFrameBuffer()
     frameBufferIndex = 0;
 }
 
-void Renderer::addRenderable(const unsigned int &renderableIndex, Renderable *renderable, const bool &readFromDepthTexture, const bool &writeToDepthTexture, const BlendMode &blendMode)
+void Renderer::addRenderable(const unsigned int &renderableIndex, Renderable *renderable, const bool &readFromDepthTexture, const bool &writeToDepthTexture, const BlendMode &blendMode, const CullMode &cullMode)
 {
     assert(renderable);
     
@@ -260,7 +260,7 @@ void Renderer::addRenderable(const unsigned int &renderableIndex, Renderable *re
     }
     
     k->second->addRenderableIndex(renderableIndex);
-    renderables.insert(std::make_pair(renderableIndex, new detail::BoundRenderable(renderable, k->first, readFromDepthTexture, writeToDepthTexture, blendMode)));
+    renderables.insert(std::make_pair(renderableIndex, new detail::BoundRenderable(renderable, k->first, readFromDepthTexture, writeToDepthTexture, blendMode, cullMode)));
 }
 
 bool Renderer::freeRenderable(const unsigned int &renderableIndex)
@@ -394,6 +394,21 @@ void Renderer::render() const
             
                  if (renderable->blendMode == BlendAdd) GL_CHECK(glBlendFunc(GL_SRC_ALPHA, GL_ONE));
             else if (renderable->blendMode == BlendMix) GL_CHECK(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+        }
+        
+        if (renderable->cullMode == CullBack)
+        {
+            GL_CHECK(glEnable(GL_CULL_FACE));
+            GL_CHECK(glCullFace(GL_BACK));
+        }
+        else if (renderable->cullMode == CullFront)
+        {
+            GL_CHECK(glEnable(GL_CULL_FACE));
+            GL_CHECK(glCullFace(GL_FRONT));
+        }
+        else if (renderable->cullMode == CullNothing)
+        {
+            GL_CHECK(glDisable(GL_CULL_FACE));
         }
         
         //TODO: Is this very inefficient? Should we let the rendererable decide whether or not to update the uniforms every frame?

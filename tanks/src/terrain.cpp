@@ -47,6 +47,7 @@ GameTerrain::GameTerrain(const std::string &path, TiXmlElement *el)
     float heightScaleFactor = 1.0f;
     int farScaleFactor = 2; 
     float detailScaleFactor = 1.0f;
+    vec2 startingOffset(0.5f);
     
     assert(std::string(el->Value()) == "terrain");
     
@@ -56,6 +57,8 @@ GameTerrain::GameTerrain(const std::string &path, TiXmlElement *el)
     el->QueryFloatAttribute("scale_detail", &detailScaleFactor);
     el->QueryStringAttribute("attribute_shader", &attributeShaderFileName);
     el->QueryStringAttribute("heightmap", &heightMapFileName);
+    el->QueryFloatAttribute("offset_x", &startingOffset.x);
+    el->QueryFloatAttribute("offset_y", &startingOffset.y);
     
     for (TiXmlElement *sl = el->FirstChildElement(); sl; sl = sl->NextSiblingElement())
     {
@@ -100,8 +103,8 @@ GameTerrain::GameTerrain(const std::string &path, TiXmlElement *el)
     localTextureScale = vec2(detailScaleFactor);
     
     //Create height maps.
-    heightTexture = new draw::FloatTexture2D(img::io::readImage(path + heightMapFileName), draw::tf::none);
-    farHeightTexture = new draw::FloatTexture2D(heightTexture->getWidth(), heightTexture->getHeight(), draw::tf::none);
+    heightTexture = new draw::FloatTexture2D(img::io::readImage(path + heightMapFileName), draw::tf::filter);
+    farHeightTexture = new draw::FloatTexture2D(heightTexture->getWidth(), heightTexture->getHeight(), draw::tf::filter);
     
     //Create normal maps for the far-away and zoomed-in heightmaps.
     farTangentTexture = new draw::RGBTexture2D(heightTexture->getWidth(), heightTexture->getHeight());
@@ -125,7 +128,7 @@ GameTerrain::GameTerrain(const std::string &path, TiXmlElement *el)
     
     //Create the terrain.
     terrain = new draw::Terrain(6, 8);
-    setOffset(vec2(0.5f));
+    setOffset(startingOffset);
 }
 
 GameTerrain::~GameTerrain()

@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<moba logo="League_of_Sints_logo.png">
+    <menu_camera position_x="-170.977" position_y="522.945" position_z="1028.93" orientation_x="0.220179" orientation_y="0.185524" orientation_z="0.0450598" orientation_w="0.956588"/>
+    <spawn_camera position_x="-438.289" position_y="43.8942" position_z="456.918" orientation_x="-0.00510771" orientation_y="0.338577" orientation_z="-0.00494226" orientation_w="0.940899" spawn_time="4"/>
+    <sky texture="sky.png" />
+    <terrain heightmap="map.png" scale_width="2" scale_height="300" scale_far="4" scale_detail="512" offset_x="0.63" offset_y="0.523" attribute_shader="map_attributes.glsl">
+        <biome diffuse="cliff_diffuse.png" normal="cliff_norm.png"/>
+        <biome diffuse="forest_diffuse.png" normal="forest_norm.png"/>
+        <biome diffuse="grass_diffuse.png" normal="grass_norm.png"/>
+        <biome diffuse="dirt_diffuse.png"/>
+        <biome diffuse="tile_diffuse.png" normal="tile_norm.png"/>
+        <attributes biome_index="1" map="map_attr_forest.png"/>
+        <attributes biome_index="3" map="map_attr_dirt.png"/>
+        <attributes biome_index="4" map="map_attr_tile.png"/>
+    </terrain>
+    <forest biome_index="1" high_detail_radius="300" low_detail_radius="4096" collision_radius="1.5" nr_planted_trees="10000" nr_high_detail="1024" nr_low_detail="32768" diffuse="pine_diffuse.png" mesh="pine.dae" sprite="pine_sprite.png" sprite_w="7.5" sprite_h="13.5"/>
+    <minion_type name="Wolf" max_speed="4" radius="2.0" nr_instances="1024" mesh="wolf_run.dae" diffuse="wolf_diffuse.png"/>
+    <minion_path name="RadiantMid">
+        <node x="0.6079" y="0.5444"/>
+        <node x="0.6567" y="0.5000"/>
+    </minion_path>
+    <minion_path name="RadiantTop">
+       <node x="0.6011" y="0.5435"/>
+       <node x="0.6011" y="0.5308"/>
+       <node x="0.5908" y="0.5122"/>
+       <node x="0.5815" y="0.5029"/>
+       <node x="0.5781" y="0.4731"/>
+       <node x="0.5942" y="0.4590"/>
+       <node x="0.6211" y="0.4658"/>
+       <node x="0.6313" y="0.4824"/>
+       <node x="0.6387" y="0.4922"/>
+       <node x="0.6504" y="0.4932"/>
+    </minion_path>
+    <minion_path name="RadiantBot">
+       <node x="0.6104" y="0.5503"/>
+       <node x="0.6221" y="0.5503"/>
+       <node x="0.6353" y="0.5630"/>
+       <node x="0.6392" y="0.5728"/>
+       <node x="0.6553" y="0.5776"/>
+       <node x="0.6694" y="0.5806"/>
+       <node x="0.6826" y="0.5688"/>
+       <node x="0.6802" y="0.5371"/>
+       <node x="0.6631" y="0.5146"/>
+       <node x="0.6626" y="0.5029"/>
+    </minion_path>
+    <minion_path name="DireMid">
+        <node x="0.6567" y="0.5000"/>
+        <node x="0.6079" y="0.5444"/>
+    </minion_path>
+    <faction name="Radiant">
+        <nexus mesh="radiant_nexus.dae" diffuse="radiant_tower_diffuse.png" normal="radiant_tower_norm.png" x="0.6021" y="0.5522" dz="-0.7" r="3.8" scale="1.5" />
+        <towers mesh="radiant_tower.dae" diffuse="radiant_tower_diffuse.png" normal="radiant_tower_norm.png">
+            <instance x="0.6006" y="0.5405" r="0.0"/>
+            <instance x="0.6084" y="0.5425" r="0.0"/>
+            <instance x="0.6133" y="0.5498" r="0.0"/>
+            <instance x="0.6030" y="0.5493" r="0.0"/>
+            <instance x="0.6050" y="0.5508" r="0.0"/>
+            <instance x="0.6279" y="0.5547" r="0.0"/>
+            <instance x="0.6528" y="0.5757" r="0.0"/>
+            <instance x="0.5928" y="0.4604" r="0.0"/>
+            <instance x="0.6001" y="0.5288" r="0.0"/>
+            <instance x="0.6138" y="0.5371" r="0.0"/>
+            <instance x="0.6260" y="0.5264" r="0.0"/>
+        </towers>
+        <minion_spawn type="Wolf" path="RadiantMid" nr_spawn="7" radius="40" time="60" />
+        <minion_spawn type="Wolf" path="RadiantTop" nr_spawn="7" radius="40" time="60" />
+        <minion_spawn type="Wolf" path="RadiantBot" nr_spawn="7" radius="40" time="60" />
+    </faction>
+    <faction name="Dire">
+        <nexus mesh="dire_nexus.dae" diffuse="dire_tower_diffuse.png" normal="dire_tower_norm.png" x="0.6611" y="0.4912" dz="-0.8" r="0.0" />
+        <towers mesh="dire_tower.dae" diffuse="dire_tower_diffuse.png" normal="dire_tower_norm.png" scale="1.0">
+            <instance x="0.6484" y="0.4941" r="0.0"/>
+            <instance x="0.6548" y="0.5015" r="0.0"/>
+            <instance x="0.6626" y="0.5044" r="0.0"/>
+            <instance x="0.6592" y="0.4912" r="0.0"/>
+            <instance x="0.6616" y="0.4937" r="0.0"/>
+            <instance x="0.6694" y="0.5801" r="0.0"/>
+            <instance x="0.6650" y="0.5166" r="0.0"/>
+            <instance x="0.6499" y="0.5059" r="0.0"/>
+            <instance x="0.6372" y="0.5186" r="0.0"/>
+            <instance x="0.6382" y="0.4902" r="0.0"/>
+            <instance x="0.6099" y="0.4634" r="0.0"/>
+        </towers>
+    </faction>
+</moba>
+
