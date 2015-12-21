@@ -28,7 +28,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <tiny/draw/renderer.h>
 #include <tiny/draw/icontexture2d.h>
-#include <tiny/draw/iconhorde.h>
+#include <tiny/draw/textbox.h>
 
 using namespace std;
 using namespace tiny;
@@ -37,7 +37,7 @@ os::Application *application = 0;
 
 draw::Renderer *renderer = 0;
 
-draw::ScreenIconHorde *font = 0;
+draw::TextBox * text = 0;
 draw::IconTexture2D *fontTexture = 0;
 
 void setup()
@@ -48,21 +48,30 @@ void setup()
     fontTexture = new draw::IconTexture2D(512, 512);
     fontTexture->packIcons(img::io::readFont(DATA_DIRECTORY + "font/OpenBaskerville-0.0.75.ttf", 48));
     
-    //Create a drawable font object as a collection of instanced screen icons.
-    font = new draw::ScreenIconHorde(1024);
-    font->setIconTexture(*fontTexture);
-    font->setText(-1.0, -1.0, 0.2, aspectRatio, "The \\rtiny\\w-\\ggame\\w-\\bengine\\w.\nA font rendering example.", *fontTexture);
+    //Create a drawable textbox object as a collection of instanced screen icons.
+    text = new draw::TextBox(fontTexture,0.2,aspectRatio);
+    text->setBoxDimensions(-1.0f,0.0f,0.0f,-1.0f);
+    std::string str("A boxed font rendering example for the tiny-game-engine.");
+    for(unsigned int i = 0; i < str.size(); i++)
+        text->addTextFragment(str.substr(i,1), draw::Colour(255-(i*255)/str.size(),(i*255)/str.size(),0));
     
-    //Create a renderer and add the font to it, disabling depth reading and writing.
+    //Create a renderer and add the textbox to it, disabling depth reading and writing.
     renderer = new draw::Renderer();
-    renderer->addRenderable(0, font, false, false, draw::BlendMix);
+    renderer->addRenderable(0, text->getRenderable(), false, false, draw::BlendMix);
+
+    //Reserve space such that text can be fully rendered, and set text.
+    draw::Renderable * oldRenderable = 0;
+    draw::Renderable * newRenderable = text->reserve(oldRenderable);
+    if(oldRenderable) renderer->freeRenderable(0);
+    if(newRenderable) renderer->addRenderable(0, newRenderable, false, false, draw::BlendMix);
+    text->setText();
 }
 
 void cleanup()
 {
     delete renderer;
     
-    delete font;
+    delete text;
     delete fontTexture;
 }
 

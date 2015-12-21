@@ -137,8 +137,49 @@ void ScreenIconHorde::render(const ShaderProgram &program) const
     icons.unbind(program);
 }
 
+void ScreenIconHorde::appendText(vec4 & pos, const float &size, const float &aspectRatio, const std::string &text, const IconTexture2D &map, const Colour &colour, const vec4 &boxSize)
+{
+    //Draw font.
+    const float sizeScale = size/map.getMaxIconDimensions().y;
+    
+    for (std::string::const_iterator i = text.begin(); i != text.end() && nrIcons < maxNrIcons; ++i)
+    {
+        const vec4 icon = map.getIcon(*i);
+        
+        pos.w = sizeScale*icon.w;
+        pos.z = pos.w*(icon.z/icon.w)/aspectRatio;
+        icons[nrIcons++] = ScreenIconInstance(pos, icon, colour.toVector());
+        pos.x += pos.z;
+        if(pos.x > boxSize.z) // Try wrapping when adding out-of-box characters
+        {
+            if(pos.y < boxSize.w + size) break; // Cannot wrap beyond bottom of box
+            const vec4 iconSpace = map.getIcon(' ');
+            for(unsigned int j = nrIcons-1; j < maxNrIcons; j--)
+            {
+                if(icons[j].icon == iconSpace)
+                {
+                    float shift = icons[j+1].positionAndSize.x - boxSize.x;
+                    float newStart = icons[nrIcons-1].positionAndSize.x - icons[j+1].positionAndSize.x+pos.z;
+                    for(unsigned int k = j+1; k < nrIcons; k++)
+                    {
+                        icons[k].positionAndSize.x -= shift;
+                        icons[k].positionAndSize.y -= size;
+                    }
+                    pos.x = boxSize.x+newStart;
+                    pos.y -= size;
+                    break;
+                }
+            }
+        }
+    }
+    
+    //Update buffer.
+    icons.sendToDevice();
+}
+
 void ScreenIconHorde::setText(const float &x, const float &y, const float &size, const float &aspectRatio, const std::string &text, const IconTexture2D &map)
 {
+    std::cout << " setText() : text="<<text<<" map="<<&map<<" size="<<size<<std::endl;
     //Draw font.
     const float sizeScale = size/map.getMaxIconDimensions().y;
     vec4 pos = vec4(x, y, 0.0f, 0.0f);

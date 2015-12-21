@@ -1,5 +1,5 @@
 /*
-Copyright 2012, Bas Fagginger Auer.
+Copyright 2012-2015, Bas Fagginger Auer and Matthijs van Dorp.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/draw/vertexbuffer.h>
 #include <tiny/draw/vertexbufferinterpreter.h>
 #include <tiny/draw/icontexture2d.h>
+#include <tiny/draw/colour.h>
 
 namespace tiny
 {
@@ -85,8 +86,14 @@ class ScreenIconHorde : public Renderable
             
             icons.sendToDevice();
         }
+
+        /** Append text by adding text starting at a given position. This function
+          * adjusts the position given such that additional text can be appended. */
+        void appendText(vec4 &, const float &, const float &, const std::string &, const IconTexture2D &, const Colour &, const vec4 &);
         
         void setText(const float &, const float &, const float &, const float &, const std::string &, const IconTexture2D &);
+
+        size_t maxNumIcons(void) const { return maxNrIcons; }
         
     protected:
         void render(const ShaderProgram &) const;
@@ -145,12 +152,12 @@ class WorldIconHorde : public Renderable
             uniformMap.setTexture(texture, "iconTexture");
         }
 
-		// Nonstandard method to set instances, preferably use setInstances().
+        // Nonstandard method to set instances, preferably use setInstances().
         template <typename Iterator>
-		void setIcons(Iterator first, Iterator last) { setInstances(first,last); }
+        void setIcons(Iterator first, Iterator last) { setInstances(first,last); }
 
-		// Use same interface as StaticMeshHorde and AnimatedMeshHorde.
-		template <typename Iterator>
+        // Use same interface as StaticMeshHorde and AnimatedMeshHorde.
+        template <typename Iterator>
         void setInstances(Iterator first, Iterator last)
         {
             nrIcons = 0;
