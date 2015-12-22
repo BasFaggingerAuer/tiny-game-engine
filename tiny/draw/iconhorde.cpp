@@ -177,6 +177,13 @@ void ScreenIconHorde::appendText(vec4 & pos, const float &size, const float &asp
     icons.sendToDevice();
 }
 
+void ScreenIconHorde::eraseText(void)
+{
+    nrIcons = 0;
+    for(size_t i = 0; i < maxNrIcons; i++) icons[i] = ScreenIconInstance();
+    icons.sendToDevice();
+}
+
 void ScreenIconHorde::setText(const float &x, const float &y, const float &size, const float &aspectRatio, const std::string &text, const IconTexture2D &map)
 {
     std::cout << " setText() : text="<<text<<" map="<<&map<<" size="<<size<<std::endl;

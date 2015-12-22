@@ -90,6 +90,9 @@ class ScreenIconHorde : public Renderable
         /** Append text by adding text starting at a given position. This function
           * adjusts the position given such that additional text can be appended. */
         void appendText(vec4 &, const float &, const float &, const std::string &, const IconTexture2D &, const Colour &, const vec4 &);
+
+        /** Erase the text currently in the ScreenIconHorde object. */
+        void eraseText(void);
         
         void setText(const float &, const float &, const float &, const float &, const std::string &, const IconTexture2D &);
 
