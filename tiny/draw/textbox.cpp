@@ -67,6 +67,13 @@ Renderable * TextBox::reserve(Renderable * &currentRenderable)
     else return 0;
 }
 
+void TextBox::setFontTexture(IconTexture2D * _iconMap);
+{
+    iconMap = _iconMap;
+    iconHorde->setIconTexture(*iconMap);
+    setText();
+}
+
 void TextBox::setBoxDimensions(const float &_x, const float &_y, const float &_p, const float &_q)
 {
     box = vec4(_x,_y,_p,_q);

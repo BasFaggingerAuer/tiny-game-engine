@@ -63,7 +63,7 @@ namespace draw
 
             /** Reset the font texture. Since different fonts have different widths, we also
               * need to re-set the text. */
-            void setFontTexture(IconTexture2D * _iconMap) { iconMap = _iconMap; iconHorde->setIconTexture(*iconMap); setText(); }
+            void setFontTexture(IconTexture2D * _iconMap);
 
             /** Set the maximal dimensions of the box, forbidding rendering of text outside of
               * the square with upper-left corner (_x,_y) and lower-right corner (_p,_q), using
