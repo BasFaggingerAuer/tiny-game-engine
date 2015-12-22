@@ -124,6 +124,9 @@ target_link_libraries(test_TerrainFancy ${USED_LIBS})
 add_executable(test_Network src/test_Network.cpp)
 target_link_libraries(test_Network ${USED_LIBS})
 
+add_executable(test_Forest src/test_Forest.cpp)
+target_link_libraries(test_Forest ${USED_LIBS})
+
 
 add_subdirectory(${TINY_SOURCE_DIR}/tanks/)
 
