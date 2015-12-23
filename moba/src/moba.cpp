@@ -47,7 +47,7 @@ int main(int argc, char **argv)
             screenHeight = atoi(argv[3]);
         }
         
-        application = new tiny::os::SDLApplication(screenWidth, screenHeight, true);
+        application = new tiny::os::SDLApplication(screenWidth, screenHeight);
     }
     catch (std::exception &e)
     {

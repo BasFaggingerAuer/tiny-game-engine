@@ -67,7 +67,7 @@ Renderable * TextBox::reserve(Renderable * &currentRenderable)
     else return 0;
 }
 
-void TextBox::setFontTexture(IconTexture2D * _iconMap);
+void TextBox::setFontTexture(IconTexture2D * _iconMap)
 {
     iconMap = _iconMap;
     iconHorde->setIconTexture(*iconMap);
