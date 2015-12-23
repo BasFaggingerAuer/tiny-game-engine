@@ -80,7 +80,10 @@ class StaticMeshHorde : public Renderable
         }
         
         template <typename Iterator>
-        void setMeshes(Iterator first, Iterator last)
+        void setMeshes(Iterator first, Iterator last) { setInstances(first,last); }
+
+        template <typename Iterator>
+        void setInstances(Iterator first, Iterator last)
         {
             nrMeshes = 0;
             
