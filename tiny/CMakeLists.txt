@@ -47,6 +47,7 @@ add_library(tinygame
             draw/animatedmeshhorde.cpp
             draw/icontexture2d.cpp
             draw/iconhorde.cpp
+            draw/textbox.cpp
             draw/lighthorde.cpp
             draw/terrain.cpp
             draw/effects/diffuse.cpp
