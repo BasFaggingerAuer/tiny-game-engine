@@ -50,11 +50,15 @@ void TextBox::addTextFragment(std::string _text, Colour _colour)
     textFragments.push_back(TextFragment(_text, _colour));
 }
 
+void TextBox::addNewline(void)
+{
+    textFragments.push_back(TextFragment("",Colour(0,0,0)));
+}
+
 Renderable * TextBox::reserve(Renderable * &currentRenderable)
 {
     if(!iconHorde || iconHorde->maxNumIcons() <= length())
     {
-        std::cout << " setText() : Reset iconHorde "<<iconHorde<<" to length "<<length()<<"... "<<std::endl;
         if(iconHorde)
         {
             currentRenderable = iconHorde;
@@ -85,7 +89,12 @@ void TextBox::setText(void)
     vec4 iconPos(box.x, box.y-size, 0.0f, 0.0f);
     for(unsigned int i = 0; i < textFragments.size(); i++)
     {
-        iconHorde->appendText(iconPos, size, aspectRatio, textFragments[i].text, *iconMap, textFragments[i].colour, box);
+        if(textFragments[i].text.length() == 0)
+        {
+            iconPos.x = box.x;
+            iconPos.y -= size;
+        }
+        else iconHorde->appendText(iconPos, size, aspectRatio, textFragments[i].text, *iconMap, textFragments[i].colour, box);
     }
 }
 

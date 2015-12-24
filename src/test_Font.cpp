@@ -50,10 +50,14 @@ void setup()
     
     //Create a drawable textbox object as a collection of instanced screen icons.
     text = new draw::TextBox(fontTexture,0.2,aspectRatio);
-    text->setBoxDimensions(-1.0f,0.0f,0.0f,-1.0f);
+    text->setBoxDimensions(-1.0f,0.0f,0.5f,-1.0f);
     std::string str("A boxed font rendering example for the tiny-game-engine.");
     for(unsigned int i = 0; i < str.size(); i++)
         text->addTextFragment(str.substr(i,1), draw::Colour(255-(i*255)/str.size(),(i*255)/str.size(),0));
+    text->addNewline();
+    str = "Automatic word wrapping, custom colouring and new lines are possible.";
+    for(unsigned int i = 0; i < str.size(); i++)
+        text->addTextFragment(str.substr(i,1), draw::Colour(0,255-(i*255)/str.size(),(i*255)/str.size()));
     
     //Create a renderer and add the textbox to it, disabling depth reading and writing.
     renderer = new draw::Renderer();

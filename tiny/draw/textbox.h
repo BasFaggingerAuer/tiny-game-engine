@@ -43,11 +43,13 @@ namespace draw
             };
 
             ScreenIconHorde * iconHorde;
-            float size; /**< The font size. */
+            float size; /**< The (vertical) font size (note that the screen bottom is at -1 and the top is at +1). */
             float aspectRatio; /**< The aspect ratio used for the font. */
             vec4 box; /**< The width of the text box. */
             IconTexture2D * iconMap; /**< The font map. */
 
+            /** The list of all text fragments of the Text box. New lines are
+              * started by inserting a text fragment with an empty text string. */
             std::vector<TextFragment> textFragments;
 
             size_t length(void) const;
@@ -60,6 +62,9 @@ namespace draw
               * existing text for the TextBox. Note that text fragments are not rendered until
               * after TextBox::setText() is called. */
             void addTextFragment(std::string _text, Colour _colour);
+
+            /** Add a newline after the currently pushed text fragments. */
+            void addNewline(void);
 
             /** Reset the font texture. Since different fonts have different widths, we also
               * need to re-set the text. */
