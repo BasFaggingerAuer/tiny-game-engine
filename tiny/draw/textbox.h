@@ -79,6 +79,9 @@ namespace draw
             /** Reserve enough space such that the text can be rendered fully. */
             Renderable * reserve(Renderable * &currentRenderable);
 
+            /** Clear the contents (i.e. all text fragments) of the TextBox. */
+            void clear(void);
+
             /** Set this Text to appear to the top-right of the location
               * specified by screen coordinates (_x,_y), where both coordinates
               * can vary from -1 to +1. */

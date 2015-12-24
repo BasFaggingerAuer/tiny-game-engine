@@ -98,6 +98,12 @@ void TextBox::setText(void)
     }
 }
 
+void TextBox::clear(void)
+{
+    textFragments.clear();
+    iconHorde->eraseText();
+}
+
 Renderable * TextBox::getRenderable(void)
 {
     return iconHorde;
