@@ -79,8 +79,13 @@ namespace draw
             /** Reserve enough space such that the text can be rendered fully. */
             Renderable * reserve(Renderable * &currentRenderable);
 
-            /** Clear the contents (i.e. all text fragments) of the TextBox. */
+            /** Clear the contents (i.e. all text fragments) of the TextBox. To only
+              * make the text invisible, use hide(). */
             void clear(void);
+
+            /** Hide the TextBox, making it invisible, without altering the TextBox itself. To show
+              * the TextBox again, use setText(). */
+            void hide(void);
 
             /** Set this Text to appear to the top-right of the location
               * specified by screen coordinates (_x,_y), where both coordinates
