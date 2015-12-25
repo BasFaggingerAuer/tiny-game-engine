@@ -160,6 +160,7 @@ void ScreenIconHorde::appendText(vec4 & pos, const float &size, const float &asp
                 {
                     float shift = icons[j+1].positionAndSize.x - boxSize.x;
                     float newStart = icons[nrIcons-1].positionAndSize.x - icons[j+1].positionAndSize.x+pos.z;
+                    if(j+1 == nrIcons) newStart = 0.0f; // if space exceeds box, we can start new line at margin
                     for(unsigned int k = j+1; k < nrIcons; k++)
                     {
                         icons[k].positionAndSize.x -= shift;
@@ -186,7 +187,6 @@ void ScreenIconHorde::eraseText(void)
 
 void ScreenIconHorde::setText(const float &x, const float &y, const float &size, const float &aspectRatio, const std::string &text, const IconTexture2D &map)
 {
-    std::cout << " setText() : text="<<text<<" map="<<&map<<" size="<<size<<std::endl;
     //Draw font.
     const float sizeScale = size/map.getMaxIconDimensions().y;
     vec4 pos = vec4(x, y, 0.0f, 0.0f);
