@@ -83,6 +83,11 @@ void TextBox::setBoxDimensions(const float &_x, const float &_y, const float &_p
     box = vec4(_x,_y,_p,_q);
 }
 
+void TextBox::hide(void)
+{
+    iconHorde->eraseText();
+}
+
 void TextBox::setText(void)
 {
     iconHorde->eraseText();
