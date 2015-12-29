@@ -57,6 +57,11 @@ StaticMesh::~StaticMesh()
 
 }
 
+size_t StaticMesh::bufferSize(void) const
+{
+	return indices.size()*sizeof(unsigned int) + vertices.size()*sizeof(tiny::mesh::StaticMeshVertex);
+}
+
 std::string StaticMesh::getVertexShaderCode() const
 {
     return

@@ -73,6 +73,11 @@ AnimatedMesh::~AnimatedMesh()
 
 }
 
+size_t AnimatedMesh::bufferSize(void) const
+{
+	return indices.size()*sizeof(unsigned int) + vertices.size()*sizeof(tiny::mesh::AnimatedMeshVertex);
+}
+
 void AnimatedMesh::setAnimationFrame(const int &a_frame)
 {
     const int newFrame = 3*nrBones*a_frame;
