@@ -117,6 +117,8 @@ class AnimatedMesh : public Renderable
         
         std::string getVertexShaderCode() const;
         std::string getFragmentShaderCode() const;
+
+		size_t bufferSize(void) const;
         
     protected:
         void render(const ShaderProgram &) const;

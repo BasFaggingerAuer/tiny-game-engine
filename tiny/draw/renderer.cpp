@@ -290,8 +290,6 @@ bool Renderer::freeRenderable(const unsigned int &renderableIndex)
         shaderPrograms.erase(k);
     }
 
-    std::cout << "Freed renderable " << renderableIndex << ", there are " << shaderPrograms.size() << " programs and " << renderables.size() << " renderables." << std::endl;
-
     return true;
 }
 
