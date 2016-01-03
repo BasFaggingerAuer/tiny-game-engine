@@ -75,7 +75,7 @@ AnimatedMesh::~AnimatedMesh()
 
 size_t AnimatedMesh::bufferSize(void) const
 {
-	return indices.size()*sizeof(unsigned int) + vertices.size()*sizeof(tiny::mesh::AnimatedMeshVertex);
+    return indices.size()*sizeof(unsigned int) + vertices.size()*sizeof(tiny::mesh::AnimatedMeshVertex);
 }
 
 void AnimatedMesh::setAnimationFrame(const int &a_frame)
@@ -109,7 +109,7 @@ std::string AnimatedMesh::getVertexShaderCode() const
 "\n"
 "vec3 qtransform(const vec4 q, const vec3 v)\n"
 "{\n"
-"	return (v + 2.0f*cross(cross(v, q.xyz) + q.w*v, q.xyz));\n"
+"    return (v + 2.0f*cross(cross(v, q.xyz) + q.w*v, q.xyz));\n"
 "}\n"
 "\n"
 "void main(void)\n"
