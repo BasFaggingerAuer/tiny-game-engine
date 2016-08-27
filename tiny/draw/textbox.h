@@ -76,6 +76,12 @@ namespace draw
               * the lower right. */
             void setBoxDimensions(const float &_x, const float &_y, const float &_p, const float &_q);
 
+            /** Set the font size. Since this affects the contained text, this also re-sets the text. */
+            void setFontSize(const float &_fontSize);
+
+            /** Set the aspect ratio. Since this affects the contained text, this also re-sets the text. */
+            void setAspectRatio(const float &_aspectRatio);
+
             /** Reserve enough space such that the text can be rendered fully. */
             Renderable * reserve(Renderable * &currentRenderable);
 

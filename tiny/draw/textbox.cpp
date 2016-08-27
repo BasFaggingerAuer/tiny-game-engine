@@ -83,6 +83,18 @@ void TextBox::setBoxDimensions(const float &_x, const float &_y, const float &_p
     box = vec4(_x,_y,_p,_q);
 }
 
+void TextBox::setFontSize(const float &_fontSize)
+{
+    size = _fontSize;
+    setText();
+}
+
+void TextBox::setAspectRatio(const float &_aspectRatio)
+{
+    aspectRatio = _aspectRatio;
+    setText();
+}
+
 void TextBox::hide(void)
 {
     iconHorde->eraseText();
