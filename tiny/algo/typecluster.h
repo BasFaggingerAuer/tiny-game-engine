@@ -152,6 +152,18 @@ namespace algo
                 return cluster.end();
             }
 
+            /** Give access to const iterators on the cluster. */
+            typename std::map<K,T*>::const_iterator cbegin(void) const
+            {
+                return cluster.cbegin();
+            }
+
+            /** Give access to const iterators on the cluster. */
+            typename std::map<K,T*>::const_iterator cend(void) const
+            {
+                return cluster.cend();
+            }
+
             /** Gives the cluster's lower bound using the provided key. Uses std::map::lower_bound(). */
             typename std::map<K,T*>::iterator lower_bound(K & key)
             {
