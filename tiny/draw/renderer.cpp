@@ -359,7 +359,7 @@ void Renderer::clearTargets() const
 void Renderer::render() const
 {
     GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, frameBufferIndex));
-    GL_CHECK(glPushAttrib(GL_VIEWPORT_BIT | GL_ENABLE_BIT));
+    //GL_CHECK(glPushAttrib(GL_VIEWPORT_BIT | GL_ENABLE_BIT));
     
     if (viewportSize.x > 0 && viewportSize.y > 0)
     {
@@ -428,7 +428,9 @@ void Renderer::render() const
         shaderProgram->setUniforms(renderable->renderable->uniformMap);
         
         renderable->renderable->uniformMap.bindTextures(uniformMap.getNrTextures());
+        renderable->renderable->bind();
         renderable->renderable->render(shaderProgram->getProgram());
+        renderable->renderable->unbind();
         renderable->renderable->uniformMap.unbindTextures(uniformMap.getNrTextures());
     }
     
@@ -436,7 +438,7 @@ void Renderer::render() const
     
     uniformMap.unbindTextures();
     
-    GL_CHECK(glPopAttrib());
+    //GL_CHECK(glPopAttrib());
     GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, 0));
     
 #ifndef NDEBUG

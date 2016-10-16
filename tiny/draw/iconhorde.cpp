@@ -150,6 +150,7 @@ void ScreenIconHorde::appendText(vec4 & pos, const float &size, const float &asp
         pos.z = pos.w*(icon.z/icon.w)/aspectRatio;
         icons[nrIcons++] = ScreenIconInstance(pos, icon, colour.toVector());
         pos.x += pos.z;
+        
         if(pos.x > boxSize.z) // Try wrapping when adding out-of-box characters
         {
             if(pos.y < boxSize.w + size) break; // Cannot wrap beyond bottom of box

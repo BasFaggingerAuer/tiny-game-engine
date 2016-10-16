@@ -1,11 +1,12 @@
 include_directories(${OPENGL_INCLUDE_DIR})
 include_directories(${GLEW_INCLUDE_DIR})
+include_directories(${OPENAL_INCLUDE_DIR})
+include_directories(${OGGVORBIS_INCLUDE_DIR})
 include_directories(${ASSIMP_INCLUDE_DIR})
-include_directories(${SDL_INCLUDE_DIR})
-include_directories(${SDL_IMAGE_INCLUDE_DIR})
-include_directories(${SDL_TTF_INCLUDE_DIR})
-include_directories(${SDL_NET_INCLUDE_DIR})
-include_directories(${SDL_MIXER_INCLUDE_DIR})
+include_directories(${SDL2_INCLUDE_DIRS})
+include_directories(${SDL2_IMAGE_INCLUDE_DIRS})
+include_directories(${SDL2_TTF_INCLUDE_DIRS})
+include_directories(${SDL2_NET_INCLUDE_DIRS})
 include_directories(${CMAKE_SOURCE_DIR})
 
 add_library(tinygame

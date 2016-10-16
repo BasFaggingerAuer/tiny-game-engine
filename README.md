@@ -20,10 +20,10 @@ Debian/Ubuntu package names are supplied between parenthesis for convenience.
 4.   GLEW OpenGL Extension Wrangler Library (libglew-dev).
 5.   OpenAL library (libopenal-dev).
 6.   OGG Vorbis library (libogg-dev, libvorbis-dev).
-7.   SDL Simple DirectMedia Layer (libsdl1.2-dev).
-8.   SDL image library (libsdl-image1.2-dev).
-9.   SDL font library (libsdl-ttf2.0-dev).
-10.  SDL networking library (libsdl-net1.2-dev).
+7.   SDL 2 Simple DirectMedia Layer (libsdl2-dev).
+8.   SDL 2 image library (libsdl2-image-dev).
+9.   SDL 2 font library (libsdl2-ttf-dev).
+10.  SDL 2 networking library (libsdl2-net-dev).
 11.  Asset importer library (libassimp-dev).
 12.  Tiny XML library (libtinyxml-dev).
 

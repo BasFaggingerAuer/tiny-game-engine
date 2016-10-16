@@ -32,6 +32,7 @@ FIND_LIBRARY(LIBASSIMP
   ENV LD_LIBRARY_PATH
   ENV LIBRARY_PATH
   /usr/lib
+  /usr/lib/x86_64-linux-gnu
   /usr/local/lib
   /opt/local/lib
   NO_DEFAULT_PATH

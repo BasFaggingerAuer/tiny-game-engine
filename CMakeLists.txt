@@ -21,17 +21,21 @@ find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(OpenAL REQUIRED)
 find_package(OggVorbis REQUIRED)
-find_package(SDL REQUIRED)
-find_package(SDL_image REQUIRED)
-find_package(SDL_ttf REQUIRED)
-find_package(SDL_net REQUIRED)
+
+INCLUDE(FindPkgConfig)
+
+PKG_SEARCH_MODULE(SDL2 REQUIRED sdl2)
+PKG_SEARCH_MODULE(SDL2IMAGE REQUIRED SDL2_image>=2.0.0)
+PKG_SEARCH_MODULE(SDL2TTF REQUIRED SDL2_ttf>=2.0.0)
+PKG_SEARCH_MODULE(SDL2NET REQUIRED SDL2_net>=2.0.0)
+
 find_package(Assimp REQUIRED)
 
 configure_file(config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
 
 set(CMAKE_CXX_FLAGS "-O2 -g -Wall -Wextra -Wshadow -ansi -pedantic")
 #set(CMAKE_CXX_FLAGS "-O3 -Wall -DNDEBUG")
-set(CMAKE_EXE_LINKER_FLAGS "-lrt")
+#set(CMAKE_EXE_LINKER_FLAGS "-lrt")
 #set(CMAKE_VERBOSE_MAKEFILE true)
 
 add_subdirectory(${TINY_SOURCE_DIR}/tiny/)
@@ -44,14 +48,14 @@ include_directories(${OPENAL_INCLUDE_DIR})
 include_directories(${OGGVORBIS_INCLUDE_DIR})
 include_directories(${ASSIMP_INCLUDE_DIR})
 link_directories(${ASSIMP_LIBRARY_DIR})
-include_directories(${SDL_INCLUDE_DIR})
-link_directories(${SDL_LIBRARY_DIR})
-include_directories(${SDL_IMAGE_INCLUDE_DIR})
-link_directories(${SDL_IMAGE_LIBRARY_DIR})
-include_directories(${SDL_TTF_INCLUDE_DIR})
-link_directories(${SDL_TTF_LIBRARY_DIR})
-include_directories(${SDL_NET_INCLUDE_DIR})
-link_directories(${SDL_NET_LIBRARY_DIR})
+include_directories(${SDL2_INCLUDE_DIRS})
+link_directories(${SDL2_LIBRARY_DIRS})
+include_directories(${SDL2_IMAGE_INCLUDE_DIRS})
+link_directories(${SDL2_IMAGE_LIBRARY_DIRS})
+include_directories(${SDL2_TTF_INCLUDE_DIRS})
+link_directories(${SDL2_TTF_LIBRARY_DIRS})
+include_directories(${SDL2_NET_INCLUDE_DIRS})
+link_directories(${SDL2_NET_LIBRARY_DIRS})
 include_directories(${TINY_SOURCE_DIR})
 include_directories(${TINY_BINARY_DIR})
 
@@ -62,10 +66,10 @@ set(USED_LIBS
               ${GLEW_LIBRARY}
               ${OPENAL_LIBRARY}
               ${OGGVORBIS_LIBRARIES}
-              ${SDL_LIBRARY}
-              ${SDLIMAGE_LIBRARY}
-              ${SDLTTF_LIBRARY}
-              ${SDLNET_LIBRARY})
+              ${SDL2_LIBRARIES}
+              ${SDL2IMAGE_LIBRARIES}
+              ${SDL2TTF_LIBRARIES}
+              ${SDL2NET_LIBRARIES})
 
 add_executable(test_SDLApplication src/test_SDLApplication.cpp)
 target_link_libraries(test_SDLApplication ${USED_LIBS})

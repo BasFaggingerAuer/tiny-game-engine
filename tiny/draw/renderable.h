@@ -50,6 +50,9 @@ class Renderable
         virtual std::string getGeometryShaderCode() const;
         virtual std::string getFragmentShaderCode() const = 0;
         
+        void bind();
+        void unbind();
+        
     protected:
         friend class Renderer;
         friend class ComputeTexture;
@@ -97,6 +100,11 @@ class Renderable
         }
         
         UniformMap uniformMap;
+        
+    private:
+        void createVertexArray();
+        
+        GLuint vertexArrayIndex;
 };
 
 }

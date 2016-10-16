@@ -23,21 +23,40 @@ using namespace tiny::draw;
 
 Renderable::Renderable()
 {
-
+    createVertexArray();
 }
 
 Renderable::Renderable(const Renderable &)
 {
     //TODO.
+    createVertexArray();
 }
 
 Renderable::~Renderable()
 {
-
+    GL_CHECK(glDeleteVertexArrays(1, &vertexArrayIndex));
 }
 
 std::string Renderable::getGeometryShaderCode() const
 {
     return "";
+}
+
+void Renderable::bind()
+{
+    GL_CHECK(glBindVertexArray(vertexArrayIndex));
+}
+
+void Renderable::unbind()
+{
+    GL_CHECK(glBindVertexArray(0));
+}
+
+void Renderable::createVertexArray()
+{
+    GL_CHECK(glGenVertexArrays(1, &vertexArrayIndex));
+    
+    if (vertexArrayIndex == 0)
+        throw std::bad_alloc();
 }
 

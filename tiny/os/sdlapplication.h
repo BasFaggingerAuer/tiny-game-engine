@@ -54,7 +54,8 @@ class SDLApplication : public Application
         int screenBPP;
         int screenDepthBPP;
         Uint32 screenFlags;
-        SDL_Surface *screen;
+        SDL_Window *screen;
+        SDL_GLContext glContext;
         Uint32 lastCount, curCount;
         bool wireframe;
         

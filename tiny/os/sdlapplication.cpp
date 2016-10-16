@@ -16,7 +16,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <iostream>
 #include <exception>
+#include <string>
 #include <climits>
+#include <ctime>
 
 #include <GL/glew.h>
 #include <GL/gl.h>
@@ -61,21 +63,14 @@ SDLApplication::SDLApplication(const int &a_screenWidth,
     //Create window.
     std::cerr << "Creating a " << screenWidth << "x" << screenHeight << " window at " << screenBPP << " bits per pixel..." << std::endl;
     
-    screenFlags |= SDL_OPENGL | SDL_GL_DOUBLEBUFFER | SDL_HWSURFACE | SDL_HWACCEL;
+    screenFlags = SDL_WINDOW_OPENGL;
     
     if (fullScreen)
     {
-        screenFlags |= SDL_FULLSCREEN;
+        screenFlags |= SDL_WINDOW_FULLSCREEN;
     }
     
-    //Make sure the colour depth is correct.
-    if ((screenFlags & SDL_FULLSCREEN) != 0 || screenBPP < 8) screenBPP = SDL_GetVideoInfo()->vfmt->BitsPerPixel;
-    //Set depth buffer precision.
-    if (screenDepthBPP > 0) SDL_GL_SetAttribute(SDL_GL_DEPTH_SIZE, screenDepthBPP);
-    //Enable double buffering.
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-    
-    screen = SDL_SetVideoMode(screenWidth, screenHeight, screenBPP, screenFlags);
+    screen = SDL_CreateWindow("", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, screenWidth, screenHeight, screenFlags);
     
     if (!screen)
     {
@@ -83,8 +78,23 @@ SDLApplication::SDLApplication(const int &a_screenWidth,
         throw std::exception();
     }
     
-    SDL_EnableUNICODE(1);
-    SDL_WM_SetCaption(" ", 0);
+    //Disable deprecated OpenGL functions and request version >= 3.2.
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+    
+    //Create rendering context.
+    glContext = SDL_GL_CreateContext(screen);
+    
+    if (!glContext)
+    {
+        std::cerr << "Unable to create OpenGL context: " << SDL_GetError() << "!" << std::endl;
+        throw std::exception();
+    }
+
+    //Enable v-sync.
+    SDL_GL_SetSwapInterval(1);
     
     if (fullScreen)
     {
@@ -106,11 +116,11 @@ SDLApplication::SDLApplication(const int &a_screenWidth,
     
     //Clear screen.
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    SDL_GL_SwapBuffers();
+    SDL_GL_SwapWindow(screen);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    SDL_GL_SwapBuffers();
+    SDL_GL_SwapWindow(screen);
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-    SDL_GL_SwapBuffers();
+    SDL_GL_SwapWindow(screen);
     
     //Initialise image loading.
     std::cerr << "Initialising image loading..." << std::endl;
@@ -156,6 +166,8 @@ SDLApplication::~SDLApplication()
     //Shut down everything.
     std::cerr << "Shutting down SDL..." << std::endl;
     
+    SDL_GL_DeleteContext(glContext);
+    
     exitOpenAL();
     SDLNet_Quit();
     TTF_Quit();
@@ -165,7 +177,7 @@ SDLApplication::~SDLApplication()
 
 void SDLApplication::exitOpenAL()
 {
-    /* Shut down OpenAL. */
+    //Shut down OpenAL.
     alcMakeContextCurrent(0);
     alcCloseDevice(alDevice);
     alcDestroyContext(alContext);
@@ -176,7 +188,7 @@ void SDLApplication::initOpenAL()
     if (alGetString(AL_VERSION)) std::cerr << "Using OpenAL version " << alGetString(AL_VERSION) << "." << std::endl;
     else std::cerr << "Cannot determine OpenAL version!" << std::endl;
     
-    /* Use the default audio device. */
+    //Use the default audio device.
     alDevice = alcOpenDevice(0);
     
     if (!alDevice)
@@ -228,18 +240,8 @@ void SDLApplication::initOpenGL()
     if (glGetString(GL_SHADING_LANGUAGE_VERSION)) std::cerr << "Using GLSL version " << glGetString(GL_SHADING_LANGUAGE_VERSION) << "." << std::endl;
     else std::cerr << "Cannot determine GLSL version!" << std::endl;
 
-    //Check for necessary OpenGL extensions.
-    if (!glGenBuffers ||
-        !glBindBuffer ||
-        !glBufferData ||
-        !glDeleteBuffers ||
-        !glUseProgram)
-    {
-        std::cerr << "Unable to find the necessary OpenGL extensions! Please make sure you are using OpenGL 3.2 compatible hardware!" << std::endl;
-
-        SDL_Quit();
-        throw std::exception();
-    }
+    //Make sure GLEW can find everything.
+    glewExperimental = GL_TRUE;
 
     glClearColor(0.0, 0.0, 0.0, 0.0);
     glClearDepth(1.0);
@@ -266,7 +268,7 @@ void SDLApplication::initOpenGL()
 void SDLApplication::keyDownCallback(const int &keyIndex)
 {
     //Default callback for keypresses.
-    const SDLKey k = static_cast<SDLKey>(keyIndex);
+    const SDL_Keycode k = static_cast<SDL_Keycode>(keyIndex);
     
     if (k == SDLK_ESCAPE)
     {
@@ -288,17 +290,28 @@ void SDLApplication::keyDownCallback(const int &keyIndex)
             glPolygonMode(GL_BACK, GL_FILL);
         }
     }
-    else if (k == SDLK_PRINT)
+    else if (k == SDLK_PRINTSCREEN)
     {
         //Save a screenshot.
         SDL_Surface *image = SDL_CreateRGBSurface(SDL_SWSURFACE, screenWidth, screenHeight, 24, 255 << 0, 255 << 8, 255 << 16, 0);
 
         if (image)
         {
+            //Save screenshot with timestamp.
+            time_t rawTime;
+            struct tm *timeInfo;
+            char timeBuffer[80];
+            
+            time(&rawTime);
+            timeInfo = localtime(&rawTime);
+            strftime(timeBuffer, 80, "%Y%m%dT%H%M%S", timeInfo);
+            
+            const std::string outputFile = std::string("screenshot_") + std::string(timeBuffer) + std::string(".bmp");
+            
             glFlush();
             glReadBuffer(GL_BACK);
             glReadPixels(0, 0, screenWidth, screenHeight, GL_RGB, GL_UNSIGNED_BYTE, image->pixels);
-            SDL_SaveBMP(image, "screenshot.bmp");
+            SDL_SaveBMP(image, outputFile.c_str());
             SDL_FreeSurface(image);
         }
     }
@@ -318,7 +331,7 @@ double SDLApplication::pollEvents()
     {
         if (event.type == SDL_KEYDOWN)
         {
-            const SDLKey k = event.key.keysym.sym;
+            const SDL_Keycode k = event.key.keysym.sym;
             
             if (k >= 0 && k < 256)
             {
@@ -329,7 +342,7 @@ double SDLApplication::pollEvents()
         }
         else if (event.type == SDL_KEYUP)
         {
-            const SDLKey k = event.key.keysym.sym;
+            const SDL_Keycode k = event.key.keysym.sym;
             
             if (k >= 0 && k < 256)
             {
@@ -354,7 +367,7 @@ double SDLApplication::pollEvents()
 
 void SDLApplication::paint()
 {
-    SDL_GL_SwapBuffers();
+    SDL_GL_SwapWindow(screen);
     SDL_Delay(10);
 }
 
@@ -371,12 +384,26 @@ int SDLApplication::getScreenHeight() const
 MouseState SDLApplication::getMouseState(const bool &reposition)
 {
     int mouseX = 0, mouseY = 0;
-    const int mouseButtons = SDL_GetMouseState(&mouseX, &mouseY);
-    
-    if (reposition) SDL_WarpMouse(screenWidth/2, screenHeight/2);
-    
-    mouseX -= screenWidth/2;
-    mouseY -= screenHeight/2;
+    int mouseButtons = 0;
+   
+    if (reposition)
+    {
+        if (SDL_GetRelativeMouseMode() == SDL_FALSE)
+        {
+            SDL_SetRelativeMouseMode(SDL_TRUE);
+        }
+        
+        mouseButtons = SDL_GetRelativeMouseState(&mouseX, &mouseY);
+    }
+    else
+    {
+        if (SDL_GetRelativeMouseMode() == SDL_TRUE)
+        {
+            SDL_SetRelativeMouseMode(SDL_FALSE);
+        }
+        
+        mouseButtons = SDL_GetMouseState(&mouseX, &mouseY);
+    }
     
     return MouseState(static_cast<float>(2*mouseX)/static_cast<float>(screenWidth),
                       static_cast<float>(2*mouseY)/static_cast<float>(screenHeight),
