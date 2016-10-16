@@ -16,6 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <algorithm>
 #include <sstream>
+#include <cmath>
 
 #include <tiny/draw/screensquare.h>
 
@@ -39,6 +40,21 @@ ScreenFillingSquareVertexBufferInterpreter::~ScreenFillingSquareVertexBufferInte
     
 }
 
+void ScreenFillingSquareVertexBufferInterpreter::setSquareDimensions(
+        float left, float top, float right, float bottom)
+{
+    left = std::max(std::min(left, 1.0f), -1.0f);
+    right = std::min(std::max(right, -1.0f), 1.0f);
+    top = std::max(std::min(top, 1.0f), -1.0f);
+    bottom = std::min(std::max(bottom, -1.0f), 1.0f);
+    hostData[0] = tiny::vec2(left, top);
+    hostData[1] = tiny::vec2(left, bottom);
+    hostData[2] = tiny::vec2(right, top);
+    hostData[3] = tiny::vec2(right, bottom);
+
+    sendToDevice();
+}
+
 ScreenFillingSquare::ScreenFillingSquare() :
     Renderable()
 {
@@ -48,6 +64,11 @@ ScreenFillingSquare::ScreenFillingSquare() :
 ScreenFillingSquare::~ScreenFillingSquare()
 {
 
+}
+
+void ScreenFillingSquare::setSquareDimensions(float left, float top, float right, float bottom)
+{
+    square.setSquareDimensions(left, top, right, bottom);
 }
 
 std::string ScreenFillingSquare::getVertexShaderCode() const

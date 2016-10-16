@@ -41,6 +41,8 @@ class ScreenFillingSquareVertexBufferInterpreter : public VertexBufferInterprete
     public:
         ScreenFillingSquareVertexBufferInterpreter();
         ~ScreenFillingSquareVertexBufferInterpreter();
+
+        void setSquareDimensions(float left, float top, float right, float bottom);
 };
 
 class ScreenFillingSquare : public Renderable
@@ -50,6 +52,8 @@ class ScreenFillingSquare : public Renderable
         ~ScreenFillingSquare();
         
         std::string getVertexShaderCode() const;
+
+        void setSquareDimensions(float left, float top, float right, float bottom);
         
     protected:
         void render(const ShaderProgram &) const;
