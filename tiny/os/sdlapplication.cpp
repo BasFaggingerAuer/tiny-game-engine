@@ -241,7 +241,7 @@ void SDLApplication::initOpenGL()
     else std::cerr << "Cannot determine GLSL version!" << std::endl;
 
     //Make sure GLEW can find everything.
-    glewExperimental = GL_TRUE;
+    //glewExperimental = GL_TRUE;
 
     glClearColor(0.0, 0.0, 0.0, 0.0);
     glClearDepth(1.0);
@@ -253,7 +253,7 @@ void SDLApplication::initOpenGL()
     glEnable(GL_CULL_FACE);
 
     glEnable(GL_PRIMITIVE_RESTART);
-    glPrimitiveRestartIndexNV(UINT_MAX);
+    glPrimitiveRestartIndex(UINT_MAX);
     
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
