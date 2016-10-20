@@ -26,8 +26,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <AL/al.h>
 #include <AL/alc.h>
 
-#define NO_SDL_GLEXT
-
 #include <SDL.h>
 #include <SDL_image.h>
 #include <SDL_ttf.h>
