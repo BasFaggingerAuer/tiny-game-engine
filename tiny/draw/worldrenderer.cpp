@@ -77,6 +77,16 @@ void WorldRenderer::freeScreenRenderable(const unsigned int &renderableIndex)
     screenToColourRenderer.freeRenderable(renderableIndex);
 }
 
+bool WorldRenderer::worldRenderableIndexExists(const unsigned int &renderableIndex) const
+{
+    return worldToScreenRenderer.renderableIndexExists(renderableIndex);
+}
+
+bool WorldRenderer::screenRenderableIndexExists(const unsigned int &renderableIndex) const
+{
+    return screenToColourRenderer.renderableIndexExists(renderableIndex);
+}
+
 void WorldRenderer::clearTargets() const
 {
     worldToScreenRenderer.clearTargets();
