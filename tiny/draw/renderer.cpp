@@ -293,6 +293,11 @@ bool Renderer::freeRenderable(const unsigned int &renderableIndex)
     return true;
 }
 
+bool Renderer::renderableIndexExists(const unsigned int &renderableIndex) const
+{
+    return (renderables.count(renderableIndex) > 0);
+}
+
 void Renderer::addRenderTarget(const std::string &name)
 {
     if (std::find(renderTargetNames.begin(), renderTargetNames.end(), name) != renderTargetNames.end())

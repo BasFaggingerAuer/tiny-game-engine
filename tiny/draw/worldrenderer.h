@@ -47,6 +47,9 @@ class WorldRenderer
         void freeWorldRenderable(const unsigned int &);
         void freeScreenRenderable(const unsigned int &);
         
+        bool worldRenderableIndexExists(const unsigned int &) const;
+        bool screenRenderableIndexExists(const unsigned int &) const;
+        
         void clearTargets() const;
         void render() const;
         

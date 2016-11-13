@@ -143,6 +143,7 @@ class Renderer
         void clearTargets() const;
         void render() const;
         
+        bool renderableIndexExists(const unsigned int &) const;
     protected:
         void addRenderTarget(const std::string &name);
         
