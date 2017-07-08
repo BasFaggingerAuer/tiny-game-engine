@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <fstream>
 #include <vector>
 #include <exception>
+#include <algorithm>
 
 #include <tiny/img/io/image.h>
 #include <tiny/mesh/io/staticmesh.h>

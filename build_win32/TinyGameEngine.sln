@@ -10,6 +10,8 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestTerrainFancy", "TestTer
 		{FF8DC128-C637-4095-A6CF-27004BC5FA0B} = {FF8DC128-C637-4095-A6CF-27004BC5FA0B}
 	EndProjectSection
 EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Tanks", "Tanks\Tanks.vcxproj", "{021D50C6-750E-4981-9250-DD94DC5C2F9E}"
+EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
 		Debug|Win32 = Debug|Win32
@@ -24,6 +26,10 @@ Global
 		{245AF60B-167C-4FB8-8579-52785646BE26}.Debug|Win32.Build.0 = Debug|Win32
 		{245AF60B-167C-4FB8-8579-52785646BE26}.Release|Win32.ActiveCfg = Release|Win32
 		{245AF60B-167C-4FB8-8579-52785646BE26}.Release|Win32.Build.0 = Release|Win32
+		{021D50C6-750E-4981-9250-DD94DC5C2F9E}.Debug|Win32.ActiveCfg = Debug|Win32
+		{021D50C6-750E-4981-9250-DD94DC5C2F9E}.Debug|Win32.Build.0 = Debug|Win32
+		{021D50C6-750E-4981-9250-DD94DC5C2F9E}.Release|Win32.ActiveCfg = Release|Win32
+		{021D50C6-750E-4981-9250-DD94DC5C2F9E}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE
