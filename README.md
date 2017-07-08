@@ -51,6 +51,11 @@ Create a symbolic link inside the build_win32 folder:
 
 Then, you can open build_win32/TinyGameEngine.sln using Visual Studio 2013 to compile TinyGameEngine.lib.
 
+Currently, the Visual Studio project file assumes that all dependencies are available as follows:
+1.   Include files in external_win32/Include, as well as a manually updated version of config.h (see config.h.cmake).
+2.   32-bit library fiels in external_win32/Lib/x86.
+2.   64-bit library fiels in external_win32/Lib/x64.
+
 Using libtinygame
 -----------------
 
