@@ -22,6 +22,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/snd/alcheck.h>
 #include <tiny/snd/worldsounderer.h>
 
+using namespace tiny;
 using namespace tiny::snd;
 
 WorldSounderer::WorldSounderer()

@@ -361,13 +361,6 @@ unsigned int MD5::hash() const
 
 //////////////////////////////
  
-std::ostream& operator<<(std::ostream& out, MD5 md5)
-{
-  return out << md5.hexdigest();
-}
- 
-//////////////////////////////
- 
 std::string tiny::hash::md5(const std::string str)
 {
     MD5 md5 = MD5(str);

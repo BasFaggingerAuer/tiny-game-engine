@@ -36,9 +36,9 @@ vec4 tiny::quatconj(const vec4 &a)
 
 vec4 tiny::quatrot(const float &alpha, const vec3 &a)
 {
-    const float s = sin(0.5*alpha);
+    const float s = sin(0.5f*alpha);
     
-    return vec4(s*a.x, s*a.y, s*a.z, cos(0.5*alpha));
+    return vec4(s*a.x, s*a.y, s*a.z, cos(0.5f*alpha));
 }
 
 vec2 tiny::randomVec2(const float &s)

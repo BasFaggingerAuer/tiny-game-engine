@@ -258,7 +258,7 @@ Terrain::Terrain(const int &a_shiftBlockSize, const int &a_maxLevel) :
     uniformMap.addTexture("localNormalTexture");
     
     //Setup initial blockTranslations.
-    blockTranslations[maxLevel - 1] = ivec2(-(superBlockSize << (maxLevel - 2)));
+    blockTranslations[maxLevel - 1] = ivec2(-static_cast<int>((superBlockSize << (maxLevel - 2))));
     
     for (int i = maxLevel - 2; i >= 0; --i)
     {

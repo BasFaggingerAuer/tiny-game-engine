@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <tiny/net/message.h>
 
+using namespace tiny;
 using namespace tiny::net;
 
 VariableType::VariableType(const std::string &a_name, const vt::vt_enum &a_type) :

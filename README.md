@@ -41,6 +41,16 @@ Then, issue the following commands:
 
 This will automatically build the tiny game engine library (libtinygame), as well as tests for this library's functionality.
 
+Installation using Visual Studio 2013
+-------------------------------------
+
+Create a symbolic link inside the build_win32 folder:
+
+1.   cd build_win32
+2.   mklink /D tiny ..\tiny
+
+Then, you can open build_win32/TinyGameEngine.sln using Visual Studio 2013 to compile TinyGameEngine.lib.
+
 Using libtinygame
 -----------------
 

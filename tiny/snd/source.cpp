@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <tiny/snd/source.h>
 
+using namespace tiny;
 using namespace tiny::snd;
 
 Source::Source(const vec3 &a_position, const vec3 &a_velocity)

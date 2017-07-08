@@ -18,6 +18,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <tiny/draw/worldrenderer.h>
 
+using namespace tiny;
 using namespace tiny::draw;
 
 WorldRenderer::WorldRenderer(const int &screenWidth, const int &screenHeight) :

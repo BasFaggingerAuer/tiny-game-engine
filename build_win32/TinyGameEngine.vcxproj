@@ -1,0 +1,260 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project DefaultTargets="Build" ToolsVersion="12.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup Label="ProjectConfigurations">
+    <ProjectConfiguration Include="Debug|Win32">
+      <Configuration>Debug</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Debug|x64">
+      <Configuration>Debug</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|Win32">
+      <Configuration>Release</Configuration>
+      <Platform>Win32</Platform>
+    </ProjectConfiguration>
+    <ProjectConfiguration Include="Release|x64">
+      <Configuration>Release</Configuration>
+      <Platform>x64</Platform>
+    </ProjectConfiguration>
+  </ItemGroup>
+  <PropertyGroup Label="Globals">
+    <ProjectGuid>{FF8DC128-C637-4095-A6CF-27004BC5FA0B}</ProjectGuid>
+    <RootNamespace>TinyGameEngine</RootNamespace>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>true</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
+    <ConfigurationType>StaticLibrary</ConfigurationType>
+    <UseDebugLibraries>false</UseDebugLibraries>
+    <PlatformToolset>v120</PlatformToolset>
+    <WholeProgramOptimization>true</WholeProgramOptimization>
+    <CharacterSet>MultiByte</CharacterSet>
+  </PropertyGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.props" />
+  <ImportGroup Label="ExtensionSettings">
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Label="PropertySheets" Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <ImportGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="PropertySheets">
+    <Import Project="$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props" Condition="exists('$(UserRootDir)\Microsoft.Cpp.$(Platform).user.props')" Label="LocalAppDataPlatform" />
+  </ImportGroup>
+  <PropertyGroup Label="UserMacros" />
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <LibraryPath>$(ProjectDir)\..\external_win32\Lib\x86;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <LibraryPath>$(ProjectDir)\..\external_win32\Lib\x86;$(LibraryPath)</LibraryPath>
+  </PropertyGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(ProjectDir)\..\external_win32\Include;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
+      <PreprocessorDefinitions>_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>Disabled</Optimization>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(ProjectDir)\..\external_win32\Include;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
+      <PreprocessorDefinitions>_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(ProjectDir)\..\external_win32\Include;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
+      <PreprocessorDefinitions>NDEBUG;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'">
+    <ClCompile>
+      <WarningLevel>Level3</WarningLevel>
+      <Optimization>MaxSpeed</Optimization>
+      <FunctionLevelLinking>true</FunctionLevelLinking>
+      <IntrinsicFunctions>true</IntrinsicFunctions>
+      <SDLCheck>true</SDLCheck>
+      <AdditionalIncludeDirectories>$(ProjectDir)\..\external_win32\Include;$(ProjectDir);%(AdditionalIncludeDirectories)</AdditionalIncludeDirectories>
+      <ObjectFileName>$(IntDir)/%(RelativeDir)/</ObjectFileName>
+      <PreprocessorDefinitions>NDEBUG;_SCL_SECURE_NO_WARNINGS;_CRT_SECURE_NO_WARNINGS;_MBCS;%(PreprocessorDefinitions)</PreprocessorDefinitions>
+    </ClCompile>
+    <Link>
+      <GenerateDebugInformation>true</GenerateDebugInformation>
+      <EnableCOMDATFolding>true</EnableCOMDATFolding>
+      <OptimizeReferences>true</OptimizeReferences>
+    </Link>
+  </ItemDefinitionGroup>
+  <ItemGroup>
+    <ClInclude Include="tiny\algo\gridmap.h" />
+    <ClInclude Include="tiny\algo\typecluster.h" />
+    <ClInclude Include="tiny\draw\animatedmesh.h" />
+    <ClInclude Include="tiny\draw\animatedmeshhorde.h" />
+    <ClInclude Include="tiny\draw\buffer.h" />
+    <ClInclude Include="tiny\draw\colour.h" />
+    <ClInclude Include="tiny\draw\computetexture.h" />
+    <ClInclude Include="tiny\draw\detail\formats.h" />
+    <ClInclude Include="tiny\draw\detail\worldrenderer.h" />
+    <ClInclude Include="tiny\draw\effects\diffuse.h" />
+    <ClInclude Include="tiny\draw\effects\lambert.h" />
+    <ClInclude Include="tiny\draw\effects\normals.h" />
+    <ClInclude Include="tiny\draw\effects\showimage.h" />
+    <ClInclude Include="tiny\draw\effects\solid.h" />
+    <ClInclude Include="tiny\draw\effects\sunsky.h" />
+    <ClInclude Include="tiny\draw\glcheck.h" />
+    <ClInclude Include="tiny\draw\heightmap\diamondsquare.h" />
+    <ClInclude Include="tiny\draw\heightmap\heighttocolour.h" />
+    <ClInclude Include="tiny\draw\heightmap\normalmap.h" />
+    <ClInclude Include="tiny\draw\heightmap\resize.h" />
+    <ClInclude Include="tiny\draw\heightmap\scale.h" />
+    <ClInclude Include="tiny\draw\heightmap\tangentmap.h" />
+    <ClInclude Include="tiny\draw\iconhorde.h" />
+    <ClInclude Include="tiny\draw\icontexture2d.h" />
+    <ClInclude Include="tiny\draw\indexbuffer.h" />
+    <ClInclude Include="tiny\draw\lighthorde.h" />
+    <ClInclude Include="tiny\draw\renderable.h" />
+    <ClInclude Include="tiny\draw\renderer.h" />
+    <ClInclude Include="tiny\draw\rendererwithcamera.h" />
+    <ClInclude Include="tiny\draw\screensquare.h" />
+    <ClInclude Include="tiny\draw\shader.h" />
+    <ClInclude Include="tiny\draw\shaderprogram.h" />
+    <ClInclude Include="tiny\draw\staticmesh.h" />
+    <ClInclude Include="tiny\draw\staticmeshhorde.h" />
+    <ClInclude Include="tiny\draw\terrain.h" />
+    <ClInclude Include="tiny\draw\textbox.h" />
+    <ClInclude Include="tiny\draw\texture.h" />
+    <ClInclude Include="tiny\draw\texture1d.h" />
+    <ClInclude Include="tiny\draw\texture2d.h" />
+    <ClInclude Include="tiny\draw\texture2darray.h" />
+    <ClInclude Include="tiny\draw\texture3d.h" />
+    <ClInclude Include="tiny\draw\texturebuffer.h" />
+    <ClInclude Include="tiny\draw\tiledhorde.h" />
+    <ClInclude Include="tiny\draw\uniformmap.h" />
+    <ClInclude Include="tiny\draw\vertexbuffer.h" />
+    <ClInclude Include="tiny\draw\vertexbufferinterpreter.h" />
+    <ClInclude Include="tiny\draw\worldrenderer.h" />
+    <ClInclude Include="tiny\hash\md5.h" />
+    <ClInclude Include="tiny\img\image.h" />
+    <ClInclude Include="tiny\img\io\image.h" />
+    <ClInclude Include="tiny\lod\quadtree.h" />
+    <ClInclude Include="tiny\math\vec.h" />
+    <ClInclude Include="tiny\mesh\animatedmesh.h" />
+    <ClInclude Include="tiny\mesh\io\animatedmesh.h" />
+    <ClInclude Include="tiny\mesh\io\detail\aimesh.h" />
+    <ClInclude Include="tiny\mesh\io\staticmesh.h" />
+    <ClInclude Include="tiny\mesh\staticmesh.h" />
+    <ClInclude Include="tiny\net\client.h" />
+    <ClInclude Include="tiny\net\console.h" />
+    <ClInclude Include="tiny\net\host.h" />
+    <ClInclude Include="tiny\net\message.h" />
+    <ClInclude Include="tiny\os\application.h" />
+    <ClInclude Include="tiny\os\sdlapplication.h" />
+    <ClInclude Include="tiny\smp\io\sample.h" />
+    <ClInclude Include="tiny\smp\sample.h" />
+    <ClInclude Include="tiny\snd\alcheck.h" />
+    <ClInclude Include="tiny\snd\buffer.h" />
+    <ClInclude Include="tiny\snd\detail\formats.h" />
+    <ClInclude Include="tiny\snd\source.h" />
+    <ClInclude Include="tiny\snd\worldsounderer.h" />
+  </ItemGroup>
+  <ItemGroup>
+    <ClCompile Include="tiny\draw\animatedmesh.cpp" />
+    <ClCompile Include="tiny\draw\animatedmeshhorde.cpp" />
+    <ClCompile Include="tiny\draw\buffer.cpp" />
+    <ClCompile Include="tiny\draw\computetexture.cpp" />
+    <ClCompile Include="tiny\draw\detail\worldrenderer.cpp" />
+    <ClCompile Include="tiny\draw\effects\diffuse.cpp" />
+    <ClCompile Include="tiny\draw\effects\lambert.cpp" />
+    <ClCompile Include="tiny\draw\effects\normals.cpp" />
+    <ClCompile Include="tiny\draw\effects\showimage.cpp" />
+    <ClCompile Include="tiny\draw\effects\solid.cpp" />
+    <ClCompile Include="tiny\draw\effects\sunsky.cpp" />
+    <ClCompile Include="tiny\draw\glcheck.cpp" />
+    <ClCompile Include="tiny\draw\iconhorde.cpp" />
+    <ClCompile Include="tiny\draw\icontexture2d.cpp" />
+    <ClCompile Include="tiny\draw\lighthorde.cpp" />
+    <ClCompile Include="tiny\draw\renderable.cpp" />
+    <ClCompile Include="tiny\draw\renderer.cpp" />
+    <ClCompile Include="tiny\draw\rendererwithcamera.cpp" />
+    <ClCompile Include="tiny\draw\screensquare.cpp" />
+    <ClCompile Include="tiny\draw\shader.cpp" />
+    <ClCompile Include="tiny\draw\shaderprogram.cpp" />
+    <ClCompile Include="tiny\draw\staticmesh.cpp" />
+    <ClCompile Include="tiny\draw\staticmeshhorde.cpp" />
+    <ClCompile Include="tiny\draw\terrain.cpp" />
+    <ClCompile Include="tiny\draw\textbox.cpp" />
+    <ClCompile Include="tiny\draw\texture.cpp" />
+    <ClCompile Include="tiny\draw\uniformmap.cpp" />
+    <ClCompile Include="tiny\draw\worldrenderer.cpp" />
+    <ClCompile Include="tiny\hash\md5.cpp" />
+    <ClCompile Include="tiny\img\image.cpp" />
+    <ClCompile Include="tiny\img\io\image.cpp" />
+    <ClCompile Include="tiny\lod\quadtree.cpp" />
+    <ClCompile Include="tiny\math\vec.cpp" />
+    <ClCompile Include="tiny\mesh\animatedmesh.cpp" />
+    <ClCompile Include="tiny\mesh\io\animatedmesh.cpp" />
+    <ClCompile Include="tiny\mesh\io\staticmesh.cpp" />
+    <ClCompile Include="tiny\mesh\staticmesh.cpp" />
+    <ClCompile Include="tiny\net\client.cpp" />
+    <ClCompile Include="tiny\net\console.cpp" />
+    <ClCompile Include="tiny\net\host.cpp" />
+    <ClCompile Include="tiny\net\message.cpp" />
+    <ClCompile Include="tiny\os\application.cpp" />
+    <ClCompile Include="tiny\os\sdlapplication.cpp" />
+    <ClCompile Include="tiny\smp\io\sample.cpp" />
+    <ClCompile Include="tiny\smp\sample.cpp" />
+    <ClCompile Include="tiny\snd\alcheck.cpp" />
+    <ClCompile Include="tiny\snd\buffer.cpp" />
+    <ClCompile Include="tiny\snd\source.cpp" />
+    <ClCompile Include="tiny\snd\worldsounderer.cpp" />
+  </ItemGroup>
+  <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
+  <ImportGroup Label="ExtensionTargets">
+  </ImportGroup>
+</Project>

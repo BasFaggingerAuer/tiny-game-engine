@@ -16,6 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <tiny/os/application.h>
 
+using namespace tiny;
 using namespace tiny::os;
 
 Application::Application() :

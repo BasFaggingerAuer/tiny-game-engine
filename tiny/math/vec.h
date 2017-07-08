@@ -19,6 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <iostream>
 #include <cmath>
 
+#ifndef M_PI
+#define M_PI 3.14159265358979323846
+#endif
+
 namespace tiny
 {
 
@@ -153,9 +157,9 @@ template <typename t> t length2(const typed2vector<t> &a) {return dot(a, a);}
 template <typename t> t length2(const typed3vector<t> &a) {return dot(a, a);}
 template <typename t> t length2(const typed4vector<t> &a) {return dot(a, a);}
 
-template <typename t> typed2vector<t> normalize(const typed2vector<t> &a) {t l = dot(a, a); l = (l > 1.0e-8 ? 1.0/sqrt(l) : 1.0); return typed2vector<t>(a.x*l, a.y*l);}
-template <typename t> typed3vector<t> normalize(const typed3vector<t> &a) {t l = dot(a, a); l = (l > 1.0e-8 ? 1.0/sqrt(l) : 1.0); return typed3vector<t>(a.x*l, a.y*l, a.z*l);}
-template <typename t> typed4vector<t> normalize(const typed4vector<t> &a) {t l = dot(a, a); l = (l > 1.0e-8 ? 1.0/sqrt(l) : 1.0); return typed4vector<t>(a.x*l, a.y*l, a.z*l, a.w*l);}
+template <typename t> typed2vector<t> normalize(const typed2vector<t> &a) {t l = dot(a, a); l = (l > static_cast<t>(1.0e-8) ? static_cast<t>(1.0/sqrt(l)) : static_cast<t>(1.0)); return typed2vector<t>(a.x*l, a.y*l);}
+template <typename t> typed3vector<t> normalize(const typed3vector<t> &a) {t l = dot(a, a); l = (l > static_cast<t>(1.0e-8) ? static_cast<t>(1.0/sqrt(l)) : static_cast<t>(1.0)); return typed3vector<t>(a.x*l, a.y*l, a.z*l);}
+template <typename t> typed4vector<t> normalize(const typed4vector<t> &a) {t l = dot(a, a); l = (l > static_cast<t>(1.0e-8) ? static_cast<t>(1.0/sqrt(l)) : static_cast<t>(1.0)); return typed4vector<t>(a.x*l, a.y*l, a.z*l, a.w*l);}
 
 typedef typed2vector<int> ivec2;
 typedef typed2vector<float> vec2;
@@ -164,8 +168,7 @@ typedef typed3vector<float> vec3;
 typedef typed4vector<int> ivec4;
 typedef typed4vector<float> vec4;
 
-// Force legality of multiplication by double; it is ridiculous that we can't multiply vectors by doubles without casting into floats. (-Takenu, 16-08-2011)
-inline vec3 & operator * (vec3 a, const double b) {return a *= b;}
+inline vec3 & operator * (vec3 a, const float b) {return a *= b;}
 
 //Integer specific bit operations.
 inline ivec2 operator % (const ivec2 &a, const ivec2 &b) {return ivec2(a.x % b.x, a.y % b.y);}
@@ -399,27 +402,27 @@ class mat4
         
         static mat4 frustumMatrix(const vec3 &a, const vec3 &b)
         {
-            const vec3 c = vec3(1.0/(b.x - a.x), 1.0/(b.y - a.y), 1.0/(b.z - a.z));
+            const vec3 c = vec3(1.0f/(b.x - a.x), 1.0f/(b.y - a.y), 1.0f/(b.z - a.z));
             
-            return mat4(2.0*a.z*c.x,
-                    0.0,
-                    0.0,
-                    0.0,
+            return mat4(2.0f*a.z*c.x,
+                    0.0f,
+                    0.0f,
+                    0.0f,
                     
-                    0.0,
-                    2.0*a.z*c.y,
-                    0.0,
-                    0.0,
+                    0.0f,
+                    2.0f*a.z*c.y,
+                    0.0f,
+                    0.0f,
                     
                     (a.x + b.x)*c.x,
                     (a.y + b.y)*c.y,
                     -(a.z + b.z)*c.z,
                     -1.0,
                     
-                    0.0,
-                    0.0,
-                    -2.0*a.z*b.z*c.z,
-                    0.0);
+                    0.0f,
+                    0.0f,
+                    -2.0f*a.z*b.z*c.z,
+                    0.0f);
         };
         
         float v00, v10, v20, v30;

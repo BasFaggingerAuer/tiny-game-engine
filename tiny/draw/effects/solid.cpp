@@ -16,6 +16,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <tiny/draw/effects/solid.h>
 
+using namespace tiny;
 using namespace tiny::draw::effects;
 
 Solid::Solid()
