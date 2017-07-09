@@ -11,8 +11,8 @@
     </ProjectConfiguration>
   </ItemGroup>
   <PropertyGroup Label="Globals">
-    <ProjectGuid>{021D50C6-750E-4981-9250-DD94DC5C2F9E}</ProjectGuid>
-    <RootNamespace>Tanks</RootNamespace>
+    <ProjectGuid>{AA25E28B-E8FB-477A-9F17-BD7EA7505C41}</ProjectGuid>
+    <RootNamespace>TestTerrainFancyOpenVR</RootNamespace>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
@@ -39,14 +39,12 @@
   </ImportGroup>
   <PropertyGroup Label="UserMacros" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">
-    <IncludePath>$(ProjectDir)\..\..\;$(ProjectDir)\..\..\external_win32\Include\;$(IncludePath)</IncludePath>
     <LibraryPath>$(ProjectDir)\..\..\external_win32\Lib\x86\;$(ProjectDir)\..\Release\;$(LibraryPath)</LibraryPath>
-    <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
+    <IncludePath>$(ProjectDir)\..\..\;$(ProjectDir)\..\..\external_win32\Include\;$(IncludePath)</IncludePath>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <IncludePath>$(ProjectDir)\..\..\;$(ProjectDir)\..\..\external_win32\Include\;$(IncludePath)</IncludePath>
     <LibraryPath>$(ProjectDir)\..\..\external_win32\Lib\x86\;$(ProjectDir)\..\Debug\;$(LibraryPath)</LibraryPath>
-    <IntDir>$(Platform)\$(Configuration)\$(ProjectName)\</IntDir>
   </PropertyGroup>
   <ItemDefinitionGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">
     <ClCompile>
@@ -56,7 +54,7 @@
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
-      <AdditionalDependencies>SDL2main.lib;SDL2.lib;SDL2_image.lib;SDL2_ttf.lib;SDL2_net.lib;opengl32.lib;glu32.lib;glew32.lib;glew32s.lib;ogg_static.lib;libvorbis_static.lib;libvorbisfile_static.lib;OpenAL32.lib;tinyxmlSTL.lib;assimp.lib;TinyGameEngine.lib;%(AdditionalDependencies)</AdditionalDependencies>
+      <AdditionalDependencies>SDL2main.lib;SDL2.lib;SDL2_image.lib;SDL2_ttf.lib;SDL2_net.lib;opengl32.lib;glu32.lib;glew32.lib;glew32s.lib;ogg_static.lib;libvorbis_static.lib;libvorbisfile_static.lib;OpenAL32.lib;assimp.lib;openvr_api.lib;TinyGameEngineOpenVR.lib;%(AdditionalDependencies)</AdditionalDependencies>
       <SubSystem>Console</SubSystem>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
     </Link>
@@ -68,34 +66,19 @@
       <FunctionLevelLinking>true</FunctionLevelLinking>
       <IntrinsicFunctions>true</IntrinsicFunctions>
       <SDLCheck>true</SDLCheck>
-      <RuntimeLibrary>MultiThreadedDLL</RuntimeLibrary>
+      <PreprocessorDefinitions>ENABLE_OPENVR;%(PreprocessorDefinitions)</PreprocessorDefinitions>
     </ClCompile>
     <Link>
       <GenerateDebugInformation>true</GenerateDebugInformation>
       <EnableCOMDATFolding>true</EnableCOMDATFolding>
       <OptimizeReferences>true</OptimizeReferences>
-      <AdditionalDependencies>SDL2main.lib;SDL2.lib;SDL2_image.lib;SDL2_ttf.lib;SDL2_net.lib;opengl32.lib;glu32.lib;glew32.lib;glew32s.lib;ogg_static.lib;libvorbis_static.lib;libvorbisfile_static.lib;OpenAL32.lib;tinyxmlSTL.lib;assimp.lib;TinyGameEngine.lib;%(AdditionalDependencies)</AdditionalDependencies>
-      <SubSystem>Console</SubSystem>
       <ImageHasSafeExceptionHandlers>false</ImageHasSafeExceptionHandlers>
+      <SubSystem>Console</SubSystem>
+      <AdditionalDependencies>SDL2main.lib;SDL2.lib;SDL2_image.lib;SDL2_ttf.lib;SDL2_net.lib;opengl32.lib;glu32.lib;glew32.lib;glew32s.lib;ogg_static.lib;libvorbis_static.lib;libvorbisfile_static.lib;OpenAL32.lib;assimp.lib;openvr_api.lib;TinyGameEngineOpenVR.lib;%(AdditionalDependencies)</AdditionalDependencies>
     </Link>
   </ItemDefinitionGroup>
   <ItemGroup>
-    <ClCompile Include="..\..\tanks\src\game.cpp" />
-    <ClCompile Include="..\..\tanks\src\game_msg.cpp" />
-    <ClCompile Include="..\..\tanks\src\messages.cpp" />
-    <ClCompile Include="..\..\tanks\src\network.cpp" />
-    <ClCompile Include="..\..\tanks\src\soldier.cpp" />
-    <ClCompile Include="..\..\tanks\src\tank.cpp" />
-    <ClCompile Include="..\..\tanks\src\tanks.cpp" />
-    <ClCompile Include="..\..\tanks\src\terrain.cpp" />
-  </ItemGroup>
-  <ItemGroup>
-    <ClInclude Include="..\..\tanks\src\game.h" />
-    <ClInclude Include="..\..\tanks\src\messages.h" />
-    <ClInclude Include="..\..\tanks\src\network.h" />
-    <ClInclude Include="..\..\tanks\src\soldier.h" />
-    <ClInclude Include="..\..\tanks\src\tank.h" />
-    <ClInclude Include="..\..\tanks\src\terrain.h" />
+    <ClCompile Include="..\..\src\test_TerrainFancy.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />
   <ImportGroup Label="ExtensionTargets">

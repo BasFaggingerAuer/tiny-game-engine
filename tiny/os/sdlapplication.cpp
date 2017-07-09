@@ -50,6 +50,9 @@ SDLApplication::SDLApplication(const int &a_screenWidth,
     wireframe(false),
     alDevice(0),
     alContext(0)
+#ifdef ENABLE_OPENVR
+    , vrHMD(0)
+#endif
 {
     //Initialise SDL.
     std::cerr << "Initialising SDL..." << std::endl;
@@ -59,11 +62,26 @@ SDLApplication::SDLApplication(const int &a_screenWidth,
         std::cerr << "Unable to initialise SDL: " << SDL_GetError() << "!" << std::endl;
         throw std::exception();
     }
+
+#ifdef ENABLE_OPENVR
+    //Initialise OpenVR.
+    std::cerr << "Initialising OpenVR..." << std::endl;
+
+    vr::EVRInitError openvrError = vr::VRInitError_None;
+
+    vrHMD = vr::VR_Init(&openvrError, vr::VRApplication_Scene);
+
+    if (openvrError != vr::VRInitError_None)
+    {
+        std::cerr << "Unable to initialise OpenVR: " << vr::VR_GetVRInitErrorAsEnglishDescription(openvrError) << "!" << std::endl;
+        throw std::exception();
+    }
+#endif
     
     //Create window.
     std::cerr << "Creating a " << screenWidth << "x" << screenHeight << " window at " << screenBPP << " bits per pixel..." << std::endl;
     
-    screenFlags = SDL_WINDOW_OPENGL;
+    screenFlags = SDL_WINDOW_OPENGL | SDL_WINDOW_SHOWN;
     
     if (fullScreen)
     {
@@ -78,11 +96,20 @@ SDLApplication::SDLApplication(const int &a_screenWidth,
         throw std::exception();
     }
     
+#ifndef ENABLE_OPENVR
     //Disable deprecated OpenGL functions and request version >= 3.2.
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
     //SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
     SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
+#else
+    //Disable deprecated OpenGL functions < 4.1.
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
+	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 0);
+	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 0);
+#endif
     
     //Create rendering context.
     glContext = SDL_GL_CreateContext(screen);
@@ -93,8 +120,10 @@ SDLApplication::SDLApplication(const int &a_screenWidth,
         throw std::exception();
     }
 
+#ifndef ENABLE_OPENVR
     //Enable v-sync.
     SDL_GL_SetSwapInterval(1);
+#endif
     
     if (fullScreen)
     {
@@ -153,7 +182,17 @@ SDLApplication::SDLApplication(const int &a_screenWidth,
     std::cerr << "Initialising OpenAL..." << std::endl;
     
     initOpenAL();
-    
+
+#ifdef ENABLE_OPENVR
+    std::cerr << "Initialising OpenVR compositor..." << std::endl;
+
+    if (!vr::VRCompositor())
+    {
+        std::cerr << "Unable to initialise OpenVR compositor!" << std::endl;
+        throw std::exception();
+    }
+#endif
+
     //Start main loop.
     std::cerr << "Initialisation complete." << std::endl;
     
@@ -166,7 +205,12 @@ SDLApplication::~SDLApplication()
     //Shut down everything.
     std::cerr << "Shutting down SDL..." << std::endl;
     
+#ifdef ENABLE_OPENVR
+    vr::VR_Shutdown();
+#endif
+
     SDL_GL_DeleteContext(glContext);
+    SDL_DestroyWindow(screen);
     
     exitOpenAL();
     SDLNet_Quit();

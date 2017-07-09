@@ -11,6 +11,16 @@ Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestTerrainFancy", "TestTer
 	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Tanks", "Tanks\Tanks.vcxproj", "{021D50C6-750E-4981-9250-DD94DC5C2F9E}"
+	ProjectSection(ProjectDependencies) = postProject
+		{FF8DC128-C637-4095-A6CF-27004BC5FA0B} = {FF8DC128-C637-4095-A6CF-27004BC5FA0B}
+	EndProjectSection
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TinyGameEngineOpenVR", "TinyGameEngineOpenVR.vcxproj", "{04107BA2-518D-42C4-96B1-F24044A1E5FB}"
+EndProject
+Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestTerrainFancyOpenVR", "TestTerrainFancyOpenVR\TestTerrainFancyOpenVR.vcxproj", "{AA25E28B-E8FB-477A-9F17-BD7EA7505C41}"
+	ProjectSection(ProjectDependencies) = postProject
+		{04107BA2-518D-42C4-96B1-F24044A1E5FB} = {04107BA2-518D-42C4-96B1-F24044A1E5FB}
+	EndProjectSection
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
@@ -27,9 +37,16 @@ Global
 		{245AF60B-167C-4FB8-8579-52785646BE26}.Release|Win32.ActiveCfg = Release|Win32
 		{245AF60B-167C-4FB8-8579-52785646BE26}.Release|Win32.Build.0 = Release|Win32
 		{021D50C6-750E-4981-9250-DD94DC5C2F9E}.Debug|Win32.ActiveCfg = Debug|Win32
-		{021D50C6-750E-4981-9250-DD94DC5C2F9E}.Debug|Win32.Build.0 = Debug|Win32
 		{021D50C6-750E-4981-9250-DD94DC5C2F9E}.Release|Win32.ActiveCfg = Release|Win32
 		{021D50C6-750E-4981-9250-DD94DC5C2F9E}.Release|Win32.Build.0 = Release|Win32
+		{04107BA2-518D-42C4-96B1-F24044A1E5FB}.Debug|Win32.ActiveCfg = Debug|Win32
+		{04107BA2-518D-42C4-96B1-F24044A1E5FB}.Debug|Win32.Build.0 = Debug|Win32
+		{04107BA2-518D-42C4-96B1-F24044A1E5FB}.Release|Win32.ActiveCfg = Release|Win32
+		{04107BA2-518D-42C4-96B1-F24044A1E5FB}.Release|Win32.Build.0 = Release|Win32
+		{AA25E28B-E8FB-477A-9F17-BD7EA7505C41}.Debug|Win32.ActiveCfg = Debug|Win32
+		{AA25E28B-E8FB-477A-9F17-BD7EA7505C41}.Debug|Win32.Build.0 = Debug|Win32
+		{AA25E28B-E8FB-477A-9F17-BD7EA7505C41}.Release|Win32.ActiveCfg = Release|Win32
+		{AA25E28B-E8FB-477A-9F17-BD7EA7505C41}.Release|Win32.Build.0 = Release|Win32
 	EndGlobalSection
 	GlobalSection(SolutionProperties) = preSolution
 		HideSolutionNode = FALSE

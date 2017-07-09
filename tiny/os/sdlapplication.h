@@ -21,6 +21,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <SDL.h>
 
+#ifdef ENABLE_OPENVR
+#include <openvr.h>
+#endif
+
 #include <tiny/os/application.h>
 
 namespace tiny
@@ -67,6 +71,10 @@ class SDLApplication : public Application
         int audioChannels;
         int audioMixChannels;
         int audioBuffer;
+
+#ifdef ENABLE_OPENVR
+        vr::IVRSystem *vrHMD;
+#endif
 };
 
 }
