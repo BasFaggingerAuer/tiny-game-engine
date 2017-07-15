@@ -155,15 +155,6 @@ Renderer::Renderer() :
     
 }
 
-Renderer::Renderer(const Renderer &) :
-    frameBufferIndex(0),
-    renderTargetNames(),
-    renderTargetTextures(),
-    depthTargetTexture(0)
-{
-    
-}
-
 Renderer::~Renderer()
 {
     //Free allocated bound renderables.

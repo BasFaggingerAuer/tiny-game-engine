@@ -40,6 +40,9 @@ class RendererWithCamera : public Renderer
         void setProjectionMatrix(const mat4 &);
         void setCamera(const vec3 &, const vec4 &);
         
+        static const float nearClippingPlane;
+        static const float farClippingPlane;
+
     private:
         void updateCameraUniforms();
         

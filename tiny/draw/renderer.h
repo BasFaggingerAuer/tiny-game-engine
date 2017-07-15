@@ -139,13 +139,7 @@ class Renderer
             
             updateRenderTargets();
         }
-        
-        void clearTargets() const;
-        void render() const;
-        
-    protected:
-        void addRenderTarget(const std::string &name);
-        
+
         template<typename T, size_t Channels>
         void setTextureTarget(const Texture2D<T, Channels> &texture, const std::string &name)
         {
@@ -169,6 +163,11 @@ class Renderer
             std::cerr << "Warning: render target '" << name << "' does not exist for this renderer!" << std::endl;
         }
         
+        void clearTargets() const;
+        void render() const;
+        
+    protected:
+        void addRenderTarget(const std::string &name);
         
         UniformMap uniformMap;
 
@@ -176,9 +175,6 @@ class Renderer
         void createFrameBuffer();
         void destroyFrameBuffer();
         void updateRenderTargets();
-        
-        //This class should not be copied.
-        Renderer(const Renderer &renderer);
         
         std::map<unsigned int, detail::BoundRenderable *> renderables;
         std::map<unsigned int, detail::BoundProgram *> shaderPrograms;

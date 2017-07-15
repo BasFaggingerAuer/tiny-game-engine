@@ -191,6 +191,8 @@ SDLApplication::SDLApplication(const int &a_screenWidth,
         std::cerr << "Unable to initialise OpenVR compositor!" << std::endl;
         throw std::exception();
     }
+
+    vrHMD->GetRecommendedRenderTargetSize(&screenWidthVR, &screenHeightVR);
 #endif
 
     //Start main loop.
@@ -298,6 +300,8 @@ void SDLApplication::initOpenGL()
 
     glEnable(GL_PRIMITIVE_RESTART);
     glPrimitiveRestartIndex(UINT_MAX);
+
+    glDisable(GL_MULTISAMPLE);
     
     glMatrixMode(GL_PROJECTION);
     glLoadIdentity();
@@ -412,7 +416,6 @@ double SDLApplication::pollEvents()
 void SDLApplication::paint()
 {
     SDL_GL_SwapWindow(screen);
-    SDL_Delay(10);
 }
 
 int SDLApplication::getScreenWidth() const
@@ -424,6 +427,23 @@ int SDLApplication::getScreenHeight() const
 {
     return screenHeight;
 }
+
+#ifdef ENABLE_OPENVR
+int SDLApplication::getScreenWidthVR() const
+{
+    return screenWidthVR;
+}
+
+int SDLApplication::getScreenHeightVR() const
+{
+    return screenHeightVR;
+}
+
+vr::IVRSystem *SDLApplication::getHMDVR() const
+{
+    return vrHMD;
+}
+#endif
 
 MouseState SDLApplication::getMouseState(const bool &reposition)
 {

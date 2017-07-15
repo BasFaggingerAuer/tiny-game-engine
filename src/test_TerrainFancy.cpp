@@ -50,7 +50,11 @@ using namespace tiny;
 
 os::Application *application = 0;
 
+#ifndef ENABLE_OPENVR
 draw::WorldRenderer *worldRenderer = 0;
+#else
+draw::WorldRendererVR *worldRenderer = 0;
+#endif
 
 //All terrain-related data.
 const vec2 terrainScale = vec2(3.0f, 3.0f);
@@ -342,7 +346,11 @@ void setup()
     sunSky->setSkyTexture(*skyGradientTexture);
     
     //Create a renderer and add the terrain, forest, and the atmospheric rendering effect to it.
+#ifndef ENABLE_OPENVR
     worldRenderer = new draw::WorldRenderer(application->getScreenWidth(), application->getScreenHeight());
+#else
+    worldRenderer = new draw::WorldRendererVR(application->getScreenWidthVR(), application->getScreenHeightVR(), application->getHMDVR());
+#endif
     
     worldRenderer->addWorldRenderable(0, skyBox);
     
@@ -459,6 +467,10 @@ void update(const double &dt)
     
     //Tell the world renderer that the camera has changed.
     worldRenderer->setCamera(cameraPosition, cameraOrientation);
+
+#ifdef ENABLE_OPENVR
+    worldRenderer->update();
+#endif
 }
 
 void render()

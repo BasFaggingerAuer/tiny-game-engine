@@ -19,6 +19,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <iostream>
 #include <cmath>
 
+#ifdef ENABLE_OPENVR
+#include <openvr.h>
+#endif
+
 #ifndef M_PI
 #define M_PI 3.14159265358979323846
 #endif
@@ -234,6 +238,47 @@ class mat4
             v23(b.z),
             v33(1.0f)
         {};
+
+#ifdef ENABLE_OPENVR
+        inline mat4(const vr::HmdMatrix44_t &a) :
+            v00(a.m[0][0]),
+            v10(a.m[1][0]),
+            v20(a.m[2][0]),
+            v30(a.m[3][0]),
+            v01(a.m[0][1]),
+            v11(a.m[1][1]),
+            v21(a.m[2][1]),
+            v31(a.m[3][1]),
+            v02(a.m[0][2]),
+            v12(a.m[1][2]),
+            v22(a.m[2][2]),
+            v32(a.m[3][2]),
+            v03(a.m[0][3]),
+            v13(a.m[1][3]),
+            v23(a.m[2][3]),
+            v33(a.m[3][3])
+        {};
+
+        inline mat4(const vr::HmdMatrix34_t &a) :
+            v00(a.m[0][0]),
+            v10(a.m[1][0]),
+            v20(a.m[2][0]),
+            v30(0.0f),
+            v01(a.m[0][1]),
+            v11(a.m[1][1]),
+            v21(a.m[2][1]),
+            v31(0.0f),
+            v02(a.m[0][2]),
+            v12(a.m[1][2]),
+            v22(a.m[2][2]),
+            v32(0.0f),
+            v03(a.m[0][3]),
+            v13(a.m[1][3]),
+            v23(a.m[2][3]),
+            v33(1.0f)
+        {};
+#endif
+
         inline ~mat4() {};
 
         inline mat4 & operator *= (const mat4 &b)

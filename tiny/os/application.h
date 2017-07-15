@@ -59,6 +59,13 @@ class Application
         virtual void paint() = 0;
         virtual int getScreenWidth() const = 0;
         virtual int getScreenHeight() const = 0;
+
+#ifdef ENABLE_OPENVR
+        virtual int getScreenWidthVR() const = 0;
+        virtual int getScreenHeightVR() const = 0;
+        virtual vr::IVRSystem *getHMDVR() const = 0;
+#endif
+
         virtual MouseState getMouseState(const bool &) = 0;
         
         void stopRunning();

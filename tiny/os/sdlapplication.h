@@ -43,6 +43,11 @@ class SDLApplication : public Application
         void paint();
         int getScreenWidth() const;
         int getScreenHeight() const;
+#ifdef ENABLE_OPENVR
+        int getScreenWidthVR() const;
+        int getScreenHeightVR() const;
+        vr::IVRSystem *getHMDVR() const;
+#endif
         MouseState getMouseState(const bool &);
         
         virtual void keyDownCallback(const int &);
@@ -74,6 +79,8 @@ class SDLApplication : public Application
 
 #ifdef ENABLE_OPENVR
         vr::IVRSystem *vrHMD;
+        uint32_t screenWidthVR;
+        uint32_t screenHeightVR;
 #endif
 };
 

@@ -174,6 +174,10 @@ class Texture : public TextureInterface
             {
                 GL_CHECK(glGenerateMipmap(textureTarget));
             }
+            else
+            {
+                GL_CHECK(glTexParameteri(textureTarget, GL_TEXTURE_MAX_LEVEL, 0));
+            }
             
             GL_CHECK(glGetTexImage(textureTarget, 0, textureChannels, textureDataType, &hostData[0]));
             GL_CHECK(glBindTexture(textureTarget, 0));
