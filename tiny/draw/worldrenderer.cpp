@@ -209,8 +209,15 @@ void WorldRendererVR::render()
     for (int i = 0; i < 2; ++i)
     {
         vr::Texture_t eyeTexture = {(void*)(uintptr_t)eyeTextures[i].getIndex(), vr::TextureType_OpenGL, vr::ColorSpace_Gamma};
-		vr::VRCompositor()->Submit(eyeEnums[i], &eyeTexture);
+		vr::EVRCompositorError error = vr::VRCompositor()->Submit(eyeEnums[i], &eyeTexture);
+
+        if (error != vr::VRCompositorError_None)
+        {
+            std::cerr << "VR compositor submission error " << error << "!" << std::endl;
+        }
     }
+
+    GL_CHECK(glFlush());
 }
 
 #endif
