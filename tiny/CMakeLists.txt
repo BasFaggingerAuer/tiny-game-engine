@@ -29,6 +29,7 @@ add_library(tinygame
             mesh/animatedmesh.cpp
             mesh/io/staticmesh.cpp
             mesh/io/animatedmesh.cpp
+            rigid/rigidbody.cpp
             draw/glcheck.cpp
             draw/buffer.cpp
             draw/uniformmap.cpp
