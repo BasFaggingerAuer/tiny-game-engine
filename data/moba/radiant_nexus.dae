@@ -12,7 +12,7 @@
     <title></title>
     <subject></subject>
     <keywords></keywords>
-    <unit meter="0.025400"/>
+    <unit meter="1"/>
     <up_axis>Z_UP</up_axis>
   </asset>
   <library_images>

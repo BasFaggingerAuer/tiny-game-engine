@@ -39,6 +39,8 @@ set(CMAKE_CXX_FLAGS "-O2 -g -Wall -Wextra -Wshadow -ansi -pedantic")
 #set(CMAKE_EXE_LINKER_FLAGS "-lrt")
 #set(CMAKE_VERBOSE_MAKEFILE true)
 
+#add_definitions(-DENABLE_OPENVR)
+
 add_subdirectory(${TINY_SOURCE_DIR}/tiny/)
 
 include_directories(${OPENGL_INCLUDE_DIR})
