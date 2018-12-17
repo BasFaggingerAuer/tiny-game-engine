@@ -33,8 +33,10 @@ class RigidBody
         RigidBody(const RigidBody &);
         RigidBody(const RigidBody &, const RigidBody &);
         virtual ~RigidBody();
+
+        float getEnergy() const;
         
-        static void collide(const RigidBody &, const RigidBody &, const vec3 &, const float &);
+        static void collide(RigidBody &, RigidBody &, const vec3 &, const float &);
 
         float inverseMass;
         mat3 inverseInertia;

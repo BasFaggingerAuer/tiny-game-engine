@@ -69,8 +69,33 @@ RigidBody::~RigidBody()
 
 }
 
-void RigidBody::collide(const RigidBody &a, const RigidBody &b, const vec3 &z, const float &elasticity)
+float RigidBody::getEnergy() const
 {
-    //TODO: Perform collision.
+    //Calculate energy of this rigid body.
+    const mat3 invI = mat3(orientation)*inverseInertia*mat3(quatconj(orientation));
+
+    return 0.5f*inverseMass*length2(linearMomentum) + 0.5f*dot(angularMomentum, invI*angularMomentum);
+}
+
+void RigidBody::collide(RigidBody &a, RigidBody &b, const vec3 &z, const float &elasticity)
+{
+    //Perform collision between two rigid bodies, conserving linear momentum, angular momentum and energy if the elasticity == 1.0.
+    const vec3 ab = b.position - a.position;
+    const vec3 az = z - a.position;
+    const vec3 bz = z - b.position;
+    const vec3 axz = cross(az, ab);
+    const vec3 bxz = cross(bz, ab);
+    const vec3 p = (-(1.0f + elasticity)*
+                     (  a.inverseMass*dot(a.linearMomentum, ab) + dot(axz, a.inverseInertia*a.angularMomentum)
+                      - b.inverseMass*dot(b.linearMomentum, ab) - dot(bxz, b.inverseInertia*b.angularMomentum))/
+                     (  a.inverseMass*length2(ab) + dot(axz, a.inverseInertia*axz)
+                      + b.inverseMass*length2(ab) + dot(bxz, b.inverseInertia*bxz)))*
+                   (b.position - a.position);
+
+    a.linearMomentum += p;
+    a.angularMomentum += cross(az, p);
+    
+    b.linearMomentum -= p;
+    b.angularMomentum -= cross(bz, p);
 }
 
