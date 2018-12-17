@@ -187,6 +187,190 @@ inline ivec2 operator << (const ivec2 &a, const ivec2 &b) {return ivec2(a.x << b
 inline ivec2 operator << (const ivec2 &a, const int &b) {return ivec2(a.x << b, a.y << b);}
 inline bool operator < (const ivec2 &a, const ivec2 &b) {return (a.x == b.x ? a.y < b.y : a.x < b.x);}
 
+class mat3
+{
+    public:
+        inline mat3() {};
+        inline mat3(const float &a) :
+            v00(a), v10(a), v20(a),
+            v01(a), v11(a), v21(a),
+            v02(a), v12(a), v22(a)
+        {};
+        inline mat3(const mat3 &a) :
+            v00(a.v00), v10(a.v10), v20(a.v20),
+            v01(a.v01), v11(a.v11), v21(a.v21),
+            v02(a.v02), v12(a.v12), v22(a.v22)
+        {};
+        inline mat3(const float &_v00, const float &_v10, const float &_v20,
+                const float &_v01, const float &_v11, const float &_v21,
+                const float &_v02, const float &_v12, const float &_v22) :
+            v00(_v00), v10(_v10), v20(_v20),
+            v01(_v01), v11(_v11), v21(_v21),
+            v02(_v02), v12(_v12), v22(_v22)
+        {};
+        
+        inline mat3(const vec3 &x, const vec3 &y, const vec3 &z) :
+            v00(x.x), v10(x.y), v20(x.z),
+            v01(y.x), v11(y.y), v21(y.z),
+            v02(z.x), v12(z.y), v22(z.z)
+        {};
+        
+        inline mat3(const vec4 &a) :
+            v00(1.0f - 2.0f*(a.y*a.y + a.z*a.z)),
+            v10(2.0f*(a.x*a.y - a.w*a.z)),
+            v20(2.0f*(a.x*a.z + a.w*a.y)),
+            v01(2.0f*(a.x*a.y + a.w*a.z)),
+            v11(1.0f - 2.0f*(a.x*a.x + a.z*a.z)),
+            v21(2.0f*(a.y*a.z - a.w*a.x)),
+            v02(2.0f*(a.x*a.z - a.w*a.y)),
+            v12(2.0f*(a.y*a.z + a.w*a.x)),
+            v22(1.0f - 2.0f*(a.x*a.x + a.y*a.y))
+        {};
+
+        inline ~mat3() {};
+
+        inline mat3 & operator *= (const mat3 &b)
+        {
+            const mat3 c(
+                v00*b.v00 + v01*b.v10 + v02*b.v20,
+                v10*b.v00 + v11*b.v10 + v12*b.v20,
+                v20*b.v00 + v21*b.v10 + v22*b.v20,
+                
+                v00*b.v01 + v01*b.v11 + v02*b.v21,
+                v10*b.v01 + v11*b.v11 + v12*b.v21,
+                v20*b.v01 + v21*b.v11 + v22*b.v21,
+                
+                v00*b.v02 + v01*b.v12 + v02*b.v22,
+                v10*b.v02 + v11*b.v12 + v12*b.v22,
+                v20*b.v02 + v21*b.v12 + v22*b.v22);
+            *this = c;
+            return *this;
+        };
+
+        inline vec3 operator * (const vec3 &a) const
+        {
+            return vec3(v00*a.x + v01*a.y + v02*a.z,
+                    v10*a.x + v11*a.y + v12*a.z,
+                    v20*a.x + v21*a.y + v22*a.z);
+        };
+
+        inline void toOpenGL(float * const v) const
+        {
+            v[ 0] = v00;
+            v[ 1] = v10;
+            v[ 2] = v20;
+            v[ 3] = 0.0f;
+            v[ 4] = v01;
+            v[ 5] = v11;
+            v[ 6] = v21;
+            v[ 7] = 0.0f;
+            v[ 8] = v02;
+            v[ 9] = v12;
+            v[10] = v22;
+            v[11] = 0.0f;
+            v[12] = 0.0f;
+            v[13] = 0.0f;
+            v[14] = 0.0f;
+            v[15] = 1.0f;
+        };
+        
+        inline mat3 transposed() const
+        {
+            return mat3(v00, v01, v02,
+                        v10, v11, v12,
+                        v20, v21, v22);
+        };
+        
+        inline mat3 inverted() const
+        {
+            const float t = 1.0f/(v00*(v11*v22 - v12*v21) - v01*(v10*v22 - v12*v20) + v02*(v10*v21 - v11*v20));
+
+            return mat3(
+                    t*(v11*v22 - v12*v21), t*(v12*v20 - v10*v22), t*(v10*v21 - v11*v20),
+                    t*(v02*v21 - v01*v22), t*(v00*v22 - v02*v20), t*(v01*v20 - v00*v21),
+                    t*(v01*v12 - v02*v11), t*(v02*v10 - v00*v12), t*(v00*v11 - v01*v10));
+        };
+
+        inline vec4 getRotation() const
+        {
+            //From http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/index.htm.
+            const float t = v00 + v11 + v22;
+            vec4 q;
+            
+            if (t > 0.0f)
+            {
+                const float s = 0.5f/sqrtf(1.0f + t);
+                
+                q = vec4((v21 - v12)*s, (v02 - v20)*s, (v10 - v01)*s, 0.25f/s);
+            }
+            else
+            {
+                if (v00 > v11 && v00 > v22)
+                {
+                    const float s = 0.5f/sqrtf(1.0f + v00 - v11 - v22);
+                    
+                    q = vec4(0.25f/s, (v01 + v10)*s, (v02 + v20)*s, (v21 - v12)*s);
+                }
+                else if (v11 > v22)
+                {
+                    const float s = 0.5f/sqrtf(1.0f + v11 - v00 - v22);
+                    
+                    q = vec4((v01 + v10)*s, 0.25f/s, (v12 + v21)*s, (v02 - v20)*s);
+                }
+                else
+                {
+                    const float s = 0.5f/sqrtf(1.0f + v22 - v00 - v11);
+                    
+                    q = vec4((v02 + v20)*s, (v12 + v21)*s, 0.25f/s, (v10 - v01)*s);
+                }
+            }
+            
+            return normalize(q);
+        };
+        
+        static mat3 identityMatrix()
+        {
+            return mat3(1.0, 0.0, 0.0,
+                        0.0, 1.0, 0.0,
+                        0.0, 0.0, 1.0);
+        };
+        
+        static mat3 scaleMatrix(const vec3 &a)
+        {
+            return mat3(a.x, 0.0, 0.0,
+                        0.0, a.y, 0.0,
+                        0.0, 0.0, a.z);
+        };
+        
+        static mat3 rotationMatrix(const vec4 &a)
+        {
+            return mat3(
+                1.0f - 2.0f*(a.y*a.y + a.z*a.z),
+                2.0f*(a.x*a.y - a.w*a.z),
+                2.0f*(a.x*a.z + a.w*a.y),
+                2.0f*(a.x*a.y + a.w*a.z),
+                1.0f - 2.0f*(a.x*a.x + a.z*a.z),
+                2.0f*(a.y*a.z - a.w*a.x),
+                2.0f*(a.x*a.z - a.w*a.y),
+                2.0f*(a.y*a.z + a.w*a.x),
+                1.0f - 2.0f*(a.x*a.x + a.y*a.y));
+        };
+        
+        float v00, v10, v20;
+        float v01, v11, v21;
+        float v02, v12, v22;
+        
+        friend std::ostream & operator << (std::ostream &Out, const mat3 &a)
+        {
+            Out << a.v00 << ", " << a.v01 << ", " << a.v02 << std::endl
+                << a.v10 << ", " << a.v11 << ", " << a.v12 << std::endl
+                << a.v20 << ", " << a.v21 << ", " << a.v22 << std::endl;
+            return Out;
+        };
+};
+
+inline mat3 & operator * (mat3 a, const mat3 &b) {return a *= b;}
+
 class mat4
 {
     public:
@@ -211,6 +395,13 @@ class mat4
             v01(_v01), v11(_v11), v21(_v21), v31(_v31),
             v02(_v02), v12(_v12), v22(_v22), v32(_v32),
             v03(_v03), v13(_v13), v23(_v23), v33(_v33)
+        {};
+
+        inline mat4(const mat3 &a) :
+            v00(a.v00), v10(a.v10), v20(a.v20), v30(0.0f),
+            v01(a.v01), v11(a.v11), v21(a.v21), v31(0.0f),
+            v02(a.v02), v12(a.v12), v22(a.v22), v32(0.0f),
+            v03(0.0f),  v13(0.0f),  v23(0.0f),  v33(1.0f)
         {};
         
         inline mat4(const vec3 &x, const vec3 &y, const vec3 &z, const vec3 &b = vec3(0.0f, 0.0f, 0.0f)) :
@@ -283,7 +474,8 @@ class mat4
 
         inline mat4 & operator *= (const mat4 &b)
         {
-            const mat4 c(v00*b.v00 + v01*b.v10 + v02*b.v20 + v03*b.v30,
+            const mat4 c(
+                v00*b.v00 + v01*b.v10 + v02*b.v20 + v03*b.v30,
                 v10*b.v00 + v11*b.v10 + v12*b.v20 + v13*b.v30,
                 v20*b.v00 + v21*b.v10 + v22*b.v20 + v23*b.v30,
                 v30*b.v00 + v31*b.v10 + v32*b.v20 + v33*b.v30,

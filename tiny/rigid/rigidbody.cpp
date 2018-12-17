@@ -23,7 +23,7 @@ using namespace tiny::rigid;
 
 RigidBody::RigidBody() :
     inverseMass(1.0f),
-    inverseInertia(mat4::identityMatrix()),
+    inverseInertia(mat3::identityMatrix()),
     position(0.0f, 0.0f, 0.0f),
     orientation(0.0f, 0.0f, 0.0f, 1.0f),
     linearMomentum(0.0f, 0.0f, 0.0f),
@@ -45,11 +45,13 @@ RigidBody::RigidBody(const RigidBody &a) :
 
 }
 
-RigidBody::RigidBody(const RigidBody &a, const RigidBody &b)
+RigidBody::RigidBody(const RigidBody &a, const RigidBody &b) :
+    RigidBody()
 {
-    //Combine two rigid bodies into one larger rigid body.
+    //Combine two rigid bodies into one larger rigid body for mass and moment of inertia.
+    //Other properties are reset.
     inverseMass = 1.0f/((1.0f/a.inverseMass) + (1.0f/b.inverseMass));
-    //TODO: Finish this.
+
 }
 
 RigidBody::~RigidBody()
