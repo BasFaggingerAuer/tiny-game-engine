@@ -27,8 +27,7 @@ RigidBody::RigidBody() :
     position(0.0f, 0.0f, 0.0f),
     orientation(0.0f, 0.0f, 0.0f, 1.0f),
     linearMomentum(0.0f, 0.0f, 0.0f),
-    angularMomentum(0.0f, 0.0f, 0.0f),
-    elasticity(1.0f)
+    angularMomentum(0.0f, 0.0f, 0.0f)
 {
 
 }
@@ -39,8 +38,7 @@ RigidBody::RigidBody(const RigidBody &a) :
     position(a.position),
     orientation(a.orientation),
     linearMomentum(a.linearMomentum),
-    angularMomentum(a.angularMomentum),
-    elasticity(a.elasticity)
+    angularMomentum(a.angularMomentum)
 {
 
 }
@@ -49,9 +47,21 @@ RigidBody::RigidBody(const RigidBody &a, const RigidBody &b) :
     RigidBody()
 {
     //Combine two rigid bodies into one larger rigid body for mass and moment of inertia.
-    //Other properties are reset.
+    //The orientations of a and b are considered to be fixed w.r.t. each other after this operation.
+    
+    const mat3 Ia = mat3(a.orientation)*a.inverseInertia.inverted()*mat3(quatconj(a.orientation));
+    const mat3 Ib = mat3(b.orientation)*b.inverseInertia.inverted()*mat3(quatconj(b.orientation));
+    const vec3 d = b.position - a.position;
+    
     inverseMass = 1.0f/((1.0f/a.inverseMass) + (1.0f/b.inverseMass));
+    inverseInertia = (Ia + Ib + (1.0f/(a.inverseMass + b.inverseMass))*(length2(d)*mat3::identityMatrix() - mat3::outerProductMatrix(d, d))).inverted();
 
+    position = (b.inverseMass/(b.inverseMass + a.inverseMass))*a.position + (a.inverseMass/(a.inverseMass + b.inverseMass))*b.position;
+    orientation = vec4(0.0f, 0.0f, 0.0f, 1.0f);
+
+    linearMomentum = a.linearMomentum + b.linearMomentum;
+    //FIXME: Is this correct?
+    angularMomentum = a.angularMomentum + b.angularMomentum;
 }
 
 RigidBody::~RigidBody()
@@ -59,7 +69,7 @@ RigidBody::~RigidBody()
 
 }
 
-void RigidBody::collide(const RigidBody &a, const RigidBody &b, const vec3 &z)
+void RigidBody::collide(const RigidBody &a, const RigidBody &b, const vec3 &z, const float &elasticity)
 {
     //TODO: Perform collision.
 }

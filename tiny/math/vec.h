@@ -229,6 +229,34 @@ class mat3
 
         inline ~mat3() {};
 
+        inline mat3 & operator += (const mat3 &b)
+        {
+            v00 += b.v00;
+            v10 += b.v10;
+            v20 += b.v20;
+            v01 += b.v01;
+            v11 += b.v11;
+            v21 += b.v21;
+            v02 += b.v02;
+            v12 += b.v12;
+            v22 += b.v22;
+            return *this;
+        };
+
+        inline mat3 & operator -= (const mat3 &b)
+        {
+            v00 -= b.v00;
+            v10 -= b.v10;
+            v20 -= b.v20;
+            v01 -= b.v01;
+            v11 -= b.v11;
+            v21 -= b.v21;
+            v02 -= b.v02;
+            v12 -= b.v12;
+            v22 -= b.v22;
+            return *this;
+        };
+
         inline mat3 & operator *= (const mat3 &b)
         {
             const mat3 c(
@@ -244,6 +272,20 @@ class mat3
                 v10*b.v02 + v11*b.v12 + v12*b.v22,
                 v20*b.v02 + v21*b.v12 + v22*b.v22);
             *this = c;
+            return *this;
+        };
+
+        inline mat3 & operator *= (const float &b)
+        {
+            v00 *= b;
+            v10 *= b;
+            v20 *= b;
+            v01 *= b;
+            v11 *= b;
+            v21 *= b;
+            v02 *= b;
+            v12 *= b;
+            v22 *= b;
             return *this;
         };
 
@@ -334,6 +376,13 @@ class mat3
                         0.0, 1.0, 0.0,
                         0.0, 0.0, 1.0);
         };
+
+        static mat3 outerProductMatrix(const vec3 &a, const vec3 &b)
+        {
+            return mat3(a.x*b.x, a.y*b.x, a.z*b.x,
+                        a.x*b.y, a.y*b.y, a.z*b.y,
+                        a.x*b.z, a.y*b.z, a.z*b.z);
+        };
         
         static mat3 scaleMatrix(const vec3 &a)
         {
@@ -369,7 +418,10 @@ class mat3
         };
 };
 
+inline mat3 & operator + (mat3 a, const mat3 &b) {return a += b;}
+inline mat3 & operator - (mat3 a, const mat3 &b) {return a -= b;}
 inline mat3 & operator * (mat3 a, const mat3 &b) {return a *= b;}
+inline mat3 & operator * (const float &b, mat3 a) {return a *= b;}
 
 class mat4
 {
@@ -495,6 +547,27 @@ class mat4
                 v20*b.v03 + v21*b.v13 + v22*b.v23 + v23*b.v33,
                 v30*b.v03 + v31*b.v13 + v32*b.v23 + v33*b.v33);
             *this = c;
+            return *this;
+        };
+
+        inline mat4 & operator *= (const float &b)
+        {
+            v00 *= b;
+            v10 *= b;
+            v20 *= b;
+            v30 *= b;
+            v01 *= b;
+            v11 *= b;
+            v21 *= b;
+            v31 *= b;
+            v02 *= b;
+            v12 *= b;
+            v22 *= b;
+            v32 *= b;
+            v03 *= b;
+            v13 *= b;
+            v23 *= b;
+            v33 *= b;
             return *this;
         };
 
@@ -678,6 +751,7 @@ class mat4
 };
 
 inline mat4 & operator * (mat4 a, const mat4 &b) {return a *= b;}
+inline mat4 & operator * (const float &b, mat4 a) {return a *= b;}
 
 vec4 quatmul(const vec4 &, const vec4 &);
 vec4 quatconj(const vec4 &);
