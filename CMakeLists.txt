@@ -17,6 +17,14 @@ project(TINY)
 
 set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${TINY_SOURCE_DIR})
 
+
+# Compilation options.
+
+# OpenVR support (still experimental, only for test_TerrainFancy).
+set(ENABLE_OPENVR FALSE)
+
+
+# Find all required libraries.
 find_package(OpenGL REQUIRED)
 find_package(GLEW REQUIRED)
 find_package(OpenAL REQUIRED)
@@ -31,49 +39,90 @@ PKG_SEARCH_MODULE(SDL2NET REQUIRED SDL2_net>=2.0.0)
 
 find_package(Assimp REQUIRED)
 
+if(ENABLE_OPENVR)
+    message("Enabling OpenVR...")
+    find_package(OpenVR REQUIRED)
+    
+    add_definitions(-DENABLE_OPENVR)
+endif()
+
+
+# Create config.h.
 configure_file(config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
 
-set (CMAKE_CXX_STANDARD 11)
+
+# Set compilation flags.
+set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_FLAGS "-O2 -g -Wall -Wextra -Wshadow -ansi -pedantic")
 #set(CMAKE_CXX_FLAGS "-O3 -Wall -DNDEBUG")
 #set(CMAKE_EXE_LINKER_FLAGS "-lrt")
 #set(CMAKE_VERBOSE_MAKEFILE true)
 
-#add_definitions(-DENABLE_OPENVR)
 
+# Create tiny game library.
 add_subdirectory(${TINY_SOURCE_DIR}/tiny/)
+
+
+# Collect all other libraries for compilation of examples.
+include_directories(${TINY_SOURCE_DIR})
+include_directories(${TINY_BINARY_DIR})
+set(USED_LIBS tinygame)
+
+if(ENABLE_OPENVR)
+    include_directories(${OPENVR_INCLUDE_DIRS})
+    list(APPEND USED_LIBS ${OPENVR_LIBRARY})
+    list(APPEND USED_LIBS ${CMAKE_DL_LIBS})
+endif()
 
 include_directories(${OPENGL_INCLUDE_DIR})
 link_directories(${OPENGL_LIBRARY_DIR})
+list(APPEND USED_LIBS ${OPENGL_LIBRARY})
+
 include_directories(${GLEW_INCLUDE_DIR})
 link_directories(${GLEW_LIBRARY_DIR})
+list(APPEND USED_LIBS ${GLEW_LIBRARY})
+
 include_directories(${OPENAL_INCLUDE_DIR})
+list(APPEND USED_LIBS ${OPENAL_LIBRARY})
+
 include_directories(${OGGVORBIS_INCLUDE_DIR})
+list(APPEND USED_LIBS ${OGGVORBIS_LIBRARIES})
+
 include_directories(${ASSIMP_INCLUDE_DIR})
 link_directories(${ASSIMP_LIBRARY_DIR})
+list(APPEND USED_LIBS ${ASSIMP_LIBRARIES})
+
 include_directories(${SDL2_INCLUDE_DIRS})
 link_directories(${SDL2_LIBRARY_DIRS})
+list(APPEND USED_LIBS ${SDL2_LIBRARIES})
+
 include_directories(${SDL2_IMAGE_INCLUDE_DIRS})
 link_directories(${SDL2_IMAGE_LIBRARY_DIRS})
+list(APPEND USED_LIBS ${SDL2IMAGE_LIBRARIES})
+
 include_directories(${SDL2_TTF_INCLUDE_DIRS})
 link_directories(${SDL2_TTF_LIBRARY_DIRS})
+list(APPEND USED_LIBS ${SDL2TTF_LIBRARIES})
+
 include_directories(${SDL2_NET_INCLUDE_DIRS})
 link_directories(${SDL2_NET_LIBRARY_DIRS})
-include_directories(${TINY_SOURCE_DIR})
-include_directories(${TINY_BINARY_DIR})
+list(APPEND USED_LIBS ${SDL2NET_LIBRARIES})
 
-set(USED_LIBS 
-              tinygame
-              ${ASSIMP_LIBRARIES}
-              ${OPENGL_LIBRARY}
-              ${GLEW_LIBRARY}
-              ${OPENAL_LIBRARY}
-              ${OGGVORBIS_LIBRARIES}
-              ${SDL2_LIBRARIES}
-              ${SDL2IMAGE_LIBRARIES}
-              ${SDL2TTF_LIBRARIES}
-              ${SDL2NET_LIBRARIES})
+# Display CMake debugging information.
+message("Used include directories:")
 
+get_property(dirs DIRECTORY ${CMAKE_CURRENT_SOURCE_DIR} PROPERTY INCLUDE_DIRECTORIES)
+foreach(dir ${dirs})
+  message(STATUS ${dir})
+endforeach()
+
+message("Used libraries:")
+foreach(lib ${USED_LIBS})
+  message(STATUS ${lib})
+endforeach()
+
+
+# Compile all examples.
 add_executable(test_SDLApplication src/test_SDLApplication.cpp)
 target_link_libraries(test_SDLApplication ${USED_LIBS})
 

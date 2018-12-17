@@ -93,15 +93,15 @@ void WorldRenderer::render() const
 
 WorldRendererVR::WorldRendererVR(const int &screenWidth, const int &screenHeight, vr::IVRSystem *_vrHMD) :
     aspectRatio(static_cast<float>(screenWidth)/std::max(static_cast<float>(screenHeight), 1.0f)),
+    vrHMD(_vrHMD),
+    eyeEnums({{vr::Eye_Left, vr::Eye_Right}}),
     diffuseTexture(screenWidth, screenHeight, tf::none),
     worldNormalTexture(screenWidth, screenHeight, tf::none),
     worldPositionTexture(screenWidth, screenHeight, tf::none),
     depthTexture(screenWidth, screenHeight),
     eyeTextures({{RGBATexture2D(screenWidth, screenHeight, tf::filter), RGBATexture2D(screenWidth, screenHeight, tf::filter)}}),
     worldToScreenRenderer(aspectRatio),
-    screenToEyeRenderers({{detail::WorldRendererStageTwo(aspectRatio), detail::WorldRendererStageTwo(aspectRatio)}}),
-    vrHMD(_vrHMD),
-    eyeEnums({{vr::Eye_Left, vr::Eye_Right}})
+    screenToEyeRenderers({{detail::WorldRendererStageTwo(aspectRatio), detail::WorldRendererStageTwo(aspectRatio)}})
 {
     //Link the two rendering stages.
     worldToScreenRenderer.setDiffuseTarget(diffuseTexture);

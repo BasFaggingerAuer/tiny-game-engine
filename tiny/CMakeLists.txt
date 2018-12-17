@@ -9,6 +9,10 @@ include_directories(${SDL2_TTF_INCLUDE_DIRS})
 include_directories(${SDL2_NET_INCLUDE_DIRS})
 include_directories(${CMAKE_SOURCE_DIR})
 
+if(ENABLE_OPENVR)
+    include_directories(${OPENVR_INCLUDE_DIRS})
+endif()
+
 add_library(tinygame
             math/vec.cpp
             hash/md5.cpp
