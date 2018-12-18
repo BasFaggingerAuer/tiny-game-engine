@@ -48,6 +48,28 @@ class RigidBody
         float elasticity;
 };
 
+class RigidBox : public RigidBody
+{
+    public:
+        RigidBox(const float &, const vec3 &, const vec3 & = vec3(0.0f, 0.0f, 0.0f), const vec4 & = vec4(0.0f, 0.0f, 0.0f, 1.0f));
+        virtual ~RigidBox();
+};
+
+class RigidSphere : public RigidBody
+{
+    public:
+        RigidSphere(const float &, const float &, const vec3 & = vec3(0.0f, 0.0f, 0.0f), const vec4 & = vec4(0.0f, 0.0f, 0.0f, 1.0f));
+        virtual ~RigidSphere();
+};
+
+class RigidTube : public RigidBody
+{
+    public:
+        RigidTube(const float &, const float &, const float &, const float &, const vec3 & = vec3(0.0f, 0.0f, 0.0f), const vec4 & = vec4(0.0f, 0.0f, 0.0f, 1.0f));
+        virtual ~RigidTube();
+};
+
 }
 
 }
+

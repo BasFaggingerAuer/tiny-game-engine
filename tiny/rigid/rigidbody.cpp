@@ -90,7 +90,7 @@ void RigidBody::collide(RigidBody &a, RigidBody &b, const vec3 &z, const float &
                       - b.inverseMass*dot(b.linearMomentum, ab) - dot(bxz, b.inverseInertia*b.angularMomentum))/
                      (  a.inverseMass*length2(ab) + dot(axz, a.inverseInertia*axz)
                       + b.inverseMass*length2(ab) + dot(bxz, b.inverseInertia*bxz)))*
-                   (b.position - a.position);
+                   ab;
 
     a.linearMomentum += p;
     a.angularMomentum += cross(az, p);
@@ -98,4 +98,59 @@ void RigidBody::collide(RigidBody &a, RigidBody &b, const vec3 &z, const float &
     b.linearMomentum -= p;
     b.angularMomentum -= cross(bz, p);
 }
+
+RigidBox::RigidBox(const float &mass, const vec3 &dimensions, const vec3 &_position, const vec4 &_orientation) :
+    RigidBody()
+{
+    position = _position;
+    orientation = _orientation;
+    inverseMass = 1.0f/mass;
+
+    inverseInertia = mat3::identityMatrix();
+    inverseInertia.v00 = 12.0f/(mass*(dimensions.y*dimensions.y + dimensions.z*dimensions.z));
+    inverseInertia.v11 = 12.0f/(mass*(dimensions.x*dimensions.x + dimensions.z*dimensions.z));
+    inverseInertia.v22 = 12.0f/(mass*(dimensions.x*dimensions.x + dimensions.y*dimensions.y));
+}
+
+RigidBox::~RigidBox()
+{
+
+}
+
+RigidSphere::RigidSphere(const float &mass, const float &radius, const vec3 &_position, const vec4 &_orientation) :
+    RigidBody()
+{
+    position = _position;
+    orientation = _orientation;
+    inverseMass = 1.0f/mass;
+
+    inverseInertia = mat3::identityMatrix();
+    inverseInertia.v00 = 5.0f/(2.0f*mass*radius*radius);
+    inverseInertia.v11 = 5.0f/(2.0f*mass*radius*radius);
+    inverseInertia.v22 = 5.0f/(2.0f*mass*radius*radius);
+}
+
+RigidSphere::~RigidSphere()
+{
+
+}
+
+RigidTube::RigidTube(const float &mass, const float &innerRadius, const float &outerRadius, const float &length, const vec3 &_position, const vec4 &_orientation) :
+    RigidBody()
+{
+    position = _position;
+    orientation = _orientation;
+    inverseMass = 1.0f/mass;
+
+    inverseInertia = mat3::identityMatrix();
+    inverseInertia.v00 = 12.0f/(mass*(3.0f*(innerRadius*innerRadius + outerRadius*outerRadius) + length*length));
+    inverseInertia.v11 = 12.0f/(mass*(3.0f*(innerRadius*innerRadius + outerRadius*outerRadius) + length*length));
+    inverseInertia.v22 =  2.0f/(mass*(innerRadius*innerRadius + outerRadius*outerRadius));
+}
+
+RigidTube::~RigidTube()
+{
+
+}
+
 
