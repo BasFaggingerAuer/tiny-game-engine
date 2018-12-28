@@ -35,37 +35,42 @@ StaticMesh::~StaticMesh()
 
 StaticMesh StaticMesh::createCubeMesh(const float &size)
 {
+    return StaticMesh::createBoxMesh(size, size, size);
+}
+
+StaticMesh StaticMesh::createBoxMesh(const float &w, const float &h, const float &d)
+{
     StaticMesh mesh;
     
-    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 0.0f), vec3(1.0f, 0.0f, 0.0f), vec3( 0.0f, 0.0f,-1.0f), vec3(-size, -size, -size)));
-    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 0.0f), vec3(1.0f, 0.0f, 0.0f), vec3( 0.0f, 0.0f,-1.0f), vec3( size, -size, -size)));
-    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 1.0f), vec3(1.0f, 0.0f, 0.0f), vec3( 0.0f, 0.0f,-1.0f), vec3(-size,  size, -size)));
-    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 1.0f), vec3(1.0f, 0.0f, 0.0f), vec3( 0.0f, 0.0f,-1.0f), vec3( size,  size, -size)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 0.0f), vec3(1.0f, 0.0f, 0.0f), vec3( 0.0f, 0.0f,-1.0f), vec3(-w, -h, -d)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 0.0f), vec3(1.0f, 0.0f, 0.0f), vec3( 0.0f, 0.0f,-1.0f), vec3( w, -h, -d)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 1.0f), vec3(1.0f, 0.0f, 0.0f), vec3( 0.0f, 0.0f,-1.0f), vec3(-w,  h, -d)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 1.0f), vec3(1.0f, 0.0f, 0.0f), vec3( 0.0f, 0.0f,-1.0f), vec3( w,  h, -d)));
     
-    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 0.0f), vec3(1.0f, 0.0f, 0.0f), vec3( 0.0f, 0.0f, 1.0f), vec3(-size, -size,  size)));
-    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 0.0f), vec3(1.0f, 0.0f, 0.0f), vec3( 0.0f, 0.0f, 1.0f), vec3( size, -size,  size)));
-    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 1.0f), vec3(1.0f, 0.0f, 0.0f), vec3( 0.0f, 0.0f, 1.0f), vec3(-size,  size,  size)));
-    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 1.0f), vec3(1.0f, 0.0f, 0.0f), vec3( 0.0f, 0.0f, 1.0f), vec3( size,  size,  size)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 0.0f), vec3(1.0f, 0.0f, 0.0f), vec3( 0.0f, 0.0f, 1.0f), vec3(-w, -h,  d)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 0.0f), vec3(1.0f, 0.0f, 0.0f), vec3( 0.0f, 0.0f, 1.0f), vec3( w, -h,  d)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 1.0f), vec3(1.0f, 0.0f, 0.0f), vec3( 0.0f, 0.0f, 1.0f), vec3(-w,  h,  d)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 1.0f), vec3(1.0f, 0.0f, 0.0f), vec3( 0.0f, 0.0f, 1.0f), vec3( w,  h,  d)));
     
-    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 0.0f), vec3(1.0f, 0.0f, 0.0f), vec3( 0.0f,-1.0f, 0.0f), vec3(-size, -size, -size)));
-    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 0.0f), vec3(1.0f, 0.0f, 0.0f), vec3( 0.0f,-1.0f, 0.0f), vec3( size, -size, -size)));
-    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 1.0f), vec3(1.0f, 0.0f, 0.0f), vec3( 0.0f,-1.0f, 0.0f), vec3(-size, -size,  size)));
-    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 1.0f), vec3(1.0f, 0.0f, 0.0f), vec3( 0.0f,-1.0f, 0.0f), vec3( size, -size,  size)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 0.0f), vec3(1.0f, 0.0f, 0.0f), vec3( 0.0f,-1.0f, 0.0f), vec3(-w, -h, -d)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 0.0f), vec3(1.0f, 0.0f, 0.0f), vec3( 0.0f,-1.0f, 0.0f), vec3( w, -h, -d)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 1.0f), vec3(1.0f, 0.0f, 0.0f), vec3( 0.0f,-1.0f, 0.0f), vec3(-w, -h,  d)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 1.0f), vec3(1.0f, 0.0f, 0.0f), vec3( 0.0f,-1.0f, 0.0f), vec3( w, -h,  d)));
     
-    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 0.0f), vec3(1.0f, 0.0f, 0.0f), vec3( 0.0f, 1.0f, 0.0f), vec3(-size,  size, -size)));
-    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 0.0f), vec3(1.0f, 0.0f, 0.0f), vec3( 0.0f, 1.0f, 0.0f), vec3( size,  size, -size)));
-    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 1.0f), vec3(1.0f, 0.0f, 0.0f), vec3( 0.0f, 1.0f, 0.0f), vec3(-size,  size,  size)));
-    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 1.0f), vec3(1.0f, 0.0f, 0.0f), vec3( 0.0f, 1.0f, 0.0f), vec3( size,  size,  size)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 0.0f), vec3(1.0f, 0.0f, 0.0f), vec3( 0.0f, 1.0f, 0.0f), vec3(-w,  h, -d)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 0.0f), vec3(1.0f, 0.0f, 0.0f), vec3( 0.0f, 1.0f, 0.0f), vec3( w,  h, -d)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 1.0f), vec3(1.0f, 0.0f, 0.0f), vec3( 0.0f, 1.0f, 0.0f), vec3(-w,  h,  d)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 1.0f), vec3(1.0f, 0.0f, 0.0f), vec3( 0.0f, 1.0f, 0.0f), vec3( w,  h,  d)));
     
-    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f), vec3(-1.0f, 0.0f, 0.0f), vec3(-size, -size, -size)));
-    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f), vec3(-1.0f, 0.0f, 0.0f), vec3(-size,  size, -size)));
-    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 1.0f), vec3(0.0f, 1.0f, 0.0f), vec3(-1.0f, 0.0f, 0.0f), vec3(-size, -size,  size)));
-    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 1.0f), vec3(0.0f, 1.0f, 0.0f), vec3(-1.0f, 0.0f, 0.0f), vec3(-size,  size,  size)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f), vec3(-1.0f, 0.0f, 0.0f), vec3(-w, -h, -d)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f), vec3(-1.0f, 0.0f, 0.0f), vec3(-w,  h, -d)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 1.0f), vec3(0.0f, 1.0f, 0.0f), vec3(-1.0f, 0.0f, 0.0f), vec3(-w, -h,  d)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 1.0f), vec3(0.0f, 1.0f, 0.0f), vec3(-1.0f, 0.0f, 0.0f), vec3(-w,  h,  d)));
     
-    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f), vec3( 1.0f, 0.0f, 0.0f), vec3( size, -size, -size)));
-    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f), vec3( 1.0f, 0.0f, 0.0f), vec3( size,  size, -size)));
-    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 1.0f), vec3(0.0f, 1.0f, 0.0f), vec3( 1.0f, 0.0f, 0.0f), vec3( size, -size,  size)));
-    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 1.0f), vec3(0.0f, 1.0f, 0.0f), vec3( 1.0f, 0.0f, 0.0f), vec3( size,  size,  size)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f), vec3( 1.0f, 0.0f, 0.0f), vec3( w, -h, -d)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f), vec3( 1.0f, 0.0f, 0.0f), vec3( w,  h, -d)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 1.0f), vec3(0.0f, 1.0f, 0.0f), vec3( 1.0f, 0.0f, 0.0f), vec3( w, -h,  d)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 1.0f), vec3(0.0f, 1.0f, 0.0f), vec3( 1.0f, 0.0f, 0.0f), vec3( w,  h,  d)));
     
     mesh.indices.push_back(0);
     mesh.indices.push_back(3);
@@ -112,10 +117,8 @@ StaticMesh StaticMesh::createCubeMesh(const float &size)
     return mesh;
 }
 
-StaticMesh StaticMesh::createCylinderMesh(const float &radius, const float &height)
+StaticMesh StaticMesh::createCylinderMesh(const float &radius, const float &height, const int &n)
 {
-    const int n = 12;
-    
     StaticMesh mesh;
     
     for (int i = 0; i <= n; ++i)

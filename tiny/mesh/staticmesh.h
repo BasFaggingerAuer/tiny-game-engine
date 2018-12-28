@@ -63,7 +63,8 @@ class StaticMesh
         ~StaticMesh();
         
         static StaticMesh createCubeMesh(const float & = 1.0f);
-        static StaticMesh createCylinderMesh(const float & = 1.0f, const float & = 1.0f);
+        static StaticMesh createBoxMesh(const float & = 1.0f, const float & = 1.0f, const float & = 1.0f);
+        static StaticMesh createCylinderMesh(const float & = 1.0f, const float & = 1.0f, const int & = 12);
         float getSize(const vec3 & = vec3(1.0f, 1.0f, 1.0f)) const;
         
         std::vector<StaticMeshVertex> vertices;

@@ -45,7 +45,6 @@ class RigidBody
         vec4 orientation;
         vec3 linearMomentum;
         vec3 angularMomentum;
-        float elasticity;
 };
 
 class RigidBox : public RigidBody

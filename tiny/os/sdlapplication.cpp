@@ -286,9 +286,6 @@ void SDLApplication::initOpenGL()
     if (glGetString(GL_SHADING_LANGUAGE_VERSION)) std::cerr << "Using GLSL version " << glGetString(GL_SHADING_LANGUAGE_VERSION) << "." << std::endl;
     else std::cerr << "Cannot determine GLSL version!" << std::endl;
 
-    //Make sure GLEW can find everything.
-    //glewExperimental = GL_TRUE;
-
     glClearColor(0.0, 0.0, 0.0, 0.0);
     glClearDepth(1.0);
     
