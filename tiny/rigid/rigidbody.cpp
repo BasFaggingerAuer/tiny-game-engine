@@ -15,6 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <climits>
+#include <exception>
 
 #include <tiny/rigid/rigidbody.h>
 
@@ -27,7 +28,8 @@ RigidBody::RigidBody() :
     position(0.0f, 0.0f, 0.0f),
     orientation(0.0f, 0.0f, 0.0f, 1.0f),
     linearMomentum(0.0f, 0.0f, 0.0f),
-    angularMomentum(0.0f, 0.0f, 0.0f)
+    angularMomentum(0.0f, 0.0f, 0.0f),
+    spheres()
 {
 
 }
@@ -38,7 +40,8 @@ RigidBody::RigidBody(const RigidBody &a) :
     position(a.position),
     orientation(a.orientation),
     linearMomentum(a.linearMomentum),
-    angularMomentum(a.angularMomentum)
+    angularMomentum(a.angularMomentum),
+    spheres(a.spheres)
 {
 
 }
@@ -62,6 +65,10 @@ RigidBody::RigidBody(const RigidBody &a, const RigidBody &b) :
     linearMomentum = a.linearMomentum + b.linearMomentum;
     //FIXME: Is this correct?
     angularMomentum = a.angularMomentum + b.angularMomentum;
+
+    spheres.reserve(a.spheres.size() + b.spheres.size());
+    spheres.insert(spheres.end(), a.spheres.begin(), a.spheres.end());
+    spheres.insert(spheres.end(), b.spheres.begin(), b.spheres.end());
 }
 
 RigidBody::~RigidBody()
@@ -80,6 +87,7 @@ float RigidBody::getEnergy() const
 void RigidBody::collide(RigidBody &a, RigidBody &b, const vec3 &z, const float &elasticity)
 {
     //Perform collision between two rigid bodies, conserving linear momentum, angular momentum and energy if the elasticity == 1.0.
+    //FIXME: This is incorrect!
     const vec3 ab = b.position - a.position;
     const vec3 az = z - a.position;
     const vec3 bz = z - b.position;
@@ -99,9 +107,65 @@ void RigidBody::collide(RigidBody &a, RigidBody &b, const vec3 &z, const float &
     b.angularMomentum -= cross(bz, p);
 }
 
+RigidBodySystem::RigidBodySystem() :
+    time(0.0f),
+    bodies(),
+    boundingPlanes()
+{
+
+}
+
+RigidBodySystem::~RigidBodySystem()
+{
+    //The user should free the rigid bodies.
+}
+
+void RigidBodySystem::addRigidBody(const unsigned int &index, RigidBody *body)
+{
+    //Verify that this index is not yet in use.
+    std::map<unsigned int, RigidBody *>::iterator j = bodies.find(index);
+    
+    if (j != bodies.end())
+    {
+        std::cerr << "A rigid body with index " << index << " has already been added!" << std::endl;
+        throw std::exception();
+    }
+    
+    bodies.insert(std::make_pair(index, body));
+}
+
+bool RigidBodySystem::freeRigidBody(const unsigned int &index)
+{
+    //Verify that this index is in use.
+    std::map<unsigned int, RigidBody *>::iterator j = bodies.find(index);
+    
+    if (j == bodies.end())
+    {
+        std::cerr << "Unable to find rigid body with index " << index << "!" << std::endl;
+        return false;
+    }
+    
+    bodies.erase(j);
+    
+    return true;
+}
+
+void RigidBodySystem::update(const float &dt)
+{
+    //TODO: Implement this.
+    
+    time += dt;
+}
+
+void RigidBodySystem::applyExternalForces()
+{
+    //To be implemented by the user (e.g., gravity).
+}
+
 RigidBox::RigidBox(const float &mass, const vec3 &dimensions, const vec3 &_position, const vec4 &_orientation) :
     RigidBody()
 {
+    //TODO: Add spheres.
     position = _position;
     orientation = _orientation;
     inverseMass = 1.0f/mass;
@@ -120,6 +184,7 @@ RigidBox::~RigidBox()
 RigidSphere::RigidSphere(const float &mass, const float &radius, const vec3 &_position, const vec4 &_orientation) :
     RigidBody()
 {
+    //TODO: Add spheres.
     position = _position;
     orientation = _orientation;
     inverseMass = 1.0f/mass;
@@ -138,6 +203,7 @@ RigidSphere::~RigidSphere()
 RigidTube::RigidTube(const float &mass, const float &innerRadius, const float &outerRadius, const float &length, const vec3 &_position, const vec4 &_orientation) :
     RigidBody()
 {
+    //TODO: Add spheres.
     position = _position;
     orientation = _orientation;
     inverseMass = 1.0f/mass;

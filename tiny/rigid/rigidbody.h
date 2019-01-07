@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <vector>
+#include <map>
 
 #include <tiny/math/vec.h>
 
@@ -25,6 +26,28 @@ namespace tiny
 
 namespace rigid
 {
+
+struct HardSphereInstance
+{
+    HardSphereInstance()
+    {
+
+    }
+
+    HardSphereInstance(const vec3 &_pos, const float &_rad) :
+        posAndRadius(vec4(_pos.x, _pos.y, _pos.z, _rad))
+    {
+
+    }
+
+    HardSphereInstance(const vec4 &_posAndRadius) :
+        posAndRadius(_posAndRadius)
+    {
+
+    }
+
+    vec4 posAndRadius;
+};
 
 class RigidBody
 {
@@ -45,6 +68,30 @@ class RigidBody
         vec4 orientation;
         vec3 linearMomentum;
         vec3 angularMomentum;
+        
+        //Rigid body collision detection is performed by decomposing the rigid body into hard spheres and performing only sphere-sphere collisions. This permits us to not consider all vertex/edge/plane collision cases at the cost of increased computation time.
+        std::vector<HardSphereInstance> spheres;
+};
+
+class RigidBodySystem
+{
+    public:
+        RigidBodySystem();
+        virtual ~RigidBodySystem();
+        
+        void addRigidBody(const unsigned int &, RigidBody *);
+        bool freeRigidBody(const unsigned int &);
+        
+        void update(const float &);
+        
+    protected:
+        virtual void applyExternalForces();
+    
+        float time;
+        std::map<unsigned int, RigidBody *> bodies;
+        
+        //Planes through which no rigid body may pass.
+        std::vector<vec4> boundingPlanes;
 };
 
 class RigidBox : public RigidBody
