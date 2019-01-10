@@ -107,6 +107,54 @@ void RigidBody::collide(RigidBody &a, RigidBody &b, const vec3 &z, const float &
     b.angularMomentum -= cross(bz, p);
 }
 
+SpatialSphereHasher::SpatialSphereHasher(const size_t &nrBuckets, const float &boxSize) :
+    invBoxSize(1.0f/boxSize),
+    buckets(nrBuckets, std::list<size_t>())
+{
+
+}
+
+SpatialSphereHasher::~SpatialSphereHasher()
+{
+
+}
+
+void SpatialSphereHasher::hashObjects(const std::vector<vec4> &objects)
+{
+    //Clear current buckets.
+    for (std::vector<std::list<size_t>>::iterator i = buckets.begin(); i != buckets.end(); ++i)
+    {
+        i->clear();
+    }
+
+    //Sort spheres into buckets.
+    size_t count = 0;
+    
+    for (std::vector<vec4>::const_iterator i = objects.begin(); i != objects.end(); ++i)
+    {
+        //Find range of boxes covered by this sphere.
+        const ivec4 lo = vfloor(invBoxSize*(*i - i->w));
+        const ivec4 hi =  vceil(invBoxSize*(*i + i->w));
+        
+        for (int z = lo.z; z <= hi.z; ++z)
+        {
+            for (int y = lo.y; y <= hi.y; ++y)
+            {
+                for (int x = lo.x; x <= hi.x; ++x)
+                {
+                    //Chose three prime numbers for spatial hashing.
+                    buckets[modnonneg(389*x + 1061*y + 599*z, static_cast<int>(buckets.size()))].push_back(count++);
+                }
+            }
+        }
+    }
+}
+
+const std::vector<std::list<size_t>> &SpatialSphereHasher::getBuckets() const
+{
+    return buckets;
+}
+
 RigidBodySystem::RigidBodySystem() :
     time(0.0f),
     bodies(),

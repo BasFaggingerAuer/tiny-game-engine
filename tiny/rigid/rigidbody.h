@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <vector>
+#include <list>
 #include <map>
 
 #include <tiny/math/vec.h>
@@ -71,6 +72,20 @@ class RigidBody
         
         //Rigid body collision detection is performed by decomposing the rigid body into hard spheres and performing only sphere-sphere collisions. This permits us to not consider all vertex/edge/plane collision cases at the cost of increased computation time.
         std::vector<HardSphereInstance> spheres;
+};
+
+class SpatialSphereHasher
+{
+    public:
+        SpatialSphereHasher(const size_t &, const float &);
+        ~SpatialSphereHasher();
+        
+        void hashObjects(const std::vector<vec4> &);
+        const std::vector<std::list<size_t>> &getBuckets() const;
+        
+    private:
+        const float invBoxSize;
+        std::vector<std::list<size_t>> buckets;
 };
 
 class RigidBodySystem

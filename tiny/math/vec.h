@@ -30,6 +30,11 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 namespace tiny
 {
 
+//Why does C++ not offer a mod()-operation that is >= 0?
+//From https://stackoverflow.com/questions/14997165/fastest-way-to-get-a-positive-modulo-in-c-c.
+template <typename t>
+inline t modnonneg(const t &a, const t &b) {return ((a % b) + b) % b;}
+
 template <typename t> class typed2vector
 {
     public:
@@ -43,7 +48,9 @@ template <typename t> class typed2vector
         inline bool operator == (const typed2vector<t> &a) const {return (a.x == x && a.y == y);}
         inline bool operator != (const typed2vector<t> &a) const {return (a.x != x || a.y != y);}
         inline typed2vector & operator += (const typed2vector<t> &a) {x += a.x; y += a.y; return *this;};
+        inline typed2vector & operator += (const t &a) {x += a; y += a; return *this;};
         inline typed2vector & operator -= (const typed2vector<t> &a) {x -= a.x; y -= a.y; return *this;};
+        inline typed2vector & operator -= (const t &a) {x -= a; y -= a; return *this;};
         inline typed2vector & operator *= (const typed2vector<t> &a) {x *= a.x; y *= a.y; return *this;};
         inline typed2vector & operator /= (const typed2vector<t> &a) {x /= a.x; y /= a.y; return *this;};
         inline typed2vector & operator *= (const t &a) {x *= a; y *= a; return *this;};
@@ -71,7 +78,9 @@ template <typename t> class typed3vector
         inline bool operator == (const typed3vector<t> &a) const {return (a.x == x && a.y == y && a.z == z);}
         inline bool operator != (const typed3vector<t> &a) const {return (a.x != x || a.y != y || a.z != z);}
         inline typed3vector & operator += (const typed3vector<t> &a) {x += a.x; y += a.y; z += a.z; return *this;};
+        inline typed3vector & operator += (const t &a) {x += a; y += a; z += a; return *this;};
         inline typed3vector & operator -= (const typed3vector<t> &a) {x -= a.x; y -= a.y; z -= a.z; return *this;};
+        inline typed3vector & operator -= (const t &a) {x -= a; y -= a; z -= a; return *this;};
         inline typed3vector & operator *= (const typed3vector<t> &a) {x *= a.x; y *= a.y; z *= a.z; return *this;};
         inline typed3vector & operator /= (const typed3vector<t> &a) {x /= a.x; y /= a.y; z /= a.z; return *this;};
         inline typed3vector & operator *= (const t &a) {x *= a; y *= a; z *= a; return *this;};
@@ -99,7 +108,9 @@ template <typename t> class typed4vector
         inline bool operator == (const typed4vector<t> &a) const {return (a.x == x && a.y == y && a.z == z && a.w == w);}
         inline bool operator != (const typed4vector<t> &a) const {return (a.x != x || a.y != y || a.z != z || a.w != w);}
         inline typed4vector & operator += (const typed4vector<t> &a) {x += a.x; y += a.y; z += a.z; w += a.w; return *this;};
+        inline typed4vector & operator += (const t &a) {x += a; y += a; z += a; w += a; return *this;};
         inline typed4vector & operator -= (const typed4vector<t> &a) {x -= a.x; y -= a.y; z -= a.z; w -= a.w; return *this;};
+        inline typed4vector & operator -= (const t &a) {x -= a; y -= a; z -= a; w -= a; return *this;};
         inline typed4vector & operator *= (const typed4vector<t> &a) {x *= a.x; y *= a.y; z *= a.z; w *= a.w; return *this;};
         inline typed4vector & operator /= (const typed4vector<t> &a) {x /= a.x; y /= a.y; z /= a.z; w /= a.w; return *this;};
         inline typed4vector & operator *= (const t &a) {x *= a; y *= a; z *= a; w *= a; return *this;};
@@ -112,7 +123,9 @@ template <typename t> class typed4vector
 };
 
 template <typename t> typed2vector<t> & operator + (typed2vector<t> a, const typed2vector<t> &b) {return a += b;}
+template <typename t> typed2vector<t> & operator + (typed2vector<t> a, const t &b) {return a += b;}
 template <typename t> typed2vector<t> & operator - (typed2vector<t> a, const typed2vector<t> &b) {return a -= b;}
+template <typename t> typed2vector<t> & operator - (typed2vector<t> a, const t &b) {return a -= b;}
 template <typename t> typed2vector<t> & operator * (typed2vector<t> a, const typed2vector<t> &b) {return a *= b;}
 template <typename t> typed2vector<t> & operator / (typed2vector<t> a, const typed2vector<t> &b) {return a /= b;}
 template <typename t> typed2vector<t> & operator * (typed2vector<t> a, const t &b) {return a *= b;}
@@ -121,7 +134,9 @@ template <typename t> typed2vector<t> & operator / (typed2vector<t> a, const t &
 template <typename t> typed2vector<t> & operator / (const t &b, typed2vector<t> a) {return a /= b;}
 
 template <typename t> typed3vector<t> & operator + (typed3vector<t> a, const typed3vector<t> &b) {return a += b;}
+template <typename t> typed3vector<t> & operator + (typed3vector<t> a, const t &b) {return a += b;}
 template <typename t> typed3vector<t> & operator - (typed3vector<t> a, const typed3vector<t> &b) {return a -= b;}
+template <typename t> typed3vector<t> & operator - (typed3vector<t> a, const t &b) {return a -= b;}
 template <typename t> typed3vector<t> & operator * (typed3vector<t> a, const typed3vector<t> &b) {return a *= b;}
 template <typename t> typed3vector<t> & operator / (typed3vector<t> a, const typed3vector<t> &b) {return a /= b;}
 template <typename t> typed3vector<t> & operator * (typed3vector<t> a, const t &b) {return a *= b;}
@@ -130,7 +145,9 @@ template <typename t> typed3vector<t> & operator / (typed3vector<t> a, const t &
 template <typename t> typed3vector<t> & operator / (const t &b, typed3vector<t> a) {return a /= b;}
 
 template <typename t> typed4vector<t> & operator + (typed4vector<t> a, const typed4vector<t> &b) {return a += b;}
+template <typename t> typed4vector<t> & operator + (typed4vector<t> a, const t &b) {return a += b;}
 template <typename t> typed4vector<t> & operator - (typed4vector<t> a, const typed4vector<t> &b) {return a -= b;}
+template <typename t> typed4vector<t> & operator - (typed4vector<t> a, const t &b) {return a -= b;}
 template <typename t> typed4vector<t> & operator * (typed4vector<t> a, const typed4vector<t> &b) {return a *= b;}
 template <typename t> typed4vector<t> & operator / (typed4vector<t> a, const typed4vector<t> &b) {return a /= b;}
 template <typename t> typed4vector<t> & operator * (typed4vector<t> a, const t &b) {return a *= b;}
@@ -186,6 +203,13 @@ inline ivec2 operator >> (const ivec2 &a, const int &b) {return ivec2(a.x >> b, 
 inline ivec2 operator << (const ivec2 &a, const ivec2 &b) {return ivec2(a.x << b.x, a.y << b.y);}
 inline ivec2 operator << (const ivec2 &a, const int &b) {return ivec2(a.x << b, a.y << b);}
 inline bool operator < (const ivec2 &a, const ivec2 &b) {return (a.x == b.x ? a.y < b.y : a.x < b.x);}
+
+inline ivec2 vfloor(const vec2 &a) {return ivec2(static_cast<int>(floor(a.x)), static_cast<int>(floor(a.y)));}
+inline ivec2 vceil(const vec2 &a) {return ivec2(static_cast<int>(ceil(a.x)), static_cast<int>(ceil(a.y)));}
+inline ivec3 vfloor(const vec3 &a) {return ivec3(static_cast<int>(floor(a.x)), static_cast<int>(floor(a.y)), static_cast<int>(floor(a.z)));}
+inline ivec3 vceil(const vec3 &a) {return ivec3(static_cast<int>(ceil(a.x)), static_cast<int>(ceil(a.y)), static_cast<int>(ceil(a.z)));}
+inline ivec4 vfloor(const vec4 &a) {return ivec4(static_cast<int>(floor(a.x)), static_cast<int>(floor(a.y)), static_cast<int>(floor(a.z)), static_cast<int>(floor(a.w)));}
+inline ivec4 vceil(const vec4 &a) {return ivec4(static_cast<int>(ceil(a.x)), static_cast<int>(ceil(a.y)), static_cast<int>(ceil(a.z)), static_cast<int>(ceil(a.w)));}
 
 class mat3
 {
