@@ -191,11 +191,13 @@ const std::vector<std::list<size_t>> &SpatialSphereHasher::getBuckets() const
     return buckets;
 }
 
-RigidBodySystem::RigidBodySystem(const size_t &a_nrCollisionIterations) :
+RigidBodySystem::RigidBodySystem(const size_t &a_nrCollisionIterations, const size_t &nrBuckets, const float &boundingSphereBucketSize, const float &internalSphereBucketSize) :
     time(0.0f),
     bodies(),
     boundingPlanes(),
-    nrCollisionIterations(a_nrCollisionIterations)
+    nrCollisionIterations(a_nrCollisionIterations),
+    boundingSphereHasher(nrBuckets, boundingSphereBucketSize),
+    internalSphereHasher(nrBuckets, internalSphereBucketSize)
 {
 
 }
@@ -278,7 +280,26 @@ void RigidBodySystem::update(const float &dt)
         //Check for collisions.
         noCollisions = true;
         
+        boundingSphereHasher.hashObjects(bodyBoundingSpheres);
         
+        //Check which objects can potentially intersect.
+        const std::vector<std::list<size_t>> &buckets = boundingSphereHasher.getBuckets();
+        std::list<std::pair<size_t, size_t>> intersectingObjects;
+        
+        for (std::vector<std::list<size_t>>::const_iterator j = buckets.begin(); j != buckets.end(); ++j)
+        {
+            for (std::list<size_t>::const_iterator k = j->begin(); k != j->end(); ++k)
+            {
+                for (std::list<size_t>::const_iterator l = std::next(k); l != j->end(); ++l)
+                {
+                    if (length(bodyBoundingSpheres[*k].posAndRadius.xyz() - bodyBoundingSpheres[*l].posAndRadius.xyz()) <=
+                               bodyBoundingSpheres[*k].posAndRadius.w + bodyBoundingSpheres[*l].posAndRadius.w)
+                    {
+                        intersectingObjects.push_back(std::make_pair(*k, *l));
+                    }
+                }
+            }
+        }
     }
     
     //Query forces.
