@@ -114,11 +114,11 @@ struct WorldIconInstance
 
     }
     
-    WorldIconInstance(const vec4 &a_position,
+    WorldIconInstance(const vec3 &a_position,
                       const vec2 &a_size,
                       const vec4 &a_icon,
                       const vec4 &a_colour) :
-        position(a_position),
+        position(a_position, 0.0f),
         size(a_size),
         icon(a_icon),
         colour(a_colour)

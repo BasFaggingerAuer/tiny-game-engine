@@ -53,15 +53,19 @@ struct HardSphereInstance
 class RigidBody
 {
     public:
-        RigidBody();
+        RigidBody(const float &, const std::vector<HardSphereInstance> &, const vec3 & = vec3(0.0f, 0.0f, 0.0f), const vec4 & = vec4(0.0f, 0.0f, 0.0f, 1.0f), const vec3 & = vec3(0.0f, 0.0f, 0.0f), const vec3 & = vec3(0.0f, 0.0f, 0.0f));
         RigidBody(const RigidBody &);
-        RigidBody(const RigidBody &, const RigidBody &);
         virtual ~RigidBody();
 
         float getEnergy() const;
+        void calculateSphereParameters();
         
         static void collide(RigidBody &, RigidBody &, const vec3 &, const float &);
 
+        //Rigid body collision detection is performed by decomposing the rigid body into hard spheres and performing only sphere-sphere collisions. This permits us to not consider all vertex/edge/plane collision cases at the cost of increased computation time.
+        std::vector<HardSphereInstance> spheres;
+        HardSphereInstance boundingSphere;
+        
         float inverseMass;
         mat3 inverseInertia;
 
@@ -70,8 +74,6 @@ class RigidBody
         vec3 linearMomentum;
         vec3 angularMomentum;
         
-        //Rigid body collision detection is performed by decomposing the rigid body into hard spheres and performing only sphere-sphere collisions. This permits us to not consider all vertex/edge/plane collision cases at the cost of increased computation time.
-        std::vector<HardSphereInstance> spheres;
 };
 
 class SpatialSphereHasher
@@ -80,7 +82,7 @@ class SpatialSphereHasher
         SpatialSphereHasher(const size_t &, const float &);
         ~SpatialSphereHasher();
         
-        void hashObjects(const std::vector<vec4> &);
+        void hashObjects(const std::vector<HardSphereInstance> &);
         const std::vector<std::list<size_t>> &getBuckets() const;
         
     private:
@@ -91,7 +93,7 @@ class SpatialSphereHasher
 class RigidBodySystem
 {
     public:
-        RigidBodySystem();
+        RigidBodySystem(const size_t & = 4);
         virtual ~RigidBodySystem();
         
         void addRigidBody(const unsigned int &, RigidBody *);
@@ -100,34 +102,18 @@ class RigidBodySystem
         void update(const float &);
         
     protected:
+        void integratePositionsAndCalculateBodySpheres(const float &);
         virtual void applyExternalForces();
     
         float time;
         std::map<unsigned int, RigidBody *> bodies;
+        std::vector<HardSphereInstance> bodyBoundingSpheres;
+        std::vector<HardSphereInstance> bodyInternalSpheres;
         
         //Planes through which no rigid body may pass.
         std::vector<vec4> boundingPlanes;
-};
-
-class RigidBox : public RigidBody
-{
-    public:
-        RigidBox(const float &, const vec3 &, const vec3 & = vec3(0.0f, 0.0f, 0.0f), const vec4 & = vec4(0.0f, 0.0f, 0.0f, 1.0f));
-        virtual ~RigidBox();
-};
-
-class RigidSphere : public RigidBody
-{
-    public:
-        RigidSphere(const float &, const float &, const vec3 & = vec3(0.0f, 0.0f, 0.0f), const vec4 & = vec4(0.0f, 0.0f, 0.0f, 1.0f));
-        virtual ~RigidSphere();
-};
-
-class RigidTube : public RigidBody
-{
-    public:
-        RigidTube(const float &, const float &, const float &, const float &, const vec3 & = vec3(0.0f, 0.0f, 0.0f), const vec4 & = vec4(0.0f, 0.0f, 0.0f, 1.0f));
-        virtual ~RigidTube();
+        
+        const size_t nrCollisionIterations;
 };
 
 }

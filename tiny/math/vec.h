@@ -70,7 +70,7 @@ template <typename t> class typed3vector
         inline typed3vector() : x(0), y(0), z(0) {};
         inline typed3vector(const t &a) : x(a), y(a), z(a) {};
         inline typed3vector(const t &_x, const t &_y, const t &_z) : x(_x), y(_y), z(_z) {};
-        inline typed3vector(const typed2vector<t> &a) : x(a.x), y(a.y), z(0.0) {};
+        inline typed3vector(const typed2vector<t> &a, const t &_z) : x(a.x), y(a.y), z(_z) {};
         inline typed3vector(const typed3vector<t> &a) : x(a.x), y(a.y), z(a.z) {};
         inline ~typed3vector() {};
 
@@ -87,6 +87,8 @@ template <typename t> class typed3vector
         inline typed3vector & operator /= (const t &a) {x /= a; y /= a; z /= a; return *this;};
         inline t dot(const typed3vector<t> &a) const {return x*a.x + y*a.y + z*a.z;};
         
+        inline typed2vector<t> xy() const {return typed2vector<t>(x, y);};
+        
         friend std::ostream & operator << (std::ostream &Out, const typed3vector<t> &a) {Out << "(" << a.x << ", " << a.y << ", " << a.z << ")"; return Out;};
         
         t x, y, z;
@@ -98,9 +100,8 @@ template <typename t> class typed4vector
         inline typed4vector() : x(0), y(0), z(0), w(0) {};
         inline typed4vector(const t &a) : x(a), y(a), z(a), w(a) {};
         inline typed4vector(const t &_x, const t &_y, const t &_z, const t &_w) : x(_x), y(_y), z(_z), w(_w) {};
-        inline typed4vector(const t &_x, const t &_y, const t &_z) : x(_x), y(_y), z(_z), w(0) {};
-        inline typed4vector(const typed2vector<t> &a) : x(a.x), y(a.y), z(0.0), w(0.0) {};
-        inline typed4vector(const typed3vector<t> &a) : x(a.x), y(a.y), z(a.z), w(0.0) {};
+        inline typed4vector(const typed2vector<t> &a, const t &_z, const t &_w) : x(a.x), y(a.y), z(_z), w(_w) {};
+        inline typed4vector(const typed3vector<t> &a, const t &_w) : x(a.x), y(a.y), z(a.z), w(_w) {};
         inline typed4vector(const typed4vector<t> &a) : x(a.x), y(a.y), z(a.z), w(a.w) {};
         inline ~typed4vector() {};
         
@@ -116,6 +117,9 @@ template <typename t> class typed4vector
         inline typed4vector & operator *= (const t &a) {x *= a; y *= a; z *= a; w *= a; return *this;};
         inline typed4vector & operator /= (const t &a) {x /= a; y /= a; z /= a; w /= a; return *this;};
         inline t dot(const typed4vector<t> &a) const {return x*a.x + y*a.y + z*a.z + w*a.w;};
+        
+        inline typed2vector<t> xy() const {return typed2vector<t>(x, y);};
+        inline typed3vector<t> xyz() const {return typed3vector<t>(x, y, z);};
         
         friend std::ostream & operator << (std::ostream &Out, const typed4vector<t> &a) {Out << "(" << a.x << ", " << a.y << ", " << a.z << ", " << a.w << ")"; return Out;};
         

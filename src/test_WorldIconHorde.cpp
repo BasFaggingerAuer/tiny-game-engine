@@ -62,7 +62,7 @@ void setup()
         {
             for (int k = -4; k <= 4; ++k)
             {
-                iconInstances.push_back(draw::WorldIconInstance(vec4(iconSpacing*i, iconSpacing*j, iconSpacing*k, 1.0f), vec2(1.0f, 1.0f), vec4(0.0f, 0.0f, 1.0f, 1.0f), vec4(1.0f, 1.0f, 1.0f, 1.0f)));
+                iconInstances.push_back(draw::WorldIconInstance(vec3(iconSpacing*i, iconSpacing*j, iconSpacing*k), vec2(1.0f, 1.0f), vec4(0.0f, 0.0f, 1.0f, 1.0f), vec4(1.0f, 1.0f, 1.0f, 1.0f)));
             }
         }
     }

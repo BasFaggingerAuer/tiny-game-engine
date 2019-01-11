@@ -210,7 +210,7 @@ int plantTreesTiled(const TextureType1 &heightTexture, const TextureType2 &attri
             
             highDetailInstances.push_back(draw::StaticMeshInstance(vec4(treePosition.x, treePosition.y, treePosition.z, 1.0f),
                                                                    vec4(0.0f, 0.0f, 0.0f, 1.0f)));
-            lowDetailInstances.push_back(draw::WorldIconInstance(vec4(treePosition.x, treePosition.y + 4.0f, treePosition.z, 1.0f),
+            lowDetailInstances.push_back(draw::WorldIconInstance(vec3(treePosition.x, treePosition.y + 4.0f, treePosition.z),
                                                                  vec2(4.0f, 4.0f),
                                                                  vec4(0.0f, 0.0f, 1.0f, 1.0f),
                                                                  vec4(1.0f, 1.0f, 1.0f, 1.0f)));

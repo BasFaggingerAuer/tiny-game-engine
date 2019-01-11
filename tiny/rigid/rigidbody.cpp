@@ -16,59 +16,35 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <climits>
 #include <exception>
+#include <algorithm>
 
 #include <tiny/rigid/rigidbody.h>
 
 using namespace tiny;
 using namespace tiny::rigid;
 
-RigidBody::RigidBody() :
-    inverseMass(1.0f),
-    inverseInertia(mat3::identityMatrix()),
-    position(0.0f, 0.0f, 0.0f),
-    orientation(0.0f, 0.0f, 0.0f, 1.0f),
-    linearMomentum(0.0f, 0.0f, 0.0f),
-    angularMomentum(0.0f, 0.0f, 0.0f),
-    spheres()
+RigidBody::RigidBody(const float &mass, const std::vector<HardSphereInstance> &a_spheres, const vec3 &a_position, const vec4 &a_orientation, const vec3 &a_linearMomentum, const vec3 &a_angularMomentum) :
+    spheres(a_spheres),
+    inverseMass(1.0f/mass),
+    position(a_position),
+    orientation(a_orientation),
+    linearMomentum(a_linearMomentum),
+    angularMomentum(a_angularMomentum)
 {
-
+    calculateSphereParameters();
 }
 
 RigidBody::RigidBody(const RigidBody &a) :
+    spheres(a.spheres),
+    boundingSphere(a.boundingSphere),
     inverseMass(a.inverseMass),
     inverseInertia(a.inverseInertia),
     position(a.position),
     orientation(a.orientation),
     linearMomentum(a.linearMomentum),
-    angularMomentum(a.angularMomentum),
-    spheres(a.spheres)
+    angularMomentum(a.angularMomentum)
 {
-
-}
-
-RigidBody::RigidBody(const RigidBody &a, const RigidBody &b) :
-    RigidBody()
-{
-    //Combine two rigid bodies into one larger rigid body for mass and moment of inertia.
-    //The orientations of a and b are considered to be fixed w.r.t. each other after this operation.
-    
-    const mat3 Ia = mat3(a.orientation)*a.inverseInertia.inverted()*mat3(quatconj(a.orientation));
-    const mat3 Ib = mat3(b.orientation)*b.inverseInertia.inverted()*mat3(quatconj(b.orientation));
-    const vec3 d = b.position - a.position;
-    
-    inverseMass = 1.0f/((1.0f/a.inverseMass) + (1.0f/b.inverseMass));
-    inverseInertia = (Ia + Ib + (1.0f/(a.inverseMass + b.inverseMass))*(length2(d)*mat3::identityMatrix() - mat3::outerProductMatrix(d, d))).inverted();
-
-    position = (b.inverseMass/(b.inverseMass + a.inverseMass))*a.position + (a.inverseMass/(a.inverseMass + b.inverseMass))*b.position;
-    orientation = vec4(0.0f, 0.0f, 0.0f, 1.0f);
-
-    linearMomentum = a.linearMomentum + b.linearMomentum;
-    //FIXME: Is this correct?
-    angularMomentum = a.angularMomentum + b.angularMomentum;
-
-    spheres.reserve(a.spheres.size() + b.spheres.size());
-    spheres.insert(spheres.end(), a.spheres.begin(), a.spheres.end());
-    spheres.insert(spheres.end(), b.spheres.begin(), b.spheres.end());
+    calculateSphereParameters();
 }
 
 RigidBody::~RigidBody()
@@ -82,6 +58,66 @@ float RigidBody::getEnergy() const
     const mat3 invI = mat3(orientation)*inverseInertia*mat3(quatconj(orientation));
 
     return 0.5f*inverseMass*length2(linearMomentum) + 0.5f*dot(angularMomentum, invI*angularMomentum);
+}
+
+void RigidBody::calculateSphereParameters()
+{
+    //For now, distribute the mass uniformly over the volume of all spheres, assuming there are no overlaps.
+    std::vector<float> volumePerSphere(spheres.size(), 0.0f);
+    float totalVolume = 0.0f;
+    
+    for (size_t i = 0; i < spheres.size(); ++i)
+    {
+        const float r = spheres[i].posAndRadius.w;
+        
+        totalVolume += (volumePerSphere[i] = (4.0f*M_PI/3.0f)*r*r*r);
+    }
+    
+    const float totalMass = 1.0f/inverseMass;
+    std::vector<float> massPerSphere(spheres.size(), 0.0f);
+    
+    for (size_t i = 0; i < spheres.size(); ++i)
+    {
+        massPerSphere[i] = totalMass*(volumePerSphere[i]/totalVolume);
+    }
+    
+    //Ensure that the object's spheres are centered around the center of mass.
+    vec3 centerOfMass = vec3(0.0f, 0.0f, 0.0f);
+    
+    for (size_t i = 0; i < spheres.size(); ++i)
+    {
+        centerOfMass += massPerSphere[i]*spheres[i].posAndRadius.xyz();
+    }
+    
+    centerOfMass /= totalMass;
+    
+    for (std::vector<HardSphereInstance>::iterator i = spheres.begin(); i != spheres.end(); ++i)
+    {
+        i->posAndRadius -= vec4(centerOfMass, 0.0f);
+    }
+    
+    //Calculate bounding sphere containing all internal spheres.
+    float maxRadius = 0.0f;
+    
+    for (std::vector<HardSphereInstance>::const_iterator i = spheres.begin(); i != spheres.end(); ++i)
+    {
+        maxRadius = std::max(maxRadius, length(i->posAndRadius.xyz()) + i->posAndRadius.w);
+    }
+    
+    boundingSphere = vec4(0.0f, 0.0f, 0.0f, maxRadius);
+    
+    //Calculate inverse inertia tensor.
+    mat3 inertia(0.0f);
+    
+    for (size_t i = 0; i < spheres.size(); ++i)
+    {
+        const vec4 s = spheres[i].posAndRadius;
+        
+        inertia += (2.0f*massPerSphere[i]*s.w*s.w/5.0f)*mat3::identityMatrix() +
+                   massPerSphere[i]*(length2(s.xyz())*mat3::identityMatrix() - mat3::outerProductMatrix(s.xyz(), s.xyz()));
+    }
+    
+    inverseInertia = inertia.inverted();
 }
 
 void RigidBody::collide(RigidBody &a, RigidBody &b, const vec3 &z, const float &elasticity)
@@ -119,7 +155,7 @@ SpatialSphereHasher::~SpatialSphereHasher()
 
 }
 
-void SpatialSphereHasher::hashObjects(const std::vector<vec4> &objects)
+void SpatialSphereHasher::hashObjects(const std::vector<HardSphereInstance> &objects)
 {
     //Clear current buckets.
     for (std::vector<std::list<size_t>>::iterator i = buckets.begin(); i != buckets.end(); ++i)
@@ -130,11 +166,11 @@ void SpatialSphereHasher::hashObjects(const std::vector<vec4> &objects)
     //Sort spheres into buckets.
     size_t count = 0;
     
-    for (std::vector<vec4>::const_iterator i = objects.begin(); i != objects.end(); ++i)
+    for (std::vector<HardSphereInstance>::const_iterator i = objects.begin(); i != objects.end(); ++i)
     {
         //Find range of boxes covered by this sphere.
-        const ivec4 lo = vfloor(invBoxSize*(*i - i->w));
-        const ivec4 hi =  vceil(invBoxSize*(*i + i->w));
+        const ivec4 lo = vfloor(invBoxSize*(i->posAndRadius - i->posAndRadius.w));
+        const ivec4 hi =  vceil(invBoxSize*(i->posAndRadius + i->posAndRadius.w));
         
         for (int z = lo.z; z <= hi.z; ++z)
         {
@@ -155,10 +191,11 @@ const std::vector<std::list<size_t>> &SpatialSphereHasher::getBuckets() const
     return buckets;
 }
 
-RigidBodySystem::RigidBodySystem() :
+RigidBodySystem::RigidBodySystem(const size_t &a_nrCollisionIterations) :
     time(0.0f),
     bodies(),
-    boundingPlanes()
+    boundingPlanes(),
+    nrCollisionIterations(a_nrCollisionIterations)
 {
 
 }
@@ -198,10 +235,57 @@ bool RigidBodySystem::freeRigidBody(const unsigned int &index)
     return true;
 }
 
+void RigidBodySystem::integratePositionsAndCalculateBodySpheres(const float &dt)
+{
+    //This could be separated and parallelized for better performance.
+    
+    //This should not affect the capacity (so not cause spurious reallocations).
+    bodyBoundingSpheres.clear();
+    bodyInternalSpheres.clear();
+    
+    for (std::map<unsigned int, RigidBody *>::const_iterator i = bodies.begin(); i != bodies.end(); ++i)
+    {
+        //Integrate position and orientation.
+        const RigidBody *b = i->second;
+        //x + dt*v, v = Minv*P
+        const vec3 x = b->position + (dt*b->inverseMass)*b->linearMomentum;
+        //Iinv = R*Iinv0*Rinv
+        const mat3 invI = mat3::rotationMatrix(b->orientation)*b->inverseInertia*mat3::rotationMatrix(quatconj(b->orientation));
+        //q + dt*0.5*(omega, 0)*q, omega = Iinv*L
+        const mat3 R = mat3::rotationMatrix(normalize(b->orientation + (dt*0.5f)*quatmul(vec4(invI*b->angularMomentum, 0.0f), b->orientation)));
+        
+        bodyBoundingSpheres.push_back(vec4(x, b->boundingSphere.posAndRadius.w));
+        
+        for (std::vector<HardSphereInstance>::const_iterator j = b->spheres.begin(); j != b->spheres.end(); ++j)
+        {
+            bodyInternalSpheres.push_back(vec4(x + R*j->posAndRadius.xyz(), j->posAndRadius.w));
+        }
+    }
+}
+
 void RigidBodySystem::update(const float &dt)
 {
-    //TODO: Implement this.
+    //Use the semi-implicit Euler method as symplectic integrator.
     
+    //Positions.
+    bool noCollisions = false;
+    
+    for (size_t i = 0; i < nrCollisionIterations && !noCollisions; ++i)
+    {
+        //Integrate positions.
+        integratePositionsAndCalculateBodySpheres(dt);
+        
+        //Check for collisions.
+        noCollisions = true;
+        
+        
+    }
+    
+    //Query forces.
+    
+    //Velocities.
+    
+    //Increment global time.
     time += dt;
 }
 
@@ -209,62 +293,4 @@ void RigidBodySystem::applyExternalForces()
 {
     //To be implemented by the user (e.g., gravity).
 }
-
-RigidBox::RigidBox(const float &mass, const vec3 &dimensions, const vec3 &_position, const vec4 &_orientation) :
-    RigidBody()
-{
-    //TODO: Add spheres.
-    position = _position;
-    orientation = _orientation;
-    inverseMass = 1.0f/mass;
-
-    inverseInertia = mat3::identityMatrix();
-    inverseInertia.v00 = 12.0f/(mass*(dimensions.y*dimensions.y + dimensions.z*dimensions.z));
-    inverseInertia.v11 = 12.0f/(mass*(dimensions.x*dimensions.x + dimensions.z*dimensions.z));
-    inverseInertia.v22 = 12.0f/(mass*(dimensions.x*dimensions.x + dimensions.y*dimensions.y));
-}
-
-RigidBox::~RigidBox()
-{
-
-}
-
-RigidSphere::RigidSphere(const float &mass, const float &radius, const vec3 &_position, const vec4 &_orientation) :
-    RigidBody()
-{
-    //TODO: Add spheres.
-    position = _position;
-    orientation = _orientation;
-    inverseMass = 1.0f/mass;
-
-    inverseInertia = mat3::identityMatrix();
-    inverseInertia.v00 = 5.0f/(2.0f*mass*radius*radius);
-    inverseInertia.v11 = 5.0f/(2.0f*mass*radius*radius);
-    inverseInertia.v22 = 5.0f/(2.0f*mass*radius*radius);
-}
-
-RigidSphere::~RigidSphere()
-{
-
-}
-
-RigidTube::RigidTube(const float &mass, const float &innerRadius, const float &outerRadius, const float &length, const vec3 &_position, const vec4 &_orientation) :
-    RigidBody()
-{
-    //TODO: Add spheres.
-    position = _position;
-    orientation = _orientation;
-    inverseMass = 1.0f/mass;
-
-    inverseInertia = mat3::identityMatrix();
-    inverseInertia.v00 = 12.0f/(mass*(3.0f*(innerRadius*innerRadius + outerRadius*outerRadius) + length*length));
-    inverseInertia.v11 = 12.0f/(mass*(3.0f*(innerRadius*innerRadius + outerRadius*outerRadius) + length*length));
-    inverseInertia.v22 =  2.0f/(mass*(innerRadius*innerRadius + outerRadius*outerRadius));
-}
-
-RigidTube::~RigidTube()
-{
-
-}
-
 

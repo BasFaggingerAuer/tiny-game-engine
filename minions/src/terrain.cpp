@@ -214,7 +214,7 @@ int GameTerrain::createAttributeMapSamples(const int &maxNrSamples, const int &i
             
             highDetailInstances.push_back(draw::StaticMeshInstance(vec4(samplePosition.x, samplePosition.y, samplePosition.z, 1.0f),
                                                                    vec4(0.0f, 0.0f, 0.0f, 1.0f)));
-            lowDetailInstances.push_back(draw::WorldIconInstance(vec4(samplePosition.x, samplePosition.y + lowDetailInstanceSize.y, samplePosition.z, 1.0f),
+            lowDetailInstances.push_back(draw::WorldIconInstance(vec3(samplePosition.x, samplePosition.y + lowDetailInstanceSize.y, samplePosition.z),
                                                                  lowDetailInstanceSize,
                                                                  vec4(0.0f, 0.0f, 1.0f, 1.0f),
                                                                  vec4(1.0f, 1.0f, 1.0f, 1.0f)));
