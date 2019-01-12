@@ -60,8 +60,6 @@ class RigidBody
         float getEnergy() const;
         void calculateSphereParameters();
         
-        static void collide(RigidBody &, RigidBody &, const vec3 &, const float &);
-
         //Rigid body collision detection is performed by decomposing the rigid body into hard spheres and performing only sphere-sphere collisions. This permits us to not consider all vertex/edge/plane collision cases at the cost of increased computation time.
         std::vector<HardSphereInstance> spheres;
         HardSphereInstance boundingSphere;
@@ -83,7 +81,7 @@ class SpatialSphereHasher
         ~SpatialSphereHasher();
         
         void hashObjects(const std::vector<HardSphereInstance> &);
-        const std::vector<std::list<size_t>> &getBuckets() const;
+        const std::vector<std::list<size_t>> *getBuckets() const;
         
     private:
         const float invBoxSize;
@@ -93,7 +91,7 @@ class SpatialSphereHasher
 class RigidBodySystem
 {
     public:
-        RigidBodySystem(const size_t & = 4, const size_t & = 1069, const float & = 4.0f, const float & = 0.5f);
+        RigidBodySystem(const size_t & = 4, const size_t & = 2003, const float & = 4.0f, const float & = 0.5f);
         virtual ~RigidBodySystem();
         
         void addRigidBody(const unsigned int &, RigidBody *);
@@ -102,8 +100,9 @@ class RigidBodySystem
         void update(const float &);
         
     protected:
-        void integratePositionsAndCalculateBodySpheres(const float &);
-        virtual void applyExternalForces();
+        void integratePositionsAndCalculateBoundingSpheres(const float &);
+        void integratePositionsAndCalculateInternalSpheres(const RigidBody *, const float &);
+        virtual void applyExternalForces(const float &);
     
         float time;
         std::map<unsigned int, RigidBody *> bodies;
@@ -114,7 +113,8 @@ class RigidBodySystem
         std::vector<vec4> boundingPlanes;
         
         const size_t nrCollisionIterations;
-        SpatialSphereHasher boundingSphereHasher, internalSphereHasher;
+        SpatialSphereHasher boundingSphereHasher;
+        SpatialSphereHasher internalSphereHasher;
 };
 
 }
