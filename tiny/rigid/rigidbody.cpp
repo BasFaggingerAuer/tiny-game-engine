@@ -157,11 +157,15 @@ void SpatialSphereHasher::hashObjects(const std::vector<HardSphereInstance> &obj
                 for (int x = lo.x; x <= hi.x; ++x)
                 {
                     //Chose three prime numbers for spatial hashing.
-                    buckets[modnonneg(389*x + 1061*y + 599*z, static_cast<int>(buckets.size()))].push_back(count++);
+                    buckets[modnonneg(389*x + 1061*y + 599*z, static_cast<int>(buckets.size()))].push_back(count);
                 }
             }
         }
+        
+        ++count;
     }
+    
+    assert(count == objects.size());
 }
 
 const std::vector<std::list<size_t>> *SpatialSphereHasher::getBuckets() const
@@ -293,8 +297,8 @@ void RigidBodySystem::update(const float &dt)
         //Intersect internal spheres of these potentially intersecting objects and resolve collisions.
         for (std::list<std::pair<size_t, size_t>>::const_iterator intersection = intersectingObjects.begin(); intersection != intersectingObjects.end(); ++intersection)
         {
-            RigidBody *b1 = bodies[intersection->first];
-            RigidBody *b2 = bodies[intersection->second];
+            RigidBody *b1 = std::next(bodies.begin(), intersection->first)->second;
+            RigidBody *b2 = std::next(bodies.begin(), intersection->second)->second;
             
             bodyInternalSpheres.clear();
             integratePositionsAndCalculateInternalSpheres(b1, dt);
@@ -387,8 +391,8 @@ void RigidBodySystem::update(const float &dt)
         //Intersect internal spheres of these potentially intersecting objects and resolve collisions.
         for (std::list<std::pair<size_t, size_t>>::const_iterator intersection = intersectingObjects.begin(); intersection != intersectingObjects.end(); ++intersection)
         {
-            RigidBody *b1 = bodies[intersection->first];
-            RigidBody *b2 = bodies[intersection->second];
+            RigidBody *b1 = std::next(bodies.begin(), intersection->first)->second;
+            RigidBody *b2 = std::next(bodies.begin(), intersection->second)->second;
             
             bodyInternalSpheres.clear();
             integratePositionsAndCalculateInternalSpheres(b1, dt);
@@ -425,6 +429,7 @@ void RigidBodySystem::update(const float &dt)
                             if (relVelocity < -collisionEpsilon)
                             {
                                 //We should no longer have interpenetrating objects moving further into each other.
+                                std::cerr << "Colliding objects are moving into each other!" << std::endl;
                                 assert(false);
                             }
                         }
@@ -434,6 +439,19 @@ void RigidBodySystem::update(const float &dt)
         }
     }
 #endif
+    
+    //Actually integrate positions.
+    for (std::map<unsigned int, RigidBody *>::iterator i = bodies.begin(); i != bodies.end(); ++i)
+    {
+        //Integrate position and orientation.
+        RigidBody *b = i->second;
+        //x + dt*v, v = Minv*P
+        b->position += (dt*b->inverseMass)*b->linearMomentum;
+        //Iinv = R*Iinv0*Rinv
+        const mat3 invI = mat3::rotationMatrix(b->orientation)*b->inverseInertia*mat3::rotationMatrix(quatconj(b->orientation));
+        //q + dt*0.5*(omega, 0)*q, omega = Iinv*L
+        b->orientation = normalize(b->orientation + (dt*0.5f)*quatmul(vec4(invI*b->angularMomentum, 0.0f), b->orientation));
+    }
     
     //Query forces.
     applyExternalForces(dt);

@@ -167,8 +167,8 @@ StaticMesh StaticMesh::createIcosahedronMesh(const float &radius)
     
     //From http://blog.andreaskahler.com/2009/06/creating-icosphere-mesh-in-code.html.
     //TODO: Fix texture coordinates.
-    const float s = radius;
-    const float t = radius*(1.0f + sqrtf(5.0f))/2.0f;
+    const float s = radius/sqrtf(0.5f*(5.0f + sqrtf(5.0f)));
+    const float t = (radius*(1.0f + sqrtf(5.0f))/2.0f)/sqrtf(0.5f*(5.0f + sqrtf(5.0f)));
     
     mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f), vec3(-s,  t, 0.0f)));
     mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f), vec3( s,  t, 0.0f)));

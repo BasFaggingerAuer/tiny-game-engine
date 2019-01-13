@@ -22,6 +22,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <tiny/math/vec.h>
 
+//TODO: Decide whether to separate this out for cleaner dependencies.
+#include <tiny/draw/staticmeshhorde.h>
+
 namespace tiny
 {
 
@@ -98,6 +101,24 @@ class RigidBodySystem
         bool freeRigidBody(const unsigned int &);
         
         void update(const float &);
+        
+        //Ability to export all internal spheres for rendering in a static mesh horde.
+        //Container should contain a StaticMeshInstance-compatible type.
+        template <typename Container>
+        void getInternalSphereStaticMeshes(Container &out) const
+        {
+            for (std::map<unsigned int, RigidBody *>::const_iterator i = bodies.begin(); i != bodies.end(); ++i)
+            {
+                //Integrate position and orientation.
+                const RigidBody *b = i->second;
+                const mat3 R = mat3::rotationMatrix(b->orientation);
+            
+                for (std::vector<HardSphereInstance>::const_iterator j = b->spheres.begin(); j != b->spheres.end(); ++j)
+                {
+                    out.push_back(tiny::draw::StaticMeshInstance(vec4(b->position + R*j->posAndRadius.xyz(), j->posAndRadius.w), b->orientation));
+                }
+            }
+        }
         
     protected:
         void integratePositionsAndCalculateBoundingSpheres(const float &);
