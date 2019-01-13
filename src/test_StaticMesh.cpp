@@ -50,6 +50,7 @@ void setup()
 {
     //Create a cube mesh and paint it with a texture.
     cubeMesh = new draw::StaticMesh(mesh::StaticMesh::createCubeMesh(0.5f));
+    //cubeMesh = new draw::StaticMesh(mesh::StaticMesh::createIcosahedronMesh(0.5f));
     cubeDiffuseTexture = new draw::RGBATexture2D(img::Image::createTestImage());
     cubeMesh->setDiffuseTexture(*cubeDiffuseTexture);
     

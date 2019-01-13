@@ -91,7 +91,7 @@ class SpatialSphereHasher
 class RigidBodySystem
 {
     public:
-        RigidBodySystem(const size_t & = 4, const size_t & = 2003, const float & = 4.0f, const float & = 0.5f);
+        RigidBodySystem(const size_t & = 4, const float & = 1.0e-6f, const size_t & = 2003, const float & = 4.0f, const float & = 0.5f);
         virtual ~RigidBodySystem();
         
         void addRigidBody(const unsigned int &, RigidBody *);
@@ -113,6 +113,7 @@ class RigidBodySystem
         std::vector<vec4> boundingPlanes;
         
         const size_t nrCollisionIterations;
+        const float collisionEpsilon;
         SpatialSphereHasher boundingSphereHasher;
         SpatialSphereHasher internalSphereHasher;
 };

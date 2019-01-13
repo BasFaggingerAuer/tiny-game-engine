@@ -161,6 +161,121 @@ StaticMesh StaticMesh::createCylinderMesh(const float &radius, const float &heig
     return mesh;
 }
 
+StaticMesh StaticMesh::createIcosahedronMesh(const float &radius)
+{
+    StaticMesh mesh;
+    
+    //From http://blog.andreaskahler.com/2009/06/creating-icosphere-mesh-in-code.html.
+    //TODO: Fix texture coordinates.
+    const float s = radius;
+    const float t = radius*(1.0f + sqrtf(5.0f))/2.0f;
+    
+    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f), vec3(-s,  t, 0.0f)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f), vec3( s,  t, 0.0f)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f), vec3(-s, -t, 0.0f)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f), vec3( s, -t, 0.0f)));
+
+    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, -s,  t)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f), vec3(0.0f,  s,  t)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, -s, -t)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f), vec3(0.0f,  s, -t)));
+
+    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f), vec3( t, 0.0f, -s)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f), vec3( t, 0.0f,  s)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f), vec3(-t, 0.0f, -s)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(1.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f), vec3(-t, 0.0f,  s)));
+    
+    //Calculate normals and tangent vectors.
+    for (std::vector<StaticMeshVertex>::iterator v = mesh.vertices.begin(); v != mesh.vertices.end(); ++v)
+    {
+        v->normal = normalize(v->position);
+        //Any orthogonal vector to the position is tangent to the sphere and (1, 0, 0) is not part of the vertices.
+        v->tangent = normalize(cross(v->position, vec3(1.0f, 0.0f, 0.0f)));
+    }
+    
+    mesh.indices.push_back(0);
+    mesh.indices.push_back(11);
+    mesh.indices.push_back(5);
+    
+    mesh.indices.push_back(0);
+    mesh.indices.push_back(5);
+    mesh.indices.push_back(1);
+    
+    mesh.indices.push_back(0);
+    mesh.indices.push_back(1);
+    mesh.indices.push_back(7);
+    
+    mesh.indices.push_back(0);
+    mesh.indices.push_back(7);
+    mesh.indices.push_back(10);
+    
+    mesh.indices.push_back(0);
+    mesh.indices.push_back(10);
+    mesh.indices.push_back(11);
+   
+    mesh.indices.push_back(1);
+    mesh.indices.push_back(5);
+    mesh.indices.push_back(9);
+    
+    mesh.indices.push_back(5);
+    mesh.indices.push_back(11);
+    mesh.indices.push_back(4);
+    
+    mesh.indices.push_back(11);
+    mesh.indices.push_back(10);
+    mesh.indices.push_back(2);
+    
+    mesh.indices.push_back(10);
+    mesh.indices.push_back(7);
+    mesh.indices.push_back(6);
+    
+    mesh.indices.push_back(7);
+    mesh.indices.push_back(1);
+    mesh.indices.push_back(8);
+    
+    mesh.indices.push_back(3);
+    mesh.indices.push_back(9);
+    mesh.indices.push_back(4);
+    
+    mesh.indices.push_back(3);
+    mesh.indices.push_back(4);
+    mesh.indices.push_back(2);
+    
+    mesh.indices.push_back(3);
+    mesh.indices.push_back(2);
+    mesh.indices.push_back(6);
+    
+    mesh.indices.push_back(3);
+    mesh.indices.push_back(6);
+    mesh.indices.push_back(8);
+    
+    mesh.indices.push_back(3);
+    mesh.indices.push_back(8);
+    mesh.indices.push_back(9);
+
+    mesh.indices.push_back(4);
+    mesh.indices.push_back(9);
+    mesh.indices.push_back(5);
+    
+    mesh.indices.push_back(2);
+    mesh.indices.push_back(4);
+    mesh.indices.push_back(11);
+    
+    mesh.indices.push_back(6);
+    mesh.indices.push_back(2);
+    mesh.indices.push_back(10);
+    
+    mesh.indices.push_back(8);
+    mesh.indices.push_back(6);
+    mesh.indices.push_back(7);
+    
+    mesh.indices.push_back(9);
+    mesh.indices.push_back(8);
+    mesh.indices.push_back(1);
+ 
+    return mesh;
+}
+
 float StaticMesh::getSize(const vec3 &scale) const
 {
     //Determine the size of the mesh, scaling all vertices with a diagonal matrices with diagonal given by the provided vector.
