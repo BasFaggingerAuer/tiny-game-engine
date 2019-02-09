@@ -318,11 +318,11 @@ void RigidBodySystem::update(const float &dt)
                     for (std::list<size_t>::const_iterator bucketB2 = b2Start; bucketB2 != bucket->end(); ++bucketB2)
                     {
                         //Do the internal spheres intersect?
-                        if (length(bodyBoundingSpheres[*bucketB1].posAndRadius.xyz() - bodyBoundingSpheres[*bucketB2].posAndRadius.xyz()) <=
-                               bodyBoundingSpheres[*bucketB1].posAndRadius.w + bodyBoundingSpheres[*bucketB2].posAndRadius.w)
+                        if (length(bodyInternalSpheres[*bucketB1].posAndRadius.xyz() - bodyInternalSpheres[*bucketB2].posAndRadius.xyz()) <=
+                               bodyInternalSpheres[*bucketB1].posAndRadius.w + bodyInternalSpheres[*bucketB2].posAndRadius.w)
                         {
-                            const vec4 s1 = bodyBoundingSpheres[*bucketB1].posAndRadius;
-                            const vec4 s2 = bodyBoundingSpheres[*bucketB2].posAndRadius;
+                            const vec4 s1 = bodyInternalSpheres[*bucketB1].posAndRadius;
+                            const vec4 s2 = bodyInternalSpheres[*bucketB2].posAndRadius;
                             const vec3 z = (1.0f/(s1.w + s2.w))*(s2.w*s1.xyz() + s1.w*s2.xyz());
                             const vec3 n = normalize(s1.xyz() - s2.xyz());
                             const mat3 invI1 = mat3::rotationMatrix(b1->orientation)*b1->inverseInertia*mat3::rotationMatrix(quatconj(b1->orientation));
@@ -412,11 +412,11 @@ void RigidBodySystem::update(const float &dt)
                     for (std::list<size_t>::const_iterator bucketB2 = b2Start; bucketB2 != bucket->end(); ++bucketB2)
                     {
                         //Do the internal spheres intersect?
-                        if (length(bodyBoundingSpheres[*bucketB1].posAndRadius.xyz() - bodyBoundingSpheres[*bucketB2].posAndRadius.xyz()) <=
-                               bodyBoundingSpheres[*bucketB1].posAndRadius.w + bodyBoundingSpheres[*bucketB2].posAndRadius.w)
+                        if (length(bodyInternalSpheres[*bucketB1].posAndRadius.xyz() - bodyInternalSpheres[*bucketB2].posAndRadius.xyz()) <=
+                               bodyInternalSpheres[*bucketB1].posAndRadius.w + bodyInternalSpheres[*bucketB2].posAndRadius.w)
                         {
-                            const vec4 s1 = bodyBoundingSpheres[*bucketB1].posAndRadius;
-                            const vec4 s2 = bodyBoundingSpheres[*bucketB2].posAndRadius;
+                            const vec4 s1 = bodyInternalSpheres[*bucketB1].posAndRadius;
+                            const vec4 s2 = bodyInternalSpheres[*bucketB2].posAndRadius;
                             const vec3 z = (1.0f/(s1.w + s2.w))*(s2.w*s1.xyz() + s1.w*s2.xyz());
                             const vec3 n = normalize(s1.xyz() - s2.xyz());
                             const mat3 invI1 = mat3::rotationMatrix(b1->orientation)*b1->inverseInertia*mat3::rotationMatrix(quatconj(b1->orientation));
