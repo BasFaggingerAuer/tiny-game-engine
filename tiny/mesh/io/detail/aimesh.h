@@ -84,6 +84,14 @@ inline const aiMesh *getAiMesh(const aiScene *scene, const std::string &meshName
         !sourceMesh->HasTextureCoords(0))
     {
         std::cerr << "Mesh '" << meshName << "' in does not possess vertex/face/normal/texture data!" << std::endl;
+        
+        std::cerr << "Number of vertices : " << sourceMesh->mNumVertices << std::endl;
+        std::cerr << "Positions          : " << sourceMesh->HasPositions() << std::endl;
+        std::cerr << "Faces              : " << sourceMesh->HasFaces() << std::endl;
+        std::cerr << "Tangents           : " << sourceMesh->HasTangentsAndBitangents() << std::endl;
+        std::cerr << "Normals            : " << sourceMesh->HasNormals() << std::endl;
+        std::cerr << "Texture coordinates: " << sourceMesh->HasTextureCoords(0) << std::endl;
+    
         throw std::exception();
     }
     
