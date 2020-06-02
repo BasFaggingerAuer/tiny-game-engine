@@ -257,6 +257,20 @@ class mat3
 
         inline ~mat3() {};
 
+        inline mat3 & operator = (const mat3 &b)
+        {
+            v00 = b.v00;
+            v10 = b.v10;
+            v20 = b.v20;
+            v01 = b.v01;
+            v11 = b.v11;
+            v21 = b.v21;
+            v02 = b.v02;
+            v12 = b.v12;
+            v22 = b.v22;
+            return *this;
+        };
+
         inline mat3 & operator += (const mat3 &b)
         {
             v00 += b.v00;
@@ -551,6 +565,28 @@ class mat4
 #endif
 
         inline ~mat4() {};
+        
+        inline mat4 & operator = (const mat4 &b)
+        {
+            v00 = b.v00;
+            v10 = b.v10;
+            v20 = b.v20;
+            v30 = b.v30;
+            v01 = b.v01;
+            v11 = b.v11;
+            v21 = b.v21;
+            v31 = b.v31;
+            v02 = b.v02;
+            v12 = b.v12;
+            v22 = b.v22;
+            v32 = b.v32;
+            v03 = b.v03;
+            v13 = b.v13;
+            v23 = b.v23;
+            v33 = b.v33;
+            return *this;
+        };
+
 
         inline mat4 & operator *= (const mat4 &b)
         {
