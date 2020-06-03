@@ -107,7 +107,7 @@ void CharacterType::addInstance(const CharacterInstance &instance, const float &
 {
     if (nrInstances < maxNrInstances)
     {
-        instances[nrInstances++] = draw::StaticMeshInstance(vec4(instance.position.x, instance.position.y + baseHeight, instance.position.z, 1.0f),
+        instances[nrInstances++] = draw::StaticMeshInstance(vec4(instance.position.x, instance.position.y + baseHeight + 0.5f*size.y, instance.position.z, 1.0f),
                                                             quatrot(instance.rotation, vec3(0.0f, 1.0f, 0.0f)),
                                                             vec4(0.5f*(1.0f + cosf(2.0f*M_PI*(instance.color + 0.0f/3.0f))),
                                                                  0.5f*(1.0f + cosf(2.0f*M_PI*(instance.color + 1.0f/3.0f))),
@@ -399,5 +399,6 @@ void Game::readSkyResources(const std::string &path, TiXmlElement *el)
     skyEffect = new draw::effects::SunSky();
     skyGradientTexture = new draw::RGBTexture2D(img::io::readImage(path + textureFileName), draw::tf::filter);
     skyEffect->setSkyTexture(*skyGradientTexture);
+    skyEffect->setSun(normalize(vec3(0.1f, 1.0f, 0.2f)));
 }
 
