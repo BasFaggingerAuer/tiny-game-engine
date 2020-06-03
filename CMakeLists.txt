@@ -189,6 +189,8 @@ target_link_libraries(test_RigidBodySystem ${USED_LIBS})
 
 add_subdirectory(${TINY_SOURCE_DIR}/tanks/)
 
+add_subdirectory(${TINY_SOURCE_DIR}/rpg/)
+
 add_subdirectory(${TINY_SOURCE_DIR}/minions/)
 
 add_subdirectory(${TINY_SOURCE_DIR}/moba/)
