@@ -23,6 +23,7 @@ StaticMeshInstanceVertexBufferInterpreter::StaticMeshInstanceVertexBufferInterpr
 {
     addVec4Attribute(0*sizeof(float), "v_positionAndSize");
     addVec4Attribute(4*sizeof(float), "v_orientation");
+    addVec4Attribute(8*sizeof(float), "v_colorMultiplier");
 }
 
 StaticMeshInstanceVertexBufferInterpreter::~StaticMeshInstanceVertexBufferInterpreter()
@@ -63,11 +64,13 @@ std::string StaticMeshHorde::getVertexShaderCode() const
 "\n"
 "in vec4 v_positionAndSize;\n"
 "in vec4 v_orientation;\n"
+"in vec4 v_colorMultiplier;\n"
 "\n"
 "out vec2 f_tex;\n"
 "out vec3 f_worldTangent;\n"
 "out vec3 f_worldNormal;\n"
 "out vec3 f_worldPosition;\n"
+"out vec4 f_colorMultiplier;\n"
 "out float f_cameraDepth;\n"
 "\n"
 "vec3 qtransform(const vec4 q, const vec3 v)\n"
@@ -81,6 +84,7 @@ std::string StaticMeshHorde::getVertexShaderCode() const
 "   f_worldTangent = qtransform(v_orientation, v_tangent);\n"
 "   f_worldNormal = qtransform(v_orientation, v_normal);\n"
 "   f_worldPosition = v_position;\n"
+"   f_colorMultiplier = v_colorMultiplier;\n"
 "   gl_Position = worldToScreen*vec4(v_positionAndSize.w*qtransform(v_orientation, v_position) + v_positionAndSize.xyz, 1.0f);\n"
 "   f_cameraDepth = gl_Position.z;\n"
 "}\n\0";
@@ -102,6 +106,7 @@ std::string StaticMeshHorde::getFragmentShaderCode() const
 "in vec3 f_worldTangent;\n"
 "in vec3 f_worldNormal;\n"
 "in vec3 f_worldPosition;\n"
+"in vec4 f_colorMultiplier;\n"
 "in float f_cameraDepth;\n"
 "\n"
 "out vec4 diffuse;\n"
@@ -110,7 +115,7 @@ std::string StaticMeshHorde::getFragmentShaderCode() const
 "\n"
 "void main(void)\n"
 "{\n"
-"   diffuse = texture(diffuseTexture, f_tex);\n"
+"   diffuse = texture(diffuseTexture, f_tex)*f_colorMultiplier;\n"
 "   vec3 normal = 2.0f*texture(normalTexture, f_tex).xyz - vec3(1.0f);\n"
 "   \n"
 "   if (diffuse.w < 0.5f) discard;\n"

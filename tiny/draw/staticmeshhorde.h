@@ -43,15 +43,18 @@ struct StaticMeshInstance
     }
     
     StaticMeshInstance(const vec4 &a_positionAndSize,
-                       const vec4 &a_orientation) :
+                       const vec4 &a_orientation,
+                       const vec4 &a_colorMultiplier = vec4(1.0f)) :
         positionAndSize(a_positionAndSize),
-        orientation(a_orientation)
+        orientation(a_orientation),
+        colorMultiplier(a_colorMultiplier)        
     {
 
     }
     
     vec4 positionAndSize;
     vec4 orientation;
+    vec4 colorMultiplier;
 };
 
 class StaticMeshInstanceVertexBufferInterpreter : public VertexBufferInterpreter<StaticMeshInstance>
@@ -80,7 +83,10 @@ class StaticMeshHorde : public Renderable
         }
         
         template <typename Iterator>
-        void setMeshes(Iterator first, Iterator last) { setInstances(first,last); }
+        void setMeshes(Iterator first, Iterator last)
+        {
+            setInstances(first, last);
+        }
 
         template <typename Iterator>
         void setInstances(Iterator first, Iterator last)
