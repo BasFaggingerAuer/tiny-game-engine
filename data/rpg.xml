@@ -8,5 +8,5 @@
         <biome diffuse="img/terrain/dirt.jpg" normal="img/terrain/dirt_normal.jpg" sound="sound/forest.ogg"/>
         <biome diffuse="img/terrain/rocks.jpg" normal="img/terrain/rocks_normal.jpg" sound="sound/sheep.ogg"/>
     </terrain>
-    <charactertype name="HumanPlayer" width="1.0" depth="1.0" height="2.0" max_instances="1024" />
+    <charactertype name="HumanPlayer" width="1.0" depth="1.0" height="3.0" max_instances="1024" />
 </rpg>

@@ -15,6 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <vector>
 #include <exception>
@@ -107,7 +108,7 @@ void CharacterType::addInstance(const CharacterInstance &instance, const float &
 {
     if (nrInstances < maxNrInstances)
     {
-        instances[nrInstances++] = draw::StaticMeshInstance(vec4(instance.position.x, instance.position.y + baseHeight + 0.5f*size.y, instance.position.z, 1.0f),
+        instances[nrInstances++] = draw::StaticMeshInstance(vec4(instance.position.x, instance.position.y + baseHeight + size.y, instance.position.z, 1.0f),
                                                             quatrot(instance.rotation, vec3(0.0f, 1.0f, 0.0f)),
                                                             instance.getColor());
     }
@@ -179,9 +180,27 @@ Game::~Game()
 
 void Game::updateConsole() const
 {
-    //Update the console on screen.
-    font->setText(-1.0, -1.0, consoleMode ? 0.05 : 0.025, aspectRatio, console->getText(256), *fontTexture);
-    consoleBackground->setColour(consoleMode ? vec4(0.0f, 0.0f, 0.0f, 0.8f) : vec4(1.0f, 1.0f, 1.0f, 0.0f));
+    if (consoleMode)
+    {
+        //Update the console on screen.
+        font->setText(-1.0, -1.0, 0.05, aspectRatio, console->getText(256), *fontTexture);
+        consoleBackground->setColour(vec4(0.0f, 0.0f, 0.0f, 0.8f));
+        consoleBackground->setSquareDimensions(-1.0f, 1.0f, 1.0f, -1.0f);
+    }
+    else
+    {
+        //Put characters in a string.
+        std::stringstream strm;
+        
+        for (auto i = characters.begin(); i != characters.end(); ++i)
+        {
+            strm << i->first << " (" << std::setprecision(0) << std::fixed << 5.0f*i->second.position.x << ", " << 5.0f*i->second.position.y << ", " << 5.0f*i->second.position.z << "): " << i->second.name << std::endl;
+        }
+        
+        font->setText(-1.0, -1.0, 0.075, aspectRatio, strm.str(), *fontTexture);
+        consoleBackground->setColour(vec4(0.0f, 0.0f, 0.0f, 0.4f));
+        consoleBackground->setSquareDimensions(-1.0f, 0.0f, -0.3f, -1.0f);
+    }
 }
 
 void Game::update(os::Application *application, const float &dt)
@@ -213,7 +232,6 @@ void Game::update(os::Application *application, const float &dt)
     if (application->isKeyPressedOnce('`'))
     {
         consoleMode = !consoleMode;
-        updateConsole();
     }
     
     if (application->isKeyPressedOnce('0'))
@@ -297,6 +315,9 @@ void Game::update(os::Application *application, const float &dt)
         renderer->setCamera(cameraPosition, cameraOrientation);
         snd::WorldSounderer::setCamera(cameraPosition, cameraOrientation);
     }
+    
+    //Update console status.
+    updateConsole();
 }
 
 void Game::render()
@@ -423,7 +444,7 @@ void Game::readConsoleResources(const std::string &path, TiXmlElement *el)
     //Create a drawable font object as a collection of instanced screen icons.
     font = new draw::ScreenIconHorde(4096);
     font->setIconTexture(*fontTexture);
-    font->setText(-1.0, -1.0, 0.1, aspectRatio, "Welcome to \\rRPG\\w, press ` to access the console.", *fontTexture);
+    font->setText(-1.0, -1.0, 0.1, aspectRatio, "", *fontTexture);
     consoleBackground = new draw::effects::Solid();
 }
 

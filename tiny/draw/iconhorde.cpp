@@ -14,6 +14,8 @@ GNU General Public License for more details.
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
+#include <cstdlib>
+
 #include <tiny/draw/iconhorde.h>
 
 using namespace tiny;
@@ -227,6 +229,41 @@ void ScreenIconHorde::setText(const float &x, const float &y, const float &size,
                 else if (*i == '2') intensity = 0.5f;
                 else if (*i == '3') intensity = 0.75f;
                 else if (*i == '4') intensity = 1.0f;
+                else if (*i == '#')
+                {
+                    //Shortened HTML color code, e.g., #fff = white, #000 = black, #f00 = red.
+                    char htmlshort[2] = {'\0', '\0'};
+                    
+                    if (++i != text.end())
+                    {
+                        htmlshort[0] = *i;
+                        colour.x = static_cast<float>(strtol(htmlshort, 0, 16))/15.0f;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                    
+                    if (++i != text.end())
+                    {
+                        htmlshort[0] = *i;
+                        colour.y = static_cast<float>(strtol(htmlshort, 0, 16))/15.0f;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                    
+                    if (++i != text.end())
+                    {
+                        htmlshort[0] = *i;
+                        colour.z = static_cast<float>(strtol(htmlshort, 0, 16))/15.0f;
+                    }
+                    else
+                    {
+                        break;
+                    }
+                }
                 else
                 {
                     const vec4 icon = map.getIcon(*i);
