@@ -151,6 +151,7 @@ Game::Game(const os::Application *application, const std::string &path) :
     }
     
     renderer->addScreenRenderable(index++, skyEffect, false, false);
+    renderer->addScreenRenderable(index++, fontWorld, false, false, draw::BlendMix);
     renderer->addScreenRenderable(index++, consoleBackground, false, false, draw::BlendMix);
     renderer->addScreenRenderable(index++, font, false, false, draw::BlendMix);
     
@@ -232,6 +233,26 @@ void Game::update(os::Application *application, const float &dt)
     {
         i->second->updateInstances();
     }
+    
+    //Draw character icons.
+    std::vector<draw::WorldIconInstance> iconInstances;
+    const float fontHeightScale = 0.2f/fontTexture->getMaxIconDimensions().y;
+    
+    for (std::map<unsigned int, CharacterInstance>::const_iterator i = characters.begin(); i != characters.end(); ++i)
+    {
+        if (!i->second.name.empty())
+        {
+            const vec4 icon = fontTexture->getIcon(i->second.name[0]);
+            
+            iconInstances.push_back(draw::WorldIconInstance(
+                vec3(i->second.position.x, i->second.position.y + baseHeight + characterTypes[i->second.type]->size.y, i->second.position.z),
+                vec2(fontHeightScale*icon.z, fontHeightScale*icon.w),
+                icon,
+                vec4(1.0f, 1.0f, 1.0f, 1.0f)));
+        }
+    }
+    
+    fontWorld->setIcons(iconInstances.begin(), iconInstances.end());
     
     //Toggle console.
     if (application->isKeyPressedOnce('`'))
@@ -451,6 +472,10 @@ void Game::readConsoleResources(const std::string &path, TiXmlElement *el)
     font->setIconTexture(*fontTexture);
     font->setText(-1.0, -1.0, 0.1, aspectRatio, "", *fontTexture);
     consoleBackground = new draw::effects::Solid();
+    
+    //Create font to put text inside the world.
+    fontWorld = new draw::WorldIconHorde(4096, true);
+    fontWorld->setIconTexture(*fontTexture);
 }
 
 void Game::readSkyResources(const std::string &path, TiXmlElement *el)

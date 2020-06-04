@@ -146,6 +146,7 @@ class Game
         bool consoleMode;
         tiny::draw::effects::Solid *consoleBackground;
         tiny::draw::ScreenIconHorde *font;
+        tiny::draw::WorldIconHorde *fontWorld;
         tiny::draw::IconTexture2D *fontTexture;
         
         //Sky and atmosphere.
