@@ -276,7 +276,13 @@ bool Game::msgUpdateCharacter(const unsigned int &senderIndex, std::ostream &out
 
 bool Game::msgSetPlayerCharacter(const unsigned int &, std::ostream &out, bool &broadcast, const unsigned int &characterPlayerIndex, const unsigned int &characterIndex)
 {
-    if (characters.find(characterIndex) == characters.end() || players.find(characterPlayerIndex) == players.end())
+    if (players.find(characterPlayerIndex) == players.end())
+    {
+        out << "Player with index " << characterPlayerIndex << " does not exist!";
+        return false;
+    }
+    
+    if (characters.find(characterIndex) == characters.end() && characterIndex != 0)
     {
         out << "Player with index " << characterPlayerIndex << " or character with index " << characterIndex << " does not exist!";
         return false;

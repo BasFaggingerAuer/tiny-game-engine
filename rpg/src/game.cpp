@@ -109,10 +109,7 @@ void CharacterType::addInstance(const CharacterInstance &instance, const float &
     {
         instances[nrInstances++] = draw::StaticMeshInstance(vec4(instance.position.x, instance.position.y + baseHeight + 0.5f*size.y, instance.position.z, 1.0f),
                                                             quatrot(instance.rotation, vec3(0.0f, 1.0f, 0.0f)),
-                                                            vec4(0.5f*(1.0f + cosf(2.0f*M_PI*(instance.color + 0.0f/3.0f))),
-                                                                 0.5f*(1.0f + cosf(2.0f*M_PI*(instance.color + 1.0f/3.0f))),
-                                                                 0.5f*(1.0f + cosf(2.0f*M_PI*(instance.color + 2.0f/3.0f))),
-                                                                 1.0f));
+                                                            instance.getColor());
     }
 }
 
@@ -219,6 +216,30 @@ void Game::update(os::Application *application, const float &dt)
         updateConsole();
     }
     
+    if (application->isKeyPressedOnce('0'))
+    {
+        Message msg(msg::mt::setPlayerCharacter);
+
+        msg << ownPlayerIndex << 0;
+        applyMessage(ownPlayerIndex, msg);
+    }
+    
+    //Direct character selection.
+    if (players.find(ownPlayerIndex) != players.end())
+    {
+        for (int i = 1; i < 10; ++i)
+        {
+            if (application->isKeyPressedOnce('0' + i) &&
+                characters.find(i) != characters.end())
+            {
+                Message msg(msg::mt::setPlayerCharacter);
+    
+                msg << ownPlayerIndex << i;
+                applyMessage(ownPlayerIndex, msg);
+            }
+        }
+    }
+    
     if (consoleMode)
     {
         //Update console input.
@@ -247,10 +268,27 @@ void Game::update(os::Application *application, const float &dt)
             }
         }
         
-        //We do not control a character: control the camera directly.
-        //Move the camera around and collide with the terrain.
-        application->updateSimpleCamera(dt, cameraPosition, cameraOrientation);
-        cameraPosition.y = std::max(cameraPosition.y, terrain->getHeight(vec2(cameraPosition.x, cameraPosition.z)) + 2.0f);
+        if (characterIndex == 0)
+        {
+            //We do not control a character: control the camera directly.
+            //Move the camera around and collide with the terrain.
+            application->updateSimpleCamera(dt, cameraPosition, cameraOrientation);
+            cameraPosition.y = std::max(cameraPosition.y, terrain->getHeight(vec2(cameraPosition.x, cameraPosition.z)) + 2.0f);
+        }
+        else
+        {
+            //We do control a character.
+            CharacterInstance &chr = characters[characterIndex];
+            
+            if (application->isKeyPressedOnce('w')) chr.position.x = roundf(chr.position.x + 1.0f);
+            if (application->isKeyPressedOnce('s')) chr.position.x = roundf(chr.position.x - 1.0f);
+            if (application->isKeyPressedOnce('a')) chr.position.z = roundf(chr.position.z + 1.0f);
+            if (application->isKeyPressedOnce('d')) chr.position.z = roundf(chr.position.z - 1.0f);
+            if (application->isKeyPressedOnce('q')) chr.position.y = roundf(chr.position.y + 1.0f);
+            if (application->isKeyPressedOnce('e')) chr.position.y = roundf(chr.position.y - 1.0f);
+            if (application->isKeyPressedOnce('j')) chr.rotation += 2.0f*M_PI/8.0f;
+            if (application->isKeyPressedOnce('l')) chr.rotation -= 2.0f*M_PI/8.0f;
+        }
         
         //Update the terrain with respect to the camera.
         terrain->terrain->setCameraPosition(cameraPosition);
@@ -304,7 +342,15 @@ void Game::clear()
     
     //Remove all characters.
     characters.clear();
-    lastCharacterIndex = 1;
+    lastCharacterIndex = 0;
+    
+    //And add default characters.
+    characters[++lastCharacterIndex] = CharacterInstance(0, "Tollie", 0.00f);
+    characters[++lastCharacterIndex] = CharacterInstance(0, "Rodan", 0.15f);
+    characters[++lastCharacterIndex] = CharacterInstance(0, "Augustus", 0.30f);
+    characters[++lastCharacterIndex] = CharacterInstance(0, "Sven", 0.45f);
+    characters[++lastCharacterIndex] = CharacterInstance(0, "Julius", 0.60f);
+    characters[++lastCharacterIndex] = CharacterInstance(0, "Laertes", 0.75f);
     
     //Reset camera.
     cameraPosition = vec3(0.0f, 0.0f, 0.0f);

@@ -51,14 +51,22 @@ class Player
 
 struct CharacterInstance
 {
-    CharacterInstance(const unsigned int &a_type = 0, const std::string &a_name = "") :
+    CharacterInstance(const unsigned int &a_type = 0, const std::string &a_name = "", const float &a_color = 0.0f) :
         type(a_type),
         name(a_name),
-        position(0, 0, 0),
+        position(0.0f),
         rotation(0.0f),
-        color(1.0f)
+        color(a_color)
     {
     
+    }
+    
+    tiny::vec4 getColor() const
+    {
+        return tiny::vec4(0.5f*(1.0f + cosf(2.0f*M_PI*(color + 0.0f/3.0f))),
+                          0.5f*(1.0f + cosf(2.0f*M_PI*(color + 1.0f/3.0f))),
+                          0.5f*(1.0f + cosf(2.0f*M_PI*(color + 2.0f/3.0f))),
+                          1.0f);
     }
     
     unsigned int type;
