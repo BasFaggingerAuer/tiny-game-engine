@@ -51,10 +51,10 @@ class Player
 
 struct CharacterInstance
 {
-    CharacterInstance(const unsigned int &a_type = 0, const std::string &a_name = "", const float &a_color = 0.0f) :
+    CharacterInstance(const unsigned int &a_type = 0, const std::string &a_name = "", const float &a_color = 0.0f, const tiny::vec3 &a_position = tiny::vec3(0.0f)) :
         type(a_type),
         name(a_name),
-        position(0.0f),
+        position(a_position),
         rotation(0.0f),
         color(a_color)
     {

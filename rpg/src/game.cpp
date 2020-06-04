@@ -106,9 +106,12 @@ void CharacterType::clearInstances()
 
 void CharacterType::addInstance(const CharacterInstance &instance, const float &baseHeight)
 {
-    if (nrInstances < maxNrInstances)
+    if (nrInstances < maxNrInstances - 1)
     {
         instances[nrInstances++] = draw::StaticMeshInstance(vec4(instance.position.x, instance.position.y + baseHeight + size.y, instance.position.z, 1.0f),
+                                                            quatrot(instance.rotation, vec3(0.0f, 1.0f, 0.0f)),
+                                                            instance.getColor());
+        instances[nrInstances++] = draw::StaticMeshInstance(vec4(instance.position.x, baseHeight + 0.1f - size.y, instance.position.z, 1.0f),
                                                             quatrot(instance.rotation, vec3(0.0f, 1.0f, 0.0f)),
                                                             instance.getColor());
     }
@@ -194,7 +197,9 @@ void Game::updateConsole() const
         
         for (auto i = characters.begin(); i != characters.end(); ++i)
         {
-            strm << i->first << " (" << std::setprecision(0) << std::fixed << 5.0f*i->second.position.x << ", " << 5.0f*i->second.position.y << ", " << 5.0f*i->second.position.z << "): " << i->second.name << std::endl;
+            const vec4 c = i->second.getColor();
+            
+            strm << "\\#fff" << i->first << " (" << std::dec << std::setprecision(0) << std::fixed << 5.0f*i->second.position.x << ", " << 5.0f*i->second.position.y << ", " << 5.0f*i->second.position.z << "): \\#" << std::hex << std::min(15, static_cast<int>(16.0f*c.x)) << std::min(15, static_cast<int>(16.0f*c.y)) << std::min(15, static_cast<int>(16.0f*c.z)) << i->second.name << std::endl;
         }
         
         font->setText(-1.0, -1.0, 0.075, aspectRatio, strm.str(), *fontTexture);
@@ -303,7 +308,7 @@ void Game::update(os::Application *application, const float &dt)
             if (application->isKeyPressedOnce('a')) chr.position.z = roundf(chr.position.z + 1.0f);
             if (application->isKeyPressedOnce('d')) chr.position.z = roundf(chr.position.z - 1.0f);
             if (application->isKeyPressedOnce('q')) chr.position.y = roundf(chr.position.y + 1.0f);
-            if (application->isKeyPressedOnce('e')) chr.position.y = roundf(chr.position.y - 1.0f);
+            if (application->isKeyPressedOnce('e')) chr.position.y = std::max(0.0f, roundf(chr.position.y - 1.0f));
             if (application->isKeyPressedOnce('j')) chr.rotation += 2.0f*M_PI/8.0f;
             if (application->isKeyPressedOnce('l')) chr.rotation -= 2.0f*M_PI/8.0f;
         }
@@ -366,12 +371,12 @@ void Game::clear()
     lastCharacterIndex = 0;
     
     //And add default characters.
-    characters[++lastCharacterIndex] = CharacterInstance(0, "Tollie", 0.00f);
-    characters[++lastCharacterIndex] = CharacterInstance(0, "Rodan", 0.15f);
-    characters[++lastCharacterIndex] = CharacterInstance(0, "Augustus", 0.30f);
-    characters[++lastCharacterIndex] = CharacterInstance(0, "Sven", 0.45f);
-    characters[++lastCharacterIndex] = CharacterInstance(0, "Julius", 0.60f);
-    characters[++lastCharacterIndex] = CharacterInstance(0, "Laertes", 0.75f);
+    characters[++lastCharacterIndex] = CharacterInstance(0, "Tollie", 0.00f, vec3(0.0f, 0.0f, -1.0f));
+    characters[++lastCharacterIndex] = CharacterInstance(0, "Rodan", 0.15f, vec3(-2.0f, 0.0f, -1.0f));
+    characters[++lastCharacterIndex] = CharacterInstance(0, "Augustus", 0.30f, vec3(-1.0f, 0.0f, 0.0f));
+    characters[++lastCharacterIndex] = CharacterInstance(0, "Sven", 0.45f, vec3(0.0f, 0.0f, 1.0f));
+    characters[++lastCharacterIndex] = CharacterInstance(0, "Julius", 0.60f, vec3(0.0f, 0.0f, 0.0f));
+    characters[++lastCharacterIndex] = CharacterInstance(0, "Laertes", 0.75f, vec3(-2.0f, 0.0f, 1.0f));
     
     //Reset camera.
     cameraPosition = vec3(0.0f, 0.0f, 0.0f);
