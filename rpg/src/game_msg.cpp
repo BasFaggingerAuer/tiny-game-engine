@@ -197,6 +197,24 @@ bool Game::msgWelcomePlayer(const unsigned int &, std::ostream &out, bool &, con
 bool Game::msgTerrainOffset(const unsigned int &, std::ostream &out, bool &broadcast, const vec2 &offset)
 {
     terrain->setOffset(offset);
+    
+    const float baseHeight = terrain->getHeight(vec2(0.0f, 0.0f));
+    
+    std::vector<draw::StaticMeshInstance> instances;
+    
+    for (int i = -nrChessboardSquares; i <= nrChessboardSquares; ++i)
+    {
+        for (int j = -nrChessboardSquares; j <= nrChessboardSquares; ++j)
+        {
+            instances.push_back(draw::StaticMeshInstance(vec4(i, baseHeight + 0.1f - 0.5f, j, 1.0f),
+                                                         vec4(0.0f, 0.0f, 0.0f, 1.0f),
+                                                         ((i ^ j) & 1) == 0 ? vec4(1.0f, 1.0f, 1.0f ,1.0f) : vec4(0.5f, 0.5f, 0.5f, 1.0f)));
+        }
+    }
+    
+    chessboard->setMeshes(instances.begin(), instances.end());
+    
+    
     out << "Set terrain offset to " << offset << ".";
     broadcast = true;
     

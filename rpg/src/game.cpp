@@ -111,7 +111,7 @@ void CharacterType::addInstance(const CharacterInstance &instance, const float &
         instances[nrInstances++] = draw::StaticMeshInstance(vec4(instance.position.x, instance.position.y + baseHeight + size.y, instance.position.z, 1.0f),
                                                             quatrot(instance.rotation, vec3(0.0f, 1.0f, 0.0f)),
                                                             instance.getColor());
-        instances[nrInstances++] = draw::StaticMeshInstance(vec4(instance.position.x, baseHeight + 0.1f - size.y, instance.position.z, 1.0f),
+        instances[nrInstances++] = draw::StaticMeshInstance(vec4(instance.position.x, baseHeight + 0.15f - size.y, instance.position.z, 1.0f),
                                                             quatrot(instance.rotation, vec3(0.0f, 1.0f, 0.0f)),
                                                             instance.getColor());
     }
@@ -144,6 +144,7 @@ Game::Game(const os::Application *application, const std::string &path) :
     
     renderer->addWorldRenderable(index++, skyBoxMesh);
     renderer->addWorldRenderable(index++, terrain->terrain);
+    renderer->addWorldRenderable(index++, chessboard);
     
     for (std::map<unsigned int, CharacterType *>::const_iterator i = characterTypes.begin(); i != characterTypes.end(); ++i)
     {
@@ -167,7 +168,12 @@ Game::~Game()
     
     delete consoleBackground;
     delete font;
+    delete fontWorld;
     delete fontTexture;
+    
+    delete chessboard;
+    delete chessboardDiffuseTexture;
+    delete chessboardNormalTexture;
     
     delete skyBoxMesh;
     delete skyBoxDiffuseTexture;
@@ -260,30 +266,6 @@ void Game::update(os::Application *application, const float &dt)
         consoleMode = !consoleMode;
     }
     
-    if (application->isKeyPressedOnce('0'))
-    {
-        Message msg(msg::mt::setPlayerCharacter);
-
-        msg << ownPlayerIndex << 0;
-        applyMessage(ownPlayerIndex, msg);
-    }
-    
-    //Direct character selection.
-    if (players.find(ownPlayerIndex) != players.end())
-    {
-        for (int i = 1; i < 10; ++i)
-        {
-            if (application->isKeyPressedOnce('0' + i) &&
-                characters.find(i) != characters.end())
-            {
-                Message msg(msg::mt::setPlayerCharacter);
-    
-                msg << ownPlayerIndex << i;
-                applyMessage(ownPlayerIndex, msg);
-            }
-        }
-    }
-    
     if (consoleMode)
     {
         //Update console input.
@@ -297,6 +279,31 @@ void Game::update(os::Application *application, const float &dt)
     }
     else
     {
+        //Release control of characters.
+        if (application->isKeyPressedOnce('0'))
+        {
+            Message msg(msg::mt::setPlayerCharacter);
+
+            msg << ownPlayerIndex << 0;
+            applyMessage(ownPlayerIndex, msg);
+        }
+        
+        //Direct character selection.
+        if (players.find(ownPlayerIndex) != players.end())
+        {
+            for (int i = 1; i < 10; ++i)
+            {
+                if (application->isKeyPressedOnce('0' + i) &&
+                    characters.find(i) != characters.end())
+                {
+                    Message msg(msg::mt::setPlayerCharacter);
+        
+                    msg << ownPlayerIndex << i;
+                    applyMessage(ownPlayerIndex, msg);
+                }
+            }
+        }
+    
         //Do we control a character?
         unsigned int characterIndex = 0;
         
@@ -443,10 +450,13 @@ void Game::readResources(const std::string &path)
     {
              if (std::string(el->Value()) == "console") readConsoleResources(path, el);
         else if (std::string(el->Value()) == "sky") readSkyResources(path, el);
+        else if (std::string(el->Value()) == "chessboard") readChessboardResources(path, el);
         else if (std::string(el->Value()) == "terrain") terrain = new GameTerrain(path, el);
         else if (std::string(el->Value()) == "charactertype") characterTypes[characterTypes.size()] = new CharacterType(path, el);
         else std::cerr << "Warning: unknown data " << el->Value() << " encountered in XML!" << std::endl;
     }
+    
+    //TODO: Check that all renderables have been created!
 }
 
 void Game::readConsoleResources(const std::string &path, TiXmlElement *el)
@@ -476,6 +486,31 @@ void Game::readConsoleResources(const std::string &path, TiXmlElement *el)
     //Create font to put text inside the world.
     fontWorld = new draw::WorldIconHorde(4096, true);
     fontWorld->setIconTexture(*fontTexture);
+}
+
+void Game::readChessboardResources(const std::string &path, TiXmlElement *el)
+{
+    std::cerr << "Reading chessboard resource..." << std::endl;
+   
+    assert(std::string(el->Value()) == "chessboard");
+    
+    //Create chessboard.
+    std::string diffuseFileName = "";
+    std::string normalFileName = "";
+    nrChessboardSquares = 8;
+    
+    el->QueryIntAttribute("squares", &nrChessboardSquares);
+    el->QueryStringAttribute("diffuse", &diffuseFileName);
+    el->QueryStringAttribute("normal", &normalFileName);
+    
+    nrChessboardSquares = std::max(1, nrChessboardSquares);
+
+    chessboardDiffuseTexture = new draw::RGBTexture2D(diffuseFileName.empty() ? img::Image::createSolidImage() : img::io::readImage(path + diffuseFileName));
+    chessboardNormalTexture = new draw::RGBTexture2D(normalFileName.empty() ? img::Image::createSolidImage() : img::io::readImage(path + normalFileName));
+    
+    chessboard = new draw::StaticMeshHorde(mesh::StaticMesh::createBoxMesh(0.5f, 0.5f, 0.5f), (2*nrChessboardSquares + 1)*(2*nrChessboardSquares + 1));
+    chessboard->setDiffuseTexture(*chessboardDiffuseTexture);
+    chessboard->setNormalTexture(*chessboardNormalTexture);
 }
 
 void Game::readSkyResources(const std::string &path, TiXmlElement *el)

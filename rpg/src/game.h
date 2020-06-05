@@ -130,6 +130,7 @@ class Game
         void readResources(const std::string &);
         void readConsoleResources(const std::string &, TiXmlElement *);
         void readSkyResources(const std::string &, TiXmlElement *);
+        void readChessboardResources(const std::string &, TiXmlElement *);
         void readBulletHordeResources(const std::string &, TiXmlElement *);
         
         void applyConsequences();
@@ -148,6 +149,12 @@ class Game
         tiny::draw::ScreenIconHorde *font;
         tiny::draw::WorldIconHorde *fontWorld;
         tiny::draw::IconTexture2D *fontTexture;
+        
+        //Chessboard.
+        int nrChessboardSquares;
+        tiny::draw::StaticMeshHorde *chessboard;
+        tiny::draw::RGBTexture2D *chessboardDiffuseTexture;
+        tiny::draw::RGBTexture2D *chessboardNormalTexture;
         
         //Sky and atmosphere.
         tiny::draw::StaticMesh *skyBoxMesh;
