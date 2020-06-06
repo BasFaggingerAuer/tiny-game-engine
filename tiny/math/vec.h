@@ -166,6 +166,17 @@ template <typename t> typed3vector<t> max(const typed3vector<t> &a, const typed3
 template <typename t> typed4vector<t> min(const typed4vector<t> &a, const typed4vector<t> &b) {return typed4vector<t>(std::min(a.x, b.x), std::min(a.y, b.y), std::min(a.z, b.z), std::min(a.w, b.w));}
 template <typename t> typed4vector<t> max(const typed4vector<t> &a, const typed4vector<t> &b) {return typed4vector<t>(std::max(a.x, b.x), std::max(a.y, b.y), std::max(a.z, b.z), std::max(a.w, b.w));}
 
+template <typename t> t minComponent(const typed2vector<t> &a) {return (a.x <= a.y ? a.x : a.y);}
+template <typename t> t minComponent(const typed3vector<t> &a) {return (a.x <= a.y ? (a.x <= a.z ? a.x : a.z) : (a.y <= a.z ? a.y : a.z));}
+
+template <typename t> t maxComponent(const typed2vector<t> &a) {return (a.x >= a.y ? a.x : a.y);}
+template <typename t> t maxComponent(const typed3vector<t> &a) {return (a.x >= a.y ? (a.x >= a.z ? a.x : a.z) : (a.y >= a.z ? a.y : a.z));}
+
+template <typename t> t t_abs(const t &a) {return (a < t(0) ? -a : a);}
+template <typename t> typed2vector<t> abs(const typed2vector<t> &a) {return typed2vector<t>(t_abs(a.x), t_abs(a.y));}
+template <typename t> typed3vector<t> abs(const typed3vector<t> &a) {return typed3vector<t>(t_abs(a.x), t_abs(a.y), t_abs(a.z));}
+template <typename t> typed4vector<t> abs(const typed4vector<t> &a) {return typed4vector<t>(t_abs(a.x), t_abs(a.y), t_abs(a.z), t_abs(a.w));}
+
 template <typename t> t clamp(const t &a, const t &b, const t &c) {return (a < b ? b : (a > c ? c : a));}
 
 template <typename t> t dot(const typed2vector<t> &a, const typed2vector<t> &b) {return a.x*b.x + a.y*b.y;}

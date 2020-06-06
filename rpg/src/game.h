@@ -89,12 +89,18 @@ class CharacterType
         std::string name;
         tiny::vec3 size;
         
+        tiny::draw::StaticMeshHorde *shadowHorde;
+        tiny::draw::RGBTexture2D *shadowDiffuseTexture;
+        tiny::draw::RGBTexture2D *shadowNormalTexture;
+        
         tiny::draw::StaticMeshHorde *horde;
         tiny::draw::RGBTexture2D *diffuseTexture;
         tiny::draw::RGBTexture2D *normalTexture;
+        
         int nrInstances;
         int maxNrInstances;
         std::vector<tiny::draw::StaticMeshInstance> instances;
+        std::vector<tiny::draw::StaticMeshInstance> shadowInstances;
 };
 
 class Chessboard
@@ -105,6 +111,7 @@ class Chessboard
         
         void updateInstances(const float &);
         
+        float baseHeight;
         int nrSquares;
         tiny::draw::StaticMeshHorde *horde;
         tiny::draw::RGBTexture2D *diffuseTexture;

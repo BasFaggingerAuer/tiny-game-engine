@@ -47,7 +47,7 @@ Player::~Player()
 
 }
 
-CharacterType::CharacterType(const std::string &, TiXmlElement *el)
+CharacterType::CharacterType(const std::string &path, TiXmlElement *el)
 {
     std::cerr << "Reading character type resource..." << std::endl;
    
@@ -64,7 +64,6 @@ CharacterType::CharacterType(const std::string &, TiXmlElement *el)
     el->QueryFloatAttribute("height", &size.y);
     el->QueryFloatAttribute("depth", &size.z);
     
-    /*
     std::string diffuseFileName = "";
     std::string normalFileName = "";
     std::string meshFileName = "";
@@ -72,22 +71,35 @@ CharacterType::CharacterType(const std::string &, TiXmlElement *el)
     el->QueryStringAttribute("diffuse", &diffuseFileName);
     el->QueryStringAttribute("normal", &normalFileName);
     el->QueryStringAttribute("mesh", &meshFileName);
-    */
     el->QueryIntAttribute("max_instances", &maxNrInstances);
     
     //Read mesh and textures.
-    /*
     diffuseTexture = new draw::RGBTexture2D(diffuseFileName.empty() ? img::Image::createSolidImage() : img::io::readImage(path + diffuseFileName));
-    normalTexture = new draw::RGBTexture2D(normalFileName.empty() ? img::Image::createSolidImage() : img::io::readImage(path + normalFileName));
-    horde = new draw::StaticMeshHorde(mesh::io::readStaticMesh(path + meshFileName), maxNrInstances);
-    */
-    diffuseTexture = new draw::RGBTexture2D(img::Image::createSolidImage());
-    normalTexture = new draw::RGBTexture2D(img::Image::createUpNormalImage());
-    horde = new draw::StaticMeshHorde(mesh::StaticMesh::createBoxMesh(size.x, size.y, size.z), maxNrInstances);
+    normalTexture = new draw::RGBTexture2D(normalFileName.empty() ? img::Image::createUpNormalImage() : img::io::readImage(path + normalFileName));
+    mesh::StaticMesh mesh = (meshFileName.empty() ? mesh::StaticMesh::createBoxMesh(1.0f, 1.0f, 1.0f) : mesh::io::readStaticMesh(path + meshFileName));
     
+    //Center mesh and fit it to size.
+    std::pair<vec3, vec3> boundingBox = mesh.getBoundingBox();
+    const vec3 o = vec3(0.5f*(boundingBox.first.x + boundingBox.second.x), boundingBox.first.y, 0.5f*(boundingBox.first.z + boundingBox.second.z));
+    const float s = minComponent(abs(size)/abs(boundingBox.second - boundingBox.first));
+    
+    for (std::vector<mesh::StaticMeshVertex>::iterator i = mesh.vertices.begin(); i != mesh.vertices.end(); ++i)
+    {
+        i->position = s*(i->position - o);
+    }
+    
+    horde = new draw::StaticMeshHorde(mesh, maxNrInstances);
     horde->setDiffuseTexture(*diffuseTexture);
     horde->setNormalTexture(*normalTexture);
     instances.resize(maxNrInstances);
+    
+    shadowDiffuseTexture = new draw::RGBTexture2D(img::Image::createSolidImage());
+    shadowNormalTexture = new draw::RGBTexture2D(img::Image::createUpNormalImage());
+    
+    shadowHorde = new draw::StaticMeshHorde(mesh::StaticMesh::createBoxMesh(0.45f*size.x, 0.05f, 0.45f*size.z), maxNrInstances);
+    shadowHorde->setDiffuseTexture(*shadowDiffuseTexture);
+    shadowHorde->setNormalTexture(*shadowNormalTexture);
+    shadowInstances.resize(maxNrInstances);
     
     std::cerr << "Added '" << name << "' character type." << std::endl;
 }
@@ -97,6 +109,10 @@ CharacterType::~CharacterType()
     delete horde;
     delete diffuseTexture;
     delete normalTexture;
+    
+    delete shadowHorde;
+    delete shadowDiffuseTexture;
+    delete shadowNormalTexture;
 }
 
 void CharacterType::clearInstances()
@@ -106,20 +122,22 @@ void CharacterType::clearInstances()
 
 void CharacterType::addInstance(const CharacterInstance &instance, const float &baseHeight)
 {
-    if (nrInstances < maxNrInstances - 1)
+    if (nrInstances < maxNrInstances)
     {
-        instances[nrInstances++] = draw::StaticMeshInstance(vec4(instance.position.x, instance.position.y + baseHeight + size.y, instance.position.z, 1.0f),
+        instances[nrInstances] = draw::StaticMeshInstance(vec4(instance.position.x, instance.position.y + baseHeight, instance.position.z, 1.0f),
                                                             quatrot(instance.rotation, vec3(0.0f, 1.0f, 0.0f)),
                                                             instance.getColor());
-        instances[nrInstances++] = draw::StaticMeshInstance(vec4(instance.position.x, baseHeight + 0.15f - size.y, instance.position.z, 1.0f),
-                                                            quatrot(instance.rotation, vec3(0.0f, 1.0f, 0.0f)),
+        shadowInstances[nrInstances] = draw::StaticMeshInstance(vec4(instance.position.x, baseHeight, instance.position.z, 1.0f),
+                                                            vec4(0.0f, 0.0f, 0.0f, 1.0f),
                                                             instance.getColor());
+        ++nrInstances;
     }
 }
 
 void CharacterType::updateInstances()
 {
     horde->setMeshes(instances.begin(), instances.begin() + nrInstances);
+    shadowHorde->setMeshes(shadowInstances.begin(), shadowInstances.begin() + nrInstances);
 }
 
 Chessboard::Chessboard(const std::string &path, TiXmlElement *el)
@@ -132,6 +150,7 @@ Chessboard::Chessboard(const std::string &path, TiXmlElement *el)
     std::string diffuseFileName = "";
     std::string normalFileName = "";
     nrSquares = 8;
+    baseHeight = 0.0f;
     
     el->QueryIntAttribute("squares", &nrSquares);
     el->QueryStringAttribute("diffuse", &diffuseFileName);
@@ -154,15 +173,17 @@ Chessboard::~Chessboard()
     delete normalTexture;
 }
 
-void Chessboard::updateInstances(const float &baseHeight)
+void Chessboard::updateInstances(const float &a_baseHeight)
 {
     std::vector<draw::StaticMeshInstance> instances;
+    
+    baseHeight = a_baseHeight + 0.5f;
     
     for (int i = -nrSquares; i <= nrSquares; ++i)
     {
         for (int j = -nrSquares; j <= nrSquares; ++j)
         {
-            instances.push_back(draw::StaticMeshInstance(vec4(i, baseHeight + 0.1f - 0.5f, j, 1.0f),
+            instances.push_back(draw::StaticMeshInstance(vec4(i, baseHeight - 0.5f, j, 1.0f),
                                                          vec4(0.0f, 0.0f, 0.0f, 1.0f),
                                                          ((i ^ j) & 1) == 0 ? vec4(1.0f, 1.0f, 1.0f ,1.0f) : vec4(0.5f, 0.5f, 0.5f, 1.0f)));
         }
@@ -198,6 +219,7 @@ Game::Game(const os::Application *application, const std::string &path) :
     for (std::map<unsigned int, CharacterType *>::const_iterator i = characterTypes.begin(); i != characterTypes.end(); ++i)
     {
         renderer->addWorldRenderable(index++, i->second->horde);
+        renderer->addWorldRenderable(index++, i->second->shadowHorde);
     }
     
     renderer->addScreenRenderable(index++, skyEffect, false, false);
@@ -274,12 +296,10 @@ void Game::update(os::Application *application, const float &dt)
         i->second->clearInstances();
     }
     
-    const float baseHeight = terrain->getHeight(vec2(0.0f, 0.0f));
-    
     for (std::map<unsigned int, CharacterInstance>::const_iterator i = characters.begin(); i != characters.end(); ++i)
     {
         assert(characterTypes.find(i->second.type) != characterTypes.end());
-        characterTypes[i->second.type]->addInstance(i->second, baseHeight);
+        characterTypes[i->second.type]->addInstance(i->second, chessboard->baseHeight);
     }
     
     for (std::map<unsigned int, CharacterType *>::iterator i = characterTypes.begin(); i != characterTypes.end(); ++i)
@@ -289,7 +309,7 @@ void Game::update(os::Application *application, const float &dt)
     
     //Draw character icons.
     std::vector<draw::WorldIconInstance> iconInstances;
-    const float fontHeightScale = 0.2f/fontTexture->getMaxIconDimensions().y;
+    const float fontHeightScale = 0.15f/fontTexture->getMaxIconDimensions().y;
     
     for (std::map<unsigned int, CharacterInstance>::const_iterator i = characters.begin(); i != characters.end(); ++i)
     {
@@ -298,7 +318,7 @@ void Game::update(os::Application *application, const float &dt)
             const vec4 icon = fontTexture->getIcon(i->second.name[0]);
             
             iconInstances.push_back(draw::WorldIconInstance(
-                vec3(i->second.position.x, i->second.position.y + baseHeight + characterTypes[i->second.type]->size.y, i->second.position.z),
+                vec3(i->second.position.x, i->second.position.y + chessboard->baseHeight + 0.5f*characterTypes[i->second.type]->size.y, i->second.position.z),
                 vec2(fontHeightScale*icon.z, fontHeightScale*icon.w),
                 icon,
                 vec4(1.0f, 1.0f, 1.0f, 1.0f)));
@@ -378,8 +398,8 @@ void Game::update(os::Application *application, const float &dt)
             //We do control a character.
             CharacterInstance &chr = characters[characterIndex];
             
-            if (application->isKeyPressedOnce('w')) chr.position.x = roundf(chr.position.x + 1.0f);
-            if (application->isKeyPressedOnce('s')) chr.position.x = roundf(chr.position.x - 1.0f);
+            if (application->isKeyPressedOnce('s')) chr.position.x = roundf(chr.position.x + 1.0f);
+            if (application->isKeyPressedOnce('w')) chr.position.x = roundf(chr.position.x - 1.0f);
             if (application->isKeyPressedOnce('a')) chr.position.z = roundf(chr.position.z + 1.0f);
             if (application->isKeyPressedOnce('d')) chr.position.z = roundf(chr.position.z - 1.0f);
             if (application->isKeyPressedOnce('q')) chr.position.y = roundf(chr.position.y + 1.0f);

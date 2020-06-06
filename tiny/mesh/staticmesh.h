@@ -66,7 +66,8 @@ class StaticMesh
         static StaticMesh createBoxMesh(const float & = 1.0f, const float & = 1.0f, const float & = 1.0f);
         static StaticMesh createCylinderMesh(const float & = 1.0f, const float & = 1.0f, const int & = 12);
         static StaticMesh createIcosahedronMesh(const float & = 1.0f);
-        float getSize(const vec3 & = vec3(1.0f, 1.0f, 1.0f)) const;
+        float getRadius(const vec3 & = vec3(1.0f, 1.0f, 1.0f)) const;
+        std::pair<vec3, vec3> getBoundingBox(const vec3 & = vec3(1.0f, 1.0f, 1.0f)) const;
         
         std::vector<StaticMeshVertex> vertices;
         std::vector<unsigned int> indices;

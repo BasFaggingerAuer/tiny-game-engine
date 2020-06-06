@@ -95,7 +95,7 @@ Faction::Faction(const std::string &path, TiXmlElement *el)
             if (sl->Attribute("diffuse")) diffuseImage = img::io::readImage(path + std::string(sl->Attribute("diffuse")));
             if (sl->Attribute("normal")) normalImage = img::io::readImage(path + std::string(sl->Attribute("normal")));
             
-            nexusRadius = mesh.getSize(vec3(1.0f, 0.0f, 1.0f));
+            nexusRadius = mesh.getRadius(vec3(1.0f, 0.0f, 1.0f));
             nexusDiffuseTexture = new draw::RGBATexture2D(diffuseImage);
             nexusNormalTexture = new draw::RGBATexture2D(normalImage);
             nexusMesh = new draw::StaticMeshHorde(mesh, 1);
@@ -144,7 +144,7 @@ Faction::Faction(const std::string &path, TiXmlElement *el)
                 throw std::exception();
             }
             
-            towerRadius = mesh.getSize(vec3(1.0f, 0.0f, 1.0f));
+            towerRadius = mesh.getRadius(vec3(1.0f, 0.0f, 1.0f));
             towerDiffuseTexture = new draw::RGBATexture2D(diffuseImage);
             towerNormalTexture = new draw::RGBATexture2D(normalImage);
             towerMeshes = new draw::StaticMeshHorde(mesh, towerPositions.size());

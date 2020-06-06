@@ -1,5 +1,5 @@
 /*
-Copyright 2012, Bas Fagginger Auer.
+Copyright 2020, Bas Fagginger Auer.
 
 This program is free software: you can redistribute it and/or modify
 it under the terms of the GNU General Public License as published by
@@ -15,6 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <algorithm>
+#include <limits>
 
 #include <tiny/mesh/staticmesh.h>
 
@@ -276,7 +277,7 @@ StaticMesh StaticMesh::createIcosahedronMesh(const float &radius)
     return mesh;
 }
 
-float StaticMesh::getSize(const vec3 &scale) const
+float StaticMesh::getRadius(const vec3 &scale) const
 {
     //Determine the size of the mesh, scaling all vertices with a diagonal matrices with diagonal given by the provided vector.
     float radius = 0.0f;
@@ -289,5 +290,22 @@ float StaticMesh::getSize(const vec3 &scale) const
     }
     
     return radius;
+}
+
+std::pair<vec3, vec3> StaticMesh::getBoundingBox(const vec3 &scale) const
+{
+    //Determine bounding box upper and lower bound, scaling all vertices by the provided vector.
+    vec3 lo = vec3(std::numeric_limits<float>::max());
+    vec3 hi = vec3(std::numeric_limits<float>::min());
+    
+    for (std::vector<StaticMeshVertex>::const_iterator i = vertices.begin(); i != vertices.end(); ++i)
+    {
+        const vec3 v = scale*i->position;
+        
+        lo = min(lo, v);
+        hi = max(hi, v);
+    }
+    
+    return std::make_pair(lo, hi);
 }
 

@@ -32,9 +32,9 @@ class Image
         Image(const size_t &, const size_t &);
         ~Image();
         
-        static Image createSolidImage(const size_t & = 64, const unsigned char & = 255, const unsigned char & = 255, const unsigned char & = 255, const unsigned char & = 255);
+        static Image createSolidImage(const size_t & = 4, const unsigned char & = 255, const unsigned char & = 255, const unsigned char & = 255, const unsigned char & = 255);
         static Image createTestImage(const size_t & = 64);
-        static Image createUpNormalImage(const size_t & = 64);
+        static Image createUpNormalImage(const size_t & = 4);
         
         size_t width, height;
         std::vector<unsigned char> data;
