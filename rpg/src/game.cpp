@@ -79,9 +79,23 @@ CharacterType::CharacterType(const std::string &path, TiXmlElement *el)
     mesh::StaticMesh mesh = (meshFileName.empty() ? mesh::StaticMesh::createBoxMesh(1.0f, 1.0f, 1.0f) : mesh::io::readStaticMesh(path + meshFileName));
     
     //Center mesh and fit it to size.
-    std::pair<vec3, vec3> boundingBox = mesh.getBoundingBox();
-    const vec3 o = vec3(0.5f*(boundingBox.first.x + boundingBox.second.x), boundingBox.first.y, 0.5f*(boundingBox.first.z + boundingBox.second.z));
-    const float s = minComponent(abs(size)/abs(boundingBox.second - boundingBox.first));
+    const std::pair<vec3, vec3> boundingBox = mesh.getBoundingBox();
+    
+    //Extract bottom 12.5% of the mesh to use for centering and scaling.
+    mesh::StaticMesh lowerMesh;
+    const float lowerY = boundingBox.first.y + (boundingBox.second.y - boundingBox.first.y)/8.0f;
+    
+    for (auto i = mesh.vertices.cbegin(); i != mesh.vertices.cend(); ++i)
+    {
+        if (i->position.y <= lowerY)
+        {
+            lowerMesh.vertices.push_back(*i);
+        }
+    }
+    
+    const std::pair<vec3, vec3> lowerBoundingBox = lowerMesh.getBoundingBox();
+    const vec3 o = vec3(0.5f*(lowerBoundingBox.first.x + lowerBoundingBox.second.x), lowerBoundingBox.first.y, 0.5f*(lowerBoundingBox.first.z + lowerBoundingBox.second.z));
+    const float s = minComponent(abs(size.xz() - 0.1f)/abs(lowerBoundingBox.second.xz() - lowerBoundingBox.first.xz()));
     
     for (std::vector<mesh::StaticMeshVertex>::iterator i = mesh.vertices.begin(); i != mesh.vertices.end(); ++i)
     {
@@ -96,7 +110,7 @@ CharacterType::CharacterType(const std::string &path, TiXmlElement *el)
     shadowDiffuseTexture = new draw::RGBTexture2D(img::Image::createSolidImage());
     shadowNormalTexture = new draw::RGBTexture2D(img::Image::createUpNormalImage());
     
-    shadowHorde = new draw::StaticMeshHorde(mesh::StaticMesh::createBoxMesh(0.45f*size.x, 0.05f, 0.45f*size.z), maxNrInstances);
+    shadowHorde = new draw::StaticMeshHorde(mesh::StaticMesh::createBoxMesh(0.5f*size.x - 0.05f, 0.05f, 0.5f*size.z - 0.05f), maxNrInstances);
     shadowHorde->setDiffuseTexture(*shadowDiffuseTexture);
     shadowHorde->setNormalTexture(*shadowNormalTexture);
     shadowInstances.resize(maxNrInstances);
@@ -125,7 +139,7 @@ void CharacterType::addInstance(const CharacterInstance &instance, const float &
     if (nrInstances < maxNrInstances)
     {
         instances[nrInstances] = draw::StaticMeshInstance(vec4(instance.position.x, instance.position.y + baseHeight, instance.position.z, 1.0f),
-                                                            quatrot(instance.rotation, vec3(0.0f, 1.0f, 0.0f)),
+                                                            quatrot((M_PI/180.0f)*instance.rotation, vec3(0.0f, 1.0f, 0.0f)),
                                                             instance.getColor());
         shadowInstances[nrInstances] = draw::StaticMeshInstance(vec4(instance.position.x, baseHeight, instance.position.z, 1.0f),
                                                             vec4(0.0f, 0.0f, 0.0f, 1.0f),
@@ -404,8 +418,8 @@ void Game::update(os::Application *application, const float &dt)
             if (application->isKeyPressedOnce('d')) chr.position.z = roundf(chr.position.z - 1.0f);
             if (application->isKeyPressedOnce('q')) chr.position.y = roundf(chr.position.y + 1.0f);
             if (application->isKeyPressedOnce('e')) chr.position.y = std::max(0.0f, roundf(chr.position.y - 1.0f));
-            if (application->isKeyPressedOnce('j')) chr.rotation += 2.0f*M_PI/8.0f;
-            if (application->isKeyPressedOnce('l')) chr.rotation -= 2.0f*M_PI/8.0f;
+            if (application->isKeyPressedOnce('j')) chr.rotation += 90.0f;
+            if (application->isKeyPressedOnce('l')) chr.rotation -= 90.0f;
             
             //Is this a network game?
             if (host || client)
@@ -472,17 +486,13 @@ void Game::clear()
     soundSources.clear();
     lastSoundSourceIndex = 1;
     
-    //Remove all characters.
-    characters.clear();
+    //Reset all characters.
     lastCharacterIndex = 0;
     
-    //And add default characters.
-    characters[++lastCharacterIndex] = CharacterInstance(0, "Tollie", 0.00f, vec3(0.0f, 0.0f, -1.0f));
-    characters[++lastCharacterIndex] = CharacterInstance(0, "Rodan", 0.15f, vec3(-2.0f, 0.0f, -1.0f));
-    characters[++lastCharacterIndex] = CharacterInstance(0, "Augustus", 0.30f, vec3(-1.0f, 0.0f, 0.0f));
-    characters[++lastCharacterIndex] = CharacterInstance(0, "Sven", 0.45f, vec3(0.0f, 0.0f, 1.0f));
-    characters[++lastCharacterIndex] = CharacterInstance(0, "Julius", 0.60f, vec3(0.0f, 0.0f, 0.0f));
-    characters[++lastCharacterIndex] = CharacterInstance(0, "Laertes", 0.75f, vec3(-2.0f, 0.0f, 1.0f));
+    for (auto i = baseCharacters.cbegin(); i != baseCharacters.end(); ++i)
+    {
+        characters[++lastCharacterIndex] = *i;
+    }
     
     //Reset camera.
     cameraPosition = vec3(0.0f, 0.0f, 0.0f);
@@ -531,6 +541,7 @@ void Game::readResources(const std::string &path)
         else if (std::string(el->Value()) == "chessboard") chessboard = new Chessboard(path, el);
         else if (std::string(el->Value()) == "terrain") terrain = new GameTerrain(path, el);
         else if (std::string(el->Value()) == "charactertype") characterTypes[characterTypes.size()] = new CharacterType(path, el);
+        else if (std::string(el->Value()) == "character") readCharacterResources(el);
         else std::cerr << "Warning: unknown data " << el->Value() << " encountered in XML!" << std::endl;
     }
     
@@ -542,6 +553,49 @@ void Game::readResources(const std::string &path)
     }
     
     chessboard->updateInstances(terrain->getHeight(vec2(0.0f, 0.0f)));
+}
+
+void Game::readCharacterResources(TiXmlElement *el)
+{
+    std::cerr << "Reading character resources..." << std::endl;
+    
+    assert(std::string(el->Value()) == "character");
+    
+    std::string name = "";
+    std::string type = "";
+    float x = 0.0f;
+    float y = 0.0f;
+    float z = 0.0f;
+    float r = 0.0f;
+    float c = 0.0f;
+    
+    el->QueryStringAttribute("name", &name);
+    el->QueryStringAttribute("type", &type);
+    el->QueryFloatAttribute("x", &x);
+    el->QueryFloatAttribute("y", &y);
+    el->QueryFloatAttribute("z", &z);
+    el->QueryFloatAttribute("r", &r);
+    el->QueryFloatAttribute("c", &c);
+    
+    unsigned int typeIndex = 0;
+    bool typeFound = false;
+    
+    for (auto i = characterTypes.cbegin(); i != characterTypes.cend() && !typeFound; ++i)
+    {
+        if (i->second->name == type)
+        {
+            typeFound = true;
+            typeIndex = i->first;
+        }
+    }
+    
+    if (!typeFound)
+    {
+        std::cerr << "Unable to find character type '" << type << "' for character '" << name << "'!" << std::endl;
+        throw std::exception();
+    }
+    
+    baseCharacters.push_back(CharacterInstance(typeIndex, name, vec3(x, y, z), r, c));
 }
 
 void Game::readConsoleResources(const std::string &path, TiXmlElement *el)

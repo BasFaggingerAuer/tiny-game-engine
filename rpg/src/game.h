@@ -51,11 +51,11 @@ class Player
 
 struct CharacterInstance
 {
-    CharacterInstance(const unsigned int &a_type = 0, const std::string &a_name = "", const float &a_color = 0.0f, const tiny::vec3 &a_position = tiny::vec3(0.0f)) :
+    CharacterInstance(const unsigned int &a_type = 0, const std::string &a_name = "", const tiny::vec3 &a_position = tiny::vec3(0.0f), const float &a_rotation = 0.0f, const float &a_color = 0.0f) :
         type(a_type),
         name(a_name),
         position(a_position),
-        rotation(0.0f),
+        rotation(a_rotation),
         color(a_color)
     {
     
@@ -63,10 +63,11 @@ struct CharacterInstance
     
     tiny::vec4 getColor() const
     {
-        return tiny::vec4(0.5f*(1.0f + cosf(2.0f*M_PI*(color + 0.0f/3.0f))),
-                          0.5f*(1.0f + cosf(2.0f*M_PI*(color + 1.0f/3.0f))),
-                          0.5f*(1.0f + cosf(2.0f*M_PI*(color + 2.0f/3.0f))),
-                          1.0f);
+        return (color >= 0.0f ? tiny::vec4(0.5f*(1.0f + cosf(2.0f*M_PI*(color + 0.0f/3.0f))),
+                                0.5f*(1.0f + cosf(2.0f*M_PI*(color + 1.0f/3.0f))),
+                                0.5f*(1.0f + cosf(2.0f*M_PI*(color + 2.0f/3.0f))),
+                                1.0f) :
+                                tiny::vec4(-color, -color, -color, 1.0f));
     }
     
     unsigned int type;
@@ -149,6 +150,7 @@ class Game
         bool msgPlayerSpawnRequest(const unsigned int &, std::ostream &, bool &, const unsigned int &);
         
         void readResources(const std::string &);
+        void readCharacterResources(TiXmlElement *);
         void readConsoleResources(const std::string &, TiXmlElement *);
         void readSkyResources(const std::string &, TiXmlElement *);
         void readChessboardResources(const std::string &, TiXmlElement *);
@@ -191,6 +193,7 @@ class Game
         //Characters.
         std::map<unsigned int, CharacterType *> characterTypes;
         std::map<unsigned int, CharacterInstance> characters;
+        std::list<CharacterInstance> baseCharacters;
         unsigned int lastCharacterIndex;
 
         //Networking.

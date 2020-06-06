@@ -213,13 +213,11 @@ bool Game::msgAddCharacter(const unsigned int &, std::ostream &out, bool &broadc
         return false;
     }
     
-    CharacterInstance character(characterTypeIndex);
+    CharacterInstance character(characterTypeIndex, "", vec3(0.0f), 0.0f, color);
     const CharacterType *characterType = characterTypes[characterTypeIndex];
     
-    character.position = vec3(0.0f);
-    character.color = color;
-    
     characters[characterIndex] = character;
+    
     if (lastCharacterIndex < characterIndex) lastCharacterIndex = characterIndex;
     
     out << "Added character with index " << characterIndex << " of type '" << characterType->name << "' (" << characterTypeIndex << ").";

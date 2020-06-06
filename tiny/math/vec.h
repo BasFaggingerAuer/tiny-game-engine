@@ -88,6 +88,8 @@ template <typename t> class typed3vector
         inline t dot(const typed3vector<t> &a) const {return x*a.x + y*a.y + z*a.z;};
         
         inline typed2vector<t> xy() const {return typed2vector<t>(x, y);};
+        inline typed2vector<t> xz() const {return typed2vector<t>(x, z);};
+        inline typed2vector<t> yz() const {return typed2vector<t>(y, z);};
         
         friend std::ostream & operator << (std::ostream &Out, const typed3vector<t> &a) {Out << "(" << a.x << ", " << a.y << ", " << a.z << ")"; return Out;};
         
