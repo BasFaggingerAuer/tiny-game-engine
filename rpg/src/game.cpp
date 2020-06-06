@@ -386,6 +386,17 @@ void Game::update(os::Application *application, const float &dt)
             if (application->isKeyPressedOnce('e')) chr.position.y = std::max(0.0f, roundf(chr.position.y - 1.0f));
             if (application->isKeyPressedOnce('j')) chr.rotation += 2.0f*M_PI/8.0f;
             if (application->isKeyPressedOnce('l')) chr.rotation -= 2.0f*M_PI/8.0f;
+            
+            //Is this a network game?
+            if (host || client)
+            {
+                Message msg(msg::mt::updateCharacter);
+                
+                msg << characterIndex << chr.position << chr.rotation << chr.color;
+                
+                if (client) client->sendMessage(msg);
+                if (host) host->sendMessage(msg);
+            }
         }
         
         //Update the terrain with respect to the camera.
