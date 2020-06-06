@@ -122,6 +122,55 @@ void CharacterType::updateInstances()
     horde->setMeshes(instances.begin(), instances.begin() + nrInstances);
 }
 
+Chessboard::Chessboard(const std::string &path, TiXmlElement *el)
+{
+    std::cerr << "Reading chessboard resource..." << std::endl;
+   
+    assert(std::string(el->Value()) == "chessboard");
+    
+    //Create chessboard.
+    std::string diffuseFileName = "";
+    std::string normalFileName = "";
+    nrSquares = 8;
+    
+    el->QueryIntAttribute("squares", &nrSquares);
+    el->QueryStringAttribute("diffuse", &diffuseFileName);
+    el->QueryStringAttribute("normal", &normalFileName);
+    
+    nrSquares = std::max(1, nrSquares);
+
+    diffuseTexture = new draw::RGBTexture2D(diffuseFileName.empty() ? img::Image::createSolidImage() : img::io::readImage(path + diffuseFileName));
+    normalTexture = new draw::RGBTexture2D(normalFileName.empty() ? img::Image::createSolidImage() : img::io::readImage(path + normalFileName));
+    
+    horde = new draw::StaticMeshHorde(mesh::StaticMesh::createBoxMesh(0.5f, 0.5f, 0.5f), (2*nrSquares + 1)*(2*nrSquares + 1));
+    horde->setDiffuseTexture(*diffuseTexture);
+    horde->setNormalTexture(*normalTexture);
+}
+
+Chessboard::~Chessboard()
+{
+    delete horde;
+    delete diffuseTexture;
+    delete normalTexture;
+}
+
+void Chessboard::updateInstances(const float &baseHeight)
+{
+    std::vector<draw::StaticMeshInstance> instances;
+    
+    for (int i = -nrSquares; i <= nrSquares; ++i)
+    {
+        for (int j = -nrSquares; j <= nrSquares; ++j)
+        {
+            instances.push_back(draw::StaticMeshInstance(vec4(i, baseHeight + 0.1f - 0.5f, j, 1.0f),
+                                                         vec4(0.0f, 0.0f, 0.0f, 1.0f),
+                                                         ((i ^ j) & 1) == 0 ? vec4(1.0f, 1.0f, 1.0f ,1.0f) : vec4(0.5f, 0.5f, 0.5f, 1.0f)));
+        }
+    }
+    
+    horde->setMeshes(instances.begin(), instances.end());
+}
+
 Game::Game(const os::Application *application, const std::string &path) :
     aspectRatio(static_cast<double>(application->getScreenWidth())/static_cast<double>(application->getScreenHeight())),
     mouseSensitivity(48.0),
@@ -144,7 +193,7 @@ Game::Game(const os::Application *application, const std::string &path) :
     
     renderer->addWorldRenderable(index++, skyBoxMesh);
     renderer->addWorldRenderable(index++, terrain->terrain);
-    renderer->addWorldRenderable(index++, chessboard);
+    renderer->addWorldRenderable(index++, chessboard->horde);
     
     for (std::map<unsigned int, CharacterType *>::const_iterator i = characterTypes.begin(); i != characterTypes.end(); ++i)
     {
@@ -172,8 +221,6 @@ Game::~Game()
     delete fontTexture;
     
     delete chessboard;
-    delete chessboardDiffuseTexture;
-    delete chessboardNormalTexture;
     
     delete skyBoxMesh;
     delete skyBoxDiffuseTexture;
@@ -450,13 +497,20 @@ void Game::readResources(const std::string &path)
     {
              if (std::string(el->Value()) == "console") readConsoleResources(path, el);
         else if (std::string(el->Value()) == "sky") readSkyResources(path, el);
-        else if (std::string(el->Value()) == "chessboard") readChessboardResources(path, el);
+        else if (std::string(el->Value()) == "chessboard") chessboard = new Chessboard(path, el);
         else if (std::string(el->Value()) == "terrain") terrain = new GameTerrain(path, el);
         else if (std::string(el->Value()) == "charactertype") characterTypes[characterTypes.size()] = new CharacterType(path, el);
         else std::cerr << "Warning: unknown data " << el->Value() << " encountered in XML!" << std::endl;
     }
     
-    //TODO: Check that all renderables have been created!
+    //Check that all renderables have been created.
+    if (!font || !chessboard || !skyEffect || !terrain)
+    {
+        std::cerr << "Error: Not all resources were initialized (incomplete XML?)!" << std::endl;
+        throw std::exception();
+    }
+    
+    chessboard->updateInstances(terrain->getHeight(vec2(0.0f, 0.0f)));
 }
 
 void Game::readConsoleResources(const std::string &path, TiXmlElement *el)
@@ -486,31 +540,6 @@ void Game::readConsoleResources(const std::string &path, TiXmlElement *el)
     //Create font to put text inside the world.
     fontWorld = new draw::WorldIconHorde(4096, true);
     fontWorld->setIconTexture(*fontTexture);
-}
-
-void Game::readChessboardResources(const std::string &path, TiXmlElement *el)
-{
-    std::cerr << "Reading chessboard resource..." << std::endl;
-   
-    assert(std::string(el->Value()) == "chessboard");
-    
-    //Create chessboard.
-    std::string diffuseFileName = "";
-    std::string normalFileName = "";
-    nrChessboardSquares = 8;
-    
-    el->QueryIntAttribute("squares", &nrChessboardSquares);
-    el->QueryStringAttribute("diffuse", &diffuseFileName);
-    el->QueryStringAttribute("normal", &normalFileName);
-    
-    nrChessboardSquares = std::max(1, nrChessboardSquares);
-
-    chessboardDiffuseTexture = new draw::RGBTexture2D(diffuseFileName.empty() ? img::Image::createSolidImage() : img::io::readImage(path + diffuseFileName));
-    chessboardNormalTexture = new draw::RGBTexture2D(normalFileName.empty() ? img::Image::createSolidImage() : img::io::readImage(path + normalFileName));
-    
-    chessboard = new draw::StaticMeshHorde(mesh::StaticMesh::createBoxMesh(0.5f, 0.5f, 0.5f), (2*nrChessboardSquares + 1)*(2*nrChessboardSquares + 1));
-    chessboard->setDiffuseTexture(*chessboardDiffuseTexture);
-    chessboard->setNormalTexture(*chessboardNormalTexture);
 }
 
 void Game::readSkyResources(const std::string &path, TiXmlElement *el)

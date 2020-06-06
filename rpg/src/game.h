@@ -97,6 +97,20 @@ class CharacterType
         std::vector<tiny::draw::StaticMeshInstance> instances;
 };
 
+class Chessboard
+{
+    public:
+        Chessboard(const std::string &, TiXmlElement *);
+        ~Chessboard();
+        
+        void updateInstances(const float &);
+        
+        int nrSquares;
+        tiny::draw::StaticMeshHorde *horde;
+        tiny::draw::RGBTexture2D *diffuseTexture;
+        tiny::draw::RGBTexture2D *normalTexture;
+};
+
 class Game
 {
     public:
@@ -151,10 +165,7 @@ class Game
         tiny::draw::IconTexture2D *fontTexture;
         
         //Chessboard.
-        int nrChessboardSquares;
-        tiny::draw::StaticMeshHorde *chessboard;
-        tiny::draw::RGBTexture2D *chessboardDiffuseTexture;
-        tiny::draw::RGBTexture2D *chessboardNormalTexture;
+        Chessboard *chessboard;
         
         //Sky and atmosphere.
         tiny::draw::StaticMesh *skyBoxMesh;
