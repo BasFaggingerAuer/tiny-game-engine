@@ -285,11 +285,18 @@ void Game::updateConsole() const
         //Put characters in a string.
         std::stringstream strm;
         
+        unsigned int characterIndex = 0;
+        
+        if (players.find(ownPlayerIndex) != players.end())
+        {
+            characterIndex = players.at(ownPlayerIndex).characterIndex;
+        }
+        
         for (auto i = characters.begin(); i != characters.end(); ++i)
         {
             const vec4 c = i->second.getColor();
             
-            strm << "\\#fff" << i->first << " (" << std::dec << std::setprecision(0) << std::fixed << 5.0f*i->second.position.x << ", " << 5.0f*i->second.position.y << ", " << 5.0f*i->second.position.z << "): \\#" << std::hex << std::min(15, static_cast<int>(16.0f*c.x)) << std::min(15, static_cast<int>(16.0f*c.y)) << std::min(15, static_cast<int>(16.0f*c.z)) << i->second.name << std::endl;
+            strm << "\\#fff" << i->first << (i->first == characterIndex ? "*(" : " (") << std::dec << std::setprecision(0) << std::fixed << 5.0f*i->second.position.x << ", " << 5.0f*i->second.position.y << ", " << 5.0f*i->second.position.z << "): \\#" << std::hex << std::min(15, static_cast<int>(16.0f*c.x)) << std::min(15, static_cast<int>(16.0f*c.y)) << std::min(15, static_cast<int>(16.0f*c.z)) << i->second.name << std::endl;
         }
         
         font->setText(-1.0, -1.0, 0.075, aspectRatio, strm.str(), *fontTexture);
@@ -382,6 +389,23 @@ void Game::update(os::Application *application, const float &dt)
                     msg << ownPlayerIndex << i;
                     applyMessage(ownPlayerIndex, msg);
                 }
+            }
+            
+            if (application->isKeyPressedOnce('z') &&
+                players[ownPlayerIndex].characterIndex > 1)
+            {
+                Message msg(msg::mt::setPlayerCharacter);
+    
+                msg << ownPlayerIndex << players[ownPlayerIndex].characterIndex - 1;
+                applyMessage(ownPlayerIndex, msg);
+            }
+            
+            if (application->isKeyPressedOnce('c'))
+            {
+                Message msg(msg::mt::setPlayerCharacter);
+    
+                msg << ownPlayerIndex << players[ownPlayerIndex].characterIndex + 1;
+                applyMessage(ownPlayerIndex, msg);
             }
         }
     
