@@ -167,6 +167,7 @@ Chessboard::Chessboard(const std::string &path, TiXmlElement *el)
     std::string normalFileName = "";
     nrSquares = 8;
     baseHeight = 0.0f;
+    extraBlocks.clear();
     
     el->QueryIntAttribute("squares", &nrSquares);
     el->QueryStringAttribute("diffuse", &diffuseFileName);
@@ -177,7 +178,7 @@ Chessboard::Chessboard(const std::string &path, TiXmlElement *el)
     diffuseTexture = new draw::RGBTexture2D(diffuseFileName.empty() ? img::Image::createSolidImage() : img::io::readImage(path + diffuseFileName));
     normalTexture = new draw::RGBTexture2D(normalFileName.empty() ? img::Image::createSolidImage() : img::io::readImage(path + normalFileName));
     
-    horde = new draw::StaticMeshHorde(mesh::StaticMesh::createBoxMesh(0.5f, 0.5f, 0.5f), (2*nrSquares + 1)*(2*nrSquares + 1));
+    horde = new draw::StaticMeshHorde(mesh::StaticMesh::createBoxMesh(0.5f, 0.5f, 0.5f), (2*nrSquares + 1)*(2*nrSquares + 1) + 1024);
     horde->setDiffuseTexture(*diffuseTexture);
     horde->setNormalTexture(*normalTexture);
 }
@@ -203,6 +204,13 @@ void Chessboard::updateInstances(const float &a_baseHeight)
                                                          vec4(0.0f, 0.0f, 0.0f, 1.0f),
                                                          ((i ^ j) & 1) == 0 ? vec4(1.0f, 1.0f, 1.0f ,1.0f) : vec4(0.5f, 0.5f, 0.5f, 1.0f)));
         }
+    }
+    
+    for (std::list<ivec3>::const_iterator i = extraBlocks.begin(); i != extraBlocks.end(); ++i)
+    {
+        instances.push_back(draw::StaticMeshInstance(vec4(i->x, baseHeight - 0.5f + i->y, i->z, 1.0f),
+                                                     vec4(0.0f, 0.0f, 0.0f, 1.0f),
+                                                     vec4(0.75f, 0.75f, 0.75f, 1.0f)));
     }
     
     horde->setMeshes(instances.begin(), instances.end());
@@ -424,6 +432,30 @@ void Game::update(os::Application *application, const float &dt)
                 assert(characterIndex == 0);
                 characterIndex = 0;
             }
+        }
+        
+        //Create/delete blocks?
+        if (application->isKeyPressedOnce(' '))
+        {
+            const ivec3 p(round(cameraPosition.x), round(cameraPosition.y - chessboard->baseHeight), round(cameraPosition.z));
+            bool found = false;
+            
+            for (std::list<ivec3>::iterator i = chessboard->extraBlocks.begin(); i != chessboard->extraBlocks.end(); ++i)
+            {
+                if (*i == p)
+                {
+                    found = true;
+                    chessboard->extraBlocks.erase(i);
+                    break;
+                }
+            }
+            
+            if (!found)
+            {
+                chessboard->extraBlocks.push_back(p);
+            }
+            
+            chessboard->updateInstances(chessboard->baseHeight - 0.5f);
         }
         
         if (characterIndex == 0)

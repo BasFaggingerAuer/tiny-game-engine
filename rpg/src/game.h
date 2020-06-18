@@ -114,6 +114,7 @@ class Chessboard
         
         float baseHeight;
         int nrSquares;
+        std::list<tiny::ivec3> extraBlocks;
         tiny::draw::StaticMeshHorde *horde;
         tiny::draw::RGBTexture2D *diffuseTexture;
         tiny::draw::RGBTexture2D *normalTexture;

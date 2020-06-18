@@ -13,11 +13,12 @@
     <charactertype name="HumanMage" width="1.0" depth="1.0" height="2.0" mesh="rpg/archmage.dae" max_instances="1024" />
     <charactertype name="HumanPaladin" width="1.0" depth="1.0" height="2.0" mesh="rpg/paladin.dae" max_instances="1024" />
     <charactertype name="HumanViking" width="1.0" depth="1.0" height="2.0" mesh="rpg/viking.dae" max_instances="1024" />
-    <charactertype name="HumanSpear" width="1.0" depth="1.0" height="2.0" mesh="rpg/spearman.dae" max_instances="1024" />
+    <charactertype name="HumanSpear" width="1.0" depth="1.0" height="2.0" mesh="rpg/spartan.dae" max_instances="1024" />
+    <charactertype name="HumanSpear2" width="1.0" depth="1.0" height="2.0" mesh="rpg/spearman.dae" max_instances="1024" />
     <charactertype name="Dwarf" width="1.0" depth="1.0" height="2.0" mesh="rpg/dwarf.dae" max_instances="1024" />
     <charactertype name="KrakenTentacle" width="3.0" depth="3.0" height="6.0" mesh="rpg/tentacle.dae" max_instances="1024" />
     <charactertype name="Kraken" width="9.0" depth="9.0" height="9.0" mesh="rpg/kraken.dae" max_instances="1024" />
-    <charactertype name="Shark" width="1.0" depth="3.0" height="1.0" scale_height="1.0" mesh="rpg/shark.dae" max_instances="1024" />
+    <charactertype name="Shark" width="3.0" depth="9.0" height="1.0" scale_height="1.0" mesh="rpg/shark.dae" max_instances="1024" />
     <charactertype name="Merman" width="1.0" depth="1.0" height="2.0" mesh="rpg/merman.dae" max_instances="1024" />
     <character name="Laertes" type="HumanRanger" x="-1.0" z="0.0" r="0.0" c="0.75" />
     <character name="Rodan" type="HumanMage" x="0.0" z="0.0" r="0.0" c="0.15" />
@@ -25,9 +26,7 @@
     <character name="Julius" type="HumanPaladin" x="-1.0" z="1.0" r="0.0" c="0.45" />
     <character name="Sven" type="HumanViking" x="0.0" z="1.0" r="0.0" c="0.00" />
     <character name="Augustus" type="HumanSpear" x="1.0" z="0.0" r="0.0" c="0.60" />
-    <character name="Tentacle" type="KrakenTentacle" x="-6.0" z="10.0" r="180.0" c="-0.7" />
-    <character name="Tentacle" type="KrakenTentacle" x="6.0" z="10.0" r="180.0" c="-0.7" />
-    <character name="Kraken" type="Kraken" x="0.0" z="16.0" r="180.0" c="-0.7" />
+    <character name="Erik" type="HumanSpear2" x="-2.0" z="0.0" r="0.0" c="-0.9" />
+    <character name="Anax" type="HumanSpear2" x="2.0" z="0.0" r="0.0" c="-0.9" />
     <character name="Shark" type="Shark" x="0.0" z="4.0" r="180.0" c="-0.7" />
-    <character name="Merman" type="Merman" x="4.0" z="4.0" r="180.0" c="-0.7" />
 </rpg>
