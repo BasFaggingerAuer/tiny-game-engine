@@ -112,8 +112,8 @@ Image Image::createUpNormalImage(const size_t &size)
     {
         for (size_t j = 0; j < size; ++j)
         {
-            *data++ = 0;
-            *data++ = 0;
+            *data++ = 128;
+            *data++ = 128;
             *data++ = 255;
             *data++ = 255;
         }

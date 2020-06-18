@@ -55,6 +55,7 @@ CharacterType::CharacterType(const std::string &path, TiXmlElement *el)
     
     name = "";
     size = vec3(1.0f);
+    float scaleHeight = 0.125f;
     
     nrInstances = 0;
     maxNrInstances = 1;
@@ -63,6 +64,7 @@ CharacterType::CharacterType(const std::string &path, TiXmlElement *el)
     el->QueryFloatAttribute("width", &size.x);
     el->QueryFloatAttribute("height", &size.y);
     el->QueryFloatAttribute("depth", &size.z);
+    el->QueryFloatAttribute("scale_height", &scaleHeight);
     
     std::string diffuseFileName = "";
     std::string normalFileName = "";
@@ -83,7 +85,7 @@ CharacterType::CharacterType(const std::string &path, TiXmlElement *el)
     
     //Extract bottom 12.5% of the mesh to use for centering and scaling.
     mesh::StaticMesh lowerMesh;
-    const float lowerY = boundingBox.first.y + (boundingBox.second.y - boundingBox.first.y)/8.0f;
+    const float lowerY = boundingBox.first.y + (boundingBox.second.y - boundingBox.first.y)*scaleHeight;
     
     for (auto i = mesh.vertices.cbegin(); i != mesh.vertices.cend(); ++i)
     {
