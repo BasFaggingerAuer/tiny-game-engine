@@ -39,7 +39,7 @@ template <typename t> class typed2vector
 {
     public:
         inline typed2vector() : x(0), y(0) {};
-        inline typed2vector(const t &a) : x(a), y(a) {};
+        explicit inline typed2vector(const t &a) : x(a), y(a) {};
         inline typed2vector(const t &_x, const t &_y) : x(_x), y(_y) {};
         inline typed2vector(const typed2vector<t> &a) : x(a.x), y(a.y) {};
         inline ~typed2vector() {};
@@ -68,7 +68,7 @@ template <typename t> class typed3vector
 {
     public:
         inline typed3vector() : x(0), y(0), z(0) {};
-        inline typed3vector(const t &a) : x(a), y(a), z(a) {};
+        explicit inline typed3vector(const t &a) : x(a), y(a), z(a) {};
         inline typed3vector(const t &_x, const t &_y, const t &_z) : x(_x), y(_y), z(_z) {};
         inline typed3vector(const typed2vector<t> &a, const t &_z) : x(a.x), y(a.y), z(_z) {};
         inline typed3vector(const typed3vector<t> &a) : x(a.x), y(a.y), z(a.z) {};
@@ -100,7 +100,7 @@ template <typename t> class typed4vector
 {
     public:
         inline typed4vector() : x(0), y(0), z(0), w(0) {};
-        inline typed4vector(const t &a) : x(a), y(a), z(a), w(a) {};
+        explicit inline typed4vector(const t &a) : x(a), y(a), z(a), w(a) {};
         inline typed4vector(const t &_x, const t &_y, const t &_z, const t &_w) : x(_x), y(_y), z(_z), w(_w) {};
         inline typed4vector(const typed2vector<t> &a, const t &_z, const t &_w) : x(a.x), y(a.y), z(_z), w(_w) {};
         inline typed4vector(const typed3vector<t> &a, const t &_w) : x(a.x), y(a.y), z(a.z), w(_w) {};
@@ -228,11 +228,155 @@ inline ivec3 vceil(const vec3 &a) {return ivec3(static_cast<int>(ceil(a.x)), sta
 inline ivec4 vfloor(const vec4 &a) {return ivec4(static_cast<int>(floor(a.x)), static_cast<int>(floor(a.y)), static_cast<int>(floor(a.z)), static_cast<int>(floor(a.w)));}
 inline ivec4 vceil(const vec4 &a) {return ivec4(static_cast<int>(ceil(a.x)), static_cast<int>(ceil(a.y)), static_cast<int>(ceil(a.z)), static_cast<int>(ceil(a.w)));}
 
+class mat2
+{
+    public:
+        inline mat2() {};
+        explicit inline mat2(const float &a) :
+            v00(a), v10(a),
+            v01(a), v11(a)
+        {};
+        inline mat2(const mat2 &a) :
+            v00(a.v00), v10(a.v10),
+            v01(a.v01), v11(a.v11)
+        {};
+        inline mat2(const float &_v00, const float &_v10,
+                const float &_v01, const float &_v11) :
+            v00(_v00), v10(_v10),
+            v01(_v01), v11(_v11)
+        {};
+        
+        explicit inline mat2(const vec2 &x, const vec2 &y) :
+            v00(x.x), v10(x.y),
+            v01(y.x), v11(y.y)
+        {};
+        
+        inline ~mat2() {};
+
+        inline mat2 & operator = (const mat2 &b)
+        {
+            v00 = b.v00;
+            v10 = b.v10;
+            v01 = b.v01;
+            v11 = b.v11;
+            return *this;
+        };
+
+        inline mat2 & operator += (const mat2 &b)
+        {
+            v00 += b.v00;
+            v10 += b.v10;
+            v01 += b.v01;
+            v11 += b.v11;
+            return *this;
+        };
+
+        inline mat2 & operator -= (const mat2 &b)
+        {
+            v00 -= b.v00;
+            v10 -= b.v10;
+            v01 -= b.v01;
+            v11 -= b.v11;
+            return *this;
+        };
+        
+        inline mat2 operator - (const mat2 &b) const
+        {
+            return mat2(v00 - b.v00, v10 - b.v10,
+                        v01 - b.v01, v11 - b.v11);
+        };
+
+        inline mat2 & operator *= (const mat2 &b)
+        {
+            const mat2 c(
+                v00*b.v00 + v01*b.v10,
+                v10*b.v00 + v11*b.v10,
+                
+                v00*b.v01 + v01*b.v11,
+                v10*b.v01 + v11*b.v11);
+            *this = c;
+            return *this;
+        };
+        
+        inline mat2 operator * (const mat2 &b) const
+        {
+            return mat2(
+                v00*b.v00 + v01*b.v10,
+                v10*b.v00 + v11*b.v10,
+                
+                v00*b.v01 + v01*b.v11,
+                v10*b.v01 + v11*b.v11);
+        };
+
+        inline mat2 & operator *= (const float &b)
+        {
+            v00 *= b;
+            v10 *= b;
+            v01 *= b;
+            v11 *= b;
+            return *this;
+        };
+
+        inline mat2 operator * (const float &b) const
+        {
+            return mat2(b*v00, b*v10,
+                        b*v01, b*v11);
+        };
+
+        inline mat2 operator / (const float &b) const
+        {
+            return mat2(v00/b, v10/b,
+                        v01/b, v11/b);
+        };
+
+        inline vec2 operator * (const vec2 &a) const
+        {
+            return vec2(v00*a.x + v01*a.y,
+                    v10*a.x + v11*a.y);
+        };
+
+        inline mat2 transposed() const
+        {
+            return mat2(v00, v01,
+                        v10, v11);
+        };
+        
+        inline mat2 adjugated() const
+        {
+            return mat2( v11, -v10,
+                        -v01,  v00);
+        };
+        
+        inline mat2 inverted() const
+        {
+            const float t = 1.0f/(v00*v11 - v10*v01);
+
+            return mat2( t*v11, -t*v10,
+                        -t*v01,  t*v00);
+        };
+
+        static mat2 identityMatrix()
+        {
+            return mat2(1.0, 0.0,
+                        0.0, 1.0);
+        };
+
+        float v00, v10;
+        float v01, v11;
+        
+        friend std::ostream & operator << (std::ostream &Out, const mat2 &a)
+        {
+            Out << a.v00 << ", " << a.v01 << std::endl
+                << a.v10 << ", " << a.v11 << std::endl;
+            return Out;
+        };
+};
+
 class mat3
 {
     public:
         inline mat3() {};
-        inline mat3(const float &a) :
+        explicit inline mat3(const float &a) :
             v00(a), v10(a), v20(a),
             v01(a), v11(a), v21(a),
             v02(a), v12(a), v22(a)
@@ -256,7 +400,7 @@ class mat3
             v02(z.x), v12(z.y), v22(z.z)
         {};
         
-        inline mat3(const vec4 &a) :
+        explicit inline mat3(const vec4 &a) :
             v00(1.0f - 2.0f*(a.y*a.y + a.z*a.z)),
             v10(2.0f*(a.x*a.y - a.w*a.z)),
             v20(2.0f*(a.x*a.z + a.w*a.y)),
@@ -342,6 +486,20 @@ class mat3
             v12 *= b;
             v22 *= b;
             return *this;
+        };
+
+        inline mat3 operator * (const float &b) const
+        {
+            return mat3(b*v00, b*v10, b*v20,
+                        b*v01, b*v11, b*v21,
+                        b*v02, b*v12, b*v22);
+        };
+
+        inline mat3 operator / (const float &b) const
+        {
+            return mat3(v00/b, v10/b, v20/b,
+                        v01/b, v11/b, v21/b,
+                        v02/b, v12/b, v22/b);
         };
 
         inline vec3 operator * (const vec3 &a) const
@@ -482,7 +640,7 @@ class mat4
 {
     public:
         inline mat4() {};
-        inline mat4(const float &a) :
+        explicit inline mat4(const float &a) :
             v00(a), v10(a), v20(a), v30(a),
             v01(a), v11(a), v21(a), v31(a),
             v02(a), v12(a), v22(a), v32(a),
@@ -511,14 +669,14 @@ class mat4
             v03(0.0f),  v13(0.0f),  v23(0.0f),  v33(1.0f)
         {};
         
-        inline mat4(const vec3 &x, const vec3 &y, const vec3 &z, const vec3 &b = vec3(0.0f, 0.0f, 0.0f)) :
+        explicit inline mat4(const vec3 &x, const vec3 &y, const vec3 &z, const vec3 &b = vec3(0.0f, 0.0f, 0.0f)) :
             v00(x.x), v10(x.y), v20(x.z), v30(0.0f),
             v01(y.x), v11(y.y), v21(y.z), v31(0.0f),
             v02(z.x), v12(z.y), v22(z.z), v32(0.0f),
             v03(b.x), v13(b.y), v23(b.z), v33(1.0f)
         {};
         
-        inline mat4(const vec4 &a, const vec3 &b = vec3(0.0f, 0.0f, 0.0f)) :
+        explicit inline mat4(const vec4 &a, const vec3 &b = vec3(0.0f, 0.0f, 0.0f)) :
             v00(1.0f - 2.0f*(a.y*a.y + a.z*a.z)),
             v10(2.0f*(a.x*a.y - a.w*a.z)),
             v20(2.0f*(a.x*a.z + a.w*a.y)),
@@ -647,6 +805,22 @@ class mat4
             v33 *= b;
             return *this;
         };
+        
+        inline mat4 operator * (const float &b) const
+        {
+            return mat4(b*v00, b*v10, b*v20, b*v30,
+                        b*v01, b*v11, b*v21, b*v31,
+                        b*v02, b*v12, b*v22, b*v32,
+                        b*v03, b*v13, b*v23, b*v33);
+        };
+
+        inline mat4 operator / (const float &b) const
+        {
+            return mat4(v00/b, v10/b, v20/b, v30/b,
+                        v01/b, v11/b, v21/b, v31/b,
+                        v02/b, v12/b, v22/b, v32/b,
+                        v03/b, v13/b, v23/b, v33/b);
+        };
 
         inline vec3 operator * (const vec3 &a) const
         {
@@ -692,6 +866,31 @@ class mat4
                 -(v01*v03 + v11*v13 + v21*v23),
                 -(v02*v03 + v12*v13 + v22*v23),
                 1.0f);
+        };
+        
+        inline mat4 invertedFull() const
+        {
+            //Less efficient version of https://lxjk.github.io/2017/09/03/Fast-4x4-Matrix-Inverse-with-SSE-SIMD-Explained.html.
+            const mat2 A = mat2(v00, v10, v01, v11);
+            const mat2 B = mat2(v02, v12, v03, v13);
+            const mat2 C = mat2(v20, v30, v21, v31);
+            const mat2 D = mat2(v22, v32, v23, v33);
+            const float dA = v00*v11 - v01*v10;
+            const float dB = v02*v13 - v03*v12;
+            const float dC = v20*v31 - v21*v30;
+            const float dD = v22*v33 - v23*v32;
+            
+            const mat2 X = (A*dD - B*(D.adjugated()*C)).adjugated();
+            const mat2 Y = (C*dB - D*(B.adjugated()*A)).adjugated();
+            const mat2 Z = (B*dC - A*(C.adjugated()*D)).adjugated();
+            const mat2 W = (D*dA - C*(A.adjugated()*B)).adjugated();
+            
+            const float dM = dA*dD - dB*dC;
+            
+            return mat4(X.v00, X.v10, Z.v00, Z.v10,
+                        X.v01, X.v11, Z.v01, Z.v11,
+                        Y.v00, Y.v10, W.v00, W.v10,
+                        Y.v01, Y.v11, W.v01, W.v11)/dM;
         };
 
         inline mat4 &setTranslation(const vec3 &a)
