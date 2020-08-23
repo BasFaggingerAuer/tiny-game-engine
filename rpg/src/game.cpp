@@ -246,6 +246,8 @@ Game::Game(const os::Application *application, const std::string &path) :
         renderer->addWorldRenderable(index++, i->second->shadowHorde);
     }
     
+    renderer->addWorldRenderable(index++, voxelMap);
+    
     renderer->addScreenRenderable(index++, skyEffect, false, false);
     renderer->addScreenRenderable(index++, fontWorld, false, false, draw::BlendMix);
     renderer->addScreenRenderable(index++, consoleBackground, false, false, draw::BlendMix);
@@ -265,6 +267,9 @@ Game::~Game()
     delete font;
     delete fontWorld;
     delete fontTexture;
+    
+    delete voxelMap;
+    delete voxelTexture;
     
     delete chessboard;
     
@@ -596,6 +601,7 @@ void Game::readResources(const std::string &path)
     {
              if (std::string(el->Value()) == "console") readConsoleResources(path, el);
         else if (std::string(el->Value()) == "sky") readSkyResources(path, el);
+        else if (std::string(el->Value()) == "voxelmap") readVoxelMapResources(path, el);
         else if (std::string(el->Value()) == "chessboard") chessboard = new Chessboard(path, el);
         else if (std::string(el->Value()) == "terrain") terrain = new GameTerrain(path, el);
         else if (std::string(el->Value()) == "charactertype") characterTypes[characterTypes.size()] = new CharacterType(path, el);
@@ -604,13 +610,42 @@ void Game::readResources(const std::string &path)
     }
     
     //Check that all renderables have been created.
-    if (!font || !chessboard || !skyEffect || !terrain)
+    if (!font || !chessboard || !skyEffect || !terrain || !voxelMap)
     {
         std::cerr << "Error: Not all resources were initialized (incomplete XML?)!" << std::endl;
         throw std::exception();
     }
     
     chessboard->updateInstances(terrain->getHeight(vec2(0.0f, 0.0f)));
+}
+
+void Game::readVoxelMapResources(const std::string &, TiXmlElement *el)
+{
+    std::cerr << "Reading voxel map resources..." << std::endl;
+    
+    assert(std::string(el->Value()) == "voxelmap");
+    
+    int width = 256;
+    int height = 256;
+    int depth = 256;
+    float voxelSize = 1.0f;
+    
+    el->QueryIntAttribute("width", &width);
+    el->QueryIntAttribute("height", &height);
+    el->QueryIntAttribute("depth", &depth);
+    el->QueryFloatAttribute("scale", &voxelSize);
+    
+    voxelMap = new draw::VoxelMap(std::max(width, std::max(height, depth))*2);
+    voxelTexture = new draw::RGBATexture3D(width, height, depth, draw::tf::none);
+    
+    for (auto i = voxelTexture->begin(); i != voxelTexture->end(); ++i)
+    {
+        *i = 0xff;
+    }
+    
+    voxelTexture->sendToDevice();
+    
+    voxelMap->setVoxelMap(*voxelTexture, voxelSize);
 }
 
 void Game::readCharacterResources(TiXmlElement *el)

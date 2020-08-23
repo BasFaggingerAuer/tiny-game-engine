@@ -28,13 +28,13 @@ template<typename T, size_t Channels>
 class Texture3D : public Texture<T, Channels>
 {
     public:
-        Texture3D(const size_t &width, const size_t &height) :
-            Texture<T, Channels>(GL_TEXTURE_3D, width, height)
+        Texture3D(const size_t &a_width, const size_t &a_height, const size_t &a_depth, const unsigned int &a_flags = tf::repeat | tf::filter | tf::mipmap) :
+            Texture<T, Channels>(GL_TEXTURE_3D, a_flags, a_width, a_height, a_depth)
         {
             
         }
         
-        Texture3D(const Texture3D<T, Channels> &texture)
+        Texture3D(const Texture3D<T, Channels> &texture) :
             Texture<T, Channels>(texture)
         {
             
@@ -55,6 +55,12 @@ class Texture3D : public Texture<T, Channels>
             return this->hostData[a_x + this->width*a_y + this->width*this->height*a_z];
         }
 };
+
+typedef Texture3D<float, 1> FloatTexture3D;
+typedef Texture3D<float, 3> Vec3Texture3D;
+typedef Texture3D<float, 4> Vec4Texture3D;
+typedef Texture3D<unsigned char, 3> RGBTexture3D;
+typedef Texture3D<unsigned char, 4> RGBATexture3D;
 
 }
 

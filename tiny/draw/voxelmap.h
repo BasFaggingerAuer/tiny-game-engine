@@ -33,10 +33,10 @@ namespace detail
 
 }
 
-class VoxelMap : public ScreenFillingSquare
+class VoxelMap : public tiny::draw::ScreenFillingSquare
 {
     public:
-        VoxelMap(const int &, const int &);
+        VoxelMap(const int &);
         ~VoxelMap();
         
         template <typename TextureType>
@@ -50,13 +50,7 @@ class VoxelMap : public ScreenFillingSquare
         
         std::string getFragmentShaderCode() const;
         
-        void setCameraPosition(const vec3 &);
-        
-    protected:
-        void render(const ShaderProgram &) const;
-        
     private:
-        const int nrVoxelLODs;
         const int nrSteps;
         float scale;
 };

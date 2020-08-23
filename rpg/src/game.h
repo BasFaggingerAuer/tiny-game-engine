@@ -27,7 +27,9 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/draw/staticmeshhorde.h>
 #include <tiny/draw/icontexture2d.h>
 #include <tiny/draw/iconhorde.h>
+#include <tiny/draw/voxelmap.h>
 #include <tiny/draw/texture2d.h>
+#include <tiny/draw/texture3d.h>
 #include <tiny/draw/effects/sunsky.h>
 #include <tiny/draw/effects/solid.h>
 #include <tiny/draw/worldrenderer.h>
@@ -156,6 +158,7 @@ class Game
         void readSkyResources(const std::string &, TiXmlElement *);
         void readChessboardResources(const std::string &, TiXmlElement *);
         void readBulletHordeResources(const std::string &, TiXmlElement *);
+        void readVoxelMapResources(const std::string &, TiXmlElement *);
         
         void applyConsequences();
         
@@ -174,6 +177,10 @@ class Game
         tiny::draw::WorldIconHorde *fontWorld;
         tiny::draw::IconTexture2D *fontTexture;
         
+        //Voxel map.
+        tiny::draw::VoxelMap *voxelMap;
+        tiny::draw::RGBATexture3D *voxelTexture;
+        
         //Chessboard.
         Chessboard *chessboard;
         
@@ -183,6 +190,7 @@ class Game
         tiny::draw::RGBTexture2D *skyGradientTexture;
         tiny::draw::effects::SunSky *skyEffect;
         
+        //Terrain.
         GameTerrain *terrain;
         
         float gravitationalConstant;

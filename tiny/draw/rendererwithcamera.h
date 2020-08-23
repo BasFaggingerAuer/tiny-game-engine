@@ -47,9 +47,11 @@ class RendererWithCamera : public Renderer
         void updateCameraUniforms();
         
         mat4 cameraToScreen;
+        mat4 screenToCamera;
         mat4 cameraToWorld;
         mat4 worldToCamera;
         mat4 worldToScreen;
+        mat4 screenToWorld;
         vec3 cameraPosition;
 };
 

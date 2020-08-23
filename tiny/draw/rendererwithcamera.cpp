@@ -27,6 +27,7 @@ const float RendererWithCamera::farClippingPlane = 1.0e8f;
 RendererWithCamera::RendererWithCamera(const float &aspectRatio) :
     Renderer(),
     cameraToScreen(mat4::frustumMatrix(vec3(-0.07f*aspectRatio, -0.07f, nearClippingPlane), vec3(0.07f*aspectRatio, 0.07f, farClippingPlane))),
+    screenToCamera(mat4::identityMatrix()),
     cameraToWorld(mat4::identityMatrix()),
     worldToCamera(mat4::identityMatrix()),
     worldToScreen(mat4::identityMatrix()),
@@ -56,9 +57,13 @@ void RendererWithCamera::setCamera(const vec3 &position, const vec4 &orientation
 
 void RendererWithCamera::updateCameraUniforms()
 {
+    screenToCamera = cameraToScreen.invertedFull();
     worldToScreen = cameraToScreen*worldToCamera;
+    screenToWorld = cameraToWorld*screenToCamera;
+    
     uniformMap.setVec3Uniform(cameraPosition, "cameraPosition");
     uniformMap.setMat4Uniform(cameraToWorld, "cameraToWorld");
     uniformMap.setMat4Uniform(worldToScreen, "worldToScreen");
+    uniformMap.setMat4Uniform(screenToWorld, "screenToWorld");
 }
 
