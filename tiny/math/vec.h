@@ -825,8 +825,16 @@ class mat4
         inline vec3 operator * (const vec3 &a) const
         {
             return vec3(v00*a.x + v01*a.y + v02*a.z + v03,
-                    v10*a.x + v11*a.y + v12*a.z + v13,
-                    v20*a.x + v21*a.y + v22*a.z + v23);
+                        v10*a.x + v11*a.y + v12*a.z + v13,
+                        v20*a.x + v21*a.y + v22*a.z + v23);
+        };
+
+        inline vec4 operator * (const vec4 &a) const
+        {
+            return vec4(v00*a.x + v01*a.y + v02*a.z + v03*a.w,
+                        v10*a.x + v11*a.y + v12*a.z + v13*a.w,
+                        v20*a.x + v21*a.y + v22*a.z + v23*a.w,
+                        v30*a.x + v31*a.y + v32*a.z + v33*a.w);
         };
 
         inline void toOpenGL(float * const v) const

@@ -46,6 +46,7 @@ class VoxelMap : public tiny::draw::ScreenFillingSquare
             
             scale = scale_;
             uniformMap.setFloatUniform(scale, "voxelScale");
+            uniformMap.setVec3Uniform(voxelTexture.getWidth(), voxelTexture.getHeight(), voxelTexture.getDepth(), "voxelTextureSize");
         }
         
         std::string getFragmentShaderCode() const;

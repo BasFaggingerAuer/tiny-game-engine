@@ -208,9 +208,9 @@ class Texture : public TextureInterface
             return hostData.begin();
         }
         
-        typename std::vector<T>::const_iterator begin() const
+        typename std::vector<T>::const_iterator cbegin() const
         {
-            return hostData.begin();
+            return hostData.cbegin();
         }
         
         typename std::vector<T>::iterator end()
@@ -218,9 +218,9 @@ class Texture : public TextureInterface
             return hostData.end();
         }
         
-        typename std::vector<T>::const_iterator end() const
+        typename std::vector<T>::const_iterator cend() const
         {
-            return hostData.end();
+            return hostData.cend();
         }
         
     protected:

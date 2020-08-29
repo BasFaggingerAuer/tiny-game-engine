@@ -237,8 +237,8 @@ Game::Game(const os::Application *application, const std::string &path) :
     unsigned int index = 0;
     
     renderer->addWorldRenderable(index++, skyBoxMesh);
-    renderer->addWorldRenderable(index++, terrain->terrain);
-    renderer->addWorldRenderable(index++, chessboard->horde);
+    //renderer->addWorldRenderable(index++, terrain->terrain);
+    //renderer->addWorldRenderable(index++, chessboard->horde);
     
     for (std::map<unsigned int, CharacterType *>::const_iterator i = characterTypes.begin(); i != characterTypes.end(); ++i)
     {
@@ -638,9 +638,18 @@ void Game::readVoxelMapResources(const std::string &, TiXmlElement *el)
     voxelMap = new draw::VoxelMap(std::max(width, std::max(height, depth))*2);
     voxelTexture = new draw::RGBATexture3D(width, height, depth, draw::tf::none);
     
-    for (auto i = voxelTexture->begin(); i != voxelTexture->end(); ++i)
+    for (size_t z = 0; z < voxelTexture->getDepth(); ++z)
     {
-        *i = 0xff;
+        for (size_t y = 0; y < voxelTexture->getHeight(); ++y)
+        {
+            for (size_t x = 0; x < voxelTexture->getWidth(); ++x)
+            {
+                (*voxelTexture)[4*(z*voxelTexture->getHeight()*voxelTexture->getWidth() + y*voxelTexture->getWidth() + x) + 0] = (y > 0 ? 0x00 : (((x ^ z) & 1) == 0 ? 0xff : 0x88));
+                (*voxelTexture)[4*(z*voxelTexture->getHeight()*voxelTexture->getWidth() + y*voxelTexture->getWidth() + x) + 1] = (y > 0 ? 0x00 : (((x ^ z) & 1) == 0 ? 0x88 : 0xff));
+                (*voxelTexture)[4*(z*voxelTexture->getHeight()*voxelTexture->getWidth() + y*voxelTexture->getWidth() + x) + 2] = (y > 0 ? 0x00 : 0x88);
+                (*voxelTexture)[4*(z*voxelTexture->getHeight()*voxelTexture->getWidth() + y*voxelTexture->getWidth() + x) + 3] = (y > 0 ? 0x00 : 0xff);
+            }
+        }
     }
     
     voxelTexture->sendToDevice();

@@ -3,7 +3,7 @@
     <console font="font/mensch.ttf" texture_size="512" font_size="48" />
     <sky texture="img/sky.png" />
     <chessboard diffuse="img/terrain/desert_cliff_egypt_2.png" normal="img/terrain/desert_cliff_egypt_2_norm.png" squares="32" />
-    <terrain heightmap="img/tasmania.png" scale_width="3" scale_height="1617" scale_far="16" scale_detail="1024" attribute_shader="shader/desert.glsl" offset_x="0.50" offset_y="0.55">
+    <terrain heightmap="img/flat.png" scale_width="3" scale_height="1617" scale_far="16" scale_detail="1024" attribute_shader="shader/desert.glsl" offset_x="0.50" offset_y="0.55">
         <biome diffuse="img/terrain/forest.jpg" normal="img/terrain/forest_normal.jpg" sound="sound/wind.ogg"/>
         <biome diffuse="img/terrain/grass.jpg" normal="img/terrain/grass_normal.jpg" sound="sound/crickets.ogg"/>
         <biome diffuse="img/terrain/dirt.jpg" normal="img/terrain/dirt_normal.jpg" sound="sound/forest.ogg"/>
