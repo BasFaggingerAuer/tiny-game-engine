@@ -156,66 +156,6 @@ void CharacterType::updateInstances()
     shadowHorde->setMeshes(shadowInstances.begin(), shadowInstances.begin() + nrInstances);
 }
 
-Chessboard::Chessboard(const std::string &path, TiXmlElement *el)
-{
-    std::cerr << "Reading chessboard resource..." << std::endl;
-   
-    assert(std::string(el->Value()) == "chessboard");
-    
-    //Create chessboard.
-    std::string diffuseFileName = "";
-    std::string normalFileName = "";
-    nrSquares = 8;
-    baseHeight = 0.0f;
-    extraBlocks.clear();
-    
-    el->QueryIntAttribute("squares", &nrSquares);
-    el->QueryStringAttribute("diffuse", &diffuseFileName);
-    el->QueryStringAttribute("normal", &normalFileName);
-    
-    nrSquares = std::max(1, nrSquares);
-
-    diffuseTexture = new draw::RGBTexture2D(diffuseFileName.empty() ? img::Image::createSolidImage() : img::io::readImage(path + diffuseFileName));
-    normalTexture = new draw::RGBTexture2D(normalFileName.empty() ? img::Image::createSolidImage() : img::io::readImage(path + normalFileName));
-    
-    horde = new draw::StaticMeshHorde(mesh::StaticMesh::createBoxMesh(0.5f, 0.5f, 0.5f), (2*nrSquares + 1)*(2*nrSquares + 1) + 1024);
-    horde->setDiffuseTexture(*diffuseTexture);
-    horde->setNormalTexture(*normalTexture);
-}
-
-Chessboard::~Chessboard()
-{
-    delete horde;
-    delete diffuseTexture;
-    delete normalTexture;
-}
-
-void Chessboard::updateInstances(const float &a_baseHeight)
-{
-    std::vector<draw::StaticMeshInstance> instances;
-    
-    baseHeight = a_baseHeight + 0.5f;
-    
-    for (int i = -nrSquares; i <= nrSquares; ++i)
-    {
-        for (int j = -nrSquares; j <= nrSquares; ++j)
-        {
-            instances.push_back(draw::StaticMeshInstance(vec4(i, baseHeight - 0.5f, j, 1.0f),
-                                                         vec4(0.0f, 0.0f, 0.0f, 1.0f),
-                                                         ((i ^ j) & 1) == 0 ? vec4(1.0f, 1.0f, 1.0f ,1.0f) : vec4(0.5f, 0.5f, 0.5f, 1.0f)));
-        }
-    }
-    
-    for (std::list<ivec3>::const_iterator i = extraBlocks.begin(); i != extraBlocks.end(); ++i)
-    {
-        instances.push_back(draw::StaticMeshInstance(vec4(i->x, baseHeight - 0.5f + i->y, i->z, 1.0f),
-                                                     vec4(0.0f, 0.0f, 0.0f, 1.0f),
-                                                     vec4(0.75f, 0.75f, 0.75f, 1.0f)));
-    }
-    
-    horde->setMeshes(instances.begin(), instances.end());
-}
-
 Game::Game(const os::Application *application, const std::string &path) :
     aspectRatio(static_cast<double>(application->getScreenWidth())/static_cast<double>(application->getScreenHeight())),
     mouseSensitivity(48.0),
@@ -237,8 +177,7 @@ Game::Game(const os::Application *application, const std::string &path) :
     unsigned int index = 0;
     
     renderer->addWorldRenderable(index++, skyBoxMesh);
-    //renderer->addWorldRenderable(index++, terrain->terrain);
-    //renderer->addWorldRenderable(index++, chessboard->horde);
+    renderer->addWorldRenderable(index++, terrain->terrain);
     
     for (std::map<unsigned int, CharacterType *>::const_iterator i = characterTypes.begin(); i != characterTypes.end(); ++i)
     {
@@ -270,8 +209,6 @@ Game::~Game()
     
     delete voxelMap;
     delete voxelTexture;
-    
-    delete chessboard;
     
     delete skyBoxMesh;
     delete skyBoxDiffuseTexture;
@@ -335,7 +272,7 @@ void Game::update(os::Application *application, const float &dt)
     for (std::map<unsigned int, CharacterInstance>::const_iterator i = characters.begin(); i != characters.end(); ++i)
     {
         assert(characterTypes.find(i->second.type) != characterTypes.end());
-        characterTypes[i->second.type]->addInstance(i->second, chessboard->baseHeight);
+        characterTypes[i->second.type]->addInstance(i->second, 0.0f);
     }
     
     for (std::map<unsigned int, CharacterType *>::iterator i = characterTypes.begin(); i != characterTypes.end(); ++i)
@@ -354,7 +291,7 @@ void Game::update(os::Application *application, const float &dt)
             const vec4 icon = fontTexture->getIcon(i->second.name[0]);
             
             iconInstances.push_back(draw::WorldIconInstance(
-                vec3(i->second.position.x, i->second.position.y + chessboard->baseHeight + 0.5f*characterTypes[i->second.type]->size.y, i->second.position.z),
+                vec3(i->second.position.x, i->second.position.y + 0.5f*characterTypes[i->second.type]->size.y, i->second.position.z),
                 vec2(fontHeightScale*icon.z, fontHeightScale*icon.w),
                 icon,
                 vec4(1.0f, 1.0f, 1.0f, 1.0f)));
@@ -437,30 +374,6 @@ void Game::update(os::Application *application, const float &dt)
                 assert(characterIndex == 0);
                 characterIndex = 0;
             }
-        }
-        
-        //Create/delete blocks?
-        if (application->isKeyPressedOnce(' '))
-        {
-            const ivec3 p(round(cameraPosition.x), round(cameraPosition.y - chessboard->baseHeight), round(cameraPosition.z));
-            bool found = false;
-            
-            for (std::list<ivec3>::iterator i = chessboard->extraBlocks.begin(); i != chessboard->extraBlocks.end(); ++i)
-            {
-                if (*i == p)
-                {
-                    found = true;
-                    chessboard->extraBlocks.erase(i);
-                    break;
-                }
-            }
-            
-            if (!found)
-            {
-                chessboard->extraBlocks.push_back(p);
-            }
-            
-            chessboard->updateInstances(chessboard->baseHeight - 0.5f);
         }
         
         if (characterIndex == 0)
@@ -602,7 +515,6 @@ void Game::readResources(const std::string &path)
              if (std::string(el->Value()) == "console") readConsoleResources(path, el);
         else if (std::string(el->Value()) == "sky") readSkyResources(path, el);
         else if (std::string(el->Value()) == "voxelmap") readVoxelMapResources(path, el);
-        else if (std::string(el->Value()) == "chessboard") chessboard = new Chessboard(path, el);
         else if (std::string(el->Value()) == "terrain") terrain = new GameTerrain(path, el);
         else if (std::string(el->Value()) == "charactertype") characterTypes[characterTypes.size()] = new CharacterType(path, el);
         else if (std::string(el->Value()) == "character") readCharacterResources(el);
@@ -610,13 +522,11 @@ void Game::readResources(const std::string &path)
     }
     
     //Check that all renderables have been created.
-    if (!font || !chessboard || !skyEffect || !terrain || !voxelMap)
+    if (!font || !skyEffect || !terrain || !voxelMap)
     {
         std::cerr << "Error: Not all resources were initialized (incomplete XML?)!" << std::endl;
         throw std::exception();
     }
-    
-    chessboard->updateInstances(terrain->getHeight(vec2(0.0f, 0.0f)));
 }
 
 void Game::readVoxelMapResources(const std::string &, TiXmlElement *el)

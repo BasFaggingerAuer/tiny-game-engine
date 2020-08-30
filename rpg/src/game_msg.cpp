@@ -197,7 +197,6 @@ bool Game::msgWelcomePlayer(const unsigned int &, std::ostream &out, bool &, con
 bool Game::msgTerrainOffset(const unsigned int &, std::ostream &out, bool &broadcast, const vec2 &offset)
 {
     terrain->setOffset(offset);
-    chessboard->updateInstances(terrain->getHeight(vec2(0.0f, 0.0f)));
     
     out << "Set terrain offset to " << offset << ".";
     broadcast = true;

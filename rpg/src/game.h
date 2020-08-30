@@ -106,22 +106,6 @@ class CharacterType
         std::vector<tiny::draw::StaticMeshInstance> shadowInstances;
 };
 
-class Chessboard
-{
-    public:
-        Chessboard(const std::string &, TiXmlElement *);
-        ~Chessboard();
-        
-        void updateInstances(const float &);
-        
-        float baseHeight;
-        int nrSquares;
-        std::list<tiny::ivec3> extraBlocks;
-        tiny::draw::StaticMeshHorde *horde;
-        tiny::draw::RGBTexture2D *diffuseTexture;
-        tiny::draw::RGBTexture2D *normalTexture;
-};
-
 class Game
 {
     public:
@@ -156,7 +140,6 @@ class Game
         void readCharacterResources(TiXmlElement *);
         void readConsoleResources(const std::string &, TiXmlElement *);
         void readSkyResources(const std::string &, TiXmlElement *);
-        void readChessboardResources(const std::string &, TiXmlElement *);
         void readBulletHordeResources(const std::string &, TiXmlElement *);
         void readVoxelMapResources(const std::string &, TiXmlElement *);
         
@@ -180,9 +163,6 @@ class Game
         //Voxel map.
         tiny::draw::VoxelMap *voxelMap;
         tiny::draw::RGBATexture3D *voxelTexture;
-        
-        //Chessboard.
-        Chessboard *chessboard;
         
         //Sky and atmosphere.
         tiny::draw::StaticMesh *skyBoxMesh;
