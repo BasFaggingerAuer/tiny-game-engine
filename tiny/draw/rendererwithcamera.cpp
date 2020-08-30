@@ -60,8 +60,6 @@ void RendererWithCamera::updateCameraUniforms()
     worldToScreen = cameraToScreen*worldToCamera;
     screenToWorld = worldToScreen.invertedFull();
     
-    std::cout << cameraPosition << std::endl;
-   
     uniformMap.setVec3Uniform(cameraPosition, "cameraPosition");
     uniformMap.setMat4Uniform(cameraToWorld, "cameraToWorld");
     uniformMap.setMat4Uniform(worldToScreen, "worldToScreen");

@@ -9,7 +9,7 @@
         <biome diffuse="img/terrain/dirt.jpg" normal="img/terrain/dirt_normal.jpg" sound="sound/forest.ogg"/>
         <biome diffuse="img/terrain/rocks.jpg" normal="img/terrain/rocks_normal.jpg" sound="sound/sheep.ogg"/>
     </terrain>
-    <voxelmap width="256" height="128" depth="256" scale="1.5" />
+    <voxelmap width="128" height="64" depth="128" scale="0.5f" />
     <charactertype name="HumanRanger" width="1.0" depth="1.0" height="2.0" mesh="rpg/archer.dae" max_instances="1024" />
     <charactertype name="HumanMage" width="1.0" depth="1.0" height="2.0" mesh="rpg/archmage.dae" max_instances="1024" />
     <charactertype name="HumanPaladin" width="1.0" depth="1.0" height="2.0" mesh="rpg/paladin.dae" max_instances="1024" />

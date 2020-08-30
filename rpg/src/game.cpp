@@ -646,10 +646,22 @@ void Game::readVoxelMapResources(const std::string &, TiXmlElement *el)
             {
                 (*voxelTexture)[4*(z*voxelTexture->getHeight()*voxelTexture->getWidth() + y*voxelTexture->getWidth() + x) + 0] = (y > 0 ? 0x00 : (((x ^ z) & 1) == 0 ? 0xff : 0x88));
                 (*voxelTexture)[4*(z*voxelTexture->getHeight()*voxelTexture->getWidth() + y*voxelTexture->getWidth() + x) + 1] = (y > 0 ? 0x00 : (((x ^ z) & 1) == 0 ? 0x88 : 0xff));
-                (*voxelTexture)[4*(z*voxelTexture->getHeight()*voxelTexture->getWidth() + y*voxelTexture->getWidth() + x) + 2] = (y > 0 ? 0x00 : 0x88);
-                (*voxelTexture)[4*(z*voxelTexture->getHeight()*voxelTexture->getWidth() + y*voxelTexture->getWidth() + x) + 3] = (y > 0 ? 0x00 : 0xff);
+                (*voxelTexture)[4*(z*voxelTexture->getHeight()*voxelTexture->getWidth() + y*voxelTexture->getWidth() + x) + 2] = (y > 0 ? 0x00 : 0x88) | (((x == 0) || (x == voxelTexture->getWidth() - 1)) && ((z == 0) || (z == voxelTexture->getDepth() - 1)) ? 0xff : 0x00);
+                (*voxelTexture)[4*(z*voxelTexture->getHeight()*voxelTexture->getWidth() + y*voxelTexture->getWidth() + x) + 3] = (y > 0 ? 0x00 : 0xff) | (((x == 0) || (x == voxelTexture->getWidth() - 1)) && ((z == 0) || (z == voxelTexture->getDepth() - 1)) ? 0xff : 0x00);
             }
         }
+    }
+    
+    for (int i = 0; i < 2048; ++i)
+    {
+        size_t z = rand() % voxelTexture->getDepth();
+        size_t y = rand() % voxelTexture->getHeight();
+        size_t x = rand() % voxelTexture->getWidth();
+        
+        (*voxelTexture)[4*(z*voxelTexture->getHeight()*voxelTexture->getWidth() + y*voxelTexture->getWidth() + x) + 0] = (rand() & 0xff) | 0x0f;
+        (*voxelTexture)[4*(z*voxelTexture->getHeight()*voxelTexture->getWidth() + y*voxelTexture->getWidth() + x) + 1] = (rand() & 0xff) | 0x0f;
+        (*voxelTexture)[4*(z*voxelTexture->getHeight()*voxelTexture->getWidth() + y*voxelTexture->getWidth() + x) + 2] = (rand() & 0xff) | 0x0f;
+        (*voxelTexture)[4*(z*voxelTexture->getHeight()*voxelTexture->getWidth() + y*voxelTexture->getWidth() + x) + 3] = 0xff;
     }
     
     voxelTexture->sendToDevice();
