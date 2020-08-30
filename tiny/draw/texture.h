@@ -151,8 +151,20 @@ class Texture : public TextureInterface
                     offset += Channels*width*height;
                 }
             }
+            else if (textureTarget == GL_TEXTURE_CUBE_MAP_ARRAY)
+            {
+                size_t offset = 0;
+                
+                for (size_t i = 0; i < depth; ++i)
+                {
+                    GL_CHECK(glTexSubImage3D(textureTarget, 0, 0, 0, i, width, height, 1, textureChannels, textureDataType, &hostData[offset]));
+                    
+                    offset += Channels*width*height;
+                }
+            }
             else
             {
+                std::cerr << "Invalid texture target!" << std::endl;
                 throw std::exception();
             }
     

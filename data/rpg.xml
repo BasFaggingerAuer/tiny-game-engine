@@ -8,7 +8,11 @@
         <biome diffuse="img/terrain/dirt.jpg" normal="img/terrain/dirt_normal.jpg" sound="sound/forest.ogg"/>
         <biome diffuse="img/terrain/rocks.jpg" normal="img/terrain/rocks_normal.jpg" sound="sound/sheep.ogg"/>
     </terrain>
-    <voxelmap width="128" height="64" depth="128" scale="1.0f" />
+    <voxelmap width="128" height="64" depth="128" scale="1.0f">
+        <cubemap px="img/terrain/rocks.jpg" mx="img/terrain/rocks.jpg" py="img/terrain/rocks.jpg" my="img/terrain/rocks.jpg" pz="img/terrain/rocks.jpg" mz="img/terrain/rocks.jpg" />
+        <cubemap px="img/terrain/dirt.jpg" mx="img/terrain/dirt.jpg" py="img/terrain/grass.jpg" my="img/terrain/dirt.jpg" pz="img/terrain/dirt.jpg" mz="img/terrain/dirt.jpg" />
+        <cubemap px="img/terrain/dirt.jpg" mx="img/terrain/dirt.jpg" py="img/terrain/forest.jpg" my="img/terrain/dirt.jpg" pz="img/terrain/dirt.jpg" mz="img/terrain/dirt.jpg" />
+    </voxelmap>
     <charactertype name="HumanRanger" width="1.0" depth="1.0" height="2.0" mesh="rpg/archer.dae" max_instances="1024" />
     <charactertype name="HumanMage" width="1.0" depth="1.0" height="2.0" mesh="rpg/archmage.dae" max_instances="1024" />
     <charactertype name="HumanPaladin" width="1.0" depth="1.0" height="2.0" mesh="rpg/paladin.dae" max_instances="1024" />

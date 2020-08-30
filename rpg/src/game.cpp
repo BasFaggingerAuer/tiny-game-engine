@@ -209,6 +209,7 @@ Game::~Game()
     
     delete voxelMap;
     delete voxelTexture;
+    delete voxelCubeArrayTexture;
     
     delete skyBoxMesh;
     delete skyBoxDiffuseTexture;
@@ -529,7 +530,7 @@ void Game::readResources(const std::string &path)
     }
 }
 
-void Game::readVoxelMapResources(const std::string &, TiXmlElement *el)
+void Game::readVoxelMapResources(const std::string &path, TiXmlElement *el)
 {
     std::cerr << "Reading voxel map resources..." << std::endl;
     
@@ -577,6 +578,38 @@ void Game::readVoxelMapResources(const std::string &, TiXmlElement *el)
     voxelTexture->sendToDevice();
     
     voxelMap->setVoxelMap(*voxelTexture, voxelSize);
+    
+    //Read cubemaps.
+    std::vector<img::Image> cubeMaps;
+    
+    for (TiXmlElement *sl = el->FirstChildElement(); sl; sl = sl->NextSiblingElement())
+    {
+        if (std::string(sl->Value()) == "cubemap")
+        {
+            std::string textureFileName = "";
+            
+            sl->QueryStringAttribute("px", &textureFileName);
+            cubeMaps.push_back(img::io::readImage(path + textureFileName));
+            sl->QueryStringAttribute("mx", &textureFileName);
+            cubeMaps.push_back(img::io::readImage(path + textureFileName));
+            sl->QueryStringAttribute("py", &textureFileName);
+            cubeMaps.push_back(img::io::readImage(path + textureFileName));
+            sl->QueryStringAttribute("my", &textureFileName);
+            cubeMaps.push_back(img::io::readImage(path + textureFileName));
+            sl->QueryStringAttribute("pz", &textureFileName);
+            cubeMaps.push_back(img::io::readImage(path + textureFileName));
+            sl->QueryStringAttribute("mz", &textureFileName);
+            cubeMaps.push_back(img::io::readImage(path + textureFileName));
+        }
+        else
+        {
+            std::cerr << "Warning: unknown data " << sl->Value() << " encountered in XML!" << std::endl;
+        }
+    }
+    
+    voxelCubeArrayTexture = new draw::RGBTexture2DCubeArray(cubeMaps.begin(), cubeMaps.end());
+    
+    voxelMap->setCubeMaps(*voxelCubeArrayTexture);
 }
 
 void Game::readCharacterResources(TiXmlElement *el)

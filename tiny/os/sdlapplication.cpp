@@ -289,6 +289,8 @@ void SDLApplication::initOpenGL()
     glClearColor(0.0, 0.0, 0.0, 0.0);
     glClearDepth(1.0);
     
+    glEnable(GL_TEXTURE_CUBE_MAP_SEAMLESS);
+    
     glEnable(GL_DEPTH_TEST);    
     glDepthMask(GL_TRUE);
     

@@ -27,12 +27,6 @@ namespace tiny
 namespace draw
 {
 
-namespace detail
-{
-
-
-}
-
 class VoxelMap : public tiny::draw::ScreenFillingSquare
 {
     public:
@@ -47,6 +41,12 @@ class VoxelMap : public tiny::draw::ScreenFillingSquare
             scale = scale_;
             uniformMap.setFloatUniform(scale, "voxelScale");
             uniformMap.setVec3Uniform(voxelTexture.getWidth(), voxelTexture.getHeight(), voxelTexture.getDepth(), "voxelTextureSize");
+        }
+        
+        template <typename TextureType>
+        void setCubeMaps(const TextureType &cubemapTextureArray)
+        {
+            uniformMap.setTexture(cubemapTextureArray, "cubemapTextureArray");
         }
         
         std::string getFragmentShaderCode() const;

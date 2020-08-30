@@ -27,6 +27,7 @@ VoxelMap::VoxelMap(const int &a_nrSteps) :
 {
     //Setup textures.
     uniformMap.addTexture("voxelTexture");
+    uniformMap.addTexture("cubemapTextureArray");
 }
 
 VoxelMap::~VoxelMap()
@@ -39,7 +40,7 @@ std::string VoxelMap::getFragmentShaderCode() const
     std::stringstream strm;
     
     strm <<
-"#version 150\n"
+"#version 400\n"
 "\n"
 "precision highp float;\n"
 "\n"
@@ -53,6 +54,8 @@ std::string VoxelMap::getFragmentShaderCode() const
 "uniform vec3 voxelTextureSize;\n"
 "uniform float voxelScale;\n"
 "\n"
+"uniform samplerCubeArray cubemapTextureArray;\n"
+"\n"
 "const float epsilon = 0.0001f;\n"
 "const float C = 1.0f, D = 1.0e8, E = 1.0f;\n"
 "\n"
@@ -60,7 +63,7 @@ std::string VoxelMap::getFragmentShaderCode() const
 "out vec4 worldNormal;\n"
 "out vec4 worldPosition;\n"
 "\n"
-"float castRay(const vec3 direction, in vec3 position, out vec3 normal, out vec4 voxel)\n"
+"float castRay(const vec3 direction, in vec3 position, out vec3 normal, out vec4 voxel, out vec3 textureDirection)\n"
 "{\n"
 "   //Prevent division by zero.\n"
 "   const vec3 invDirection = 1.0f/max(abs(direction), epsilon);\n"
@@ -87,6 +90,7 @@ std::string VoxelMap::getFragmentShaderCode() const
 "       \n"
 "       if (voxel.w == 1.0f)\n"
 "       {\n"
+"           textureDirection = normalize((position/voxelScale) + dist*direction - vec3(voxelIndices) - vec3(0.5f));\n"
 "           return dist*voxelScale;\n"
 "       }\n"
 "       \n"
@@ -106,15 +110,18 @@ std::string VoxelMap::getFragmentShaderCode() const
 "   vec3 direction = normalize(((tmp/tmp.w) - vec4(cameraPosition, 0.0f)).xyz);\n"
 "   vec3 normal;\n"
 "   vec4 voxel;\n"
-"   float dist = castRay(direction, cameraPosition + 0.5f*voxelScale*vec3(voxelTextureSize.x, 2.0f, voxelTextureSize.z) - vec3(0.0f, 0.5f, 0.0f), normal, voxel);\n"
+"   vec3 textureDirection;\n"
+"   float dist = castRay(direction, cameraPosition + 0.5f*voxelScale*vec3(voxelTextureSize.x, 2.0f, voxelTextureSize.z) - vec3(0.0f, 0.5f, 0.0f), normal, voxel, textureDirection);\n"
 "   \n"
 "   if (dist < 0.0f) discard;\n"
 "   \n"
 "   worldPosition = vec4(cameraPosition + dist*direction, 1.0f);\n"
 "   tmp = worldToScreen*worldPosition;\n"
 "   \n"
-"   diffuse = vec4(voxel.xyz, 1.0f);\n"
-"   worldNormal = vec4(normalize(normal), 0.0f);\n"
+"   //diffuse = vec4(voxel.xyz, 1.0f);\n"
+"   //TODO: Proper cube map indexing.\n"
+"   diffuse = texture(cubemapTextureArray, vec4(textureDirection, 0.0f));\n"
+"   worldNormal = vec4(normalize(normal), 2.0f);\n"
 "   worldPosition.w = tmp.z;\n"
 "   \n"
 "   gl_FragDepth = (log(C*tmp.z + E) / log(C*D + E));\n"

@@ -118,6 +118,10 @@ void TextureInterface::createDeviceTexture()
     {
         GL_CHECK(glTexImage3D(textureTarget, 0, textureFormat, width, height, depth, 0, textureChannels, textureDataType, 0));
     }
+    else if (textureTarget == GL_TEXTURE_CUBE_MAP_ARRAY)
+    {
+        GL_CHECK(glTexImage3D(textureTarget, 0, textureFormat, width, height, depth, 0, textureChannels, textureDataType, 0));
+    }
     else if (textureTarget == GL_TEXTURE_BUFFER)
     {
         //No action is required.
