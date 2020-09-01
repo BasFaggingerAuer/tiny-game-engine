@@ -59,6 +59,7 @@ class Texture3D : public Texture<T, Channels>
 typedef Texture3D<float, 1> FloatTexture3D;
 typedef Texture3D<float, 3> Vec3Texture3D;
 typedef Texture3D<float, 4> Vec4Texture3D;
+typedef Texture3D<unsigned char, 1> RTexture3D;
 typedef Texture3D<unsigned char, 3> RGBTexture3D;
 typedef Texture3D<unsigned char, 4> RGBATexture3D;
 

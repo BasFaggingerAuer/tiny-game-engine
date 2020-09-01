@@ -163,7 +163,7 @@ class Game
         
         //Voxel map.
         tiny::draw::VoxelMap *voxelMap;
-        tiny::draw::RGBATexture3D *voxelTexture;
+        tiny::draw::RTexture3D *voxelTexture;
         tiny::draw::RGBTexture2DCubeArray *voxelCubeArrayTexture;
         
         //Sky and atmosphere.

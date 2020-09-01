@@ -547,7 +547,7 @@ void Game::readVoxelMapResources(const std::string &path, TiXmlElement *el)
     el->QueryFloatAttribute("scale", &voxelSize);
     
     voxelMap = new draw::VoxelMap(std::max(width, std::max(height, depth))*2);
-    voxelTexture = new draw::RGBATexture3D(width, height, depth, draw::tf::none);
+    voxelTexture = new draw::RTexture3D(width, height, depth, draw::tf::none);
     
     for (size_t z = 0; z < voxelTexture->getDepth(); ++z)
     {
@@ -555,10 +555,7 @@ void Game::readVoxelMapResources(const std::string &path, TiXmlElement *el)
         {
             for (size_t x = 0; x < voxelTexture->getWidth(); ++x)
             {
-                (*voxelTexture)[4*(z*voxelTexture->getHeight()*voxelTexture->getWidth() + y*voxelTexture->getWidth() + x) + 0] = (y > 0 ? 0x00 : (((x ^ z) & 1) == 0 ? 0xff : 0x88));
-                (*voxelTexture)[4*(z*voxelTexture->getHeight()*voxelTexture->getWidth() + y*voxelTexture->getWidth() + x) + 1] = (y > 0 ? 0x00 : (((x ^ z) & 1) == 0 ? 0x88 : 0xff));
-                (*voxelTexture)[4*(z*voxelTexture->getHeight()*voxelTexture->getWidth() + y*voxelTexture->getWidth() + x) + 2] = (y > 0 ? 0x00 : 0x88) | (((x == 0) || (x == voxelTexture->getWidth() - 1)) && ((z == 0) || (z == voxelTexture->getDepth() - 1)) ? 0xff : 0x00);
-                (*voxelTexture)[4*(z*voxelTexture->getHeight()*voxelTexture->getWidth() + y*voxelTexture->getWidth() + x) + 3] = (y > 0 ? 0x00 : 0xff) | (((x == 0) || (x == voxelTexture->getWidth() - 1)) && ((z == 0) || (z == voxelTexture->getDepth() - 1)) ? 0xff : 0x00);
+                (*voxelTexture)[z*voxelTexture->getHeight()*voxelTexture->getWidth() + y*voxelTexture->getWidth() + x] = (y > 0 ? 0x00 : 1 + (rand() & 3)) | (((x == 0) || (x == voxelTexture->getWidth() - 1)) && ((z == 0) || (z == voxelTexture->getDepth() - 1)) ? 1 + (rand() & 3) : 0x00);
             }
         }
     }
@@ -569,10 +566,7 @@ void Game::readVoxelMapResources(const std::string &path, TiXmlElement *el)
         size_t y = rand() % voxelTexture->getHeight();
         size_t x = rand() % voxelTexture->getWidth();
         
-        (*voxelTexture)[4*(z*voxelTexture->getHeight()*voxelTexture->getWidth() + y*voxelTexture->getWidth() + x) + 0] = (rand() & 0xff) | 0x0f;
-        (*voxelTexture)[4*(z*voxelTexture->getHeight()*voxelTexture->getWidth() + y*voxelTexture->getWidth() + x) + 1] = (rand() & 0xff) | 0x0f;
-        (*voxelTexture)[4*(z*voxelTexture->getHeight()*voxelTexture->getWidth() + y*voxelTexture->getWidth() + x) + 2] = (rand() & 0xff) | 0x0f;
-        (*voxelTexture)[4*(z*voxelTexture->getHeight()*voxelTexture->getWidth() + y*voxelTexture->getWidth() + x) + 3] = 0xff;
+        (*voxelTexture)[z*voxelTexture->getHeight()*voxelTexture->getWidth() + y*voxelTexture->getWidth() + x] = 1 + (rand() & 3);
     }
     
     voxelTexture->sendToDevice();
