@@ -46,6 +46,7 @@ class WorldRenderer
         
         void setProjectionMatrix(const mat4 &);
         void setCamera(const vec3 &, const vec4 &);
+        vec3 getWorldDirection(const vec2 &) const;
         
         void addWorldRenderable(const unsigned int &, Renderable *, const bool & = true, const bool & = true, const BlendMode & = BlendReplace, const CullMode & = CullBack);
         void addScreenRenderable(const unsigned int &, Renderable *, const bool & = true, const bool & = true, const BlendMode & = BlendReplace, const CullMode & = CullBack);

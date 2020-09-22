@@ -45,16 +45,23 @@ class Texture3D : public Texture<T, Channels>
             
         }
         
-        T & operator () (const size_t &a_x, const size_t &a_y, const size_t &a_z)
-        {
-            return this->hostData[a_x + this->width*a_y + this->width*this->height*a_z];
-        }
-        
-        const T & operator () (const size_t &a_x, const size_t &a_y, const size_t &a_z) const
-        {
-            return this->hostData[a_x + this->width*a_y + this->width*this->height*a_z];
-        }
+        vec4 operator () (const size_t &, const size_t &, const size_t &) const;
 };
+
+//Functions to sample different types of textures.
+template <>
+inline vec4 Texture3D<unsigned char, 1>::operator () (const size_t &a_x, const size_t &a_y, const size_t &a_z) const
+{
+    if (a_x >= width || a_y >= height || a_z >= depth)
+    {
+        return vec4(0.0f, 0.0f, 0.0f, 1.0f);
+    }
+    
+    return vec4(static_cast<float>(this->hostData[1*(a_x + this->width*a_y) + 0])/255.0f,
+                0.0f,
+                0.0f,
+                1.0f);
+}
 
 typedef Texture3D<float, 1> FloatTexture3D;
 typedef Texture3D<float, 3> Vec3Texture3D;

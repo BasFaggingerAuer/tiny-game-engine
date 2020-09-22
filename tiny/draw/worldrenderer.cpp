@@ -58,6 +58,11 @@ void WorldRenderer::setCamera(const vec3 &position, const vec4 &orientation)
     screenToColourRenderer.setCamera(position, orientation);
 }
 
+vec3 WorldRenderer::getWorldDirection(const vec2 &screenCoordinates) const
+{
+    return worldToScreenRenderer.getWorldDirection(screenCoordinates);
+}
+
 void WorldRenderer::addWorldRenderable(const unsigned int &renderableIndex, Renderable *renderable, const bool &readFromDepthTexture, const bool &writeToDepthTexture, const BlendMode &blendMode, const CullMode &cullMode)
 {
     worldToScreenRenderer.addRenderable(renderableIndex, renderable, readFromDepthTexture, writeToDepthTexture, blendMode, cullMode);

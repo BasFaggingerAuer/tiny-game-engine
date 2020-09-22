@@ -45,7 +45,6 @@ class WorldRendererStageOne : public RendererWithCamera
         void setDiffuseTarget(const Texture2D<T, Channels> &texture)
         {
             setTextureTarget(texture, "diffuse");
-            uniformMap.setFloatUniform(RendererWithCamera::nearClippingPlane, "nearClippingPlane");
             uniformMap.setVec2Uniform(vec2(1.0f/static_cast<float>(texture.getWidth()),
                                            1.0f/static_cast<float>(texture.getHeight())),
                                       "inverseScreenSize");

@@ -21,9 +21,10 @@ using namespace tiny;
 using namespace tiny::draw;
 using namespace tiny::draw::detail;
 
-VoxelMap::VoxelMap(const int &a_nrSteps) :
+VoxelMap::VoxelMap(const int &a_nrSteps, const float &a_epsilon) :
     ScreenFillingSquare(),
-    nrSteps(a_nrSteps)
+    nrSteps(a_nrSteps),
+    epsilon(a_epsilon)
 {
     //Setup textures.
     uniformMap.addTexture("voxelTexture");
@@ -48,7 +49,6 @@ std::string VoxelMap::getFragmentShaderCode() const
 "uniform mat4 worldToScreen;\n"
 "uniform vec3 cameraPosition;\n"
 "uniform vec2 inverseScreenSize;\n"
-"uniform float nearClippingPlane;\n"
 "\n"
 "uniform sampler3D voxelTexture;\n"
 "uniform vec3 voxelTextureSize;\n"
@@ -56,7 +56,7 @@ std::string VoxelMap::getFragmentShaderCode() const
 "\n"
 "uniform samplerCubeArray cubemapTextureArray;\n"
 "\n"
-"const float epsilon = 1.0e-6;\n"
+"const float epsilon = " << epsilon << ";\n"
 "const float C = 1.0f, D = 1.0e8, E = 1.0f;\n"
 "\n"
 "out vec4 diffuse;\n"
@@ -78,7 +78,7 @@ std::string VoxelMap::getFragmentShaderCode() const
 "   //    voxel = texelFetch(voxelTexture, voxelIndices, 0);\n"
 "   //}\n"
 "   \n"
-"   vec3 distances = (step(0.0f, direction) - fract(position/voxelScale))*directionSign*invDirection;\n"
+"   vec3 distances = max((step(0.0f, direction) - fract(position/voxelScale))*directionSign*invDirection, 0.0f);\n"
 "   bvec3 mask = lessThanEqual(distances.xyz, min(distances.yzx, distances.zxy));\n"
 "   float dist = 0.0f;\n"
 "   \n"
@@ -106,12 +106,12 @@ std::string VoxelMap::getFragmentShaderCode() const
 "\n"
 "void main(void)\n"
 "{\n"
-"   vec4 tmp = screenToWorld*vec4(2.0f*inverseScreenSize*gl_FragCoord.xy - 1.0f, nearClippingPlane, 1.0f);\n"
+"   vec4 tmp = screenToWorld*vec4(2.0f*inverseScreenSize*gl_FragCoord.xy - 1.0f, -1.0f, 1.0f);\n"
 "   vec3 direction = normalize(((tmp/tmp.w) - vec4(cameraPosition, 0.0f)).xyz);\n"
 "   vec3 normal;\n"
 "   vec4 voxel;\n"
 "   vec3 textureDirection;\n"
-"   float dist = castRay(direction, cameraPosition + 0.5f*voxelScale*vec3(voxelTextureSize.x, 2.0f, voxelTextureSize.z) - vec3(0.0f, 0.5f, 0.0f), normal, voxel, textureDirection);\n"
+"   float dist = castRay(direction, cameraPosition + 0.5f*voxelScale*vec3(voxelTextureSize.x, 0.0f, voxelTextureSize.z), normal, voxel, textureDirection);\n"
 "   \n"
 "   if (dist < 0.0f) discard;\n"
 "   \n"

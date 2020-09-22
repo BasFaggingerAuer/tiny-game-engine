@@ -379,10 +379,43 @@ void Game::update(os::Application *application, const float &dt)
         
         if (characterIndex == 0)
         {
+            //Did the user click anywhere?
+            auto mouse = application->getMouseState(false);
+            
+            if (mouse.buttons != 0)
+            {
+                //Translate from screen to world coordinates.
+                auto voxelHit = voxelMap->getIntersection(*voxelTexture, cameraPosition, renderer->getWorldDirection(vec2(mouse.x, 1.0f - mouse.y)));
+                
+                if (voxelHit.distance > 0.0f)
+                {
+                    std::cout << "HIT VOXEL AT " << voxelHit.voxelIndices << ", " << voxelHit.normal << std::endl;
+                    
+                    if (mouse.buttons == 1)
+                    {
+                        ivec3 p = max(ivec3(0), min(ivec3(voxelTexture->getWidth() - 1, voxelTexture->getHeight() - 1, voxelTexture->getDepth() - 1),
+                                      voxelHit.voxelIndices + voxelHit.normal));
+                        (*voxelTexture)[p.z*voxelTexture->getHeight()*voxelTexture->getWidth() + p.y*voxelTexture->getWidth() + p.x] = 1;
+                    }
+                    else if (mouse.buttons == 2)
+                    {
+                        ivec3 p = max(ivec3(0), min(ivec3(voxelTexture->getWidth() - 1, voxelTexture->getHeight() - 1, voxelTexture->getDepth() - 1),
+                                      voxelHit.voxelIndices));
+                        (*voxelTexture)[p.z*voxelTexture->getHeight()*voxelTexture->getWidth() + p.y*voxelTexture->getWidth() + p.x] = 0;
+                    }
+                    
+                    voxelTexture->sendToDevice();
+                }
+            }
+            
             //We do not control a character: control the camera directly.
             //Move the camera around and collide with the terrain.
-            application->updateSimpleCamera(dt, cameraPosition, cameraOrientation);
-            cameraPosition.y = std::max(cameraPosition.y, terrain->getHeight(vec2(cameraPosition.x, cameraPosition.z)) + 2.0f);
+            const float cameraRadius = 1.0f;
+            vec3 newPosition = cameraPosition;
+            
+            application->updateSimpleCamera(dt, newPosition, cameraOrientation);
+            newPosition.y = std::max(newPosition.y, terrain->getHeight(vec2(newPosition.x, newPosition.z)) + cameraRadius);
+            cameraPosition = newPosition;
         }
         else
         {
@@ -472,7 +505,7 @@ void Game::clear()
     }
     
     //Reset camera.
-    cameraPosition = vec3(0.0f, 0.0f, 0.0f);
+    cameraPosition = vec3(10.0f, 10.0f, 10.0f);
     cameraOrientation = vec4(0.0f, 0.0f, 0.0f, 1.0f);
 }
 

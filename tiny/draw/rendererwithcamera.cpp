@@ -55,6 +55,14 @@ void RendererWithCamera::setCamera(const vec3 &position, const vec4 &orientation
     updateCameraUniforms();
 }
 
+vec3 RendererWithCamera::getWorldDirection(const vec2 &screenCoordinates) const
+{
+    //Calculate ray direction in 3D corresponding to screen coordinates normalized to [0, 1] x [0, 1] with the latest updated camera values.
+    vec4 tmp = screenToWorld*vec4(2.0f*screenCoordinates - 1.0f, -1.0f, 1.0f);
+    
+    return normalize(((tmp/tmp.w) - vec4(cameraPosition, 0.0f)).xyz());
+}
+
 void RendererWithCamera::updateCameraUniforms()
 {
     worldToScreen = cameraToScreen*worldToCamera;

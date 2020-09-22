@@ -468,8 +468,8 @@ MouseState SDLApplication::getMouseState(const bool &reposition)
         mouseButtons = SDL_GetMouseState(&mouseX, &mouseY);
     }
     
-    return MouseState(static_cast<float>(2*mouseX)/static_cast<float>(screenWidth),
-                      static_cast<float>(2*mouseY)/static_cast<float>(screenHeight),
+    return MouseState(static_cast<float>(mouseX)/static_cast<float>(screenWidth),
+                      static_cast<float>(mouseY)/static_cast<float>(screenHeight),
                       (mouseButtons & SDL_BUTTON(1) ? 1 : 0) | (mouseButtons & SDL_BUTTON(3) ? 2 : 0) | (mouseButtons & SDL_BUTTON(2) ? 4 : 0));
 }
 

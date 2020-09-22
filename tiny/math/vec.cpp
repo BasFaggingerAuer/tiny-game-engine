@@ -62,3 +62,33 @@ vec4 tiny::randomVec4(const float &s)
                 2.0f*s*static_cast<float>(rand())/static_cast<float>(RAND_MAX) - s);
 }
 
+vec2 tiny::to_float(const ivec2 &a)
+{
+    return vec2(static_cast<float>(a.x), static_cast<float>(a.y));
+}
+
+vec3 tiny::to_float(const ivec3 &a)
+{
+    return vec3(static_cast<float>(a.x), static_cast<float>(a.y), static_cast<float>(a.z));
+}
+
+vec4 tiny::to_float(const ivec4 &a)
+{
+    return vec4(static_cast<float>(a.x), static_cast<float>(a.y), static_cast<float>(a.z), static_cast<float>(a.w));
+}
+
+ivec2 tiny::to_int(const vec2 &a)
+{
+    return ivec2(static_cast<int>(a.x), static_cast<int>(a.y));
+}
+
+ivec3 tiny::to_int(const vec3 &a)
+{
+    return ivec3(static_cast<int>(a.x), static_cast<int>(a.y), static_cast<int>(a.z));
+}
+
+ivec4 tiny::to_int(const vec4 &a)
+{
+    return ivec4(static_cast<int>(a.x), static_cast<int>(a.y), static_cast<int>(a.z), static_cast<int>(a.w));
+}
+

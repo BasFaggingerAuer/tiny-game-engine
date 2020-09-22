@@ -97,7 +97,7 @@ void SunSky::setSun(const vec3 &a_sun)
 {
     sun = normalize(a_sun);
     uniformMap.setVec3Uniform(sun, "sunDirection");
-    uniformMap.setVec3Uniform(skyColours[static_cast<size_t>(floor((0.5f - 0.49f*sun.y)*static_cast<float>(skyColours.size())))], "skyColour");
+    uniformMap.setVec3Uniform(skyColours[static_cast<size_t>(floorf((0.5f - 0.49f*sun.y)*static_cast<float>(skyColours.size())))], "skyColour");
 }
 
 void SunSky::setFog(const float &fogIntensity)

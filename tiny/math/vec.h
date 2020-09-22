@@ -55,14 +55,16 @@ template <typename t> class typed2vector
         inline typed2vector & operator /= (const typed2vector<t> &a) {x /= a.x; y /= a.y; return *this;};
         inline typed2vector & operator *= (const t &a) {x *= a; y *= a; return *this;};
         inline typed2vector & operator /= (const t &a) {x /= a; y /= a; return *this;};
+        inline typed2vector operator - () const {return typed2vector<t>(-x, -y);};
         inline t dot(const typed2vector<t> &a) const {return x*a.x + y*a.y;};
+        
+        inline typed2vector<t> xy() const {return typed2vector<t>(x, y);};
+        inline typed2vector<t> yx() const {return typed2vector<t>(y, x);};
         
         friend std::ostream & operator << (std::ostream &Out, const typed2vector<t> &a) {Out << "(" << a.x << ", " << a.y << ")"; return Out;};
         
         t x, y;
 };
-
-template <typename t> class typed4vector;
 
 template <typename t> class typed3vector
 {
@@ -85,11 +87,19 @@ template <typename t> class typed3vector
         inline typed3vector & operator /= (const typed3vector<t> &a) {x /= a.x; y /= a.y; z /= a.z; return *this;};
         inline typed3vector & operator *= (const t &a) {x *= a; y *= a; z *= a; return *this;};
         inline typed3vector & operator /= (const t &a) {x /= a; y /= a; z /= a; return *this;};
+        inline typed3vector operator - () const {return typed3vector<t>(-x, -y, -z);};
         inline t dot(const typed3vector<t> &a) const {return x*a.x + y*a.y + z*a.z;};
         
         inline typed2vector<t> xy() const {return typed2vector<t>(x, y);};
         inline typed2vector<t> xz() const {return typed2vector<t>(x, z);};
         inline typed2vector<t> yz() const {return typed2vector<t>(y, z);};
+        
+        inline typed3vector<t> xyz() const {return typed3vector<t>(x, y, z);};
+        inline typed3vector<t> xzy() const {return typed3vector<t>(x, z, y);};
+        inline typed3vector<t> yxz() const {return typed3vector<t>(y, x, z);};
+        inline typed3vector<t> yzx() const {return typed3vector<t>(y, z, x);};
+        inline typed3vector<t> zxy() const {return typed3vector<t>(z, x, y);};
+        inline typed3vector<t> zyx() const {return typed3vector<t>(z, y, x);};
         
         friend std::ostream & operator << (std::ostream &Out, const typed3vector<t> &a) {Out << "(" << a.x << ", " << a.y << ", " << a.z << ")"; return Out;};
         
@@ -118,6 +128,7 @@ template <typename t> class typed4vector
         inline typed4vector & operator /= (const typed4vector<t> &a) {x /= a.x; y /= a.y; z /= a.z; w /= a.w; return *this;};
         inline typed4vector & operator *= (const t &a) {x *= a; y *= a; z *= a; w *= a; return *this;};
         inline typed4vector & operator /= (const t &a) {x /= a; y /= a; z /= a; w /= a; return *this;};
+        inline typed4vector operator - () const {return typed4vector<t>(-x, -y, -z, -w);};
         inline t dot(const typed4vector<t> &a) const {return x*a.x + y*a.y + z*a.z + w*a.w;};
         
         inline typed2vector<t> xy() const {return typed2vector<t>(x, y);};
@@ -137,7 +148,7 @@ template <typename t> typed2vector<t> & operator / (typed2vector<t> a, const typ
 template <typename t> typed2vector<t> & operator * (typed2vector<t> a, const t &b) {return a *= b;}
 template <typename t> typed2vector<t> & operator * (const t &b, typed2vector<t> a) {return a *= b;}
 template <typename t> typed2vector<t> & operator / (typed2vector<t> a, const t &b) {return a /= b;}
-template <typename t> typed2vector<t> & operator / (const t &b, typed2vector<t> a) {return a /= b;}
+template <typename t> typed2vector<t> & operator / (const t &b, typed2vector<t> a) {return typed2vector<t>(b/a.x, b/a.y);}
 
 template <typename t> typed3vector<t> & operator + (typed3vector<t> a, const typed3vector<t> &b) {return a += b;}
 template <typename t> typed3vector<t> & operator + (typed3vector<t> a, const t &b) {return a += b;}
@@ -148,7 +159,7 @@ template <typename t> typed3vector<t> & operator / (typed3vector<t> a, const typ
 template <typename t> typed3vector<t> & operator * (typed3vector<t> a, const t &b) {return a *= b;}
 template <typename t> typed3vector<t> & operator * (const t &b, typed3vector<t> a) {return a *= b;}
 template <typename t> typed3vector<t> & operator / (typed3vector<t> a, const t &b) {return a /= b;}
-template <typename t> typed3vector<t> & operator / (const t &b, typed3vector<t> a) {return a /= b;}
+template <typename t> typed3vector<t> operator / (const t &b, typed3vector<t> a) {return typed3vector<t>(b/a.x, b/a.y, b/a.z);}
 
 template <typename t> typed4vector<t> & operator + (typed4vector<t> a, const typed4vector<t> &b) {return a += b;}
 template <typename t> typed4vector<t> & operator + (typed4vector<t> a, const t &b) {return a += b;}
@@ -159,7 +170,7 @@ template <typename t> typed4vector<t> & operator / (typed4vector<t> a, const typ
 template <typename t> typed4vector<t> & operator * (typed4vector<t> a, const t &b) {return a *= b;}
 template <typename t> typed4vector<t> & operator * (const t &b, typed4vector<t> a) {return a *= b;}
 template <typename t> typed4vector<t> & operator / (typed4vector<t> a, const t &b) {return a /= b;}
-template <typename t> typed4vector<t> & operator / (const t &b, typed4vector<t> a) {return a /= b;}
+template <typename t> typed4vector<t> operator / (const t &b, typed4vector<t> a) {return typed4vector<t>(b/a.x, b/a.y, b/a.z, b/a.w);}
 
 template <typename t> typed2vector<t> min(const typed2vector<t> &a, const typed2vector<t> &b) {return typed2vector<t>(std::min(a.x, b.x), std::min(a.y, b.y));}
 template <typename t> typed2vector<t> max(const typed2vector<t> &a, const typed2vector<t> &b) {return typed2vector<t>(std::max(a.x, b.x), std::max(a.y, b.y));}
@@ -180,6 +191,27 @@ template <typename t> typed3vector<t> abs(const typed3vector<t> &a) {return type
 template <typename t> typed4vector<t> abs(const typed4vector<t> &a) {return typed4vector<t>(t_abs(a.x), t_abs(a.y), t_abs(a.z), t_abs(a.w));}
 
 template <typename t> t clamp(const t &a, const t &b, const t &c) {return (a < b ? b : (a > c ? c : a));}
+template <typename t> typed2vector<t> clamp(const typed2vector<t> &a, const typed2vector<t> &b, const typed2vector<t> &c) {return typed2vector<t>(clamp(a.x, b.x, c.x), clamp(a.y, b.y, c.y));}
+template <typename t> typed3vector<t> clamp(const typed3vector<t> &a, const typed3vector<t> &b, const typed3vector<t> &c) {return typed3vector<t>(clamp(a.x, b.x, c.x), clamp(a.y, b.y, c.y), clamp(a.z, b.z, c.z));}
+template <typename t> typed4vector<t> clamp(const typed4vector<t> &a, const typed4vector<t> &b, const typed4vector<t> &c) {return typed4vector<t>(clamp(a.x, b.x, c.x), clamp(a.y, b.y, c.y), clamp(a.z, b.z, c.z), clamp(a.w, b.w, c.w));}
+
+template <typename t> t step(const t &a, const t &b) {return (b < a ? t(0) : t(1));}
+template <typename t> typed2vector<t> step(const typed2vector<t> &a, const typed2vector<t> &b) {return typed2vector<t>(step(a.x, b.x), step(a.y, b.y));}
+template <typename t> typed3vector<t> step(const typed3vector<t> &a, const typed3vector<t> &b) {return typed3vector<t>(step(a.x, b.x), step(a.y, b.y), step(a.z, b.z));}
+template <typename t> typed4vector<t> step(const typed4vector<t> &a, const typed4vector<t> &b) {return typed4vector<t>(step(a.x, b.x), step(a.y, b.y), step(a.z, b.z), step(a.w, b.w));}
+
+template <typename t> typed2vector<t> floor(const typed2vector<t> &a) {return typed2vector<t>(std::floor(a.x), std::floor(a.y));}
+template <typename t> typed3vector<t> floor(const typed3vector<t> &a) {return typed3vector<t>(std::floor(a.x), std::floor(a.y), std::floor(a.z));}
+template <typename t> typed4vector<t> floor(const typed4vector<t> &a) {return typed4vector<t>(std::floor(a.x), std::floor(a.y), std::floor(a.z), std::floor(a.w));}
+
+template <typename t> typed2vector<t> ceil(const typed2vector<t> &a) {return typed2vector<t>(std::ceil(a.x), std::ceil(a.y));}
+template <typename t> typed3vector<t> ceil(const typed3vector<t> &a) {return typed3vector<t>(std::ceil(a.x), std::ceil(a.y), std::ceil(a.z));}
+template <typename t> typed4vector<t> ceil(const typed4vector<t> &a) {return typed4vector<t>(std::ceil(a.x), std::ceil(a.y), std::ceil(a.z), std::ceil(a.w));}
+
+template <typename t> t fract(const t &a) {return a - std::floor(a);}
+template <typename t> typed2vector<t> fract(const typed2vector<t> &a) {return typed2vector<t>(fract(a.x), fract(a.y));}
+template <typename t> typed3vector<t> fract(const typed3vector<t> &a) {return typed3vector<t>(fract(a.x), fract(a.y), fract(a.z));}
+template <typename t> typed4vector<t> fract(const typed4vector<t> &a) {return typed4vector<t>(fract(a.x), fract(a.y), fract(a.z), fract(a.w));}
 
 template <typename t> t dot(const typed2vector<t> &a, const typed2vector<t> &b) {return a.x*b.x + a.y*b.y;}
 template <typename t> t dot(const typed3vector<t> &a, const typed3vector<t> &b) {return a.x*b.x + a.y*b.y + a.z*b.z;}
@@ -206,7 +238,17 @@ typedef typed3vector<float> vec3;
 typedef typed4vector<int> ivec4;
 typedef typed4vector<float> vec4;
 
-inline vec3 & operator * (vec3 a, const float b) {return a *= b;}
+vec2 to_float(const ivec2 &a);
+vec3 to_float(const ivec3 &a);
+vec4 to_float(const ivec4 &a);
+
+ivec2 to_int(const vec2 &a);
+ivec3 to_int(const vec3 &a);
+ivec4 to_int(const vec4 &a);
+
+template <typename t> ivec2 lessThanEqual(const typed2vector<t> &a, const typed2vector<t> &b) {return ivec2(a.x <= b.x ? 1 : 0, a.y <= b.y ? 1 : 0);}
+template <typename t> ivec3 lessThanEqual(const typed3vector<t> &a, const typed3vector<t> &b) {return ivec3(a.x <= b.x ? 1 : 0, a.y <= b.y ? 1 : 0, a.z <= b.z ? 1 : 0);}
+template <typename t> ivec4 lessThanEqual(const typed4vector<t> &a, const typed4vector<t> &b) {return ivec4(a.x <= b.x ? 1 : 0, a.y <= b.y ? 1 : 0, a.z <= b.z ? 1 : 0, a.w <= b.w ? 1 : 0);}
 
 //Integer specific bit operations.
 inline ivec2 operator % (const ivec2 &a, const ivec2 &b) {return ivec2(a.x % b.x, a.y % b.y);}
@@ -220,13 +262,6 @@ inline ivec2 operator >> (const ivec2 &a, const int &b) {return ivec2(a.x >> b, 
 inline ivec2 operator << (const ivec2 &a, const ivec2 &b) {return ivec2(a.x << b.x, a.y << b.y);}
 inline ivec2 operator << (const ivec2 &a, const int &b) {return ivec2(a.x << b, a.y << b);}
 inline bool operator < (const ivec2 &a, const ivec2 &b) {return (a.x == b.x ? a.y < b.y : a.x < b.x);}
-
-inline ivec2 vfloor(const vec2 &a) {return ivec2(static_cast<int>(floor(a.x)), static_cast<int>(floor(a.y)));}
-inline ivec2 vceil(const vec2 &a) {return ivec2(static_cast<int>(ceil(a.x)), static_cast<int>(ceil(a.y)));}
-inline ivec3 vfloor(const vec3 &a) {return ivec3(static_cast<int>(floor(a.x)), static_cast<int>(floor(a.y)), static_cast<int>(floor(a.z)));}
-inline ivec3 vceil(const vec3 &a) {return ivec3(static_cast<int>(ceil(a.x)), static_cast<int>(ceil(a.y)), static_cast<int>(ceil(a.z)));}
-inline ivec4 vfloor(const vec4 &a) {return ivec4(static_cast<int>(floor(a.x)), static_cast<int>(floor(a.y)), static_cast<int>(floor(a.z)), static_cast<int>(floor(a.w)));}
-inline ivec4 vceil(const vec4 &a) {return ivec4(static_cast<int>(ceil(a.x)), static_cast<int>(ceil(a.y)), static_cast<int>(ceil(a.z)), static_cast<int>(ceil(a.w)));}
 
 class mat2
 {

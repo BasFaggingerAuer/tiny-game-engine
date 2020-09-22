@@ -147,8 +147,8 @@ void SpatialSphereHasher::hashObjects(const std::vector<HardSphereInstance> &obj
     for (std::vector<HardSphereInstance>::const_iterator i = objects.begin(); i != objects.end(); ++i)
     {
         //Find range of boxes covered by this sphere.
-        const ivec4 lo = vfloor(invBoxSize*(i->posAndRadius - i->posAndRadius.w));
-        const ivec4 hi =  vceil(invBoxSize*(i->posAndRadius + i->posAndRadius.w));
+        const ivec4 lo = to_int(floor(invBoxSize*(i->posAndRadius - i->posAndRadius.w)));
+        const ivec4 hi = to_int( ceil(invBoxSize*(i->posAndRadius + i->posAndRadius.w)));
         
         for (int z = lo.z; z <= hi.z; ++z)
         {
