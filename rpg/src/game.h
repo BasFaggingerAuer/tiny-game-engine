@@ -153,6 +153,7 @@ class Game
         
         tiny::vec3 cameraPosition;
         tiny::vec4 cameraOrientation;
+        bool mouseReleased;
         
         //Console and font.
         bool consoleMode;

@@ -57,7 +57,7 @@ inline vec4 Texture3D<unsigned char, 1>::operator () (const size_t &a_x, const s
         return vec4(0.0f, 0.0f, 0.0f, 1.0f);
     }
     
-    return vec4(static_cast<float>(this->hostData[1*(a_x + this->width*a_y) + 0])/255.0f,
+    return vec4(static_cast<float>(this->hostData[1*(a_x + this->width*a_y + this->width*this->height*a_z) + 0])/255.0f,
                 0.0f,
                 0.0f,
                 1.0f);

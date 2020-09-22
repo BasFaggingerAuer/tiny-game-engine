@@ -384,28 +384,35 @@ void Game::update(os::Application *application, const float &dt)
             
             if (mouse.buttons != 0)
             {
-                //Translate from screen to world coordinates.
-                auto voxelHit = voxelMap->getIntersection(*voxelTexture, cameraPosition, renderer->getWorldDirection(vec2(mouse.x, 1.0f - mouse.y)));
-                
-                if (voxelHit.distance > 0.0f)
+                if (mouseReleased)
                 {
-                    std::cout << "HIT VOXEL AT " << voxelHit.voxelIndices << ", " << voxelHit.normal << std::endl;
+                    mouseReleased = false;
                     
-                    if (mouse.buttons == 1)
-                    {
-                        ivec3 p = max(ivec3(0), min(ivec3(voxelTexture->getWidth() - 1, voxelTexture->getHeight() - 1, voxelTexture->getDepth() - 1),
-                                      voxelHit.voxelIndices + voxelHit.normal));
-                        (*voxelTexture)[p.z*voxelTexture->getHeight()*voxelTexture->getWidth() + p.y*voxelTexture->getWidth() + p.x] = 1;
-                    }
-                    else if (mouse.buttons == 2)
-                    {
-                        ivec3 p = max(ivec3(0), min(ivec3(voxelTexture->getWidth() - 1, voxelTexture->getHeight() - 1, voxelTexture->getDepth() - 1),
-                                      voxelHit.voxelIndices));
-                        (*voxelTexture)[p.z*voxelTexture->getHeight()*voxelTexture->getWidth() + p.y*voxelTexture->getWidth() + p.x] = 0;
-                    }
+                    //Translate from screen to world coordinates.
+                    auto voxelHit = voxelMap->getIntersection(*voxelTexture, cameraPosition, renderer->getWorldDirection(vec2(mouse.x, 1.0f - mouse.y)));
                     
-                    voxelTexture->sendToDevice();
+                    if (voxelHit.distance > 0.0f)
+                    {
+                        if (mouse.buttons == 1)
+                        {
+                            ivec3 p = max(ivec3(0), min(ivec3(voxelTexture->getWidth() - 1, voxelTexture->getHeight() - 1, voxelTexture->getDepth() - 1),
+                                          voxelHit.voxelIndices + voxelHit.normal));
+                            (*voxelTexture)[p.z*voxelTexture->getHeight()*voxelTexture->getWidth() + p.y*voxelTexture->getWidth() + p.x] = 1;
+                        }
+                        else if (mouse.buttons == 2)
+                        {
+                            ivec3 p = max(ivec3(0), min(ivec3(voxelTexture->getWidth() - 1, voxelTexture->getHeight() - 1, voxelTexture->getDepth() - 1),
+                                          voxelHit.voxelIndices));
+                            (*voxelTexture)[p.z*voxelTexture->getHeight()*voxelTexture->getWidth() + p.y*voxelTexture->getWidth() + p.x] = 0;
+                        }
+                        
+                        voxelTexture->sendToDevice();
+                    }
                 }
+            }
+            else
+            {
+                mouseReleased = true;
             }
             
             //We do not control a character: control the camera directly.
