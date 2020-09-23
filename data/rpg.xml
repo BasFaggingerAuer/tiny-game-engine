@@ -2,7 +2,7 @@
 <rpg>
     <console font="font/mensch.ttf" texture_size="512" font_size="48" />
     <sky texture="img/sky.png" />
-    <terrain heightmap="img/flat.png" scale_width="3" scale_height="1617" scale_far="16" scale_detail="1024" attribute_shader="shader/desert.glsl" offset_x="0.50" offset_y="0.55">
+    <terrain heightmap="img/tasmania.png" scale_width="3" scale_height="1617" scale_far="16" scale_detail="1024" attribute_shader="shader/desert.glsl" offset_x="0.50" offset_y="0.55">
         <biome diffuse="img/terrain/forest.jpg" normal="img/terrain/forest_normal.jpg" sound="sound/wind.ogg"/>
         <biome diffuse="img/terrain/grass.jpg" normal="img/terrain/grass_normal.jpg" sound="sound/crickets.ogg"/>
         <biome diffuse="img/terrain/dirt.jpg" normal="img/terrain/dirt_normal.jpg" sound="sound/forest.ogg"/>
@@ -32,17 +32,17 @@
         <cubemap all="img/cm_wall4.png" />
         <cubemap all="img/cm_tile_red.png" />
     </voxelmap>
-    <charactertype name="HumanRanger" width="1.0" depth="1.0" height="2.0" mesh="rpg/archer.dae" max_instances="1024" />
-    <charactertype name="HumanMage" width="1.0" depth="1.0" height="2.0" mesh="rpg/archmage.dae" max_instances="1024" />
-    <charactertype name="HumanPaladin" width="1.0" depth="1.0" height="2.0" mesh="rpg/paladin.dae" max_instances="1024" />
-    <charactertype name="HumanViking" width="1.0" depth="1.0" height="2.0" mesh="rpg/viking.dae" max_instances="1024" />
-    <charactertype name="HumanSpear" width="1.0" depth="1.0" height="2.0" mesh="rpg/spartan.dae" max_instances="1024" />
-    <charactertype name="HumanSpear2" width="1.0" depth="1.0" height="2.0" mesh="rpg/spearman.dae" max_instances="1024" />
-    <charactertype name="Dwarf" width="1.0" depth="1.0" height="2.0" mesh="rpg/dwarf.dae" max_instances="1024" />
-    <charactertype name="KrakenTentacle" width="3.0" depth="3.0" height="6.0" mesh="rpg/tentacle.dae" max_instances="1024" />
-    <charactertype name="Kraken" width="9.0" depth="9.0" height="9.0" mesh="rpg/kraken.dae" max_instances="1024" />
-    <charactertype name="Shark" width="3.0" depth="9.0" height="1.0" scale_height="1.0" mesh="rpg/shark.dae" max_instances="1024" />
-    <charactertype name="Merman" width="1.0" depth="1.0" height="2.0" mesh="rpg/merman.dae" max_instances="1024" />
+    <charactertype name="HumanRanger" width="1.0" depth="1.0" height="2.0" mesh="rpg/archer.dae" max_instances="64" />
+    <charactertype name="HumanMage" width="1.0" depth="1.0" height="2.0" mesh="rpg/archmage.dae" max_instances="64" />
+    <charactertype name="HumanPaladin" width="1.0" depth="1.0" height="2.0" mesh="rpg/paladin.dae" max_instances="64" />
+    <charactertype name="HumanViking" width="1.0" depth="1.0" height="2.0" mesh="rpg/viking.dae" max_instances="64" />
+    <charactertype name="HumanSpear" width="1.0" depth="1.0" height="2.0" mesh="rpg/spartan.dae" max_instances="64" />
+    <charactertype name="HumanSpear2" width="1.0" depth="1.0" height="2.0" mesh="rpg/spearman.dae" max_instances="64" />
+    <charactertype name="Dwarf" width="1.0" depth="1.0" height="2.0" mesh="rpg/dwarf.dae" max_instances="64" />
+    <charactertype name="KrakenTentacle" width="3.0" depth="3.0" height="6.0" mesh="rpg/tentacle.dae" max_instances="64" />
+    <charactertype name="Kraken" width="9.0" depth="9.0" height="9.0" mesh="rpg/kraken.dae" max_instances="64" />
+    <charactertype name="Shark" width="3.0" depth="9.0" height="1.0" scale_height="1.0" mesh="rpg/shark.dae" max_instances="64" />
+    <charactertype name="Merman" width="1.0" depth="1.0" height="2.0" mesh="rpg/merman.dae" max_instances="64" />
     <character name="Laertes" type="HumanRanger" x="-1.0" z="0.0" r="0.0" c="0.75" />
     <character name="Rodan" type="HumanMage" x="0.0" z="0.0" r="0.0" c="0.15" />
     <character name="Tollie" type="Dwarf" x="1.0" z="1.0" r="0.0" c="0.30" />

@@ -164,6 +164,9 @@ void GameTerrain::setOffset(const vec2 &offset)
     draw::computeNormalMap(*farHeightTexture, *farNormalTexture, scale.x*farScale.x);
     draw::computeNormalMap(*heightTexture, *normalTexture, scale.x);
     
+    //Center terrain at origin.
+    heightOffset = -getHeight(vec2(0.0f));
+    
     //Calculate attribute maps for both the zoomed-in and far-away terrain.
     calculateAttributes(*heightTexture, *attributeTexture, attributeShaderCode, scale.x);
     calculateAttributes(*farHeightTexture, *farAttributeTexture, attributeShaderCode, scale.x*farScale.x);
@@ -174,7 +177,7 @@ void GameTerrain::setOffset(const vec2 &offset)
     terrain->setFarHeightTextures(*heightTexture, *farHeightTexture,
                                   *tangentTexture, *farTangentTexture,
                                   *normalTexture, *farNormalTexture,
-                                  scale, farScale, farOffset);
+                                  scale, farScale, farOffset, heightOffset);
     //terrain->setHeightTextures(*farHeightTexture, *farTangentTexture, *farNormalTexture, scale);
     //terrain->setHeightTextures(*heightTexture, *tangentTexture, *normalTexture, scale);
 }
@@ -200,7 +203,7 @@ void GameTerrain::calculateAttributes(const tiny::draw::FloatTexture2D &heightMa
 
 float GameTerrain::getHeight(const vec2 &a_pos) const
 {
-    return sampleTextureBilinear(*heightTexture, scale, a_pos).x;
+    return sampleTextureBilinear(*heightTexture, scale, a_pos).x + heightOffset;
 }
 
 float GameTerrain::getAttribute(const vec2 &a_pos) const

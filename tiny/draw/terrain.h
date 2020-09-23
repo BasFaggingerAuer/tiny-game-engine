@@ -131,19 +131,19 @@ class Terrain : public Renderable
         void setHeightTextures(const TextureType1 &heightTexture,
                          const TextureType2 &tangentTexture,
                          const TextureType2 &normalTexture,
-                         const vec2 &scale_)
+                         const vec2 &scale_, const float &heightOffset = 0.0f)
         {
             setFarHeightTextures(heightTexture, heightTexture,
                            tangentTexture, tangentTexture,
                            normalTexture, normalTexture,
-                           scale_, ivec2(1, 1), vec2(0.0f, 0.0f));
+                           scale_, ivec2(1, 1), vec2(0.0f, 0.0f), heightOffset);
         }
         
         template <typename TextureType1, typename TextureType2>
         void setFarHeightTextures(const TextureType1 &heightTexture, const TextureType1 &farHeightTexture,
                             const TextureType2 &tangentTexture, const TextureType2 &farTangentTexture,
                             const TextureType2 &normalTexture, const TextureType2 &farNormalTexture,
-                            const vec2 &scale_, const ivec2 &farScale_, const vec2 farOffset)
+                            const vec2 &scale_, const ivec2 &farScale_, const vec2 &farOffset, const float &heightOffset = 0.0f)
         {
             uniformMap.setTexture(heightTexture, "heightTexture");
             uniformMap.setTexture(farHeightTexture, "farHeightTexture");
@@ -158,6 +158,7 @@ class Terrain : public Renderable
             uniformMap.setVec4Uniform(1.0f/static_cast<float>(farScale.x), 1.0f/static_cast<float>(farScale.y), farOffset.x, farOffset.y, "scaleAndTranslateFar");
             uniformMap.setVec2Uniform(1.0f/static_cast<float>(heightTexture.getWidth()), 1.0f/static_cast<float>(heightTexture.getHeight()), "inverseHeightTextureSize");
             uniformMap.setVec2Uniform(heightTexture.getWidth()/2, heightTexture.getHeight()/2, "textureShift");
+            uniformMap.setFloatUniform(heightOffset, "heightOffset");
         }
         
         template <typename TextureType1, typename TextureType2, typename TextureType3>

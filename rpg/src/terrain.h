@@ -77,6 +77,8 @@ class GameTerrain
         tiny::draw::RGBATexture2D *farAttributeTexture;
         tiny::draw::RGBTexture2DArray *localDiffuseTextures;
         tiny::draw::RGBTexture2DArray *localNormalTextures;
+        
+        float heightOffset;
 };
 
 } //namespace rpg

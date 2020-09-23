@@ -422,6 +422,9 @@ void Game::update(os::Application *application, const float &dt)
             
             application->updateSimpleCamera(dt, newPosition, cameraOrientation);
             newPosition.y = std::max(newPosition.y, terrain->getHeight(vec2(newPosition.x, newPosition.z)) + cameraRadius);
+            newPosition.x = clamp(newPosition.x, -0.5f*voxelMap->getScale()*static_cast<float>(voxelTexture->getWidth()), 0.5f*voxelMap->getScale()*static_cast<float>(voxelTexture->getWidth()));
+            newPosition.y = clamp(newPosition.y, 0.0f, voxelMap->getScale()*static_cast<float>(voxelTexture->getHeight()));
+            newPosition.z = clamp(newPosition.z, -0.5f*voxelMap->getScale()*static_cast<float>(voxelTexture->getDepth()), 0.5f*voxelMap->getScale()*static_cast<float>(voxelTexture->getDepth()));
             cameraPosition = newPosition;
         }
         else
@@ -512,7 +515,7 @@ void Game::clear()
     }
     
     //Reset camera.
-    cameraPosition = vec3(10.0f, 10.0f, 10.0f);
+    cameraPosition = vec3(0.0f, 10.0f, 0.0f);
     cameraOrientation = vec4(0.0f, 0.0f, 0.0f, 1.0f);
 }
 
@@ -579,9 +582,9 @@ void Game::readVoxelMapResources(const std::string &path, TiXmlElement *el)
     
     assert(std::string(el->Value()) == "voxelmap");
     
-    int width = 256;
-    int height = 256;
-    int depth = 256;
+    int width = 64;
+    int height = 64;
+    int depth = 64;
     float voxelSize = 1.0f;
     
     el->QueryIntAttribute("width", &width);
@@ -589,7 +592,7 @@ void Game::readVoxelMapResources(const std::string &path, TiXmlElement *el)
     el->QueryIntAttribute("depth", &depth);
     el->QueryFloatAttribute("scale", &voxelSize);
     
-    voxelMap = new draw::VoxelMap(std::max(width, std::max(height, depth))*2);
+    voxelMap = new draw::VoxelMap(std::max(width, std::max(height, depth))*4);
     voxelTexture = new draw::RGTexture3D(width, height, depth, draw::tf::none);
     
     for (size_t z = 0; z < voxelTexture->getDepth(); ++z)
