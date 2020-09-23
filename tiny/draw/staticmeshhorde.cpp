@@ -83,9 +83,9 @@ std::string StaticMeshHorde::getVertexShaderCode() const
 "   f_tex = v_textureCoordinate;\n"
 "   f_worldTangent = qtransform(v_orientation, v_tangent);\n"
 "   f_worldNormal = qtransform(v_orientation, v_normal);\n"
-"   f_worldPosition = v_position;\n"
+"   f_worldPosition = v_positionAndSize.w*qtransform(v_orientation, v_position) + v_positionAndSize.xyz;\n"
 "   f_colorMultiplier = v_colorMultiplier;\n"
-"   gl_Position = worldToScreen*vec4(v_positionAndSize.w*qtransform(v_orientation, v_position) + v_positionAndSize.xyz, 1.0f);\n"
+"   gl_Position = worldToScreen*vec4(f_worldPosition, 1.0f);\n"
 "   f_cameraDepth = gl_Position.z;\n"
 "}\n\0";
 }

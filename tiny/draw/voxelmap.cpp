@@ -21,10 +21,12 @@ using namespace tiny;
 using namespace tiny::draw;
 using namespace tiny::draw::detail;
 
-VoxelMap::VoxelMap(const int &a_nrSteps, const float &a_epsilon) :
+VoxelMap::VoxelMap(const int &a_nrSteps, const float &a_lodScale, const float &a_epsilon) :
     ScreenFillingSquare(),
     nrSteps(a_nrSteps),
-    epsilon(a_epsilon)
+    lodScale(a_lodScale),
+    epsilon(a_epsilon),
+    scale(1.0f)
 {
     //Setup textures.
     uniformMap.addTexture("voxelTexture");
@@ -120,7 +122,7 @@ std::string VoxelMap::getFragmentShaderCode() const
 "   \n"
 "   //diffuse = vec4(voxel.xyz, 1.0f);\n"
 "   //diffuse = texture(cubemapTextureArray, vec4(normalize(textureDirection), 255.0f*voxel.x - 1.0f));\n"
-"   diffuse = textureLod(cubemapTextureArray, vec4(normalize(textureDirection), 255.0f*voxel.x - 1.0f), tmp.z/32.0f);\n"
+"   diffuse = 2.0f*voxel.y*textureLod(cubemapTextureArray, vec4(normalize(textureDirection), 255.0f*voxel.x - 1.0f), max(0.0f, log2(tmp.z)/" << lodScale << "));\n"
 "   worldNormal = vec4(normalize(normal), 2.0f);\n"
 "   worldPosition.w = tmp.z;\n"
 "   \n"
@@ -128,5 +130,10 @@ std::string VoxelMap::getFragmentShaderCode() const
 "}\n\0";
     
     return strm.str();
+}
+
+float VoxelMap::getScale() const
+{
+    return scale;
 }
 

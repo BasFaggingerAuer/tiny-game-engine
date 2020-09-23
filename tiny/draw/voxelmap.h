@@ -45,7 +45,7 @@ struct VoxelIntersection
 class VoxelMap : public tiny::draw::ScreenFillingSquare
 {
     public:
-        VoxelMap(const int &, const float & = 1.0e-6f);
+        VoxelMap(const int &, const float & = 1.4f, const float & = 1.0e-6f);
         ~VoxelMap();
         
         template <typename TextureType>
@@ -95,10 +95,13 @@ class VoxelMap : public tiny::draw::ScreenFillingSquare
             uniformMap.setTexture(cubemapTextureArray, "cubemapTextureArray");
         }
         
+        float getScale() const;
+        
         std::string getFragmentShaderCode() const;
         
     private:
         const int nrSteps;
+        const float lodScale;
         const float epsilon;
         float scale;
 };

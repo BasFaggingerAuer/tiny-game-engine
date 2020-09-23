@@ -61,6 +61,7 @@ add_library(tinygame
             draw/effects/normals.cpp
             draw/effects/lambert.cpp
             draw/effects/sunsky.cpp
+            draw/effects/sunskyvoxelmap.cpp
             draw/effects/solid.cpp
             draw/effects/showimage.cpp
             os/application.cpp

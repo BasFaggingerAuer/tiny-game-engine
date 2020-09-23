@@ -140,7 +140,7 @@ void TextureInterface::createDeviceTexture()
         if ((flags & tf::mipmap) != 0)
         {
             GL_CHECK(glTexParameteri(textureTarget, GL_TEXTURE_MAG_FILTER, (flags & tf::filter) != 0 ? GL_LINEAR : GL_NEAREST));
-            GL_CHECK(glTexParameteri(textureTarget, GL_TEXTURE_MIN_FILTER, (flags & tf::filter) != 0 ? GL_LINEAR_MIPMAP_LINEAR : GL_NEAREST_MIPMAP_NEAREST));
+            GL_CHECK(glTexParameteri(textureTarget, GL_TEXTURE_MIN_FILTER, (flags & tf::filter) != 0 ? GL_LINEAR_MIPMAP_LINEAR : GL_NEAREST_MIPMAP_LINEAR));
             GL_CHECK(glGenerateMipmap(textureTarget));
         }
         else

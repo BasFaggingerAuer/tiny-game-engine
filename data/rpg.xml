@@ -8,11 +8,29 @@
         <biome diffuse="img/terrain/dirt.jpg" normal="img/terrain/dirt_normal.jpg" sound="sound/forest.ogg"/>
         <biome diffuse="img/terrain/rocks.jpg" normal="img/terrain/rocks_normal.jpg" sound="sound/sheep.ogg"/>
     </terrain>
-    <voxelmap width="128" height="64" depth="128" scale="1.0f">
-        <cubemap px="img/testr.png" mx="img/testg.png" py="img/testw.png" my="img/testp.png" pz="img/testc.png" mz="img/testy.png" />
-        <cubemap px="img/testr.png" mx="img/testr.png" py="img/testr.png" my="img/testr.png" pz="img/testr.png" mz="img/testr.png" />
-        <cubemap px="img/testg.png" mx="img/testg.png" py="img/testg.png" my="img/testg.png" pz="img/testg.png" mz="img/testg.png" />
-        <cubemap px="img/testb.png" mx="img/testb.png" py="img/testb.png" my="img/testb.png" pz="img/testb.png" mz="img/testb.png" />
+    <voxelmap width="64" height="64" depth="64" scale="1.0f">
+        <cubemap all="img/cm_dirt.png" />
+        <cubemap all="img/cm_mud.png" />
+        <cubemap all="img/cm_grass3.png" />
+        <cubemap all="img/cm_sand.png" />
+        <cubemap all="img/cm_dirt_desert.png" />
+        <cubemap all="img/cm_dirt_desert2.png" />
+        <cubemap all="img/cm_water.png" />
+        <cubemap all="img/cm_snow.png" />
+        <cubemap all="img/cm_stones.png" />
+        <cubemap all="img/cm_forest_pine.png" />
+        <cubemap all="img/cm_planks.png" />
+        <cubemap all="img/cm_planks5.png" />
+        <cubemap all="img/cm_pavement.png" />
+        <cubemap all="img/cm_pavement2.png" />
+        <cubemap all="img/cm_pavement3.png" />
+        <cubemap all="img/cm_pavement4.png" />
+        <cubemap all="img/cm_pavement5.png" />
+        <cubemap all="img/cm_wall.png" />
+        <cubemap all="img/cm_wall2.png" />
+        <cubemap all="img/cm_wall3.png" />
+        <cubemap all="img/cm_wall4.png" />
+        <cubemap all="img/cm_tile_red.png" />
     </voxelmap>
     <charactertype name="HumanRanger" width="1.0" depth="1.0" height="2.0" mesh="rpg/archer.dae" max_instances="1024" />
     <charactertype name="HumanMage" width="1.0" depth="1.0" height="2.0" mesh="rpg/archmage.dae" max_instances="1024" />

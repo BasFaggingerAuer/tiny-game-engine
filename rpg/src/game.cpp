@@ -397,13 +397,13 @@ void Game::update(os::Application *application, const float &dt)
                         {
                             ivec3 p = max(ivec3(0), min(ivec3(voxelTexture->getWidth() - 1, voxelTexture->getHeight() - 1, voxelTexture->getDepth() - 1),
                                           voxelHit.voxelIndices + voxelHit.normal));
-                            (*voxelTexture)[p.z*voxelTexture->getHeight()*voxelTexture->getWidth() + p.y*voxelTexture->getWidth() + p.x] = 1;
+                            (*voxelTexture)[2*(p.z*voxelTexture->getHeight()*voxelTexture->getWidth() + p.y*voxelTexture->getWidth() + p.x) + 0] = 1;
                         }
                         else if (mouse.buttons == 2)
                         {
                             ivec3 p = max(ivec3(0), min(ivec3(voxelTexture->getWidth() - 1, voxelTexture->getHeight() - 1, voxelTexture->getDepth() - 1),
                                           voxelHit.voxelIndices));
-                            (*voxelTexture)[p.z*voxelTexture->getHeight()*voxelTexture->getWidth() + p.y*voxelTexture->getWidth() + p.x] = 0;
+                            (*voxelTexture)[2*(p.z*voxelTexture->getHeight()*voxelTexture->getWidth() + p.y*voxelTexture->getWidth() + p.x) + 0] = 0;
                         }
                         
                         voxelTexture->sendToDevice();
@@ -568,6 +568,9 @@ void Game::readResources(const std::string &path)
         std::cerr << "Error: Not all resources were initialized (incomplete XML?)!" << std::endl;
         throw std::exception();
     }
+    
+    //Assign voxel map to the sky effect.
+    skyEffect->setVoxelMap(*voxelTexture, voxelMap->getScale());
 }
 
 void Game::readVoxelMapResources(const std::string &path, TiXmlElement *el)
@@ -587,7 +590,7 @@ void Game::readVoxelMapResources(const std::string &path, TiXmlElement *el)
     el->QueryFloatAttribute("scale", &voxelSize);
     
     voxelMap = new draw::VoxelMap(std::max(width, std::max(height, depth))*2);
-    voxelTexture = new draw::RTexture3D(width, height, depth, draw::tf::none);
+    voxelTexture = new draw::RGTexture3D(width, height, depth, draw::tf::none);
     
     for (size_t z = 0; z < voxelTexture->getDepth(); ++z)
     {
@@ -595,18 +598,10 @@ void Game::readVoxelMapResources(const std::string &path, TiXmlElement *el)
         {
             for (size_t x = 0; x < voxelTexture->getWidth(); ++x)
             {
-                (*voxelTexture)[z*voxelTexture->getHeight()*voxelTexture->getWidth() + y*voxelTexture->getWidth() + x] = (y > 0 ? 0x00 : 1 + (rand() & 3)) | (((x == 0) || (x == voxelTexture->getWidth() - 1)) && ((z == 0) || (z == voxelTexture->getDepth() - 1)) ? 1 + (rand() & 3) : 0x00);
+                (*voxelTexture)[2*(z*voxelTexture->getHeight()*voxelTexture->getWidth() + y*voxelTexture->getWidth() + x) + 0] = (y > 0 ? 0 : 1);
+                (*voxelTexture)[2*(z*voxelTexture->getHeight()*voxelTexture->getWidth() + y*voxelTexture->getWidth() + x) + 1] = (((x ^ y ^ z) & 1) == 0 ? 128 : 160);
             }
         }
-    }
-    
-    for (int i = 0; i < 2048; ++i)
-    {
-        size_t z = rand() % voxelTexture->getDepth();
-        size_t y = rand() % voxelTexture->getHeight();
-        size_t x = rand() % voxelTexture->getWidth();
-        
-        (*voxelTexture)[z*voxelTexture->getHeight()*voxelTexture->getWidth() + y*voxelTexture->getWidth() + x] = 1 + (rand() & 3);
     }
     
     voxelTexture->sendToDevice();
@@ -622,18 +617,32 @@ void Game::readVoxelMapResources(const std::string &path, TiXmlElement *el)
         {
             std::string textureFileName = "";
             
-            sl->QueryStringAttribute("px", &textureFileName);
-            cubeMaps.push_back(img::io::readImage(path + textureFileName));
-            sl->QueryStringAttribute("mx", &textureFileName);
-            cubeMaps.push_back(img::io::readImage(path + textureFileName));
-            sl->QueryStringAttribute("py", &textureFileName);
-            cubeMaps.push_back(img::io::readImage(path + textureFileName));
-            sl->QueryStringAttribute("my", &textureFileName);
-            cubeMaps.push_back(img::io::readImage(path + textureFileName));
-            sl->QueryStringAttribute("pz", &textureFileName);
-            cubeMaps.push_back(img::io::readImage(path + textureFileName));
-            sl->QueryStringAttribute("mz", &textureFileName);
-            cubeMaps.push_back(img::io::readImage(path + textureFileName));
+            sl->QueryStringAttribute("all", &textureFileName);
+            
+            if (!textureFileName.empty())
+            {
+                auto texture = img::io::readImage(path + textureFileName);
+                
+                for (int im = 0; im < 6; ++im)
+                {
+                    cubeMaps.push_back(texture);
+                }
+            }
+            else
+            {
+                sl->QueryStringAttribute("px", &textureFileName);
+                cubeMaps.push_back(img::io::readImage(path + textureFileName));
+                sl->QueryStringAttribute("mx", &textureFileName);
+                cubeMaps.push_back(img::io::readImage(path + textureFileName));
+                sl->QueryStringAttribute("py", &textureFileName);
+                cubeMaps.push_back(img::io::readImage(path + textureFileName));
+                sl->QueryStringAttribute("my", &textureFileName);
+                cubeMaps.push_back(img::io::readImage(path + textureFileName));
+                sl->QueryStringAttribute("pz", &textureFileName);
+                cubeMaps.push_back(img::io::readImage(path + textureFileName));
+                sl->QueryStringAttribute("mz", &textureFileName);
+                cubeMaps.push_back(img::io::readImage(path + textureFileName));
+            }
         }
         else
         {
@@ -641,7 +650,7 @@ void Game::readVoxelMapResources(const std::string &path, TiXmlElement *el)
         }
     }
     
-    voxelCubeArrayTexture = new draw::RGBTexture2DCubeArray(cubeMaps.begin(), cubeMaps.end());
+    voxelCubeArrayTexture = new draw::RGBTexture2DCubeArray(cubeMaps.begin(), cubeMaps.end(), draw::tf::repeat | draw::tf::mipmap);
     
     voxelMap->setCubeMaps(*voxelCubeArrayTexture);
 }
@@ -723,19 +732,21 @@ void Game::readSkyResources(const std::string &path, TiXmlElement *el)
     std::cerr << "Reading sky resources..." << std::endl;
     
     std::string textureFileName = "";
+    int nrSteps = 128;
     
     assert(std::string(el->Value()) == "sky");
     
     el->QueryStringAttribute("texture", &textureFileName);
+    el->QueryIntAttribute("nr_steps", &nrSteps);
     
     //Create sky box mesh and read gradient texture.
     skyBoxMesh = new draw::StaticMesh(mesh::StaticMesh::createCubeMesh(-1.0e6));
     skyBoxDiffuseTexture = new draw::RGBTexture2D(img::Image::createSolidImage());
     skyBoxMesh->setDiffuseTexture(*skyBoxDiffuseTexture);
     
-    skyEffect = new draw::effects::SunSky();
+    skyEffect = new draw::effects::SunSkyVoxelMap(nrSteps);
     skyGradientTexture = new draw::RGBTexture2D(img::io::readImage(path + textureFileName), draw::tf::filter);
     skyEffect->setSkyTexture(*skyGradientTexture);
-    skyEffect->setSun(normalize(vec3(0.1f, 1.0f, 0.2f)));
+    skyEffect->setSun(normalize(vec3(0.4f, 0.8f, 0.4f)));
 }
 
