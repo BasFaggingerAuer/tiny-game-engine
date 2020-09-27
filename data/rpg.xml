@@ -8,7 +8,7 @@
         <biome diffuse="img/terrain/dirt.jpg" normal="img/terrain/dirt_normal.jpg" sound="sound/forest.ogg"/>
         <biome diffuse="img/terrain/rocks.jpg" normal="img/terrain/rocks_normal.jpg" sound="sound/sheep.ogg"/>
     </terrain>
-    <voxelmap width="64" height="64" depth="64" scale="1.0f">
+    <voxelmap width="32" height="32" depth="32" scale="1.0">
         <cubemap all="img/cm_dirt.png" />
         <cubemap all="img/cm_mud.png" />
         <cubemap all="img/cm_grass.png" />
@@ -45,13 +45,10 @@
     <charactertype name="Kraken" width="9.0" depth="9.0" height="9.0" mesh="rpg/kraken.dae" max_instances="64" />
     <charactertype name="Shark" width="3.0" depth="9.0" height="1.0" scale_height="1.0" mesh="rpg/shark.dae" max_instances="64" />
     <charactertype name="Merman" width="1.0" depth="1.0" height="2.0" mesh="rpg/merman.dae" max_instances="64" />
-    <character name="Laertes" type="HumanRanger" x="-1.0" z="0.0" r="0.0" c="0.75" />
-    <character name="Rodan" type="HumanMage" x="0.0" z="0.0" r="0.0" c="0.15" />
-    <character name="Tollie" type="Dwarf" x="1.0" z="1.0" r="0.0" c="0.30" />
-    <character name="Julius" type="HumanPaladin" x="-1.0" z="1.0" r="0.0" c="0.45" />
-    <character name="Sven" type="HumanViking" x="0.0" z="1.0" r="0.0" c="0.00" />
-    <character name="Augustus" type="HumanSpear" x="1.0" z="0.0" r="0.0" c="0.60" />
-    <character name="Erik" type="HumanSpear2" x="-2.0" z="0.0" r="0.0" c="-0.9" />
-    <character name="Anax" type="HumanSpear2" x="2.0" z="0.0" r="0.0" c="-0.9" />
-    <character name="Shark" type="Shark" x="0.0" z="4.0" r="180.0" c="-0.7" />
+    <character name="Laertes" type="HumanRanger" x="-1" z="0" r="0" c="0.75" />
+    <character name="Rodan" type="HumanMage" x="0" z="0" r="0" c="0.15" />
+    <character name="Tollie" type="Dwarf" x="1" z="1" r="0" c="0.30" />
+    <character name="Julius" type="HumanPaladin" x="-1" z="1" r="0" c="0.45" />
+    <character name="Sven" type="HumanViking" x="0" z="1" r="0" c="0.00" />
+    <character name="Augustus" type="HumanSpear" x="1" z="0" r="0" c="0.60" />
 </rpg>

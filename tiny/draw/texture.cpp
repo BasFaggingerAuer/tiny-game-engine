@@ -24,6 +24,7 @@ TextureInterface::TextureInterface(const GLenum &a_textureTarget,
                                    const GLint &a_textureFormat,
                                    const GLenum &a_textureChannels,
                                    const GLenum &a_textureDataType,
+                                   const size_t &a_nrChannels,
                                    const unsigned int &a_flags,
                                    const size_t &a_width,
                                    const size_t &a_height,
@@ -36,6 +37,7 @@ TextureInterface::TextureInterface(const GLenum &a_textureTarget,
     width(a_width),
     height(a_height),
     depth(a_depth),
+    nrChannels(a_nrChannels),
     textureIndex(0)
 {
     createDeviceTexture();
@@ -50,6 +52,7 @@ TextureInterface::TextureInterface(const TextureInterface &a_texture) :
     width(a_texture.width),
     height(a_texture.height),
     depth(a_texture.depth),
+    nrChannels(a_texture.nrChannels),
     textureIndex(0)
 {
     createDeviceTexture();
@@ -78,6 +81,11 @@ size_t TextureInterface::getHeight() const
 size_t TextureInterface::getDepth() const
 {
     return depth;
+}
+
+size_t TextureInterface::getChannels() const
+{
+    return nrChannels;
 }
 
 void TextureInterface::bind(const int &bindTarget) const

@@ -142,8 +142,8 @@ class UpdateCharacter : public tiny::net::MessageType
         UpdateCharacter() : tiny::net::MessageType(mt::updateCharacter, "updatecharacter", "Sets the parameters of a character with a specific index.")
         {
             addVariableType("index", tiny::net::vt::Integer);
-            addVariableType("pos", tiny::net::vt::Vec3);
-            addVariableType("rot", tiny::net::vt::Float);
+            addVariableType("pos", tiny::net::vt::IVec3);
+            addVariableType("rot", tiny::net::vt::Integer);
             addVariableType("color", tiny::net::vt::Float);
         }
         

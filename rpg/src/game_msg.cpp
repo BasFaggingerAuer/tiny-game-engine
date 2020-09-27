@@ -212,7 +212,7 @@ bool Game::msgAddCharacter(const unsigned int &, std::ostream &out, bool &broadc
         return false;
     }
     
-    CharacterInstance character(characterTypeIndex, "", vec3(0.0f), 0.0f, color);
+    CharacterInstance character(characterTypeIndex, "", ivec3(0), 0, color);
     const CharacterType *characterType = characterTypes[characterTypeIndex];
     
     characters[characterIndex] = character;
@@ -242,7 +242,7 @@ bool Game::msgRemoveCharacter(const unsigned int &, std::ostream &out, bool &bro
 }
 
 bool Game::msgUpdateCharacter(const unsigned int &senderIndex, std::ostream &out, bool &broadcast, const unsigned int &characterIndex,
-                              const vec3 &position, const float &rotation, const float &color)
+                              const ivec3 &position, const int &rotation, const float &color)
 {
     //Clients are only permitted to modify the status of their own characters.
     if (senderIndex != 0 && players[senderIndex].characterIndex != characterIndex)
@@ -348,7 +348,7 @@ bool Game::applyMessage(const unsigned int &senderIndex, const Message &message)
         else if (message.id == msg::mt::terrainOffset) ok = msgTerrainOffset(senderIndex, out, broadcast, message.data[0].v2);
         else if (message.id == msg::mt::addCharacter) ok = msgAddCharacter(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].iv1, message.data[2].v1);
         else if (message.id == msg::mt::removeCharacter) ok = msgRemoveCharacter(senderIndex, out, broadcast, message.data[0].iv1);
-        else if (message.id == msg::mt::updateCharacter) ok = msgUpdateCharacter(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].v3, message.data[2].v1, message.data[3].v1);
+        else if (message.id == msg::mt::updateCharacter) ok = msgUpdateCharacter(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].iv3, message.data[2].iv1, message.data[3].v1);
         else if (message.id == msg::mt::setPlayerCharacter) ok = msgSetPlayerCharacter(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].iv1);
         else if (message.id == msg::mt::playerSpawnRequest) ok = msgPlayerSpawnRequest(senderIndex, out, broadcast, message.data[0].iv1);
     }
@@ -357,7 +357,7 @@ bool Game::applyMessage(const unsigned int &senderIndex, const Message &message)
         //Host messages received from clients.
         assert(host && !client);
         
-        if (message.id == msg::mt::updateCharacter) ok = msgUpdateCharacter(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].v3, message.data[2].v1, message.data[3].v1);
+        if (message.id == msg::mt::updateCharacter) ok = msgUpdateCharacter(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].iv3, message.data[2].iv1, message.data[3].v1);
     }
     
     //Add message output to the console.

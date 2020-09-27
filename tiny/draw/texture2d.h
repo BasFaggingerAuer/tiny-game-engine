@@ -34,6 +34,7 @@ class DepthTexture2D : public TextureInterface
                              GL_DEPTH_COMPONENT24,
                              GL_DEPTH_COMPONENT,
                              GL_UNSIGNED_BYTE,
+                             1,
                              tf::none,
                              a_width,
                              a_height)

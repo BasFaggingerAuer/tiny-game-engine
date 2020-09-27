@@ -54,7 +54,7 @@ class Player
 
 struct CharacterInstance
 {
-    CharacterInstance(const unsigned int &a_type = 0, const std::string &a_name = "", const tiny::vec3 &a_position = tiny::vec3(0.0f), const float &a_rotation = 0.0f, const float &a_color = 0.0f) :
+    CharacterInstance(const unsigned int &a_type = 0, const std::string &a_name = "", const tiny::ivec3 &a_position = tiny::ivec3(0), const int &a_rotation = 0, const float &a_color = 0.0f) :
         type(a_type),
         name(a_name),
         position(a_position),
@@ -75,8 +75,8 @@ struct CharacterInstance
     
     unsigned int type;
     std::string name;
-    tiny::vec3 position;
-    float rotation;
+    tiny::ivec3 position;
+    int rotation;
     float color;
 };
 
@@ -111,7 +111,6 @@ enum PaintMode
 {
     VoxelReplace,
     VoxelAdd,
-    ModelMove
 };
 
 class Game
@@ -140,7 +139,7 @@ class Game
         bool msgTerrainOffset(const unsigned int &, std::ostream &, bool &, const tiny::vec2 &);
         bool msgAddCharacter(const unsigned int &, std::ostream &, bool &, const unsigned int &, const unsigned int &, const float &);
         bool msgRemoveCharacter(const unsigned int &, std::ostream &, bool &, const unsigned int &);
-        bool msgUpdateCharacter(const unsigned int &, std::ostream &, bool &, const unsigned int &, const tiny::vec3 &, const float &, const float &);
+        bool msgUpdateCharacter(const unsigned int &, std::ostream &, bool &, const unsigned int &, const tiny::ivec3 &, const int &, const float &);
         bool msgSetPlayerCharacter(const unsigned int &, std::ostream &, bool &, const unsigned int &, const unsigned int &);
         bool msgPlayerSpawnRequest(const unsigned int &, std::ostream &, bool &, const unsigned int &);
         
@@ -152,6 +151,7 @@ class Game
         void readVoxelMapResources(const std::string &, TiXmlElement *);
         
         void createVoxelPalette();
+        void setVoxelBasePlane(const int &);
         
         //Renderer.
         const double aspectRatio;

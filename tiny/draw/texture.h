@@ -47,7 +47,7 @@ const unsigned int mipmap = 0x0004;
 class TextureInterface
 {
     public:
-        TextureInterface(const GLenum &a_textureTarget, const GLint &a_textureFormat, const GLenum &a_textureChannels, const GLenum &a_textureDataType, const unsigned int &a_flags, const size_t &a_width, const size_t &a_height = 1, const size_t &a_depth = 1);
+        TextureInterface(const GLenum &a_textureTarget, const GLint &a_textureFormat, const GLenum &a_textureChannels, const GLenum &a_textureDataType, const size_t &a_nrChannels, const unsigned int &a_flags, const size_t &a_width, const size_t &a_height = 1, const size_t &a_depth = 1);
         TextureInterface(const TextureInterface &a_texture);
         virtual ~TextureInterface();
         
@@ -55,6 +55,7 @@ class TextureInterface
         size_t getWidth() const;
         size_t getHeight() const;
         size_t getDepth() const;
+        size_t getChannels() const;
         void bind(const int & = 0) const;
         void unbind(const int & = 0) const;
         
@@ -67,7 +68,7 @@ class TextureInterface
         const GLenum textureChannels;
         const GLenum textureDataType;
         const unsigned int flags;
-        const size_t width, height, depth;
+        const size_t width, height, depth, nrChannels;
         GLuint textureIndex;
 };
 
@@ -80,6 +81,7 @@ class Texture : public TextureInterface
                              detail::getOpenGLTextureFormat<Channels, T>(),
                              detail::getOpenGLChannelType<Channels>(),
                              detail::getOpenGLDataType<T>(),
+                             Channels,
                              a_flags,
                              a_width,
                              a_height,
