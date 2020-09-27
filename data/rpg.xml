@@ -11,6 +11,8 @@
     <voxelmap width="64" height="64" depth="64" scale="1.0f">
         <cubemap all="img/cm_dirt.png" />
         <cubemap all="img/cm_mud.png" />
+        <cubemap all="img/cm_grass.png" />
+        <cubemap all="img/cm_grass2.png" />
         <cubemap all="img/cm_grass3.png" />
         <cubemap all="img/cm_sand.png" />
         <cubemap all="img/cm_dirt_desert.png" />

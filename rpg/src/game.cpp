@@ -252,9 +252,24 @@ void Game::updateConsole() const
             strm << "\\#fff" << i->first << (i->first == characterIndex ? "*(" : " (") << std::dec << std::setprecision(0) << std::fixed << 5.0f*i->second.position.x << ", " << 5.0f*i->second.position.y << ", " << 5.0f*i->second.position.z << "): \\#" << std::hex << std::min(15, static_cast<int>(16.0f*c.x)) << std::min(15, static_cast<int>(16.0f*c.y)) << std::min(15, static_cast<int>(16.0f*c.z)) << i->second.name << std::endl;
         }
         
-        font->setText(-1.0, -1.0, 0.075, aspectRatio, strm.str(), *fontTexture);
-        consoleBackground->setColour(vec4(0.0f, 0.0f, 0.0f, 0.4f));
-        consoleBackground->setSquareDimensions(-1.0f, 0.0f, -0.3f, -1.0f);
+        if (characterIndex == 0)
+        {
+            strm << std::endl << "\\#fff";
+            strm << " Z/C = Previous/next character" << std::endl;
+            strm << (paintMode == VoxelReplace ? "*" : " ") << "V = Replace/Pick voxels" << std::endl;
+            strm << (paintMode == VoxelAdd ? "*" : " ") << "B = Add/Remove voxels" << std::endl;
+            strm << " P = Restore voxel palette" << std::endl;
+            strm << (paintMode == ModelMove ? "*" : " ") << "M = Move models" << std::endl;
+        }
+        else
+        {
+            strm << std::endl << "\\#fff";
+            strm << " 0: Return to voxel edit mode" << std::endl;
+        }
+        
+        font->setText(-1.0, -1.0, 0.05, aspectRatio, strm.str(), *fontTexture);
+        consoleBackground->setColour(vec4(0.0f, 0.0f, 0.0f, 0.3f));
+        consoleBackground->setSquareDimensions(-1.0f, 1.0f, -0.6f, -1.0f);
     }
 }
 
@@ -300,6 +315,12 @@ void Game::update(os::Application *application, const float &dt)
     }
     
     fontWorld->setIcons(iconInstances.begin(), iconInstances.end());
+    
+    //Update mouse timer.
+    if (mouseTimer > 0.0f)
+    {
+        mouseTimer -= dt;
+    }
     
     //Toggle console.
     if (application->isKeyPressedOnce('`'))
@@ -379,31 +400,73 @@ void Game::update(os::Application *application, const float &dt)
         
         if (characterIndex == 0)
         {
+            //We do not control a character.
+            
+            //Change edit mode.
+            if (application->isKeyPressedOnce('v'))
+            {
+                paintMode = VoxelReplace;
+            }
+            if (application->isKeyPressedOnce('b'))
+            {
+                paintMode = VoxelAdd;
+            }
+            if (application->isKeyPressedOnce('m'))
+            {
+                paintMode = ModelMove;
+            }
+            if (application->isKeyPressedOnce('p'))
+            {
+                createVoxelPalette();
+            }
+            
             //Did the user click anywhere?
             auto mouse = application->getMouseState(false);
             
             if (mouse.buttons != 0)
             {
-                if (mouseReleased)
+                if (mouseTimer <= 0.0f || application->isKeyPressed('f'))
                 {
-                    mouseReleased = false;
+                    mouseTimer = 0.25f;
                     
-                    //Translate from screen to world coordinates.
+                    //Check which voxel we hit.
                     auto voxelHit = voxelMap->getIntersection(*voxelTexture, cameraPosition, renderer->getWorldDirection(vec2(mouse.x, 1.0f - mouse.y)));
                     
                     if (voxelHit.distance > 0.0f)
                     {
-                        if (mouse.buttons == 1)
+                        switch (paintMode)
                         {
-                            ivec3 p = max(ivec3(0), min(ivec3(voxelTexture->getWidth() - 1, voxelTexture->getHeight() - 1, voxelTexture->getDepth() - 1),
-                                          voxelHit.voxelIndices + voxelHit.normal));
-                            (*voxelTexture)[2*(p.z*voxelTexture->getHeight()*voxelTexture->getWidth() + p.y*voxelTexture->getWidth() + p.x) + 0] = 1;
-                        }
-                        else if (mouse.buttons == 2)
-                        {
-                            ivec3 p = max(ivec3(0), min(ivec3(voxelTexture->getWidth() - 1, voxelTexture->getHeight() - 1, voxelTexture->getDepth() - 1),
-                                          voxelHit.voxelIndices));
-                            (*voxelTexture)[2*(p.z*voxelTexture->getHeight()*voxelTexture->getWidth() + p.y*voxelTexture->getWidth() + p.x) + 0] = 0;
+                            case VoxelReplace:
+                                if (mouse.buttons == 1)
+                                {
+                                    ivec3 p = max(ivec3(0), min(ivec3(voxelTexture->getWidth() - 1, voxelTexture->getHeight() - 1, voxelTexture->getDepth() - 1),
+                                                  voxelHit.voxelIndices));
+                                    (*voxelTexture)[2*(p.z*voxelTexture->getHeight()*voxelTexture->getWidth() + p.y*voxelTexture->getWidth() + p.x) + 0] = paintVoxelType;
+                                }
+                                else if (mouse.buttons == 2)
+                                {
+                                    ivec3 p = max(ivec3(0), min(ivec3(voxelTexture->getWidth() - 1, voxelTexture->getHeight() - 1, voxelTexture->getDepth() - 1),
+                                                  voxelHit.voxelIndices));
+                                    paintVoxelType = (*voxelTexture)[2*(p.z*voxelTexture->getHeight()*voxelTexture->getWidth() + p.y*voxelTexture->getWidth() + p.x) + 0];
+                                }
+                                break;
+                            case VoxelAdd:
+                                if (mouse.buttons == 1)
+                                {
+                                    ivec3 p = max(ivec3(0), min(ivec3(voxelTexture->getWidth() - 1, voxelTexture->getHeight() - 1, voxelTexture->getDepth() - 1),
+                                                  voxelHit.voxelIndices + voxelHit.normal));
+                                    (*voxelTexture)[2*(p.z*voxelTexture->getHeight()*voxelTexture->getWidth() + p.y*voxelTexture->getWidth() + p.x) + 0] = paintVoxelType;
+                                }
+                                else if (mouse.buttons == 2)
+                                {
+                                    ivec3 p = max(ivec3(0), min(ivec3(voxelTexture->getWidth() - 1, voxelTexture->getHeight() - 1, voxelTexture->getDepth() - 1),
+                                                  voxelHit.voxelIndices));
+                                    (*voxelTexture)[2*(p.z*voxelTexture->getHeight()*voxelTexture->getWidth() + p.y*voxelTexture->getWidth() + p.x) + 0] = 0;
+                                }
+                                break;
+                            case ModelMove:
+                                //TODO
+                                break;
                         }
                         
                         voxelTexture->sendToDevice();
@@ -412,10 +475,9 @@ void Game::update(os::Application *application, const float &dt)
             }
             else
             {
-                mouseReleased = true;
+                mouseTimer = 0.0f;
             }
             
-            //We do not control a character: control the camera directly.
             //Move the camera around and collide with the terrain.
             const float cameraRadius = 1.0f;
             vec3 newPosition = cameraPosition;
@@ -517,6 +579,9 @@ void Game::clear()
     //Reset camera.
     cameraPosition = vec3(0.0f, 10.0f, 0.0f);
     cameraOrientation = vec4(0.0f, 0.0f, 0.0f, 1.0f);
+    paintMode = VoxelReplace;
+    paintVoxelType = 1;
+    mouseTimer = 0.0f;
 }
 
 GameMessageTranslator *Game::getTranslator() const
@@ -592,25 +657,6 @@ void Game::readVoxelMapResources(const std::string &path, TiXmlElement *el)
     el->QueryIntAttribute("depth", &depth);
     el->QueryFloatAttribute("scale", &voxelSize);
     
-    voxelMap = new draw::VoxelMap(std::max(width, std::max(height, depth))*4);
-    voxelTexture = new draw::RGTexture3D(width, height, depth, draw::tf::none);
-    
-    for (size_t z = 0; z < voxelTexture->getDepth(); ++z)
-    {
-        for (size_t y = 0; y < voxelTexture->getHeight(); ++y)
-        {
-            for (size_t x = 0; x < voxelTexture->getWidth(); ++x)
-            {
-                (*voxelTexture)[2*(z*voxelTexture->getHeight()*voxelTexture->getWidth() + y*voxelTexture->getWidth() + x) + 0] = (y > 0 ? 0 : 1);
-                (*voxelTexture)[2*(z*voxelTexture->getHeight()*voxelTexture->getWidth() + y*voxelTexture->getWidth() + x) + 1] = (((x ^ y ^ z) & 1) == 0 ? 128 : 160);
-            }
-        }
-    }
-    
-    voxelTexture->sendToDevice();
-    
-    voxelMap->setVoxelMap(*voxelTexture, voxelSize);
-    
     //Read cubemaps.
     std::vector<img::Image> cubeMaps;
     
@@ -654,8 +700,47 @@ void Game::readVoxelMapResources(const std::string &path, TiXmlElement *el)
     }
     
     voxelCubeArrayTexture = new draw::RGBTexture2DCubeArray(cubeMaps.begin(), cubeMaps.end(), draw::tf::repeat | draw::tf::mipmap);
+    voxelMap = new draw::VoxelMap(std::max(width, std::max(height, depth))*4);
+    voxelTexture = new draw::RGTexture3D(width, height, depth, draw::tf::none);
     
+    //Create ground plane.
+    for (size_t z = 0; z < voxelTexture->getDepth(); ++z)
+    {
+        for (size_t y = 0; y < voxelTexture->getHeight(); ++y)
+        {
+            for (size_t x = 0; x < voxelTexture->getWidth(); ++x)
+            {
+                (*voxelTexture)[2*(z*voxelTexture->getHeight()*voxelTexture->getWidth() + y*voxelTexture->getWidth() + x) + 0] = (y > 0 ? 0 : 1);
+                (*voxelTexture)[2*(z*voxelTexture->getHeight()*voxelTexture->getWidth() + y*voxelTexture->getWidth() + x) + 1] = (((x ^ y ^ z) & 1) == 0 ? 128 : 144);
+            }
+        }
+    }
+    
+    voxelTexture->sendToDevice();
+    voxelMap->setVoxelMap(*voxelTexture, voxelSize);
     voxelMap->setCubeMaps(*voxelCubeArrayTexture);
+    createVoxelPalette();
+}
+
+void Game::createVoxelPalette()
+{
+    //Create palette for different voxel types.
+    const size_t n = voxelCubeArrayTexture->getDepth()/6;
+    const size_t p = static_cast<size_t>(ceil(sqrtf(static_cast<float>(n))));
+    size_t count = 0;
+    
+    for (size_t z = (voxelTexture->getDepth() - p)/2; z <= (voxelTexture->getDepth() + p)/2 && z < voxelTexture->getDepth(); ++z)
+    {
+        for (size_t y = 1; y < 2; ++y)
+        {
+            for (size_t x = 0; x < p && x < voxelTexture->getWidth() && count < n; ++x)
+            {
+                (*voxelTexture)[2*(z*voxelTexture->getHeight()*voxelTexture->getWidth() + y*voxelTexture->getWidth() + x) + 0] = 1 + count++;
+            }
+        }
+    }
+    
+    voxelTexture->sendToDevice();
 }
 
 void Game::readCharacterResources(TiXmlElement *el)

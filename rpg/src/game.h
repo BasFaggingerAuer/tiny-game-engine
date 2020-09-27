@@ -107,6 +107,13 @@ class CharacterType
         std::vector<tiny::draw::StaticMeshInstance> shadowInstances;
 };
 
+enum PaintMode
+{
+    VoxelReplace,
+    VoxelAdd,
+    ModelMove
+};
+
 class Game
 {
     public:
@@ -144,7 +151,7 @@ class Game
         void readBulletHordeResources(const std::string &, TiXmlElement *);
         void readVoxelMapResources(const std::string &, TiXmlElement *);
         
-        void applyConsequences();
+        void createVoxelPalette();
         
         //Renderer.
         const double aspectRatio;
@@ -153,7 +160,9 @@ class Game
         
         tiny::vec3 cameraPosition;
         tiny::vec4 cameraOrientation;
-        bool mouseReleased;
+        float mouseTimer;
+        PaintMode paintMode;
+        int paintVoxelType;
         
         //Console and font.
         bool consoleMode;
