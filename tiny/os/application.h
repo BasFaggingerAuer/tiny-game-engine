@@ -16,6 +16,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #pragma once
 
+#include <string>
+
 #include <tiny/math/vec.h>
 
 namespace tiny
@@ -72,6 +74,7 @@ class Application
         bool isRunning() const;
         bool isKeyPressed(const int &) const;
         bool isKeyPressedOnce(const int &);
+        std::string getTextInput();
         
         virtual void keyDownCallback(const int &);
         virtual void keyUpCallback(const int &);
@@ -80,6 +83,7 @@ class Application
         
     protected:
         bool pressedKeys[256];
+        std::string collectedText;
         
     private:
         bool running;

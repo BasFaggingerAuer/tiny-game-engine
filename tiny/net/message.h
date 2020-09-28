@@ -44,7 +44,8 @@ enum vt_enum
     Float,
     Vec2,
     Vec3,
-    Vec4
+    Vec4,
+    String256
 };
 
 }
@@ -71,6 +72,7 @@ struct VariableData
     VariableData(const vec2 &);
     VariableData(const vec3 &);
     VariableData(const vec4 &);
+    VariableData(const std::string &);
     
     int iv1;
     ivec2 iv2;
@@ -80,6 +82,7 @@ struct VariableData
     vec2 v2;
     vec3 v3;
     vec4 v4;
+    std::string s256;
 };
 
 struct Message

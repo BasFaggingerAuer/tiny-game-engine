@@ -23,6 +23,8 @@ Application::Application() :
     running(true)
 {
     for (int i = 0; i < 256; ++i) pressedKeys[i] = false;
+    
+    collectedText = "";
 }
 
 Application::~Application()
@@ -51,6 +53,15 @@ bool Application::isKeyPressedOnce(const int &key)
     pressedKeys[key] = false;
     
     return pressed;
+}
+
+std::string Application::getTextInput()
+{
+    std::string a = collectedText;
+    
+    collectedText = "";
+    
+    return a;
 }
 
 void Application::keyDownCallback(const int &)

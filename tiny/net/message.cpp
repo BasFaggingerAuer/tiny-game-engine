@@ -38,7 +38,8 @@ VariableData::VariableData() :
     v1(0.0f),
     v2(0.0f, 0.0f),
     v3(0.0f, 0.0f, 0.0f),
-    v4(0.0f, 0.0f, 0.0f, 0.0f)
+    v4(0.0f, 0.0f, 0.0f, 0.0f),
+    s256("")
 {
 
 }
@@ -51,7 +52,8 @@ VariableData::VariableData(const int &a) :
     v1(0.0f),
     v2(0.0f, 0.0f),
     v3(0.0f, 0.0f, 0.0f),
-    v4(0.0f, 0.0f, 0.0f, 0.0f)
+    v4(0.0f, 0.0f, 0.0f, 0.0f),
+    s256("")
 {
 
 }
@@ -64,7 +66,8 @@ VariableData::VariableData(const unsigned int &a) :
     v1(0.0f),
     v2(0.0f, 0.0f),
     v3(0.0f, 0.0f, 0.0f),
-    v4(0.0f, 0.0f, 0.0f, 0.0f)
+    v4(0.0f, 0.0f, 0.0f, 0.0f),
+    s256("")
 {
 
 }
@@ -77,7 +80,8 @@ VariableData::VariableData(const ivec2 &a) :
     v1(0.0f),
     v2(0.0f, 0.0f),
     v3(0.0f, 0.0f, 0.0f),
-    v4(0.0f, 0.0f, 0.0f, 0.0f)
+    v4(0.0f, 0.0f, 0.0f, 0.0f),
+    s256("")
 {
 
 }
@@ -90,7 +94,8 @@ VariableData::VariableData(const ivec3 &a) :
     v1(0.0f),
     v2(0.0f, 0.0f),
     v3(0.0f, 0.0f, 0.0f),
-    v4(0.0f, 0.0f, 0.0f, 0.0f)
+    v4(0.0f, 0.0f, 0.0f, 0.0f),
+    s256("")
 {
 
 }
@@ -103,7 +108,8 @@ VariableData::VariableData(const ivec4 &a) :
     v1(0.0f),
     v2(0.0f, 0.0f),
     v3(0.0f, 0.0f, 0.0f),
-    v4(0.0f, 0.0f, 0.0f, 0.0f)
+    v4(0.0f, 0.0f, 0.0f, 0.0f),
+    s256("")
 {
 
 }
@@ -116,7 +122,8 @@ VariableData::VariableData(const float &a) :
     v1(a),
     v2(0.0f, 0.0f),
     v3(0.0f, 0.0f, 0.0f),
-    v4(0.0f, 0.0f, 0.0f, 0.0f)
+    v4(0.0f, 0.0f, 0.0f, 0.0f),
+    s256("")
 {
 
 }
@@ -129,7 +136,8 @@ VariableData::VariableData(const vec2 &a) :
     v1(0.0f),
     v2(a),
     v3(0.0f, 0.0f, 0.0f),
-    v4(0.0f, 0.0f, 0.0f, 0.0f)
+    v4(0.0f, 0.0f, 0.0f, 0.0f),
+    s256("")
 {
 
 }
@@ -142,7 +150,8 @@ VariableData::VariableData(const vec3 &a) :
     v1(0.0f),
     v2(0.0f, 0.0f),
     v3(a),
-    v4(0.0f, 0.0f, 0.0f, 0.0f)
+    v4(0.0f, 0.0f, 0.0f, 0.0f),
+    s256("")
 {
 
 }
@@ -155,9 +164,28 @@ VariableData::VariableData(const vec4 &a) :
     v1(0.0f),
     v2(0.0f, 0.0f),
     v3(0.0f, 0.0f, 0.0f),
-    v4(a)
+    v4(a),
+    s256("")
 {
 
+}
+
+VariableData::VariableData(const std::string &a) :
+    iv1(0),
+    iv2(0, 0),
+    iv3(0, 0, 0),
+    iv4(0, 0, 0, 0),
+    v1(0.0f),
+    v2(0.0f, 0.0f),
+    v3(0.0f, 0.0f, 0.0f),
+    v4(),
+    s256(a)
+{
+    if (s256.length() >= 255)
+    {
+        std::cerr << "Warning: reducing string length for '" << s256 << "'!" << std::endl;
+        s256 = s256.substr(0, 255);
+    }
 }
 
 MessageType::MessageType(const id_t &a_id, const std::string &a_name, const std::string &a_usage) :
@@ -195,6 +223,7 @@ std::string MessageType::getDescription() const
         else if (i->type == vt::Vec2) stream << "vec2";
         else if (i->type == vt::Vec3) stream << "vec3";
         else if (i->type == vt::Vec4) stream << "vec4";
+        else if (i->type == vt::String256) stream << "string256";
         
         stream << " " << i->name << (i + 1 < variableTypes.end() ? ", " : "");
     }
@@ -221,6 +250,7 @@ size_t MessageType::getSizeInBytes() const
         else if (i->type == vt::Vec2) length += sizeof(vec2);
         else if (i->type == vt::Vec3) length += sizeof(vec3);
         else if (i->type == vt::Vec4) length += sizeof(vec4);
+        else if (i->type == vt::String256) length += 256;
     }
     
     return length;
@@ -251,6 +281,7 @@ bool MessageType::messageToText(const Message &in, std::string &out) const
         else if (i->type == vt::Vec2) stream << ptr->v2.x << " " << ptr->v2.y;
         else if (i->type == vt::Vec3) stream << ptr->v3.x << " " << ptr->v3.y << " " << ptr->v3.z;
         else if (i->type == vt::Vec4) stream << ptr->v4.x << " " << ptr->v4.y << " " << ptr->v4.z << " " << ptr->v4.w;
+        else if (i->type == vt::String256) stream << " \"" << ptr->s256 << "\"";
         
         ptr++;
     }
@@ -278,6 +309,8 @@ bool MessageType::textToMessage(const std::string &in, Message &out) const
     //Start extracting data.
     for (std::vector<VariableType>::const_iterator i = variableTypes.begin(); i != variableTypes.end(); ++i)
     {
+        if (!stream.good()) return false;
+        
         if (i->type == vt::Integer)
         {
             int a = 0;
@@ -332,6 +365,26 @@ bool MessageType::textToMessage(const std::string &in, Message &out) const
             vec4 a(0.0f, 0.0f, 0.0f, 0.0f);
             
             stream >> a.x >> a.y >> a.z >> a.w;
+            *ptr++ = VariableData(a);
+        }
+        else if (i->type == vt::String256)
+        {
+            std::string a("");
+            int mode = 0;
+            char c;
+            
+            while (stream.get(c) && mode < 2)
+            {
+                if (c == '"')
+                {
+                    ++mode;
+                }
+                else if (mode == 1)
+                {
+                    a.push_back(c);
+                }
+            }
+            
             *ptr++ = VariableData(a);
         }
     }
@@ -421,6 +474,13 @@ size_t MessageType::dataToMessage(const unsigned char *data, Message &out) const
             dataPtr += sizeof(vec4);
             *msgPtr++ = VariableData(a);
         }
+        else if (i->type == vt::String256)
+        {
+            std::string a = std::string((const char *)dataPtr, 256);
+            
+            dataPtr += 256;
+            *msgPtr++ = VariableData(a);
+        }
     }
     
     assert(dataPtr - data == static_cast<int>(getSizeInBytes()));
@@ -483,6 +543,22 @@ size_t MessageType::messageToData(const Message &in, unsigned char *out) const
         {
             *(vec4 *)dataPtr = msgPtr->v4;
             dataPtr += sizeof(vec4);
+        }
+        else if (i->type == vt::String256)
+        {
+            size_t j;
+            
+            for (j = 0; j < 255 && j < msgPtr->s256.length(); ++j)
+            {
+                dataPtr[j] = msgPtr->s256[j];
+            }
+            
+            for ( ; j < 256; ++j)
+            {
+                dataPtr[j] = 0;
+            }
+            
+            dataPtr += 256;
         }
         
         msgPtr++;

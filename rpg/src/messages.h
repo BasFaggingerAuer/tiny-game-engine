@@ -38,6 +38,8 @@ enum mt_t
     removePlayer,
     welcomePlayer,
     terrainOffset,
+    listCharacterTypes,
+    listCharacters,
     addCharacter,
     removeCharacter,
     updateCharacter,

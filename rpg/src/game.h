@@ -131,13 +131,15 @@ class Game
     private:
         bool msgHelp(const unsigned int &, std::ostream &, bool &);
         bool msgHost(const unsigned int &, std::ostream &, bool &, const unsigned int &);
-        bool msgJoin(const unsigned int &, std::ostream &, bool &, const unsigned int &, const unsigned int &, const unsigned int &);
+        bool msgJoin(const unsigned int &, std::ostream &, bool &, const std::string &, const unsigned int &);
         bool msgDisconnect(const unsigned int &, std::ostream &, bool &);
         bool msgAddPlayer(const unsigned int &, std::ostream &, bool &, const unsigned int &);
         bool msgRemovePlayer(const unsigned int &, std::ostream &, bool &, const unsigned int &);
         bool msgWelcomePlayer(const unsigned int &, std::ostream &, bool &, const unsigned int &);
         bool msgTerrainOffset(const unsigned int &, std::ostream &, bool &, const tiny::vec2 &);
-        bool msgAddCharacter(const unsigned int &, std::ostream &, bool &, const unsigned int &, const unsigned int &, const float &);
+        bool msgListCharacterTypes(const unsigned int &, std::ostream &, bool &);
+        bool msgListCharacters(const unsigned int &, std::ostream &, bool &);
+        bool msgAddCharacter(const unsigned int &, std::ostream &, bool &, const unsigned int &, const std::string &, const unsigned int &, const float &);
         bool msgRemoveCharacter(const unsigned int &, std::ostream &, bool &, const unsigned int &);
         bool msgUpdateCharacter(const unsigned int &, std::ostream &, bool &, const unsigned int &, const tiny::ivec3 &, const int &, const float &);
         bool msgSetPlayerCharacter(const unsigned int &, std::ostream &, bool &, const unsigned int &, const unsigned int &);

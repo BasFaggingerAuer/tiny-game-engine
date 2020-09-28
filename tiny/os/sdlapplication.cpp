@@ -194,6 +194,9 @@ SDLApplication::SDLApplication(const int &a_screenWidth,
 
     vrHMD->GetRecommendedRenderTargetSize(&screenWidthVR, &screenHeightVR);
 #endif
+    
+    //Enable text input.
+    SDL_StartTextInput();
 
     //Start main loop.
     std::cerr << "Initialisation complete." << std::endl;
@@ -206,6 +209,8 @@ SDLApplication::~SDLApplication()
 {
     //Shut down everything.
     std::cerr << "Shutting down SDL..." << std::endl;
+    
+    SDL_StopTextInput();
     
 #ifdef ENABLE_OPENVR
     vr::VR_Shutdown();
@@ -397,6 +402,10 @@ double SDLApplication::pollEvents()
             }
             
             this->keyUpCallback(static_cast<int>(k));
+        }
+        else if (event.type == SDL_TEXTINPUT)
+        {
+            collectedText += std::string(event.text.text);
         }
         else if (event.type == SDL_QUIT)
         {

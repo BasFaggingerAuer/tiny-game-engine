@@ -15,6 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <iostream>
+#include <iomanip>
 #include <fstream>
 #include <vector>
 #include <exception>
@@ -58,22 +59,16 @@ bool Game::msgHost(const unsigned int &, std::ostream &out, bool &, const unsign
     return true;
 }
 
-bool Game::msgJoin(const unsigned int &, std::ostream &out, bool &, const unsigned int &ipHi, const unsigned int &ipLo, const unsigned int &port)
+bool Game::msgJoin(const unsigned int &, std::ostream &out, bool &, const std::string &ip, const unsigned int &port)
 {
     if (!host && !client)
     {
         try
         {
-            std::ostringstream ipAddress;
-            
-            //Extract IP address from two integers.
-            ipAddress << ((ipHi/1000) % 1000) << "." << (ipHi % 1000) << "."
-                      << ((ipLo/1000) % 1000) << "." << (ipLo % 1000);
-            
             clear();
             players.clear();
-            client = new GameClient(ipAddress.str(), port, this);
-            out << "Joined game at " << ipAddress.str() << ":" << port << ".";
+            client = new GameClient(ip, port, this);
+            out << "Joined game at " << ip << ":" << port << ".";
         }
         catch (std::exception &e)
         {
@@ -204,7 +199,31 @@ bool Game::msgTerrainOffset(const unsigned int &, std::ostream &out, bool &broad
     return true;
 }
 
-bool Game::msgAddCharacter(const unsigned int &, std::ostream &out, bool &broadcast, const unsigned int &characterIndex, const unsigned int &characterTypeIndex, const float &color)
+bool Game::msgListCharacterTypes(const unsigned int &, std::ostream &out, bool &)
+{
+    out << "\\w\\4==== Available character types:" << std::endl;
+    
+    for (auto i = characterTypes.cbegin(); i != characterTypes.cend(); ++i)
+    {
+        out << std::setw(4) << std::setfill('0') << i->first << ": " << i->second->name << std::endl;
+    }
+    
+    return true;
+}
+
+bool Game::msgListCharacters(const unsigned int &, std::ostream &out, bool &)
+{
+    out << "\\w\\4==== Available characters:" << std::endl;
+    
+    for (auto i = characters.cbegin(); i != characters.cend(); ++i)
+    {
+        out << std::setw(4) << std::setfill('0') << i->first << ": " << i->second.name << " (" << characterTypes[i->second.type]->name << ", " << std::setw(0) << i->second.type << ")" << std::endl;
+    }
+    
+    return true;
+}
+
+bool Game::msgAddCharacter(const unsigned int &, std::ostream &out, bool &broadcast, const unsigned int &characterIndex, const std::string &characterName, const unsigned int &characterTypeIndex, const float &color)
 {
     if (characterTypes.find(characterTypeIndex) == characterTypes.end() || characters.find(characterIndex) != characters.end())
     {
@@ -212,7 +231,7 @@ bool Game::msgAddCharacter(const unsigned int &, std::ostream &out, bool &broadc
         return false;
     }
     
-    CharacterInstance character(characterTypeIndex, "", ivec3(0), 0, color);
+    CharacterInstance character(characterTypeIndex, characterName, ivec3(0), 0, color);
     const CharacterType *characterType = characterTypes[characterTypeIndex];
     
     characters[characterIndex] = character;
@@ -340,13 +359,15 @@ bool Game::applyMessage(const unsigned int &senderIndex, const Message &message)
     {
              if (message.id == msg::mt::help) ok = msgHelp(senderIndex, out, broadcast);
         else if (message.id == msg::mt::host) ok = msgHost(senderIndex, out, broadcast, message.data[0].iv1);
-        else if (message.id == msg::mt::join) ok = msgJoin(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].iv1, message.data[2].iv1);
+        else if (message.id == msg::mt::join) ok = msgJoin(senderIndex, out, broadcast, message.data[0].s256, message.data[1].iv1);
         else if (message.id == msg::mt::disconnect) ok = msgDisconnect(senderIndex, out, broadcast);
         else if (message.id == msg::mt::addPlayer) ok = msgAddPlayer(senderIndex, out, broadcast, message.data[0].iv1);
         else if (message.id == msg::mt::removePlayer) ok = msgRemovePlayer(senderIndex, out, broadcast, message.data[0].iv1);
         else if (message.id == msg::mt::welcomePlayer) ok = msgWelcomePlayer(senderIndex, out, broadcast, message.data[0].iv1);
         else if (message.id == msg::mt::terrainOffset) ok = msgTerrainOffset(senderIndex, out, broadcast, message.data[0].v2);
-        else if (message.id == msg::mt::addCharacter) ok = msgAddCharacter(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].iv1, message.data[2].v1);
+        else if (message.id == msg::mt::listCharacterTypes) ok = msgListCharacterTypes(senderIndex, out, broadcast);
+        else if (message.id == msg::mt::listCharacters) ok = msgListCharacters(senderIndex, out, broadcast);
+        else if (message.id == msg::mt::addCharacter) ok = msgAddCharacter(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].s256, message.data[2].iv1, message.data[3].v1);
         else if (message.id == msg::mt::removeCharacter) ok = msgRemoveCharacter(senderIndex, out, broadcast, message.data[0].iv1);
         else if (message.id == msg::mt::updateCharacter) ok = msgUpdateCharacter(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].iv3, message.data[2].iv1, message.data[3].v1);
         else if (message.id == msg::mt::setPlayerCharacter) ok = msgSetPlayerCharacter(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].iv1);

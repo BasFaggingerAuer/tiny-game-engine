@@ -47,10 +47,9 @@ class Host : public tiny::net::MessageType
 class Join : public tiny::net::MessageType
 {
     public:
-        Join() : tiny::net::MessageType(mt::join, "join", "Join a game at a specific ip address (192.168.1.4 becomes 192168 and 001004) and port.")
+        Join() : tiny::net::MessageType(mt::join, "join", "Join a game at a specific ip address and port.")
         {
-            addVariableType("ip1", tiny::net::vt::Integer);
-            addVariableType("ip2", tiny::net::vt::Integer);
+            addVariableType("ip", tiny::net::vt::String256);
             addVariableType("port", tiny::net::vt::Integer);
         }
         
@@ -112,12 +111,35 @@ class TerrainOffset : public tiny::net::MessageType
         ~TerrainOffset() {}
 };
 
+class ListCharacterTypes : public tiny::net::MessageType
+{
+    public:
+        ListCharacterTypes() : tiny::net::MessageType(mt::listCharacterTypes, "listcharactertypes", "Displays a list of available character types.")
+        {
+
+        }
+        
+        ~ListCharacterTypes() {}
+};
+
+class ListCharacters : public tiny::net::MessageType
+{
+    public:
+        ListCharacters() : tiny::net::MessageType(mt::listCharacters, "listcharacters", "Displays a list of current characters.")
+        {
+
+        }
+        
+        ~ListCharacters() {}
+};
+
 class AddCharacter : public tiny::net::MessageType
 {
     public:
         AddCharacter() : tiny::net::MessageType(mt::addCharacter, "addcharacter", "Creates a character with given index of a given type at a specific spot on the terrain, without a controller.")
         {
             addVariableType("index", tiny::net::vt::Integer);
+            addVariableType("name", tiny::net::vt::String256);
             addVariableType("type", tiny::net::vt::Integer);
             addVariableType("color", tiny::net::vt::Float);
         }
@@ -190,6 +212,8 @@ GameMessageTranslator::GameMessageTranslator() :
     addMessageType(new msg::RemovePlayer());
     addMessageType(new msg::WelcomePlayer());
     addMessageType(new msg::TerrainOffset());
+    addMessageType(new msg::ListCharacterTypes());
+    addMessageType(new msg::ListCharacters());
     addMessageType(new msg::AddCharacter());
     addMessageType(new msg::RemoveCharacter());
     addMessageType(new msg::UpdateCharacter());

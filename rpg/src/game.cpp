@@ -344,18 +344,25 @@ void Game::update(os::Application *application, const float &dt)
     if (application->isKeyPressedOnce('`'))
     {
         consoleMode = !consoleMode;
+        
+        if (consoleMode) application->getTextInput();
     }
     
     if (consoleMode)
     {
         //Update console input.
-        for (int i = 0; i < 256; ++i)
+        const std::string text = application->getTextInput();
+        
+        for (auto j = text.cbegin(); j != text.cend(); ++j)
         {
-            if (application->isKeyPressedOnce(i))
-            {
-                console->keyDown(i);
-            }
+            if (*j != '`' && *j != '\b' && *j != '\n' && *j != '\r' && *j != '[' && *j != ']') console->keyDown(*j);
         }
+        
+        if (application->isKeyPressedOnce('\b')) console->keyDown('\b');
+        if (application->isKeyPressedOnce('\n')) console->keyDown('\n');
+        if (application->isKeyPressedOnce('\r')) console->keyDown('\r');
+        if (application->isKeyPressedOnce('[')) console->scrollUp();
+        if (application->isKeyPressedOnce(']')) console->scrollDown();
     }
     else
     {
@@ -779,7 +786,7 @@ void Game::readVoxelMapResources(const std::string &path, TiXmlElement *el)
         {
             for (size_t x = 0; x < voxelTexture->getWidth(); ++x)
             {
-                (*voxelTexture)[voxelTexture->getChannels()*(z*voxelTexture->getHeight()*voxelTexture->getWidth() + y*voxelTexture->getWidth() + x) + 1] = (((x ^ y ^ z) & 1) == 0 ? 128 : 144);
+                (*voxelTexture)[voxelTexture->getChannels()*(z*voxelTexture->getHeight()*voxelTexture->getWidth() + y*voxelTexture->getWidth() + x) + 1] = (((x ^ y ^ z) & 1) == 0 ? 112 : 144);
             }
         }
     }
