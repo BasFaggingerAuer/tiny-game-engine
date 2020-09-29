@@ -300,21 +300,15 @@ void Game::update(os::Application *application, const float &dt)
             //We do not control a character.
             
             //Change edit mode.
-            if (application->isKeyPressedOnce('v'))
+            if (application->isKeyPressedOnce('v')) paintMode = VoxelReplace;
+            if (application->isKeyPressedOnce('b')) paintMode = VoxelAdd;
+            if (application->isKeyPressedOnce('p')) voxelMap->createVoxelPalette();
+            if (application->isKeyPressedOnce('\\')) voxelMap->setVoxelBasePlane(paintVoxelType);
+            if (application->isKeyPressedOnce('m'))
             {
-                paintMode = VoxelReplace;
-            }
-            if (application->isKeyPressedOnce('b'))
-            {
-                paintMode = VoxelAdd;
-            }
-            if (application->isKeyPressedOnce('p'))
-            {
-                voxelMap->createVoxelPalette();
-            }
-            if (application->isKeyPressedOnce('\\'))
-            {
-                voxelMap->setVoxelBasePlane(paintVoxelType);
+                std::string text = voxelMap->getCompressedVoxels();
+                
+                voxelMap->createFromCompressedVoxels(text);
             }
             
             //Did the user click anywhere?

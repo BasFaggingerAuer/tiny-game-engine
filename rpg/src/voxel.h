@@ -35,6 +35,7 @@ class GameVoxelMap
         ~GameVoxelMap();
         
         void createVoxelPalette();
+        void createFromCompressedVoxels(const std::string &);
         void setVoxelBasePlane(const int &);
         void setVoxel(const tiny::ivec3 &, const int &);
         int getVoxel(const tiny::ivec3 &) const;
@@ -44,6 +45,7 @@ class GameVoxelMap
         float getScaledDepth() const;
         tiny::draw::VoxelIntersection getIntersection(const tiny::vec3 &, const tiny::vec3 &) const;
         int getBaseHeight(const int &, const int &) const;
+        std::string getCompressedVoxels() const;
         
         tiny::draw::VoxelMap *voxelMap;
         tiny::draw::RGTexture3D *voxelTexture;
