@@ -199,6 +199,16 @@ bool Game::msgTerrainOffset(const unsigned int &, std::ostream &out, bool &broad
     return true;
 }
 
+bool Game::msgSunDirection(const unsigned int &, std::ostream &out, bool &broadcast, const vec3 &direction)
+{
+    skyEffect->setSun(normalize(direction));
+    
+    out << "Set sun direction to " << direction << ".";
+    broadcast = true;
+    
+    return true;
+}
+
 bool Game::msgListCharacterTypes(const unsigned int &, std::ostream &out, bool &)
 {
     out << "\\w\\4==== Available character types:" << std::endl;
@@ -365,6 +375,7 @@ bool Game::applyMessage(const unsigned int &senderIndex, const Message &message)
         else if (message.id == msg::mt::removePlayer) ok = msgRemovePlayer(senderIndex, out, broadcast, message.data[0].iv1);
         else if (message.id == msg::mt::welcomePlayer) ok = msgWelcomePlayer(senderIndex, out, broadcast, message.data[0].iv1);
         else if (message.id == msg::mt::terrainOffset) ok = msgTerrainOffset(senderIndex, out, broadcast, message.data[0].v2);
+        else if (message.id == msg::mt::sunDirection) ok = msgSunDirection(senderIndex, out, broadcast, message.data[0].v3);
         else if (message.id == msg::mt::listCharacterTypes) ok = msgListCharacterTypes(senderIndex, out, broadcast);
         else if (message.id == msg::mt::listCharacters) ok = msgListCharacters(senderIndex, out, broadcast);
         else if (message.id == msg::mt::addCharacter) ok = msgAddCharacter(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].s256, message.data[2].iv1, message.data[3].v1);

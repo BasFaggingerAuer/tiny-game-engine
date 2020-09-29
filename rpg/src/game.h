@@ -85,6 +85,7 @@ class Game
         bool msgRemovePlayer(const unsigned int &, std::ostream &, bool &, const unsigned int &);
         bool msgWelcomePlayer(const unsigned int &, std::ostream &, bool &, const unsigned int &);
         bool msgTerrainOffset(const unsigned int &, std::ostream &, bool &, const tiny::vec2 &);
+        bool msgSunDirection(const unsigned int &, std::ostream &, bool &, const tiny::vec3 &);
         bool msgListCharacterTypes(const unsigned int &, std::ostream &, bool &);
         bool msgListCharacters(const unsigned int &, std::ostream &, bool &);
         bool msgAddCharacter(const unsigned int &, std::ostream &, bool &, const unsigned int &, const std::string &, const unsigned int &, const float &);

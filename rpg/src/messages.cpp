@@ -111,6 +111,17 @@ class TerrainOffset : public tiny::net::MessageType
         ~TerrainOffset() {}
 };
 
+class SunDirection : public tiny::net::MessageType
+{
+    public:
+        SunDirection() : tiny::net::MessageType(mt::sunDirection, "sundirection", "Changes direction of the sun.")
+        {
+            addVariableType("direction", tiny::net::vt::Vec3);
+        }
+        
+        ~SunDirection() {}
+};
+
 class ListCharacterTypes : public tiny::net::MessageType
 {
     public:
@@ -212,6 +223,7 @@ GameMessageTranslator::GameMessageTranslator() :
     addMessageType(new msg::RemovePlayer());
     addMessageType(new msg::WelcomePlayer());
     addMessageType(new msg::TerrainOffset());
+    addMessageType(new msg::SunDirection());
     addMessageType(new msg::ListCharacterTypes());
     addMessageType(new msg::ListCharacters());
     addMessageType(new msg::AddCharacter());
