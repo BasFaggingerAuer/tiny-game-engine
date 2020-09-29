@@ -47,121 +47,6 @@ Player::~Player()
 
 }
 
-CharacterType::CharacterType(const std::string &path, TiXmlElement *el)
-{
-    std::cerr << "Reading character type resource..." << std::endl;
-   
-    assert(std::string(el->Value()) == "charactertype");
-    
-    name = "";
-    size = vec3(1.0f);
-    float scaleHeight = 0.125f;
-    
-    nrInstances = 0;
-    maxNrInstances = 1;
-    
-    el->QueryStringAttribute("name", &name);
-    el->QueryFloatAttribute("width", &size.x);
-    el->QueryFloatAttribute("height", &size.y);
-    el->QueryFloatAttribute("depth", &size.z);
-    el->QueryFloatAttribute("scale_height", &scaleHeight);
-    
-    std::string diffuseFileName = "";
-    std::string normalFileName = "";
-    std::string meshFileName = "";
-    
-    el->QueryStringAttribute("diffuse", &diffuseFileName);
-    el->QueryStringAttribute("normal", &normalFileName);
-    el->QueryStringAttribute("mesh", &meshFileName);
-    el->QueryIntAttribute("max_instances", &maxNrInstances);
-    
-    //Read mesh and textures.
-    diffuseTexture = new draw::RGBTexture2D(diffuseFileName.empty() ? img::Image::createSolidImage() : img::io::readImage(path + diffuseFileName));
-    normalTexture = new draw::RGBTexture2D(normalFileName.empty() ? img::Image::createUpNormalImage() : img::io::readImage(path + normalFileName));
-    mesh::StaticMesh mesh = (meshFileName.empty() ? mesh::StaticMesh::createBoxMesh(1.0f, 1.0f, 1.0f) : mesh::io::readStaticMesh(path + meshFileName));
-    
-    //Center mesh and fit it to size.
-    const std::pair<vec3, vec3> boundingBox = mesh.getBoundingBox();
-    
-    //Extract bottom 12.5% of the mesh to use for centering and scaling.
-    mesh::StaticMesh lowerMesh;
-    const float lowerY = boundingBox.first.y + (boundingBox.second.y - boundingBox.first.y)*scaleHeight;
-    
-    for (auto i = mesh.vertices.cbegin(); i != mesh.vertices.cend(); ++i)
-    {
-        if (i->position.y <= lowerY)
-        {
-            lowerMesh.vertices.push_back(*i);
-        }
-    }
-    
-    const std::pair<vec3, vec3> lowerBoundingBox = lowerMesh.getBoundingBox();
-    const vec3 o = vec3(0.5f*(lowerBoundingBox.first.x + lowerBoundingBox.second.x), lowerBoundingBox.first.y, 0.5f*(lowerBoundingBox.first.z + lowerBoundingBox.second.z));
-    const float s = minComponent(abs(size.xz() - 0.1f)/abs(lowerBoundingBox.second.xz() - lowerBoundingBox.first.xz()));
-    
-    for (std::vector<mesh::StaticMeshVertex>::iterator i = mesh.vertices.begin(); i != mesh.vertices.end(); ++i)
-    {
-        i->position = s*(i->position - o);
-    }
-    
-    horde = new draw::StaticMeshHorde(mesh, maxNrInstances);
-    horde->setDiffuseTexture(*diffuseTexture);
-    horde->setNormalTexture(*normalTexture);
-    instances.resize(maxNrInstances);
-    
-    shadowDiffuseTexture = new draw::RGBTexture2D(img::Image::createSolidImage());
-    shadowNormalTexture = new draw::RGBTexture2D(img::Image::createUpNormalImage());
-    
-    shadowHorde = new draw::StaticMeshHorde(mesh::StaticMesh::createBoxMesh(0.5f*size.x - 0.05f, 0.05f, 0.5f*size.z - 0.05f), maxNrInstances);
-    shadowHorde->setDiffuseTexture(*shadowDiffuseTexture);
-    shadowHorde->setNormalTexture(*shadowNormalTexture);
-    shadowInstances.resize(maxNrInstances);
-    
-    std::cerr << "Added '" << name << "' character type." << std::endl;
-}
-
-CharacterType::~CharacterType()
-{
-    delete horde;
-    delete diffuseTexture;
-    delete normalTexture;
-    
-    delete shadowHorde;
-    delete shadowDiffuseTexture;
-    delete shadowNormalTexture;
-}
-
-void CharacterType::clearInstances()
-{
-    nrInstances = 0;
-}
-
-void CharacterType::addInstance(const CharacterInstance &instance, const float &baseHeight)
-{
-    if (nrInstances < maxNrInstances)
-    {
-        instances[nrInstances] = draw::StaticMeshInstance(vec4(static_cast<float>(instance.position.x) + 0.5f,
-                                                               static_cast<float>(instance.position.y + baseHeight),
-                                                               static_cast<float>(instance.position.z) + 0.5f,
-                                                               1.0f),
-                                                            quatrot((M_PI/180.0f)*static_cast<float>(instance.rotation), vec3(0.0f, 1.0f, 0.0f)),
-                                                            instance.getColor());
-        shadowInstances[nrInstances] = draw::StaticMeshInstance(vec4(static_cast<float>(instance.position.x) + 0.5f,
-                                                               static_cast<float>(baseHeight),
-                                                               static_cast<float>(instance.position.z) + 0.5f,
-                                                               1.0f),
-                                                            vec4(0.0f, 0.0f, 0.0f, 1.0f),
-                                                            instance.getColor());
-        ++nrInstances;
-    }
-}
-
-void CharacterType::updateInstances()
-{
-    horde->setMeshes(instances.begin(), instances.begin() + nrInstances);
-    shadowHorde->setMeshes(shadowInstances.begin(), shadowInstances.begin() + nrInstances);
-}
-
 Game::Game(const os::Application *application, const std::string &path) :
     aspectRatio(static_cast<double>(application->getScreenWidth())/static_cast<double>(application->getScreenHeight())),
     mouseSensitivity(48.0),
@@ -191,7 +76,7 @@ Game::Game(const os::Application *application, const std::string &path) :
         renderer->addWorldRenderable(index++, i->second->shadowHorde);
     }
     
-    renderer->addWorldRenderable(index++, voxelMap);
+    renderer->addWorldRenderable(index++, voxelMap->voxelMap);
     
     renderer->addScreenRenderable(index++, skyEffect, false, false);
     renderer->addScreenRenderable(index++, fontWorld, false, false, draw::BlendMix);
@@ -214,8 +99,6 @@ Game::~Game()
     delete fontTexture;
     
     delete voxelMap;
-    delete voxelTexture;
-    delete voxelCubeArrayTexture;
     
     delete skyBoxMesh;
     delete skyBoxDiffuseTexture;
@@ -298,18 +181,7 @@ void Game::update(os::Application *application, const float &dt)
     {
         assert(characterTypes.find(i->second.type) != characterTypes.end());
         
-        //Determine height above voxel map.
-        int baseHeight;
-        
-        for (baseHeight = 0; baseHeight < static_cast<int>(voxelTexture->getHeight()); ++baseHeight)
-        {
-            if ((*voxelTexture)(i->second.position.x + voxelTexture->getWidth()/2,
-                                baseHeight,
-                                i->second.position.z + voxelTexture->getDepth()/2).x == 0.0f)
-            {
-                break;
-            }
-        }
+        const int baseHeight = voxelMap->getBaseHeight(i->second.position.x, i->second.position.z);
         
         characterTypes[i->second.type]->addInstance(i->second, baseHeight);
         
@@ -438,11 +310,11 @@ void Game::update(os::Application *application, const float &dt)
             }
             if (application->isKeyPressedOnce('p'))
             {
-                createVoxelPalette();
+                voxelMap->createVoxelPalette();
             }
             if (application->isKeyPressedOnce('\\'))
             {
-                setVoxelBasePlane(paintVoxelType);
+                voxelMap->setVoxelBasePlane(paintVoxelType);
             }
             
             //Did the user click anywhere?
@@ -455,14 +327,14 @@ void Game::update(os::Application *application, const float &dt)
                     mouseTimer = 0.25f;
                     
                     //Check which voxel we hit.
-                    auto voxelHit = voxelMap->getIntersection(*voxelTexture, cameraPosition, renderer->getWorldDirection(vec2(mouse.x, 1.0f - mouse.y)));
+                    auto voxelHit = voxelMap->getIntersection(cameraPosition, renderer->getWorldDirection(vec2(mouse.x, 1.0f - mouse.y)));
                     
                     if (voxelHit.distance > 0.0f)
                     {
                         if (mouse.buttons == 4)
                         {
                             //Find closest character.
-                            const ivec3 p = voxelHit.voxelIndices - ivec3(voxelTexture->getWidth()/2, 0, voxelTexture->getDepth()/2);
+                            const ivec3 p = voxelHit.voxelIndices;
                             int foundCharacter = -1;
                             int minDistanceSq = 5*5;
                             
@@ -493,31 +365,24 @@ void Game::update(os::Application *application, const float &dt)
                                 case VoxelReplace:
                                     if (mouse.buttons == 1)
                                     {
-                                        const ivec3 p = voxelHit.voxelIndices;
-                                        (*voxelTexture)[voxelTexture->getChannels()*(p.z*voxelTexture->getHeight()*voxelTexture->getWidth() + p.y*voxelTexture->getWidth() + p.x) + 0] = paintVoxelType;
+                                        voxelMap->setVoxel(voxelHit.voxelIndices, paintVoxelType);
                                     }
                                     else if (mouse.buttons == 2)
                                     {
-                                        const ivec3 p = voxelHit.voxelIndices;
-                                        paintVoxelType = (*voxelTexture)[voxelTexture->getChannels()*(p.z*voxelTexture->getHeight()*voxelTexture->getWidth() + p.y*voxelTexture->getWidth() + p.x) + 0];
+                                        paintVoxelType = voxelMap->getVoxel(voxelHit.voxelIndices);
                                     }
                                     break;
                                 case VoxelAdd:
                                     if (mouse.buttons == 1)
                                     {
-                                        const ivec3 p = max(ivec3(0), min(ivec3(voxelTexture->getWidth() - 1, voxelTexture->getHeight() - 1, voxelTexture->getDepth() - 1),
-                                                            voxelHit.voxelIndices + voxelHit.normal));
-                                        (*voxelTexture)[voxelTexture->getChannels()*(p.z*voxelTexture->getHeight()*voxelTexture->getWidth() + p.y*voxelTexture->getWidth() + p.x) + 0] = paintVoxelType;
+                                        voxelMap->setVoxel(voxelHit.voxelIndices + voxelHit.normal, paintVoxelType);
                                     }
                                     else if (mouse.buttons == 2)
                                     {
-                                        const ivec3 p = voxelHit.voxelIndices;
-                                        (*voxelTexture)[voxelTexture->getChannels()*(p.z*voxelTexture->getHeight()*voxelTexture->getWidth() + p.y*voxelTexture->getWidth() + p.x) + 0] = 0;
+                                        voxelMap->setVoxel(voxelHit.voxelIndices, 0);
                                     }
                                     break;
                             }
-                            
-                            voxelTexture->sendToDevice();
                         }
                     }
                 }
@@ -533,9 +398,9 @@ void Game::update(os::Application *application, const float &dt)
             
             application->updateSimpleCamera(dt, newPosition, cameraOrientation);
             newPosition.y = std::max(newPosition.y, terrain->getHeight(vec2(newPosition.x, newPosition.z)) + cameraRadius);
-            newPosition.x = clamp(newPosition.x, -0.5f*voxelMap->getScale()*static_cast<float>(voxelTexture->getWidth()), 0.5f*voxelMap->getScale()*static_cast<float>(voxelTexture->getWidth()));
-            newPosition.y = clamp(newPosition.y, 0.0f, voxelMap->getScale()*static_cast<float>(voxelTexture->getHeight()));
-            newPosition.z = clamp(newPosition.z, -0.5f*voxelMap->getScale()*static_cast<float>(voxelTexture->getDepth()), 0.5f*voxelMap->getScale()*static_cast<float>(voxelTexture->getDepth()));
+            newPosition.x = clamp(newPosition.x, -0.5f*voxelMap->getScaledWidth(), 0.5f*voxelMap->getScaledWidth());
+            newPosition.y = clamp(newPosition.y, voxelMap->getScale() + cameraRadius, voxelMap->getScaledHeight());
+            newPosition.z = clamp(newPosition.z, -0.5f*voxelMap->getScaledDepth(), 0.5f*voxelMap->getScaledDepth());
             cameraPosition = newPosition;
         }
         else
@@ -562,14 +427,14 @@ void Game::update(os::Application *application, const float &dt)
                     mouseTimer = 0.25f;
                     
                     //Check which voxel we hit.
-                    auto voxelHit = voxelMap->getIntersection(*voxelTexture, cameraPosition, renderer->getWorldDirection(vec2(mouse.x, 1.0f - mouse.y)));
+                    auto voxelHit = voxelMap->getIntersection(cameraPosition, renderer->getWorldDirection(vec2(mouse.x, 1.0f - mouse.y)));
                     
                     if (voxelHit.distance > 0.0f)
                     {
                         if (mouse.buttons == 1)
                         {
-                            chr.position.x = voxelHit.voxelIndices.x - voxelTexture->getWidth()/2;
-                            chr.position.z = voxelHit.voxelIndices.z - voxelTexture->getDepth()/2;
+                            chr.position.x = voxelHit.voxelIndices.x;
+                            chr.position.z = voxelHit.voxelIndices.z;
                         }
                     }
                 }
@@ -699,7 +564,7 @@ void Game::readResources(const std::string &path)
     {
              if (std::string(el->Value()) == "console") readConsoleResources(path, el);
         else if (std::string(el->Value()) == "sky") readSkyResources(path, el);
-        else if (std::string(el->Value()) == "voxelmap") readVoxelMapResources(path, el);
+        else if (std::string(el->Value()) == "voxelmap") voxelMap = new GameVoxelMap(path, el);
         else if (std::string(el->Value()) == "terrain") terrain = new GameTerrain(path, el);
         else if (std::string(el->Value()) == "charactertype") characterTypes[characterTypes.size()] = new CharacterType(path, el);
         else if (std::string(el->Value()) == "character") readCharacterResources(el);
@@ -714,126 +579,7 @@ void Game::readResources(const std::string &path)
     }
     
     //Assign voxel map to the sky effect.
-    skyEffect->setVoxelMap(*voxelTexture, voxelMap->getScale());
-}
-
-void Game::readVoxelMapResources(const std::string &path, TiXmlElement *el)
-{
-    std::cerr << "Reading voxel map resources..." << std::endl;
-    
-    assert(std::string(el->Value()) == "voxelmap");
-    
-    int width = 64;
-    int height = 64;
-    int depth = 64;
-    float voxelSize = 1.0f;
-    
-    el->QueryIntAttribute("width", &width);
-    el->QueryIntAttribute("height", &height);
-    el->QueryIntAttribute("depth", &depth);
-    el->QueryFloatAttribute("scale", &voxelSize);
-    
-    //Read cubemaps.
-    std::vector<img::Image> cubeMaps;
-    
-    for (TiXmlElement *sl = el->FirstChildElement(); sl; sl = sl->NextSiblingElement())
-    {
-        if (std::string(sl->Value()) == "cubemap")
-        {
-            std::string textureFileName = "";
-            
-            sl->QueryStringAttribute("all", &textureFileName);
-            
-            if (!textureFileName.empty())
-            {
-                auto texture = img::io::readImage(path + textureFileName);
-                
-                for (int im = 0; im < 6; ++im)
-                {
-                    cubeMaps.push_back(texture);
-                }
-            }
-            else
-            {
-                sl->QueryStringAttribute("px", &textureFileName);
-                cubeMaps.push_back(img::io::readImage(path + textureFileName));
-                sl->QueryStringAttribute("mx", &textureFileName);
-                cubeMaps.push_back(img::io::readImage(path + textureFileName));
-                sl->QueryStringAttribute("py", &textureFileName);
-                cubeMaps.push_back(img::io::readImage(path + textureFileName));
-                sl->QueryStringAttribute("my", &textureFileName);
-                cubeMaps.push_back(img::io::readImage(path + textureFileName));
-                sl->QueryStringAttribute("pz", &textureFileName);
-                cubeMaps.push_back(img::io::readImage(path + textureFileName));
-                sl->QueryStringAttribute("mz", &textureFileName);
-                cubeMaps.push_back(img::io::readImage(path + textureFileName));
-            }
-        }
-        else
-        {
-            std::cerr << "Warning: unknown data " << sl->Value() << " encountered in XML!" << std::endl;
-        }
-    }
-    
-    voxelCubeArrayTexture = new draw::RGBTexture2DCubeArray(cubeMaps.begin(), cubeMaps.end(), draw::tf::repeat | draw::tf::mipmap);
-    voxelMap = new draw::VoxelMap(std::max(width, std::max(height, depth))*4);
-    voxelTexture = new draw::RGTexture3D(width, height, depth, draw::tf::none);
-    
-    //Create checkerboard pattern.
-    for (size_t z = 0; z < voxelTexture->getDepth(); ++z)
-    {
-        for (size_t y = 0; y < voxelTexture->getHeight(); ++y)
-        {
-            for (size_t x = 0; x < voxelTexture->getWidth(); ++x)
-            {
-                (*voxelTexture)[voxelTexture->getChannels()*(z*voxelTexture->getHeight()*voxelTexture->getWidth() + y*voxelTexture->getWidth() + x) + 1] = (((x ^ y ^ z) & 1) == 0 ? 112 : 144);
-            }
-        }
-    }
-    
-    voxelTexture->sendToDevice();
-    voxelMap->setVoxelMap(*voxelTexture, voxelSize);
-    voxelMap->setCubeMaps(*voxelCubeArrayTexture);
-    setVoxelBasePlane(1);
-    createVoxelPalette();
-}
-
-void Game::createVoxelPalette()
-{
-    //Create palette for different voxel types.
-    const size_t n = voxelCubeArrayTexture->getDepth()/6;
-    const size_t p = static_cast<size_t>(ceil(sqrtf(static_cast<float>(n))));
-    size_t count = 0;
-    
-    for (size_t z = (voxelTexture->getDepth() - p)/2; z <= (voxelTexture->getDepth() + p)/2 && z < voxelTexture->getDepth(); ++z)
-    {
-        for (size_t y = 1; y < 2; ++y)
-        {
-            for (size_t x = 0; x < p && x < voxelTexture->getWidth() && count < n; ++x)
-            {
-                (*voxelTexture)[voxelTexture->getChannels()*(z*voxelTexture->getHeight()*voxelTexture->getWidth() + y*voxelTexture->getWidth() + x) + 0] = 1 + count++;
-            }
-        }
-    }
-    
-    voxelTexture->sendToDevice();
-}
-
-void Game::setVoxelBasePlane(const int &v)
-{
-    //Set all voxels at y = 0 to given type.
-    for (size_t z = 0; z < voxelTexture->getDepth(); ++z)
-    {
-        for (size_t y = 0; y < 1; ++y)
-        {
-            for (size_t x = 0; x < voxelTexture->getWidth(); ++x)
-            {
-                (*voxelTexture)[voxelTexture->getChannels()*(z*voxelTexture->getHeight()*voxelTexture->getWidth() + y*voxelTexture->getWidth() + x) + 0] = v;
-            }
-        }
-    }
-    
-    voxelTexture->sendToDevice();
+    skyEffect->setVoxelMap(*(voxelMap->voxelTexture), voxelMap->getScale());
 }
 
 void Game::readCharacterResources(TiXmlElement *el)

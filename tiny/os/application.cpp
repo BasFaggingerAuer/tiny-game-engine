@@ -82,7 +82,7 @@ void Application::stopRunning()
 void Application::updateSimpleCamera(const float &dt, vec3 &cameraPosition, vec4 &cameraOrientation) const
 {
     //Update the position and orientation of a simple controllable camera.
-    const float ds = (isKeyPressed('f') ? 300.0f : 2.0f)*dt;
+    const float ds = (isKeyPressed('f') ? 50.0f : 3.0f)*dt;
     const float dr = 2.1f*dt;
     
     if (isKeyPressed('i')) cameraOrientation = quatmul(quatrot(dr, vec3(-1.0f, 0.0f, 0.0f)), cameraOrientation);

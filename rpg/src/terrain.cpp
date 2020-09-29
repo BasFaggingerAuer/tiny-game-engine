@@ -165,7 +165,7 @@ void GameTerrain::setOffset(const vec2 &offset)
     draw::computeNormalMap(*heightTexture, *normalTexture, scale.x);
     
     //Center terrain at origin.
-    heightOffset = -getHeight(vec2(0.0f));
+    heightOffset = -sampleTextureBilinear(*heightTexture, scale, vec2(0.0f, 0.0f)).x;
     
     //Calculate attribute maps for both the zoomed-in and far-away terrain.
     calculateAttributes(*heightTexture, *attributeTexture, attributeShaderCode, scale.x);

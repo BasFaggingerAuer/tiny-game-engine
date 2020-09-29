@@ -23,6 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <tiny/os/application.h>
 
+#include <tiny/math/vec.h>
 #include <tiny/draw/staticmesh.h>
 #include <tiny/draw/staticmeshhorde.h>
 #include <tiny/draw/icontexture2d.h>
@@ -39,6 +40,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include "network.h"
 #include "terrain.h"
+#include "voxel.h"
+#include "character.h"
 
 namespace rpg
 {
@@ -50,61 +53,6 @@ class Player
         ~Player();
         
         unsigned int characterIndex;
-};
-
-struct CharacterInstance
-{
-    CharacterInstance(const unsigned int &a_type = 0, const std::string &a_name = "", const tiny::ivec3 &a_position = tiny::ivec3(0), const int &a_rotation = 0, const float &a_color = 0.0f) :
-        type(a_type),
-        name(a_name),
-        position(a_position),
-        rotation(a_rotation),
-        color(a_color)
-    {
-    
-    }
-    
-    tiny::vec4 getColor() const
-    {
-        return (color >= 0.0f ? tiny::vec4(0.5f*(1.0f + cosf(2.0f*M_PI*(color + 0.0f/3.0f))),
-                                0.5f*(1.0f + cosf(2.0f*M_PI*(color + 1.0f/3.0f))),
-                                0.5f*(1.0f + cosf(2.0f*M_PI*(color + 2.0f/3.0f))),
-                                1.0f) :
-                                tiny::vec4(-color, -color, -color, 1.0f));
-    }
-    
-    unsigned int type;
-    std::string name;
-    tiny::ivec3 position;
-    int rotation;
-    float color;
-};
-
-class CharacterType
-{
-    public:
-        CharacterType(const std::string &, TiXmlElement *);
-        ~CharacterType();
-        
-        void clearInstances();
-        void addInstance(const CharacterInstance &, const float &);
-        void updateInstances();
-        
-        std::string name;
-        tiny::vec3 size;
-        
-        tiny::draw::StaticMeshHorde *shadowHorde;
-        tiny::draw::RGBTexture2D *shadowDiffuseTexture;
-        tiny::draw::RGBTexture2D *shadowNormalTexture;
-        
-        tiny::draw::StaticMeshHorde *horde;
-        tiny::draw::RGBTexture2D *diffuseTexture;
-        tiny::draw::RGBTexture2D *normalTexture;
-        
-        int nrInstances;
-        int maxNrInstances;
-        std::vector<tiny::draw::StaticMeshInstance> instances;
-        std::vector<tiny::draw::StaticMeshInstance> shadowInstances;
 };
 
 enum PaintMode
@@ -152,9 +100,6 @@ class Game
         void readBulletHordeResources(const std::string &, TiXmlElement *);
         void readVoxelMapResources(const std::string &, TiXmlElement *);
         
-        void createVoxelPalette();
-        void setVoxelBasePlane(const int &);
-        
         //Renderer.
         const double aspectRatio;
         const float mouseSensitivity;
@@ -173,11 +118,6 @@ class Game
         tiny::draw::WorldIconHorde *fontWorld;
         tiny::draw::IconTexture2D *fontTexture;
         
-        //Voxel map.
-        tiny::draw::VoxelMap *voxelMap;
-        tiny::draw::RGTexture3D *voxelTexture;
-        tiny::draw::RGBTexture2DCubeArray *voxelCubeArrayTexture;
-        
         //Sky and atmosphere.
         tiny::draw::StaticMesh *skyBoxMesh;
         tiny::draw::RGBTexture2D *skyBoxDiffuseTexture;
@@ -186,6 +126,9 @@ class Game
         
         //Terrain.
         GameTerrain *terrain;
+        
+        //Voxel map.
+        GameVoxelMap *voxelMap;
         
         float gravitationalConstant;
         

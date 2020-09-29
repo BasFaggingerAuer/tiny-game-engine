@@ -38,6 +38,8 @@ add_executable(rpg src/rpg.cpp
                    src/messages.cpp
                    src/network.cpp
                    src/terrain.cpp
+                   src/voxel.cpp
+                   src/character.cpp
                    src/game.cpp
                    src/game_msg.cpp)
 
