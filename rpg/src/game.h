@@ -140,8 +140,10 @@ class Game
         //Characters.
         std::map<unsigned int, CharacterType *> characterTypes;
         std::map<unsigned int, CharacterInstance> characters;
-        std::list<CharacterInstance> baseCharacters;
         unsigned int lastCharacterIndex;
+        
+        //Game starting state.
+        std::list<std::string> initCommands;
 
         //Networking.
         GameMessageTranslator * const translator;

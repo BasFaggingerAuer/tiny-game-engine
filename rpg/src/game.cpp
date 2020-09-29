@@ -477,6 +477,7 @@ void Game::render()
 void Game::clear()
 {
     //Stops any running game and clears all data.
+    console->addLine("Resetting game state...");
     
     //Stop networking.
     if (client)
@@ -511,11 +512,7 @@ void Game::clear()
     
     //Reset all characters.
     lastCharacterIndex = 0;
-    
-    for (auto i = baseCharacters.cbegin(); i != baseCharacters.end(); ++i)
-    {
-        characters[++lastCharacterIndex] = *i;
-    }
+    characters.clear();
     
     //Reset camera.
     cameraPosition = vec3(0.0f, 10.0f, 0.0f);
@@ -523,6 +520,21 @@ void Game::clear()
     paintMode = VoxelReplace;
     paintVoxelType = 1;
     mouseTimer = 0.0f;
+    
+    //Run initialization commands.
+    console->addLine("Running initialization...");
+    
+    for (auto i = initCommands.cbegin(); i != initCommands.cend(); ++i)
+    {
+        for (auto j = i->cbegin(); j != i->cend(); ++j)
+        {
+            console->keyDown(*j);
+        }
+        
+        console->keyDown('\n');
+    }
+    
+    console->addLine("Reset and initialization complete.");
 }
 
 GameMessageTranslator *Game::getTranslator() const
@@ -567,7 +579,17 @@ void Game::readResources(const std::string &path)
         else if (std::string(el->Value()) == "voxelmap") voxelMap = new GameVoxelMap(path, el);
         else if (std::string(el->Value()) == "terrain") terrain = new GameTerrain(path, el);
         else if (std::string(el->Value()) == "charactertype") characterTypes[characterTypes.size()] = new CharacterType(path, el);
-        else if (std::string(el->Value()) == "character") readCharacterResources(el);
+        else if (std::string(el->Value()) == "init")
+        {
+            std::string command = "";
+            
+            el->QueryStringAttribute("command", &command);
+            
+            if (!command.empty())
+            {
+                initCommands.push_back(command);
+            }
+        }
         else std::cerr << "Warning: unknown data " << el->Value() << " encountered in XML!" << std::endl;
     }
     
@@ -580,49 +602,6 @@ void Game::readResources(const std::string &path)
     
     //Assign voxel map to the sky effect.
     skyEffect->setVoxelMap(*(voxelMap->voxelTexture), voxelMap->getScale());
-}
-
-void Game::readCharacterResources(TiXmlElement *el)
-{
-    std::cerr << "Reading character resources..." << std::endl;
-    
-    assert(std::string(el->Value()) == "character");
-    
-    std::string name = "";
-    std::string type = "";
-    float x = 0.0f;
-    float y = 0.0f;
-    float z = 0.0f;
-    float r = 0.0f;
-    float c = 0.0f;
-    
-    el->QueryStringAttribute("name", &name);
-    el->QueryStringAttribute("type", &type);
-    el->QueryFloatAttribute("x", &x);
-    el->QueryFloatAttribute("y", &y);
-    el->QueryFloatAttribute("z", &z);
-    el->QueryFloatAttribute("r", &r);
-    el->QueryFloatAttribute("c", &c);
-    
-    unsigned int typeIndex = 0;
-    bool typeFound = false;
-    
-    for (auto i = characterTypes.cbegin(); i != characterTypes.cend() && !typeFound; ++i)
-    {
-        if (i->second->name == type)
-        {
-            typeFound = true;
-            typeIndex = i->first;
-        }
-    }
-    
-    if (!typeFound)
-    {
-        std::cerr << "Unable to find character type '" << type << "' for character '" << name << "'!" << std::endl;
-        throw std::exception();
-    }
-    
-    baseCharacters.push_back(CharacterInstance(typeIndex, name, ivec3(x, y, z), r, c));
 }
 
 void Game::readConsoleResources(const std::string &path, TiXmlElement *el)

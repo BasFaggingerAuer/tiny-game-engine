@@ -45,10 +45,18 @@
     <charactertype name="Kraken" width="9.0" depth="9.0" height="9.0" mesh="rpg/kraken.dae" max_instances="64" />
     <charactertype name="Shark" width="3.0" depth="9.0" height="1.0" scale_height="1.0" mesh="rpg/shark.dae" max_instances="64" />
     <charactertype name="Merman" width="1.0" depth="1.0" height="2.0" mesh="rpg/merman.dae" max_instances="64" />
-    <character name="Laertes" type="HumanRanger" x="-1" z="0" r="0" c="0.75" />
-    <character name="Rodan" type="HumanMage" x="0" z="0" r="0" c="0.15" />
-    <character name="Tollie" type="Dwarf" x="1" z="1" r="0" c="0.30" />
-    <character name="Julius" type="HumanPaladin" x="-1" z="1" r="0" c="0.45" />
-    <character name="Sven" type="HumanViking" x="0" z="1" r="0" c="0.00" />
-    <character name="Augustus" type="HumanSpear" x="1" z="0" r="0" c="0.60" />
+    <init command="terrainoffset 0.50 0.55" />
+    <init command="sundirection 0.3 0.6 0.4" />
+    <init command="addcharacter 1 'Laertes' 1 0.75" />
+    <init command="updatecharacter 1 -1 0 0 0 0.75" />
+    <init command="addcharacter 2 'Rodan' 2 0.15" />
+    <init command="updatecharacter 2 0 0 0 0 0.15" />
+    <init command="addcharacter 3 'Tollie' 6 0.30" />
+    <init command="updatecharacter 3 1 0 1 0 0.30" />
+    <init command="addcharacter 4 'Julius' 3 0.45" />
+    <init command="updatecharacter 4 -1 0 1 0 0.45" />
+    <init command="addcharacter 5 'Sven' 4 0.00" />
+    <init command="updatecharacter 5 0 0 1 0 0.00" />
+    <init command="addcharacter 6 'Augustus' 5 0.60" />
+    <init command="updatecharacter 6 1 0 0 0 0.60" />
 </rpg>

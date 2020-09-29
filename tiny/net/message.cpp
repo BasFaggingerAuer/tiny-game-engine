@@ -281,7 +281,7 @@ bool MessageType::messageToText(const Message &in, std::string &out) const
         else if (i->type == vt::Vec2) stream << ptr->v2.x << " " << ptr->v2.y;
         else if (i->type == vt::Vec3) stream << ptr->v3.x << " " << ptr->v3.y << " " << ptr->v3.z;
         else if (i->type == vt::Vec4) stream << ptr->v4.x << " " << ptr->v4.y << " " << ptr->v4.z << " " << ptr->v4.w;
-        else if (i->type == vt::String256) stream << " \"" << ptr->s256 << "\"";
+        else if (i->type == vt::String256) stream << " '" << ptr->s256 << "'";
         
         ptr++;
     }
@@ -375,7 +375,7 @@ bool MessageType::textToMessage(const std::string &in, Message &out) const
             
             while (stream.get(c) && mode < 2)
             {
-                if (c == '"')
+                if (c == '\'')
                 {
                     ++mode;
                 }
