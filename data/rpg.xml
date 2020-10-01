@@ -8,7 +8,7 @@
         <biome diffuse="img/terrain/dirt.jpg" normal="img/terrain/dirt_normal.jpg" sound="sound/forest.ogg"/>
         <biome diffuse="img/terrain/rocks.jpg" normal="img/terrain/rocks_normal.jpg" sound="sound/sheep.ogg"/>
     </terrain>
-    <voxelmap width="32" height="32" depth="32" scale="1.0">
+    <voxelmap width="32" height="32" depth="32" scale="1.0" compressed_voxels="GaaaaKbGpecJOeCIuyfTaVigmGc4ajalObEqeOcxqg2qhMqaeceuQaGsa1qbAb0dygWkGBaVa2bd4hyOaJWcoHbaH6baosijubGKcggyzGHXcaGbqbyb4bWbibebKHiOHtcassijnaGIbgIrayzGHbwgyymaGLdgY5aOyHHbggvaOiHHdggyyGHvfaggyyHHbgwdayOGHCeaggyyHHbgsdaO4GHCoagQvaOiIHCgagUvayiHHbg*pby4+hGH+Fag*+byyTed">
         <cubemap all="img/cm_dirt.png" />
         <cubemap all="img/cm_mud.png" />
         <cubemap all="img/cm_grass.png" />

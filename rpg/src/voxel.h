@@ -35,7 +35,7 @@ class GameVoxelMap
         ~GameVoxelMap();
         
         void createVoxelPalette();
-        void createFromCompressedVoxels(const std::string &);
+        bool createFromCompressedVoxels(const std::string &, const float &);
         void setVoxelBasePlane(const int &);
         void setVoxel(const tiny::ivec3 &, const int &);
         int getVoxel(const tiny::ivec3 &) const;

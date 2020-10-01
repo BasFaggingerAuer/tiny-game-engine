@@ -308,7 +308,8 @@ void Game::update(os::Application *application, const float &dt)
             {
                 std::string text = voxelMap->getCompressedVoxels();
                 
-                voxelMap->createFromCompressedVoxels(text);
+                std::cout << "Voxel map description:" << std::endl;
+                std::cout << text << std::endl;
             }
             
             //Did the user click anywhere?
