@@ -8,7 +8,7 @@
         <biome diffuse="img/terrain/dirt.jpg" normal="img/terrain/dirt_normal.jpg" sound="sound/forest.ogg"/>
         <biome diffuse="img/terrain/rocks.jpg" normal="img/terrain/rocks_normal.jpg" sound="sound/sheep.ogg"/>
     </terrain>
-    <voxelmap width="32" height="32" depth="32" scale="1.0" compressed_voxels="GaaaaKbGpecJOeCIuyfTaVigmGc4ajalObEqeOcxqg2qhMqaeceuQaGsa1qbAb0dygWkGBaVa2bd4hyOaJWcoHbaH6baosijubGKcggyzGHXcaGbqbyb4bWbibebKHiOHtcassijnaGIbgIrayzGHbwgyymaGLdgY5aOyHHbggvaOiHHdggyyGHvfaggyyHHbgwdayOGHCeaggyyHHbgsdaO4GHCoagQvaOiIHCgagUvayiHHbg*pby4+hGH+Fag*+byyTed">
+    <voxelmap width="32" height="32" depth="32" scale="1.0" compressed_voxels="Gaaiaacafqzqh8HdqjarOcUqgydHWiobsXk0IxWemGcqcwGg8GyeGAecc2ybOwv72GRovVQFfvXvq1ujrBOU9Ic7uBpaWHvGIhkauNkko1PYcxYlsUKxCQtffN6uzHl5fjxYlwyaafBGowC0MuNkko1PYcxYlsUKxCQtffN6uzHl5fjxYlkTYQYQQu5vDDlPI*OaafRafRcdhTucalo6yXrpIfFGwM6urXPovw4sErYL8ItDQO4uNklCjxRi5sUwXdfaQtffN6uzHl5AfjxY1gSHtDQO4uNklCjVi5sEXRpay4f0rpSaGHvqFGo6OxwaOJEbD0ROnqRLaqh9c6OvHHpqFva0kwrB4OvlaAfROn8BeaT1cagwcTwda91caTc6ONkaAfROnCy4ZcGwXkAdR1bqp1b0kwrRy1cGwXkAdR1bqF1b0gwrRy1cGwXMDa0MDaDx3RfaDR2bqR2b0Tqcg">
         <cubemap all="img/cm_dirt.png" />
         <cubemap all="img/cm_mud.png" />
         <cubemap all="img/cm_grass.png" />
@@ -51,7 +51,7 @@
     <init command="updatecharacter 1 -1 0 0 0 0.75" />
     <init command="addcharacter 2 'Rodan' 2 0.15" />
     <init command="updatecharacter 2 0 0 0 0 0.15" />
-    <init command="addcharacter 3 'Tollie' 6 0.30" />
+    <init command="addcharacter 3 'Tollie' 7 0.30" />
     <init command="updatecharacter 3 1 0 1 0 0.30" />
     <init command="addcharacter 4 'Julius' 3 0.45" />
     <init command="updatecharacter 4 -1 0 1 0 0.45" />

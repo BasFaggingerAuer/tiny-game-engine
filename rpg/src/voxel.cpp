@@ -160,6 +160,93 @@ size_t huffmanBitsToTree(const std::vector<bool> &treeBits, size_t bp, std::vect
     return bp;
 }
 
+void uintToBits(std::vector<bool> &bits, const uint32_t &value, const uint32_t &nrBits)
+{
+    for (uint32_t i = 0u; i < nrBits; ++i)
+    {
+        bits.push_back((value & (1u << i)) != 0u);
+    }
+}
+
+uint32_t bitsToUint(const std::vector<bool> &bits, size_t &bp, const uint32_t &nrBits)
+{
+    uint32_t v = 0u;
+    
+    for (uint32_t i = 0u; i < nrBits; ++i)
+    {
+        v |= (bits[bp++] ? (1u << i) : 0u);
+    }
+    
+    return v;
+}
+
+void voxelRunCountToBits(std::vector<bool> &bits, const uint32_t &count, const uint32_t &medNrCountBits, const uint32_t &maxNrCountBits)
+{
+    //Only a single voxel?
+    for (uint32_t i = 0u; i < 1u; ++i)
+    {
+        bits.push_back((static_cast<uint32_t>(count) & (1u << i)) != 0u);
+    }
+
+    if (count >= 2u)
+    {
+        //Only voxels up to the short run length?
+        bits.push_back(true);
+        
+        for (uint32_t i = 1u; i < medNrCountBits; ++i)
+        {
+            bits.push_back((static_cast<uint32_t>(count) & (1u << i)) != 0u);
+        }
+
+        if (count >= (1u << medNrCountBits))
+        {
+            //Up to full run length.
+            bits.push_back(true);
+            
+            for (uint32_t i = medNrCountBits; i < maxNrCountBits; ++i)
+            {
+                bits.push_back((static_cast<uint32_t>(count) & (1u << i)) != 0u);
+            }
+        }
+        else
+        {
+            bits.push_back(false);
+        }
+    }
+    else
+    {
+        bits.push_back(false);
+    }
+}
+
+uint32_t bitsToVoxelRunCount(std::vector<bool> &bits, size_t &bp, const uint32_t &medNrCountBits, const uint32_t &maxNrCountBits)
+{
+    uint32_t count = 0u;
+    
+    for (uint32_t i = 0u; i < 1u; ++i)
+    {
+        count |= (bits[bp++] ? (1u << i) : 0u);
+    }
+    
+    if (bits[bp++])
+    {
+        for (uint32_t i = 1u; i < medNrCountBits; ++i)
+        {
+            count |= (bits[bp++] ? (1u << i) : 0u);
+        }
+        
+        if (bits[bp++])
+        {
+            for (uint32_t i = medNrCountBits; i < maxNrCountBits; ++i)
+            {
+                count |= (bits[bp++] ? (1u << i) : 0u);
+            }
+        }
+    }
+    
+    return count;
+}
+
 draw::RGTexture3D *initializeVoxelTexture(const size_t &width, const size_t &height, const size_t &depth)
 {
     //Initialize checkerboard voxel map.
@@ -312,22 +399,30 @@ bool GameVoxelMap::createFromCompressedVoxels(const std::string &text, const flo
         }
     }
     
-    uint32_t width = 0;
     size_t bp = 0;
     
-    for (uint32_t j = 0; j < 32u; ++j)
+    const uint32_t width = bitsToUint(bits, bp, 16u);
+    const uint32_t height = bitsToUint(bits, bp, 16u);
+    const uint32_t depth = bitsToUint(bits, bp, 16u);
+    const uint32_t medNrCountBits = bitsToUint(bits, bp, 6u);
+    const uint32_t maxNrCountBits = bitsToUint(bits, bp, 6u);
+    const uint32_t nrVoxelTypes = bitsToUint(bits, bp, 8u);
+    
+    if (width != depth ||
+        ((width - 1u) & width) != 0u ||
+        ((depth - 1u) & depth) != 0u)
     {
-        width |= (bits[bp++] ? (1u << j) : 0u);
+        std::cerr << "Invalid dimensions " << width << "x" << height << "x" << depth << " for the voxel map (require equal width and depth, as power of two)!" << std::endl;
+        return false;
     }
     
-    uint32_t nrVoxelTypes = 0;
-
-    for (uint32_t j = 0; j < 8u; ++j)
+    if (medNrCountBits >= maxNrCountBits)
     {
-        nrVoxelTypes |= (bits[bp++] ? (1u << j) : 0u);
+        std::cerr << "Invalid bit counts (" << medNrCountBits << ", " << maxNrCountBits << ")!" << std::endl;
+        return false;
     }
     
-    std::cerr << "Generating a " << width << "x" << width << "x" << width << " voxel map containing " << nrVoxelTypes << " voxel types from " << text.size() << " ASCII bytes of compressed data..." << std::endl;
+    std::cerr << "Generating a " << width << "x" << height << "x" << depth << " voxel map containing " << nrVoxelTypes << " voxel types from " << text.size() << " ASCII bytes of compressed data..." << std::endl;
 
     std::vector<HuffmanNode> tree;
     std::vector<std::vector<bool> > voxelTypeBits(nrVoxelTypes, std::vector<bool>());
@@ -355,25 +450,8 @@ bool GameVoxelMap::createFromCompressedVoxels(const std::string &text, const flo
             else n = tree[n.left];
         }
         
-        const uint8_t v = *(n.symbols.begin());
-        
-        //Read count.
-        uint32_t count = 0u;
-        
-        for (uint32_t i = 0u; i < 4u; ++i)
-        {
-            count |= (bits[bp++] ? (1u << i) : 0u);
-        }
-        
-        if (bits[bp++])
-        {
-            for (uint32_t i = 4u; i < 16u; ++i)
-            {
-                count |= (bits[bp++] ? (1u << i) : 0u);
-            }
-        }
-        
-        orderedVoxels.insert(orderedVoxels.end(), count, v);
+        //Store the found symbols the read count # times.
+        orderedVoxels.insert(orderedVoxels.end(), bitsToVoxelRunCount(bits, bp, medNrCountBits, maxNrCountBits), *(n.symbols.begin()));
     }
     
     if (nrVoxels != orderedVoxels.size())
@@ -385,7 +463,7 @@ bool GameVoxelMap::createFromCompressedVoxels(const std::string &text, const flo
     //Fill in voxel texture.
     if (voxelTexture) delete voxelTexture;
     
-    voxelTexture = initializeVoxelTexture(width, width, width);
+    voxelTexture = initializeVoxelTexture(width, height, depth);
     
     //Use a Z-curve for each constant-Y plane to improve compression.
     for (uint32_t y = 0; y < voxelTexture->getHeight(); ++y)
@@ -507,16 +585,13 @@ int GameVoxelMap::getBaseHeight(const int &x, const int &z) const
 
 std::string GameVoxelMap::getCompressedVoxels() const
 {
-    if (voxelTexture->getWidth() != voxelTexture->getHeight() ||
-        voxelTexture->getWidth() != voxelTexture->getDepth() ||
-        voxelTexture->getHeight() != voxelTexture->getDepth())
+    if (voxelTexture->getWidth() != voxelTexture->getDepth())
     {
-        std::cerr << "Voxels can only be compressed for cubical voxel maps!" << std::endl;
+        std::cerr << "Voxels can only be compressed for voxel maps of equal width and depth!" << std::endl;
         return "";
     }
     
     if ((voxelTexture->getWidth() & (voxelTexture->getWidth() - 1)) != 0 ||
-        (voxelTexture->getHeight() & (voxelTexture->getHeight() - 1)) != 0 ||
         (voxelTexture->getDepth() & (voxelTexture->getDepth() - 1)) != 0)
     {
         std::cerr << "Voxels can only be compressed for power-of-two voxel maps!" << std::endl;
@@ -530,16 +605,6 @@ std::string GameVoxelMap::getCompressedVoxels() const
     //Use a Z-curve for each constant-Y plane to improve compression.
     for (uint32_t y = 0; y < voxelTexture->getHeight(); ++y)
     {
-        /*
-        for (uint32_t z = 0; z < voxelTexture->getDepth(); ++z)
-        {
-            for (uint32_t x = 0; x < voxelTexture->getWidth(); ++x)
-            {
-                orderedVoxels.push_back((*voxelTexture)[voxelTexture->getChannels()*(z*voxelTexture->getHeight()*voxelTexture->getWidth() + y*voxelTexture->getWidth() + x) + 0]);
-            }
-        }
-        */
-        
         for (uint32_t i = 0u; i < voxelTexture->getWidth()*voxelTexture->getDepth(); ++i)
         {
             uint32_t x = (i & 1u) | ((i & 4u) >> 1u) | ((i & 16u) >> 2u) | ((i & 64u) >> 3u) | ((i & 256u) >> 4u) | ((i & 1024u) >> 5u) | ((i & 4096u) >> 6u) | ((i & 16384u) >> 7u) | ((i & 65536u) >> 8u);
@@ -551,20 +616,45 @@ std::string GameVoxelMap::getCompressedVoxels() const
     
     assert(orderedVoxels.size() == nrVoxels);
     
-    //Determine the number of different voxel types and their frequencies.
+    //Determine the number of different voxel types and their frequencies in a run-length compression scheme.
+    const uint32_t maxNrCountBits = 16u;
     const uint32_t nrVoxelTypes = *std::max_element(orderedVoxels.begin(), orderedVoxels.end()) + 1u;
     std::vector<uint32_t> voxelTypeCounts(nrVoxelTypes, 0);
+    int currentType = -1;
+    int count = 0;
+    std::vector<int> countValues;
     
-    for (auto i = orderedVoxels.cbegin(); i != orderedVoxels.cend(); ++i)
+    for (auto v = orderedVoxels.cbegin(); v != orderedVoxels.cend(); ++v)
     {
-        voxelTypeCounts[*i]++;
+        if (*v != currentType || count >= ((1 << maxNrCountBits) - 1))
+        {
+            if (count > 0) countValues.push_back(count);
+            voxelTypeCounts[*v]++;
+            currentType = *v;
+            count = 1;
+        }
+        else
+        {
+            ++count;
+        }
+    }
+    
+    //Find good cutoffs for voxel counts for this specific map by taking 90-th percentile of run lengths.
+    std::sort(countValues.begin(), countValues.end());
+    
+    uint32_t medNrCountBits;
+    const uint32_t shortRunCount = countValues[static_cast<int>(floor(0.9f*static_cast<float>(countValues.size())))];
+    
+    for (medNrCountBits = 0u; medNrCountBits < maxNrCountBits; ++medNrCountBits)
+    {
+        if ((1u << medNrCountBits) >= shortRunCount) break;
     }
     
     //Create a Huffman tree to efficiently encode voxel types.
     std::multiset<HuffmanNode> preTree;
     std::vector<HuffmanNode> tree;
     
-    for (uint32_t i = 0; i < nrVoxelTypes; ++i)
+    for (uint32_t i = 0u; i < nrVoxelTypes; ++i)
     {
         preTree.insert(HuffmanNode(i, voxelTypeCounts[i]));
     }
@@ -621,51 +711,32 @@ std::string GameVoxelMap::getCompressedVoxels() const
     //Generate output bits.
     std::vector<bool> bits;
     
-    //Start with storing the voxel map size (should be a cube of power-of-two dimension).
-    for (uint32_t i = 0u; i < 32u; ++i)
-    {
-        bits.push_back((voxelTexture->getWidth() & (1u << i)) != 0u);
-    }
+    //Start with storing the voxel map size.
+    uintToBits(bits, voxelTexture->getWidth(), 16u);
+    uintToBits(bits, voxelTexture->getHeight(), 16u);
+    uintToBits(bits, voxelTexture->getDepth(), 16u);
+    
+    //Store run # bits.
+    uintToBits(bits, medNrCountBits, 6u);
+    uintToBits(bits, maxNrCountBits, 6u);
     
     //Store # of different voxel types.
-    for (uint32_t i = 0u; i < 8u; ++i)
-    {
-        bits.push_back((nrVoxelTypes & (1u << i)) != 0u);
-    }
+    uintToBits(bits, nrVoxelTypes, 8u);
     
     //Store tree.
     bits.insert(bits.end(), treeBits.begin(), treeBits.end());
     
     //Store run-length encoded voxels.
-    const uint32_t nrBitsInFirstRun = 4u;
-    int currentType = -1;
-    int count = 0;
+    currentType = -1;
+    count = 0;
     
     for (auto v = orderedVoxels.cbegin(); v != orderedVoxels.cend(); ++v)
     {
-        if (*v != currentType || count >= 65535)
+        if (*v != currentType || count >= ((1 << maxNrCountBits) - 1))
         {
-            //Store counts up to 65535 voxels as 4-bits + 1-bit [+ 12-bits] where the latter 12 bits are only provided if 1-bit == 1.
             if (count > 0)
             {
-                for (uint32_t i = 0u; i < nrBitsInFirstRun; ++i)
-                {
-                    bits.push_back((static_cast<uint32_t>(count) & (1u << i)) != 0u);
-                }
-
-                if (count >= (1 << nrBitsInFirstRun))
-                {
-                    bits.push_back(true);
-                    
-                    for (uint32_t i = nrBitsInFirstRun; i < 16u; ++i)
-                    {
-                        bits.push_back((static_cast<uint32_t>(count) & (1u << i)) != 0u);
-                    }
-                }
-                else
-                {
-                    bits.push_back(false);
-                }
+                voxelRunCountToBits(bits, count, medNrCountBits, maxNrCountBits);
             }
             
             //Add Huffman bits of current voxel type.
@@ -680,24 +751,7 @@ std::string GameVoxelMap::getCompressedVoxels() const
     }
     
     //Final run.
-    for (uint32_t i = 0u; i < nrBitsInFirstRun; ++i)
-    {
-        bits.push_back((static_cast<uint32_t>(count) & (1u << i)) != 0u);
-    }
-
-    if (count >= (1 << nrBitsInFirstRun))
-    {
-        bits.push_back(true);
-        
-        for (uint32_t i = nrBitsInFirstRun; i < 16u; ++i)
-        {
-            bits.push_back((static_cast<uint32_t>(count) & (1u << i)) != 0u);
-        }
-    }
-    else
-    {
-        bits.push_back(false);
-    }
+    voxelRunCountToBits(bits, count, medNrCountBits, maxNrCountBits);
     
     //Map bits to ASCII for every 6-bit block.
     std::string text("");
@@ -732,7 +786,7 @@ std::string GameVoxelMap::getCompressedVoxels() const
     
     const size_t nrUncompressedBits = 8u*nrVoxels + 32u;
     
-    std::cerr << "Compressed " << nrUncompressedBits << " bits to " << bits.size() << " bits encoded as " << 8u*text.size() << " ASCII bits (" << nrUncompressedBits/(8u*text.size()) << "x)." << std::endl;
+    std::cerr << "Compressed " << voxelTexture->getWidth() << "x" << voxelTexture->getHeight() << "x" << voxelTexture->getDepth() << " voxel map " << nrUncompressedBits << " bits to " << bits.size() << " bits encoded as " << 8u*text.size() << " ASCII bits (" << nrUncompressedBits/(8u*text.size()) << "x). Run lengths stored in 1, " << medNrCountBits << ", and " << maxNrCountBits << " bits." << std::endl;
     
     return text;
 }

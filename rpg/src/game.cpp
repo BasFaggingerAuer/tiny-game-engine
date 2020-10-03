@@ -573,7 +573,7 @@ void Game::readResources(const std::string &path)
         else if (std::string(el->Value()) == "sky") readSkyResources(path, el);
         else if (std::string(el->Value()) == "voxelmap") voxelMap = new GameVoxelMap(path, el);
         else if (std::string(el->Value()) == "terrain") terrain = new GameTerrain(path, el);
-        else if (std::string(el->Value()) == "charactertype") characterTypes[characterTypes.size()] = new CharacterType(path, el);
+        else if (std::string(el->Value()) == "charactertype") characterTypes[characterTypes.size() + 1] = new CharacterType(path, el);
         else if (std::string(el->Value()) == "init")
         {
             std::string command = "";
