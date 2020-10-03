@@ -144,7 +144,7 @@ void Game::updateConsole() const
         if (characterIndex == 0)
         {
             strm << std::endl << "\\#fff";
-            strm << " Z/C = Previous/next character" << std::endl;
+            strm << " Z/C = Prev./next character" << std::endl;
             strm << (paintMode == VoxelReplace ? "*" : " ") << "V = Replace/Pick voxels" << std::endl;
             strm << (paintMode == VoxelAdd ? "*" : " ") << "B = Add/Remove voxels" << std::endl;
             strm << " P = Restore voxel palette" << std::endl;
@@ -303,7 +303,13 @@ void Game::update(os::Application *application, const float &dt)
             if (application->isKeyPressedOnce('v')) paintMode = VoxelReplace;
             if (application->isKeyPressedOnce('b')) paintMode = VoxelAdd;
             if (application->isKeyPressedOnce('p')) voxelMap->createVoxelPalette();
-            if (application->isKeyPressedOnce('\\')) voxelMap->setVoxelBasePlane(paintVoxelType);
+            if (application->isKeyPressedOnce('\\'))
+            {
+                Message msg(msg::mt::updateVoxelBasePlane);
+                
+                msg << paintVoxelType;
+                applyMessage(ownPlayerIndex, msg);
+            }
             if (application->isKeyPressedOnce('m'))
             {
                 std::string text = voxelMap->getCompressedVoxels();
@@ -360,7 +366,10 @@ void Game::update(os::Application *application, const float &dt)
                                 case VoxelReplace:
                                     if (mouse.buttons == 1)
                                     {
-                                        voxelMap->setVoxel(voxelHit.voxelIndices, paintVoxelType);
+                                        Message msg(msg::mt::updateVoxel);
+                                        
+                                        msg << voxelHit.voxelIndices << paintVoxelType;
+                                        applyMessage(ownPlayerIndex, msg);
                                     }
                                     else if (mouse.buttons == 2)
                                     {
@@ -370,11 +379,17 @@ void Game::update(os::Application *application, const float &dt)
                                 case VoxelAdd:
                                     if (mouse.buttons == 1)
                                     {
-                                        voxelMap->setVoxel(voxelHit.voxelIndices + voxelHit.normal, paintVoxelType);
+                                        Message msg(msg::mt::updateVoxel);
+                                        
+                                        msg << voxelHit.voxelIndices + voxelHit.normal << paintVoxelType;
+                                        applyMessage(ownPlayerIndex, msg);
                                     }
                                     else if (mouse.buttons == 2)
                                     {
-                                        voxelMap->setVoxel(voxelHit.voxelIndices, 0);
+                                        Message msg(msg::mt::updateVoxel);
+                                        
+                                        msg << voxelHit.voxelIndices << 0;
+                                        applyMessage(ownPlayerIndex, msg);
                                     }
                                     break;
                             }

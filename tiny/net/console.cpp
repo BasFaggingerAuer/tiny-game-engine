@@ -62,8 +62,11 @@ void Console::keyDown(const int &key)
     if (key == '\n' || key == '\r')
     {
         addLine(curLine);
-        execute(curLine);
+        
+        const std::string command = curLine;
+        
         curLine = "";
+        execute(command);
     }
     else if (key == '\b')
     {

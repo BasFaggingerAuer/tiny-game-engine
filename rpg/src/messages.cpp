@@ -195,6 +195,29 @@ class SetPlayerCharacter : public tiny::net::MessageType
         ~SetPlayerCharacter() {}
 };
 
+class UpdateVoxel : public tiny::net::MessageType
+{
+    public:
+        UpdateVoxel() : tiny::net::MessageType(mt::updateVoxel, "updatevoxel", "Sets a specific voxel to a specific type.")
+        {
+            addVariableType("pos", tiny::net::vt::IVec3);
+            addVariableType("value", tiny::net::vt::Integer);
+        }
+        
+        ~UpdateVoxel() {}
+};
+
+class UpdateVoxelBasePlane : public tiny::net::MessageType
+{
+    public:
+        UpdateVoxelBasePlane() : tiny::net::MessageType(mt::updateVoxelBasePlane, "updatevoxelplane", "Floods voxel base plane.")
+        {
+            addVariableType("value", tiny::net::vt::Integer);
+        }
+        
+        ~UpdateVoxelBasePlane() {}
+};
+
 class PlayerSpawnRequest : public tiny::net::MessageType
 {
     public:
@@ -230,6 +253,8 @@ GameMessageTranslator::GameMessageTranslator() :
     addMessageType(new msg::RemoveCharacter());
     addMessageType(new msg::UpdateCharacter());
     addMessageType(new msg::SetPlayerCharacter());
+    addMessageType(new msg::UpdateVoxel());
+    addMessageType(new msg::UpdateVoxelBasePlane());
     addMessageType(new msg::PlayerSpawnRequest());
 }
 

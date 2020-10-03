@@ -349,6 +349,46 @@ bool Game::msgPlayerSpawnRequest(const unsigned int &senderIndex, std::ostream &
     return true;
 }
 
+bool Game::msgUpdateVoxel(const unsigned int &senderIndex, std::ostream &out, bool &broadcast, const ivec3 &position, const unsigned int &value)
+{
+    if (senderIndex != 0)
+    {
+        out << "Player tried to send voxel update!";
+        return false;
+    }
+    
+    if (value > 255u)
+    {
+        out << "Invalid voxel update index!";
+        return false;
+    }
+    
+    voxelMap->setVoxel(position, value);
+    broadcast = true;
+    
+    return true;
+}
+
+bool Game::msgUpdateVoxelBasePlane(const unsigned int &senderIndex, std::ostream &out, bool &broadcast, const unsigned int &value)
+{
+    if (senderIndex != 0)
+    {
+        out << "Player tried to send voxel base plane update!";
+        return false;
+    }
+    
+    if (value > 255u)
+    {
+        out << "Invalid voxel update index!";
+        return false;
+    }
+    
+    voxelMap->setVoxelBasePlane(value);
+    broadcast = true;
+    
+    return true;
+}
+
 bool Game::applyMessage(const unsigned int &senderIndex, const Message &message)
 {
     std::ostringstream out;
@@ -382,13 +422,13 @@ bool Game::applyMessage(const unsigned int &senderIndex, const Message &message)
         else if (message.id == msg::mt::removeCharacter) ok = msgRemoveCharacter(senderIndex, out, broadcast, message.data[0].iv1);
         else if (message.id == msg::mt::updateCharacter) ok = msgUpdateCharacter(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].iv3, message.data[2].iv1, message.data[3].v1);
         else if (message.id == msg::mt::setPlayerCharacter) ok = msgSetPlayerCharacter(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].iv1);
+        else if (message.id == msg::mt::updateVoxel) ok = msgUpdateVoxel(senderIndex, out, broadcast, message.data[0].iv3, message.data[1].iv1);
+        else if (message.id == msg::mt::updateVoxelBasePlane) ok = msgUpdateVoxelBasePlane(senderIndex, out, broadcast, message.data[0].iv1);
         else if (message.id == msg::mt::playerSpawnRequest) ok = msgPlayerSpawnRequest(senderIndex, out, broadcast, message.data[0].iv1);
     }
     else
     {
         //Host messages received from clients.
-        assert(host && !client);
-        
         if (message.id == msg::mt::updateCharacter) ok = msgUpdateCharacter(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].iv3, message.data[2].iv1, message.data[3].v1);
     }
     

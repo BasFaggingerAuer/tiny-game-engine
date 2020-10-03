@@ -92,6 +92,8 @@ class Game
         bool msgRemoveCharacter(const unsigned int &, std::ostream &, bool &, const unsigned int &);
         bool msgUpdateCharacter(const unsigned int &, std::ostream &, bool &, const unsigned int &, const tiny::ivec3 &, const int &, const float &);
         bool msgSetPlayerCharacter(const unsigned int &, std::ostream &, bool &, const unsigned int &, const unsigned int &);
+        bool msgUpdateVoxel(const unsigned int &, std::ostream &, bool &, const tiny::ivec3 &, const unsigned int &);
+        bool msgUpdateVoxelBasePlane(const unsigned int &, std::ostream &, bool &, const unsigned int &);
         bool msgPlayerSpawnRequest(const unsigned int &, std::ostream &, bool &, const unsigned int &);
         
         void readResources(const std::string &);
