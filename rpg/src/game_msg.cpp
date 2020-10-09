@@ -349,13 +349,16 @@ bool Game::msgPlayerSpawnRequest(const unsigned int &senderIndex, std::ostream &
     return true;
 }
 
-bool Game::msgUpdateVoxel(const unsigned int &senderIndex, std::ostream &out, bool &broadcast, const ivec3 &position, const unsigned int &value)
+bool Game::msgUpdateVoxel(const unsigned int &, std::ostream &out, bool &broadcast, const ivec3 &position, const unsigned int &value)
 {
+    //Enable collaborative map editing.
+    /*
     if (senderIndex != 0)
     {
         out << "Player tried to send voxel update!";
         return false;
     }
+    */
     
     if (value > 255u)
     {
@@ -430,6 +433,7 @@ bool Game::applyMessage(const unsigned int &senderIndex, const Message &message)
     {
         //Host messages received from clients.
         if (message.id == msg::mt::updateCharacter) ok = msgUpdateCharacter(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].iv3, message.data[2].iv1, message.data[3].v1);
+        else if (message.id == msg::mt::updateVoxel) ok = msgUpdateVoxel(senderIndex, out, broadcast, message.data[0].iv3, message.data[1].iv1);
     }
     
     //Add message output to the console.

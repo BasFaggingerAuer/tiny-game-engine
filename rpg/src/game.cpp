@@ -369,7 +369,9 @@ void Game::update(os::Application *application, const float &dt)
                                         Message msg(msg::mt::updateVoxel);
                                         
                                         msg << voxelHit.voxelIndices << paintVoxelType;
-                                        applyMessage(ownPlayerIndex, msg);
+                                        
+                                        if (client) client->sendMessage(msg);
+                                        else applyMessage(ownPlayerIndex, msg);
                                     }
                                     else if (mouse.buttons == 2)
                                     {
@@ -382,14 +384,18 @@ void Game::update(os::Application *application, const float &dt)
                                         Message msg(msg::mt::updateVoxel);
                                         
                                         msg << voxelHit.voxelIndices + voxelHit.normal << paintVoxelType;
-                                        applyMessage(ownPlayerIndex, msg);
+                                        
+                                        if (client) client->sendMessage(msg);
+                                        else applyMessage(ownPlayerIndex, msg);
                                     }
                                     else if (mouse.buttons == 2)
                                     {
                                         Message msg(msg::mt::updateVoxel);
                                         
                                         msg << voxelHit.voxelIndices << 0;
-                                        applyMessage(ownPlayerIndex, msg);
+                                        
+                                        if (client) client->sendMessage(msg);
+                                        else applyMessage(ownPlayerIndex, msg);
                                     }
                                     break;
                             }
