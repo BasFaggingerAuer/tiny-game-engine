@@ -119,24 +119,26 @@ void CharacterType::addInstance(const CharacterInstance &instance, const float &
 {
     if (nrInstances < maxNrInstances)
     {
-        vec4 r = quatrot((M_PI/180.0f)*static_cast<float>(instance.rotation), vec3(0.0f, 1.0f, 0.0f));
+        const float a = (M_PI/180.0f)*static_cast<float>(instance.rotation);
+        const vec4 r = quatrot(a, vec3(0.0f, 1.0f, 0.0f));
+        vec4 rState = vec4(0.0f, 0.0f, 0.0f, 1.0f);
         
         if (instance.state == 1)
         {
-            r = quatmul(r, quatrot(0.5f*M_PI, vec3(1.0f, 0.0f, 0.0f)));
+            rState = quatrot(0.5f*M_PI, vec3(1.0f, 0.0f, 0.0f));
         }
         
-        instances[nrInstances] = draw::StaticMeshInstance(vec4(static_cast<float>(instance.position.x + 1) - 0.5f*size.x,
+        instances[nrInstances] = draw::StaticMeshInstance(vec4(static_cast<float>(instance.position.x) + 0.5f - cosf(a)*0.5f*(size.x - 1.0f) + sinf(a)*0.5f*(size.z - 1.0f),
                                                                static_cast<float>(instance.position.y + baseHeight),
-                                                               static_cast<float>(instance.position.z + 1) - 0.5f*size.z,
+                                                               static_cast<float>(instance.position.z) + 0.5f - sinf(a)*0.5f*(size.x - 1.0f) - cosf(a)*0.5f*(size.z - 1.0f),
+                                                               1.0f),
+                                                            quatmul(r, rState),
+                                                            instance.getColor());
+        shadowInstances[nrInstances] = draw::StaticMeshInstance(vec4(static_cast<float>(instance.position.x) + 0.5f - cosf(a)*0.5f*(size.x - 1.0f) + sinf(a)*0.5f*(size.z - 1.0f),
+                                                               static_cast<float>(baseHeight),
+                                                               static_cast<float>(instance.position.z) + 0.5f - sinf(a)*0.5f*(size.x - 1.0f) - cosf(a)*0.5f*(size.z - 1.0f),
                                                                1.0f),
                                                             r,
-                                                            instance.getColor());
-        shadowInstances[nrInstances] = draw::StaticMeshInstance(vec4(static_cast<float>(instance.position.x + 1) - 0.5f*size.x,
-                                                               static_cast<float>(baseHeight),
-                                                               static_cast<float>(instance.position.z + 1) - 0.5f*size.z,
-                                                               1.0f),
-                                                            vec4(0.0f, 0.0f, 0.0f, 1.0f),
                                                             instance.getColor());
         ++nrInstances;
     }
