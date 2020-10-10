@@ -119,15 +119,15 @@ void CharacterType::addInstance(const CharacterInstance &instance, const float &
 {
     if (nrInstances < maxNrInstances)
     {
-        instances[nrInstances] = draw::StaticMeshInstance(vec4(static_cast<float>(instance.position.x) + 0.5f,
+        instances[nrInstances] = draw::StaticMeshInstance(vec4(static_cast<float>(instance.position.x + 1) - 0.5f*size.x,
                                                                static_cast<float>(instance.position.y + baseHeight),
-                                                               static_cast<float>(instance.position.z) + 0.5f,
+                                                               static_cast<float>(instance.position.z + 1) - 0.5f*size.z,
                                                                1.0f),
                                                             quatrot((M_PI/180.0f)*static_cast<float>(instance.rotation), vec3(0.0f, 1.0f, 0.0f)),
                                                             instance.getColor());
-        shadowInstances[nrInstances] = draw::StaticMeshInstance(vec4(static_cast<float>(instance.position.x) + 0.5f,
+        shadowInstances[nrInstances] = draw::StaticMeshInstance(vec4(static_cast<float>(instance.position.x + 1) - 0.5f*size.x,
                                                                static_cast<float>(baseHeight),
-                                                               static_cast<float>(instance.position.z) + 0.5f,
+                                                               static_cast<float>(instance.position.z + 1) - 0.5f*size.z,
                                                                1.0f),
                                                             vec4(0.0f, 0.0f, 0.0f, 1.0f),
                                                             instance.getColor());

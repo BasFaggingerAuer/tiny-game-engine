@@ -45,6 +45,7 @@
     <charactertype name="Kraken" width="9.0" depth="9.0" height="9.0" mesh="rpg/kraken.dae" max_instances="64" />
     <charactertype name="Shark" width="3.0" depth="9.0" height="1.0" scale_height="1.0" mesh="rpg/shark.dae" max_instances="64" />
     <charactertype name="Merman" width="1.0" depth="1.0" height="2.0" mesh="rpg/merman.dae" max_instances="64" />
+    <charactertype name="Horse" width="1.0" depth="2.0" height="2.0" scale_height="1.0" mesh="rpg/horse.dae" max_instances="64" />
     <init command="terrainoffset 0.50 0.55" />
     <init command="sundirection 0.3 0.6 0.4" />
     <init command="addcharacter 1 'Laertes' 1 0.75" />
@@ -59,4 +60,5 @@
     <init command="updatecharacter 5 0 0 1 0 0.00" />
     <init command="addcharacter 6 'Augustus' 5 0.60" />
     <init command="updatecharacter 6 1 0 0 0 0.60" />
+    <init command="addcharacter 7 'Horse' 12 -1.00" />
 </rpg>
