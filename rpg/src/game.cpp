@@ -53,6 +53,7 @@ Game::Game(const os::Application *application, const std::string &path) :
     gravitationalConstant(9.81),
     lastSoundSourceIndex(1),
     lastCharacterIndex(1),
+    selectedCharacterType(0),
     translator(new GameMessageTranslator()),
     console(new GameConsole(this)),
     host(0),
@@ -149,11 +150,24 @@ void Game::updateConsole() const
             strm << (paintMode == VoxelAdd ? "*" : " ") << "B = Add/Remove voxels" << std::endl;
             strm << " P = Restore voxel palette" << std::endl;
             strm << " \\\\ = Flood base plane" << std::endl;
+            strm << " WASDQE = Move" << std::endl;
+            strm << " IJKLOU = Look" << std::endl;
+            strm << " F = Fast mode" << std::endl;
+            strm << " M/. = Select character type" << std::endl;
+            
+            auto ct = characterTypes.find(selectedCharacterType);
+            
+            if (ct != characterTypes.end())
+            {
+                strm << "       " << ct->second->name << std::endl;
+            }
         }
         else
         {
             strm << std::endl << "\\#fff";
             strm << " 0: Return to voxel edit mode" << std::endl;
+            strm << " WASDQE = Move" << std::endl;
+            strm << " F = Knock prone" << std::endl;
         }
         
         font->setText(-1.0, -1.0, 0.05, aspectRatio, strm.str(), *fontTexture);
@@ -278,6 +292,16 @@ void Game::update(os::Application *application, const float &dt)
                 msg << ownPlayerIndex << players[ownPlayerIndex].characterIndex + 1;
                 applyMessage(ownPlayerIndex, msg);
             }
+            
+            if (application->isKeyPressedOnce('m'))
+            {
+                if (selectedCharacterType > 0) --selectedCharacterType;
+            }
+            
+            if (application->isKeyPressedOnce('.'))
+            {
+                ++selectedCharacterType;
+            }
         }
     
         //Do we control a character?
@@ -310,7 +334,7 @@ void Game::update(os::Application *application, const float &dt)
                 msg << paintVoxelType;
                 applyMessage(ownPlayerIndex, msg);
             }
-            if (application->isKeyPressedOnce('m'))
+            if (application->isKeyPressedOnce('n'))
             {
                 std::string text = voxelMap->getCompressedVoxels();
                 
@@ -332,73 +356,96 @@ void Game::update(os::Application *application, const float &dt)
                     
                     if (voxelHit.distance > 0.0f)
                     {
-                        if (mouse.buttons == 4)
+                        switch (paintMode)
                         {
-                            //Find closest character.
-                            const ivec3 p = voxelHit.voxelIndices;
-                            int foundCharacter = -1;
-                            int minDistanceSq = 5*5;
-                            
-                            for (std::map<unsigned int, CharacterInstance>::const_iterator i = characters.begin(); i != characters.end(); ++i)
-                            {
-                                const ivec3 d = i->second.position - p;
-                                const int distanceSq = d.x*d.x + d.z*d.z;
-                                
-                                if (distanceSq < minDistanceSq)
+                            case VoxelReplace:
+                                if (mouse.buttons == 1)
                                 {
-                                    foundCharacter = i->first;
-                                    minDistanceSq = distanceSq;
+                                    Message msg(msg::mt::updateVoxel);
+                                    
+                                    msg << voxelHit.voxelIndices << paintVoxelType;
+                                    
+                                    if (client) client->sendMessage(msg);
+                                    else applyMessage(ownPlayerIndex, msg);
                                 }
-                            }
-                            
-                            if (foundCharacter >= 0)
-                            {
-                                Message msg(msg::mt::setPlayerCharacter);
-                                
-                                msg << ownPlayerIndex << foundCharacter;
-                                applyMessage(ownPlayerIndex, msg);
-                            }
-                        }
-                        else
-                        {
-                            switch (paintMode)
-                            {
-                                case VoxelReplace:
-                                    if (mouse.buttons == 1)
+                                else if (mouse.buttons == 2)
+                                {
+                                    paintVoxelType = voxelMap->getVoxel(voxelHit.voxelIndices);
+                                }
+                                else if (mouse.buttons == 4)
+                                {
+                                    //Find closest character.
+                                    const ivec3 p = voxelHit.voxelIndices;
+                                    int foundCharacter = -1;
+                                    int minDistanceSq = 5*5;
+                                    
+                                    for (std::map<unsigned int, CharacterInstance>::const_iterator i = characters.begin(); i != characters.end(); ++i)
                                     {
-                                        Message msg(msg::mt::updateVoxel);
+                                        const ivec3 d = i->second.position - p;
+                                        const int distanceSq = d.x*d.x + d.z*d.z;
                                         
-                                        msg << voxelHit.voxelIndices << paintVoxelType;
-                                        
-                                        if (client) client->sendMessage(msg);
-                                        else applyMessage(ownPlayerIndex, msg);
+                                        if (distanceSq < minDistanceSq)
+                                        {
+                                            foundCharacter = i->first;
+                                            minDistanceSq = distanceSq;
+                                        }
                                     }
-                                    else if (mouse.buttons == 2)
+                                    
+                                    if (foundCharacter >= 0)
                                     {
-                                        paintVoxelType = voxelMap->getVoxel(voxelHit.voxelIndices);
+                                        Message msg(msg::mt::setPlayerCharacter);
+                                        
+                                        msg << ownPlayerIndex << foundCharacter;
+                                        applyMessage(ownPlayerIndex, msg);
                                     }
-                                    break;
-                                case VoxelAdd:
-                                    if (mouse.buttons == 1)
+                                }
+                                break;
+                            case VoxelAdd:
+                                if (mouse.buttons == 1)
+                                {
+                                    Message msg(msg::mt::updateVoxel);
+                                    
+                                    msg << voxelHit.voxelIndices + voxelHit.normal << paintVoxelType;
+                                    
+                                    if (client) client->sendMessage(msg);
+                                    else applyMessage(ownPlayerIndex, msg);
+                                }
+                                else if (mouse.buttons == 2)
+                                {
+                                    Message msg(msg::mt::updateVoxel);
+                                    
+                                    msg << voxelHit.voxelIndices << 0;
+                                    
+                                    if (client) client->sendMessage(msg);
+                                    else applyMessage(ownPlayerIndex, msg);
+                                }
+                                else if (mouse.buttons == 4)
+                                {
+                                    //Find closest character.
+                                    const ivec3 p = voxelHit.voxelIndices;
+                                    
+                                    auto ct = characterTypes.find(selectedCharacterType);
+            
+                                    if (ct != characterTypes.end())
                                     {
-                                        Message msg(msg::mt::updateVoxel);
+                                        if (true)
+                                        {
+                                            Message msg(msg::mt::addCharacter);
+                                            
+                                            msg << ++lastCharacterIndex << ct->second->name << ct->first << -0.75f;
+                                            applyMessage(ownPlayerIndex, msg);
+                                        }
                                         
-                                        msg << voxelHit.voxelIndices + voxelHit.normal << paintVoxelType;
+                                        if (true)
+                                        {
+                                            Message msg(msg::mt::updateCharacter);
                                         
-                                        if (client) client->sendMessage(msg);
-                                        else applyMessage(ownPlayerIndex, msg);
+                                            msg << lastCharacterIndex << ivec3(p.x, 0, p.z) << 0 << 0 << -0.75f;
+                                            applyMessage(ownPlayerIndex, msg);
+                                        }
                                     }
-                                    else if (mouse.buttons == 2)
-                                    {
-                                        Message msg(msg::mt::updateVoxel);
-                                        
-                                        msg << voxelHit.voxelIndices << 0;
-                                        
-                                        if (client) client->sendMessage(msg);
-                                        else applyMessage(ownPlayerIndex, msg);
-                                    }
-                                    break;
-                            }
+                                }
+                                break;
                         }
                     }
                 }
@@ -432,6 +479,7 @@ void Game::update(os::Application *application, const float &dt)
             if (application->isKeyPressedOnce('e')) chr.position.y = std::max(0, chr.position.y - 1);
             if (application->isKeyPressedOnce('j')) chr.rotation += 45;
             if (application->isKeyPressedOnce('l')) chr.rotation -= 45;
+            if (application->isKeyPressedOnce('f')) chr.state = (chr.state != 0 ? 0 : 1);
             
             //Did the user click anywhere?
             auto mouse = application->getMouseState(false);
@@ -465,7 +513,7 @@ void Game::update(os::Application *application, const float &dt)
             {
                 Message msg(msg::mt::updateCharacter);
                 
-                msg << characterIndex << chr.position << chr.rotation << chr.color;
+                msg << characterIndex << chr.position << chr.rotation << chr.state << chr.color;
                 
                 if (client) client->sendMessage(msg);
                 if (host) host->sendMessage(msg);
@@ -528,6 +576,7 @@ void Game::clear()
     
     //Reset all characters.
     lastCharacterIndex = 0;
+    selectedCharacterType = 0;
     characters.clear();
     
     //Reset camera.

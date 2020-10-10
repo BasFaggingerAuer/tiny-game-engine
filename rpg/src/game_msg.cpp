@@ -241,7 +241,7 @@ bool Game::msgAddCharacter(const unsigned int &, std::ostream &out, bool &broadc
         return false;
     }
     
-    CharacterInstance character(characterTypeIndex, characterName, ivec3(0), 0, color);
+    CharacterInstance character(characterTypeIndex, characterName, ivec3(0), 0, 0, color);
     const CharacterType *characterType = characterTypes[characterTypeIndex];
     
     characters[characterIndex] = character;
@@ -271,7 +271,7 @@ bool Game::msgRemoveCharacter(const unsigned int &, std::ostream &out, bool &bro
 }
 
 bool Game::msgUpdateCharacter(const unsigned int &senderIndex, std::ostream &out, bool &broadcast, const unsigned int &characterIndex,
-                              const ivec3 &position, const int &rotation, const float &color)
+                              const ivec3 &position, const int &rotation, const int &state, const float &color)
 {
     //Clients are only permitted to modify the status of their own characters.
     if (senderIndex != 0 && players[senderIndex].characterIndex != characterIndex)
@@ -296,6 +296,7 @@ bool Game::msgUpdateCharacter(const unsigned int &senderIndex, std::ostream &out
     
     i->second.position = position;
     i->second.rotation = rotation;
+    i->second.state = state;
     i->second.color = color;
     broadcast = true;
     
@@ -423,7 +424,7 @@ bool Game::applyMessage(const unsigned int &senderIndex, const Message &message)
         else if (message.id == msg::mt::listCharacters) ok = msgListCharacters(senderIndex, out, broadcast);
         else if (message.id == msg::mt::addCharacter) ok = msgAddCharacter(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].s256, message.data[2].iv1, message.data[3].v1);
         else if (message.id == msg::mt::removeCharacter) ok = msgRemoveCharacter(senderIndex, out, broadcast, message.data[0].iv1);
-        else if (message.id == msg::mt::updateCharacter) ok = msgUpdateCharacter(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].iv3, message.data[2].iv1, message.data[3].v1);
+        else if (message.id == msg::mt::updateCharacter) ok = msgUpdateCharacter(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].iv3, message.data[2].iv1, message.data[3].iv1, message.data[4].v1);
         else if (message.id == msg::mt::setPlayerCharacter) ok = msgSetPlayerCharacter(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].iv1);
         else if (message.id == msg::mt::updateVoxel) ok = msgUpdateVoxel(senderIndex, out, broadcast, message.data[0].iv3, message.data[1].iv1);
         else if (message.id == msg::mt::updateVoxelBasePlane) ok = msgUpdateVoxelBasePlane(senderIndex, out, broadcast, message.data[0].iv1);
@@ -432,7 +433,7 @@ bool Game::applyMessage(const unsigned int &senderIndex, const Message &message)
     else
     {
         //Host messages received from clients.
-        if (message.id == msg::mt::updateCharacter) ok = msgUpdateCharacter(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].iv3, message.data[2].iv1, message.data[3].v1);
+        if (message.id == msg::mt::updateCharacter) ok = msgUpdateCharacter(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].iv3, message.data[2].iv1, message.data[3].iv1, message.data[4].v1);
         else if (message.id == msg::mt::updateVoxel) ok = msgUpdateVoxel(senderIndex, out, broadcast, message.data[0].iv3, message.data[1].iv1);
     }
     

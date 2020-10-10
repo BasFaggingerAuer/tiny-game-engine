@@ -177,6 +177,7 @@ class UpdateCharacter : public tiny::net::MessageType
             addVariableType("index", tiny::net::vt::Integer);
             addVariableType("pos", tiny::net::vt::IVec3);
             addVariableType("rot", tiny::net::vt::Integer);
+            addVariableType("state", tiny::net::vt::Integer);
             addVariableType("color", tiny::net::vt::Float);
         }
         

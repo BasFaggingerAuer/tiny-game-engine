@@ -29,11 +29,12 @@ namespace rpg
 
 struct CharacterInstance
 {
-    CharacterInstance(const unsigned int &a_type = 0, const std::string &a_name = "", const tiny::ivec3 &a_position = tiny::ivec3(0), const int &a_rotation = 0, const float &a_color = 0.0f) :
+    CharacterInstance(const unsigned int &a_type = 0, const std::string &a_name = "", const tiny::ivec3 &a_position = tiny::ivec3(0), const int &a_rotation = 0, const int &a_state = 0, const float &a_color = 0.0f) :
         type(a_type),
         name(a_name),
         position(a_position),
         rotation(a_rotation),
+        state(a_state),
         color(a_color)
     {
     
@@ -52,6 +53,7 @@ struct CharacterInstance
     std::string name;
     tiny::ivec3 position;
     int rotation;
+    int state;
     float color;
 };
 

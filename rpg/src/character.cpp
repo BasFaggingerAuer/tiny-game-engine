@@ -119,11 +119,18 @@ void CharacterType::addInstance(const CharacterInstance &instance, const float &
 {
     if (nrInstances < maxNrInstances)
     {
+        vec4 r = quatrot((M_PI/180.0f)*static_cast<float>(instance.rotation), vec3(0.0f, 1.0f, 0.0f));
+        
+        if (instance.state == 1)
+        {
+            r = quatmul(r, quatrot(0.5f*M_PI, vec3(1.0f, 0.0f, 0.0f)));
+        }
+        
         instances[nrInstances] = draw::StaticMeshInstance(vec4(static_cast<float>(instance.position.x + 1) - 0.5f*size.x,
                                                                static_cast<float>(instance.position.y + baseHeight),
                                                                static_cast<float>(instance.position.z + 1) - 0.5f*size.z,
                                                                1.0f),
-                                                            quatrot((M_PI/180.0f)*static_cast<float>(instance.rotation), vec3(0.0f, 1.0f, 0.0f)),
+                                                            r,
                                                             instance.getColor());
         shadowInstances[nrInstances] = draw::StaticMeshInstance(vec4(static_cast<float>(instance.position.x + 1) - 0.5f*size.x,
                                                                static_cast<float>(baseHeight),

@@ -90,7 +90,7 @@ class Game
         bool msgListCharacters(const unsigned int &, std::ostream &, bool &);
         bool msgAddCharacter(const unsigned int &, std::ostream &, bool &, const unsigned int &, const std::string &, const unsigned int &, const float &);
         bool msgRemoveCharacter(const unsigned int &, std::ostream &, bool &, const unsigned int &);
-        bool msgUpdateCharacter(const unsigned int &, std::ostream &, bool &, const unsigned int &, const tiny::ivec3 &, const int &, const float &);
+        bool msgUpdateCharacter(const unsigned int &, std::ostream &, bool &, const unsigned int &, const tiny::ivec3 &, const int &, const int &, const float &);
         bool msgSetPlayerCharacter(const unsigned int &, std::ostream &, bool &, const unsigned int &, const unsigned int &);
         bool msgUpdateVoxel(const unsigned int &, std::ostream &, bool &, const tiny::ivec3 &, const unsigned int &);
         bool msgUpdateVoxelBasePlane(const unsigned int &, std::ostream &, bool &, const unsigned int &);
@@ -143,6 +143,7 @@ class Game
         std::map<unsigned int, CharacterType *> characterTypes;
         std::map<unsigned int, CharacterInstance> characters;
         unsigned int lastCharacterIndex;
+        unsigned int selectedCharacterType;
         
         //Game starting state.
         std::list<std::string> initCommands;
