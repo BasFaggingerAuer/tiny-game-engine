@@ -104,7 +104,7 @@ class Game
         void readVoxelMapResources(const std::string &, TiXmlElement *);
         
         //Renderer.
-        const double aspectRatio;
+        const float aspectRatio;
         const float mouseSensitivity;
         tiny::draw::WorldRenderer *renderer;
         

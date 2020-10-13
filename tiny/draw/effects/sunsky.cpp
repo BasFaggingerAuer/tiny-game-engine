@@ -102,6 +102,6 @@ void SunSky::setSun(const vec3 &a_sun)
 
 void SunSky::setFog(const float &fogIntensity)
 {
-    uniformMap.setVec3Uniform(-fogIntensity*vec3(5.8e-6 + 2.0e-5, 13.5e-6 + 2.0e-5, 33.1e-6 + 2.0e-5), "fogFalloff");
+    uniformMap.setVec3Uniform(-fogIntensity*vec3(5.8e-6f + 2.0e-5f, 13.5e-6f + 2.0e-5f, 33.1e-6f + 2.0e-5f), "fogFalloff");
 }
 

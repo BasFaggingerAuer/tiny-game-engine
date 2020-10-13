@@ -50,7 +50,7 @@ class GameTerrain
         {
             //Sample texture at the four points surrounding pos.
             const tiny::vec2 pos = tiny::vec2(a_pos.x/scale.x + 0.5f*static_cast<float>(texture.getWidth()), a_pos.y/scale.y + 0.5f*static_cast<float>(texture.getHeight()));
-            const tiny::ivec2 intPos = tiny::ivec2(floor(pos.x), floor(pos.y));
+            const tiny::ivec2 intPos = tiny::ivec2(static_cast<int>(floor(pos.x)), static_cast<int>(floor(pos.y)));
             const tiny::vec4 h00 = texture(intPos.x + 0, intPos.y + 0);
             const tiny::vec4 h01 = texture(intPos.x + 0, intPos.y + 1);
             const tiny::vec4 h10 = texture(intPos.x + 1, intPos.y + 0);

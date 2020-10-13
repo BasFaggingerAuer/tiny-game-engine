@@ -40,7 +40,7 @@ TerrainBlockVertexBufferInterpreter::TerrainBlockVertexBufferInterpreter(const s
     {
         for (size_t j = 0; j < width; ++j)
         {
-            hostData[j + width*i] = vec2(j, i);
+            hostData[j + width*i] = vec2(static_cast<float>(j), static_cast<float>(i));
         }
     }
     
@@ -123,17 +123,17 @@ TerrainStitchVertexBufferInterpreter::TerrainStitchVertexBufferInterpreter(const
 {
     size_t count = 0;
     
-    for (size_t i = 0; i < width;       ++i) hostData[count++] = vec2(2*i, 0);
-    for (size_t i = 0; i < 2*width - 3; ++i) hostData[count++] = vec2(1 + i, 1);
+    for (size_t i = 0; i < width;       ++i) hostData[count++] = vec2(static_cast<float>(2*i), static_cast<float>(0));
+    for (size_t i = 0; i < 2*width - 3; ++i) hostData[count++] = vec2(static_cast<float>(1 + i), static_cast<float>(1));
     
-    for (size_t i = 0; i < width;       ++i) hostData[count++] = vec2(0, 2*(width - 1 - i));
-    for (size_t i = 0; i < 2*width - 3; ++i) hostData[count++] = vec2(1, 1 + 2*width - 4 - i);
+    for (size_t i = 0; i < width;       ++i) hostData[count++] = vec2(static_cast<float>(0), static_cast<float>(2*(width - 1 - i)));
+    for (size_t i = 0; i < 2*width - 3; ++i) hostData[count++] = vec2(static_cast<float>(1), static_cast<float>(1 + 2*width - 4 - i));
     
-    for (size_t i = 0; i < width;       ++i) hostData[count++] = vec2(2*(width - 1 - i), 2*width - 2);
-    for (size_t i = 0; i < 2*width - 3; ++i) hostData[count++] = vec2(1 + 2*width - 4 - i, 2*width - 3);
+    for (size_t i = 0; i < width;       ++i) hostData[count++] = vec2(static_cast<float>(2*(width - 1 - i)), static_cast<float>(2*width - 2));
+    for (size_t i = 0; i < 2*width - 3; ++i) hostData[count++] = vec2(static_cast<float>(1 + 2*width - 4 - i), static_cast<float>(2*width - 3));
     
-    for (size_t i = 0; i < width;       ++i) hostData[count++] = vec2(2*width - 2, 2*i);
-    for (size_t i = 0; i < 2*width - 3; ++i) hostData[count++] = vec2(2*width - 3, 1 + i);
+    for (size_t i = 0; i < width;       ++i) hostData[count++] = vec2(static_cast<float>(2*width - 2), static_cast<float>(2*i));
+    for (size_t i = 0; i < 2*width - 3; ++i) hostData[count++] = vec2(static_cast<float>(2*width - 3), static_cast<float>(1 + i));
     
     sendToDevice();
     
@@ -509,10 +509,10 @@ void Terrain::setCameraPosition(const vec3 &a_position)
     for (int i = minLevel; i < maxLevel; ++i)
     {
         //Calculate scale factor and set up translations.
-        const vec2 r = vec2(1 << i, 1 << i);
-        const vec2 s = vec2(4 << i, 4 << i);
-        const vec2 bs = vec2((blockSize - 1) << i, (blockSize - 1) << i);
-        const vec2 t = vec2(blockTranslations[i].x, blockTranslations[i].y);
+        const vec2 r = vec2(static_cast<float>(1 << i), static_cast<float>(1 << i));
+        const vec2 s = vec2(static_cast<float>(4 << i), static_cast<float>(4 << i));
+        const vec2 bs = vec2(static_cast<float>((blockSize - 1) << i), static_cast<float>((blockSize - 1) << i));
+        const vec2 t = vec2(static_cast<float>(blockTranslations[i].x), static_cast<float>(blockTranslations[i].y));
         
         //Draw blocks.
         smallBlock[nrSmallBlocks++] = TerrainBlockInstance(vec4(r.x, r.y, t.x + s.x + 3.0f*bs.x, t.y + s.y + 2.0f*bs.y));

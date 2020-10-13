@@ -144,11 +144,11 @@ void computeDiamondSquareRefinement(const TextureType &source, TextureType &dest
     ComputeTexture *squareComputeTexture = new ComputeTexture(inputTextures, outputTextures, squareFragmentShader);
     
     diamondComputeTexture->uniformMap().setFloatUniform(amplitude, "amplitude");
-    diamondComputeTexture->uniformMap().setVec2Uniform(source.getWidth(), source.getHeight(), "sourceSize");
+    diamondComputeTexture->uniformMap().setVec2Uniform(static_cast<float>(source.getWidth()), static_cast<float>(source.getHeight()), "sourceSize");
     diamondComputeTexture->setOutput(*tmp[1], "colour");
     
     squareComputeTexture->uniformMap().setFloatUniform(amplitude, "amplitude");
-    squareComputeTexture->uniformMap().setVec2Uniform(source.getWidth(), source.getHeight(), "sourceSize");
+    squareComputeTexture->uniformMap().setVec2Uniform(static_cast<float>(source.getWidth()), static_cast<float>(source.getHeight()), "sourceSize");
     squareComputeTexture->setInput(*tmp[1], "source");
     squareComputeTexture->setOutput(*tmp[0], "colour");
     

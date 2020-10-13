@@ -43,7 +43,7 @@ bool Game::msgHost(const unsigned int &, std::ostream &out, bool &, const unsign
             out << "Hosting game at port " << port << ".";
             
         }
-        catch (std::exception &e)
+        catch (std::exception &)
         {
             out << "Unable to host game!";
             return false;
@@ -75,7 +75,7 @@ bool Game::msgJoin(const unsigned int &, std::ostream &out, bool &, const unsign
             client = new GameClient(ipAddress.str(), port, this);
             out << "Joined game at " << ipAddress.str() << ":" << port << ".";
         }
-        catch (std::exception &e)
+        catch (std::exception &)
         {
             out << "Unable to join game!";
             return false;

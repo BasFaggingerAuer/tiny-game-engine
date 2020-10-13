@@ -48,9 +48,9 @@ Player::~Player()
 }
 
 Game::Game(const os::Application *application, const std::string &path) :
-    aspectRatio(static_cast<double>(application->getScreenWidth())/static_cast<double>(application->getScreenHeight())),
-    mouseSensitivity(48.0),
-    gravitationalConstant(9.81),
+    aspectRatio(static_cast<float>(application->getScreenWidth())/static_cast<float>(application->getScreenHeight())),
+    mouseSensitivity(48.0f),
+    gravitationalConstant(9.81f),
     lastSoundSourceIndex(1),
     lastCharacterIndex(1),
     selectedCharacterType(0),
@@ -119,7 +119,7 @@ void Game::updateConsole() const
     if (consoleMode)
     {
         //Update the console on screen.
-        font->setText(-1.0, -1.0, 0.05, aspectRatio, console->getText(256), *fontTexture);
+        font->setText(-1.0f, -1.0f, 0.05f, aspectRatio, console->getText(256), *fontTexture);
         consoleBackground->setColour(vec4(0.0f, 0.0f, 0.0f, 0.8f));
         consoleBackground->setSquareDimensions(-1.0f, 1.0f, 1.0f, -1.0f);
     }
@@ -170,7 +170,7 @@ void Game::updateConsole() const
             strm << " F = Knock prone" << std::endl;
         }
         
-        font->setText(-1.0, -1.0, 0.05, aspectRatio, strm.str(), *fontTexture);
+        font->setText(-1.0f, -1.0f, 0.05f, aspectRatio, strm.str(), *fontTexture);
         consoleBackground->setColour(vec4(0.0f, 0.0f, 0.0f, 0.3f));
         consoleBackground->setSquareDimensions(-1.0f, 1.0f, -0.6f, -1.0f);
     }
@@ -197,7 +197,7 @@ void Game::update(os::Application *application, const float &dt)
         
         const int baseHeight = voxelMap->getBaseHeight(i->second.position.x, i->second.position.z);
         
-        characterTypes[i->second.type]->addInstance(i->second, baseHeight);
+        characterTypes[i->second.type]->addInstance(i->second, static_cast<float>(baseHeight));
         
         if (!i->second.name.empty())
         {
@@ -690,7 +690,7 @@ void Game::readConsoleResources(const std::string &path, TiXmlElement *el)
     //Create a drawable font object as a collection of instanced screen icons.
     font = new draw::ScreenIconHorde(4096);
     font->setIconTexture(*fontTexture);
-    font->setText(-1.0, -1.0, 0.1, aspectRatio, "", *fontTexture);
+    font->setText(-1.0f, -1.0f, 0.1f, aspectRatio, "", *fontTexture);
     consoleBackground = new draw::effects::Solid();
     
     //Create font to put text inside the world.

@@ -248,7 +248,7 @@ void copyAiAnimation(const aiScene *scene, const aiMesh *sourceMesh, const unsig
                 finalTransformation.Decompose(scale, rotate, translate);
                 
                 frames[boneIndex] = KeyFrame(vec3(scale.x, scale.y, scale.z),
-                                             frame,
+                                             static_cast<float>(frame),
                                              quatconj(vec4(rotate.x, rotate.y, rotate.z, rotate.w)),
                                              vec4(translate.x, translate.y, translate.z, 0.0f));
             }

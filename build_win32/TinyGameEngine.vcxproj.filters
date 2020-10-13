@@ -225,6 +225,18 @@
     <ClInclude Include="tiny\snd\worldsounderer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="tiny\draw\texture2dcubearray.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tiny\draw\voxelmap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tiny\draw\effects\sunskyvoxelmap.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="tiny\rigid\rigidbody.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="tiny\draw\detail\worldrenderer.cpp">
@@ -372,6 +384,15 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="tiny\snd\worldsounderer.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tiny\draw\voxelmap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tiny\draw\effects\sunskyvoxelmap.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="tiny\rigid\rigidbody.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

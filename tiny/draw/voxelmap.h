@@ -52,7 +52,7 @@ class VoxelMap : public tiny::draw::ScreenFillingSquare
         VoxelIntersection getIntersection(const TextureType &voxelTexture, const vec3 &a_position, const vec3 &a_direction) const
         {
             //Determine intersection of a single ray with the voxel map on the CPU.
-            const vec3 position = a_position + 0.5f*scale*vec3(voxelTexture.getWidth(), 0.0f, voxelTexture.getDepth());
+            const vec3 position = a_position + 0.5f*scale*vec3(static_cast<float>(voxelTexture.getWidth()), 0.0f, static_cast<float>(voxelTexture.getDepth()));
             const vec3 direction = normalize(a_direction);
             const vec3 invDirection = 1.0f/max(abs(direction), vec3(epsilon));
             const ivec3 directionSign = to_int((step(vec3(-epsilon), direction) - 1.0f) + step(vec3(epsilon), direction));
@@ -86,7 +86,7 @@ class VoxelMap : public tiny::draw::ScreenFillingSquare
             
             scale = scale_;
             uniformMap.setFloatUniform(scale, "voxelScale");
-            uniformMap.setVec3Uniform(voxelTexture.getWidth(), voxelTexture.getHeight(), voxelTexture.getDepth(), "voxelTextureSize");
+            uniformMap.setVec3Uniform(static_cast<float>(voxelTexture.getWidth()), static_cast<float>(voxelTexture.getHeight()), static_cast<float>(voxelTexture.getDepth()), "voxelTextureSize");
         }
         
         template <typename TextureType>

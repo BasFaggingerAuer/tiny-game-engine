@@ -21,31 +21,32 @@
   <PropertyGroup Label="Globals">
     <ProjectGuid>{FF8DC128-C637-4095-A6CF-27004BC5FA0B}</ProjectGuid>
     <RootNamespace>TinyGameEngine</RootNamespace>
+    <WindowsTargetPlatformVersion>10.0</WindowsTargetPlatformVersion>
   </PropertyGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.Default.props" />
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Debug|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>true</UseDebugLibraries>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|Win32'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
   <PropertyGroup Condition="'$(Configuration)|$(Platform)'=='Release|x64'" Label="Configuration">
     <ConfigurationType>StaticLibrary</ConfigurationType>
     <UseDebugLibraries>false</UseDebugLibraries>
-    <PlatformToolset>v120</PlatformToolset>
+    <PlatformToolset>v142</PlatformToolset>
     <WholeProgramOptimization>true</WholeProgramOptimization>
     <CharacterSet>MultiByte</CharacterSet>
   </PropertyGroup>
@@ -153,6 +154,7 @@
     <ClInclude Include="tiny\draw\effects\showimage.h" />
     <ClInclude Include="tiny\draw\effects\solid.h" />
     <ClInclude Include="tiny\draw\effects\sunsky.h" />
+    <ClInclude Include="tiny\draw\effects\sunskyvoxelmap.h" />
     <ClInclude Include="tiny\draw\glcheck.h" />
     <ClInclude Include="tiny\draw\heightmap\diamondsquare.h" />
     <ClInclude Include="tiny\draw\heightmap\heighttocolour.h" />
@@ -178,12 +180,14 @@
     <ClInclude Include="tiny\draw\texture1d.h" />
     <ClInclude Include="tiny\draw\texture2d.h" />
     <ClInclude Include="tiny\draw\texture2darray.h" />
+    <ClInclude Include="tiny\draw\texture2dcubearray.h" />
     <ClInclude Include="tiny\draw\texture3d.h" />
     <ClInclude Include="tiny\draw\texturebuffer.h" />
     <ClInclude Include="tiny\draw\tiledhorde.h" />
     <ClInclude Include="tiny\draw\uniformmap.h" />
     <ClInclude Include="tiny\draw\vertexbuffer.h" />
     <ClInclude Include="tiny\draw\vertexbufferinterpreter.h" />
+    <ClInclude Include="tiny\draw\voxelmap.h" />
     <ClInclude Include="tiny\draw\worldrenderer.h" />
     <ClInclude Include="tiny\hash\md5.h" />
     <ClInclude Include="tiny\img\image.h" />
@@ -201,6 +205,7 @@
     <ClInclude Include="tiny\net\message.h" />
     <ClInclude Include="tiny\os\application.h" />
     <ClInclude Include="tiny\os\sdlapplication.h" />
+    <ClInclude Include="tiny\rigid\rigidbody.h" />
     <ClInclude Include="tiny\smp\io\sample.h" />
     <ClInclude Include="tiny\smp\sample.h" />
     <ClInclude Include="tiny\snd\alcheck.h" />
@@ -221,6 +226,7 @@
     <ClCompile Include="tiny\draw\effects\showimage.cpp" />
     <ClCompile Include="tiny\draw\effects\solid.cpp" />
     <ClCompile Include="tiny\draw\effects\sunsky.cpp" />
+    <ClCompile Include="tiny\draw\effects\sunskyvoxelmap.cpp" />
     <ClCompile Include="tiny\draw\glcheck.cpp" />
     <ClCompile Include="tiny\draw\iconhorde.cpp" />
     <ClCompile Include="tiny\draw\icontexture2d.cpp" />
@@ -237,6 +243,7 @@
     <ClCompile Include="tiny\draw\textbox.cpp" />
     <ClCompile Include="tiny\draw\texture.cpp" />
     <ClCompile Include="tiny\draw\uniformmap.cpp" />
+    <ClCompile Include="tiny\draw\voxelmap.cpp" />
     <ClCompile Include="tiny\draw\worldrenderer.cpp" />
     <ClCompile Include="tiny\hash\md5.cpp" />
     <ClCompile Include="tiny\img\image.cpp" />
@@ -253,6 +260,7 @@
     <ClCompile Include="tiny\net\message.cpp" />
     <ClCompile Include="tiny\os\application.cpp" />
     <ClCompile Include="tiny\os\sdlapplication.cpp" />
+    <ClCompile Include="tiny\rigid\rigidbody.cpp" />
     <ClCompile Include="tiny\smp\io\sample.cpp" />
     <ClCompile Include="tiny\smp\sample.cpp" />
     <ClCompile Include="tiny\snd\alcheck.cpp" />

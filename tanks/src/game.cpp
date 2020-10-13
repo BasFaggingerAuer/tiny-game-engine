@@ -47,9 +47,9 @@ Player::~Player()
 }
 
 Game::Game(const os::Application *application, const std::string &path) :
-    aspectRatio(static_cast<double>(application->getScreenWidth())/static_cast<double>(application->getScreenHeight())),
-    mouseSensitivity(48.0),
-    gravitationalConstant(9.81),
+    aspectRatio(static_cast<float>(application->getScreenWidth())/static_cast<float>(application->getScreenHeight())),
+    mouseSensitivity(48.0f),
+    gravitationalConstant(9.81f),
     lastSoundSourceIndex(1),
     lastSoldierIndex(1),
     lastBulletIndex(1),
@@ -124,7 +124,7 @@ Game::~Game()
 void Game::updateConsole() const
 {
     //Update the console on screen.
-    font->setText(-1.0, -1.0, consoleMode ? 0.05 : 0.025, aspectRatio, console->getText(256), *fontTexture);
+    font->setText(-1.0f, -1.0f, consoleMode ? 0.05f : 0.025f, aspectRatio, console->getText(256), *fontTexture);
     consoleBackground->setColour(consoleMode ? vec4(0.0f, 0.0f, 0.0f, 0.8f) : vec4(1.0f, 1.0f, 1.0f, 0.0f));
 }
 
@@ -435,8 +435,8 @@ void Game::update(os::Application *application, const float &dt)
             if (soldier.hit)
             {
                 //We have been hit!
-                soldier.x.x = (rand() & 127) - 64;
-                soldier.x.z = (rand() & 127) - 64;
+                soldier.x.x = static_cast<float>((rand() & 127) - 64);
+                soldier.x.z = static_cast<float>((rand() & 127) - 64);
                 soldier.x.y = terrain->getHeight(vec2(soldier.x.x, soldier.x.z));
                 soldier.hit = false;
                 isHit = true;
@@ -710,7 +710,7 @@ void Game::readConsoleResources(const std::string &path, TiXmlElement *el)
     //Create a drawable font object as a collection of instanced screen icons.
     font = new draw::ScreenIconHorde(4096);
     font->setIconTexture(*fontTexture);
-    font->setText(-1.0, -1.0, 0.1, aspectRatio, "Welcome to \\rTanks\\w, press ` to access the console.", *fontTexture);
+    font->setText(-1.0f, -1.0f, 0.1f, aspectRatio, "Welcome to \\rTanks\\w, press ` to access the console.", *fontTexture);
     consoleBackground = new draw::effects::Solid();
 }
 

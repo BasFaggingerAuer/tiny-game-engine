@@ -69,7 +69,7 @@ class SunSkyVoxelMap : public tiny::draw::ScreenFillingSquare
         {
             uniformMap.setTexture(voxelTexture, "voxelTexture");
             uniformMap.setFloatUniform(scale_, "voxelScale");
-            uniformMap.setVec3Uniform(voxelTexture.getWidth(), voxelTexture.getHeight(), voxelTexture.getDepth(), "voxelTextureSize");
+            uniformMap.setVec3Uniform(static_cast<float>(voxelTexture.getWidth()), static_cast<float>(voxelTexture.getHeight()), static_cast<float>(voxelTexture.getDepth()), "voxelTextureSize");
         }
         
         void setSun(const vec3 &);

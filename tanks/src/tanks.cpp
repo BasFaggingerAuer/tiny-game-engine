@@ -52,7 +52,7 @@ int main(int argc, char **argv)
         application = new tiny::os::SDLApplication(screenWidth, screenHeight);
         game = new tanks::Game(application, argv[1]);
     }
-    catch (std::exception &e)
+    catch (std::exception &)
     {
         std::cerr << "Unable to start application!" << std::endl;
         return -1;
@@ -60,7 +60,7 @@ int main(int argc, char **argv)
     
     while (application->isRunning())
     {
-        game->update(application, application->pollEvents());
+        game->update(application, static_cast<float>(application->pollEvents()));
         game->render();
         application->paint();
     }

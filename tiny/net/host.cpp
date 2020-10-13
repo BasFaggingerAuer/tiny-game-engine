@@ -100,7 +100,7 @@ bool Host::listen(const double &dt)
     {
         receivedData = false;
         
-        if (SDLNet_CheckSockets(selector, 1000.0*dt) > 0)
+        if (SDLNet_CheckSockets(selector, static_cast<Uint32>(1000.0*dt)) > 0)
         {
             if (SDLNet_SocketReady(hostSocket) != 0)
             {

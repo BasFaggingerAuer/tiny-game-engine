@@ -90,7 +90,7 @@ class Game
         void applyConsequences();
         
         //Renderer.
-        const double aspectRatio;
+        const float aspectRatio;
         const float mouseSensitivity;
         tiny::draw::WorldRenderer *renderer;
         

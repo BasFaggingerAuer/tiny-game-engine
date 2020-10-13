@@ -24,7 +24,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #endif
 
 #ifndef M_PI
-#define M_PI 3.14159265358979323846
+#define M_PI 3.14159265358979323846f
 #endif
 
 namespace tiny
@@ -38,28 +38,31 @@ inline t modnonneg(const t &a, const t &b) {return ((a % b) + b) % b;}
 template <typename t> class typed2vector
 {
     public:
-        inline typed2vector() : x(0), y(0) {};
-        explicit inline typed2vector(const t &a) : x(a), y(a) {};
-        inline typed2vector(const t &_x, const t &_y) : x(_x), y(_y) {};
-        inline typed2vector(const typed2vector<t> &a) : x(a.x), y(a.y) {};
-        inline ~typed2vector() {};
+        inline typed2vector() noexcept : x(0), y(0) {};
+        explicit inline typed2vector(const t &a) noexcept : x(a), y(a) {};
+        inline typed2vector(const t &_x, const t &_y) noexcept : x(_x), y(_y) {};
+        inline typed2vector(const typed2vector<t> &a) noexcept : x(a.x), y(a.y) {};
+        inline typed2vector(typed2vector<t> &&a) noexcept : x(a.x), y(a.y) {};
+        inline ~typed2vector() noexcept {};
         
-        inline typed2vector & operator = (const typed2vector<t> &a) {x = a.x; y = a.y; return *this;};
-        inline bool operator == (const typed2vector<t> &a) const {return (a.x == x && a.y == y);}
-        inline bool operator != (const typed2vector<t> &a) const {return (a.x != x || a.y != y);}
-        inline typed2vector & operator += (const typed2vector<t> &a) {x += a.x; y += a.y; return *this;};
-        inline typed2vector & operator += (const t &a) {x += a; y += a; return *this;};
-        inline typed2vector & operator -= (const typed2vector<t> &a) {x -= a.x; y -= a.y; return *this;};
-        inline typed2vector & operator -= (const t &a) {x -= a; y -= a; return *this;};
-        inline typed2vector & operator *= (const typed2vector<t> &a) {x *= a.x; y *= a.y; return *this;};
-        inline typed2vector & operator /= (const typed2vector<t> &a) {x /= a.x; y /= a.y; return *this;};
-        inline typed2vector & operator *= (const t &a) {x *= a; y *= a; return *this;};
-        inline typed2vector & operator /= (const t &a) {x /= a; y /= a; return *this;};
-        inline typed2vector operator - () const {return typed2vector<t>(-x, -y);};
-        inline t dot(const typed2vector<t> &a) const {return x*a.x + y*a.y;};
+        inline typed2vector & operator = (const typed2vector<t> &a) noexcept {x = a.x; y = a.y; return *this;};
+        inline typed2vector & operator = (typed2vector<t> &&a) noexcept { x = a.x; y = a.y; return *this; };
+        inline bool operator == (const typed2vector<t> &a) const noexcept {return (a.x == x && a.y == y);}
+        inline bool operator != (const typed2vector<t> &a) const noexcept {return (a.x != x || a.y != y);}
+        inline typed2vector & operator += (const typed2vector<t> &a) noexcept {x += a.x; y += a.y; return *this;};
+        inline typed2vector & operator += (typed2vector<t> &&a) noexcept {x += a.x; y += a.y; return *this;};
+        inline typed2vector & operator += (const t &a) noexcept {x += a; y += a; return *this;};
+        inline typed2vector & operator -= (const typed2vector<t> &a) noexcept {x -= a.x; y -= a.y; return *this;};
+        inline typed2vector & operator -= (const t &a) noexcept {x -= a; y -= a; return *this;};
+        inline typed2vector & operator *= (const typed2vector<t> &a) noexcept {x *= a.x; y *= a.y; return *this;};
+        inline typed2vector & operator /= (const typed2vector<t> &a) noexcept {x /= a.x; y /= a.y; return *this;};
+        inline typed2vector & operator *= (const t &a) noexcept {x *= a; y *= a; return *this;};
+        inline typed2vector & operator /= (const t &a) noexcept {x /= a; y /= a; return *this;};
+        inline typed2vector operator - () const noexcept {return typed2vector<t>(-x, -y);};
+        inline t dot(const typed2vector<t> &a) const noexcept {return x*a.x + y*a.y;};
         
-        inline typed2vector<t> xy() const {return typed2vector<t>(x, y);};
-        inline typed2vector<t> yx() const {return typed2vector<t>(y, x);};
+        inline typed2vector<t> xy() const noexcept {return typed2vector<t>(x, y);};
+        inline typed2vector<t> yx() const noexcept {return typed2vector<t>(y, x);};
         
         friend std::ostream & operator << (std::ostream &Out, const typed2vector<t> &a) {Out << "(" << a.x << ", " << a.y << ")"; return Out;};
         
@@ -69,37 +72,39 @@ template <typename t> class typed2vector
 template <typename t> class typed3vector
 {
     public:
-        inline typed3vector() : x(0), y(0), z(0) {};
-        explicit inline typed3vector(const t &a) : x(a), y(a), z(a) {};
-        inline typed3vector(const t &_x, const t &_y, const t &_z) : x(_x), y(_y), z(_z) {};
-        inline typed3vector(const typed2vector<t> &a, const t &_z) : x(a.x), y(a.y), z(_z) {};
-        inline typed3vector(const typed3vector<t> &a) : x(a.x), y(a.y), z(a.z) {};
-        inline ~typed3vector() {};
+        inline typed3vector() noexcept : x(0), y(0), z(0) {};
+        explicit inline typed3vector(const t &a) noexcept : x(a), y(a), z(a) {};
+        inline typed3vector(const t &_x, const t &_y, const t &_z) noexcept : x(_x), y(_y), z(_z) {};
+        inline typed3vector(const typed2vector<t> &a, const t &_z) noexcept : x(a.x), y(a.y), z(_z) {};
+        inline typed3vector(const typed3vector<t> &a) noexcept : x(a.x), y(a.y), z(a.z) {};
+        inline typed3vector(typed3vector<t> &&a) noexcept : x(a.x), y(a.y), z(a.z) {};
+        inline ~typed3vector() noexcept {};
 
-        inline typed3vector & operator = (const typed3vector<t> &a) {x = a.x; y = a.y; z = a.z; return *this;};
-        inline bool operator == (const typed3vector<t> &a) const {return (a.x == x && a.y == y && a.z == z);}
-        inline bool operator != (const typed3vector<t> &a) const {return (a.x != x || a.y != y || a.z != z);}
-        inline typed3vector & operator += (const typed3vector<t> &a) {x += a.x; y += a.y; z += a.z; return *this;};
-        inline typed3vector & operator += (const t &a) {x += a; y += a; z += a; return *this;};
-        inline typed3vector & operator -= (const typed3vector<t> &a) {x -= a.x; y -= a.y; z -= a.z; return *this;};
-        inline typed3vector & operator -= (const t &a) {x -= a; y -= a; z -= a; return *this;};
-        inline typed3vector & operator *= (const typed3vector<t> &a) {x *= a.x; y *= a.y; z *= a.z; return *this;};
-        inline typed3vector & operator /= (const typed3vector<t> &a) {x /= a.x; y /= a.y; z /= a.z; return *this;};
-        inline typed3vector & operator *= (const t &a) {x *= a; y *= a; z *= a; return *this;};
-        inline typed3vector & operator /= (const t &a) {x /= a; y /= a; z /= a; return *this;};
-        inline typed3vector operator - () const {return typed3vector<t>(-x, -y, -z);};
-        inline t dot(const typed3vector<t> &a) const {return x*a.x + y*a.y + z*a.z;};
+        inline typed3vector & operator = (const typed3vector<t> &a) noexcept {x = a.x; y = a.y; z = a.z; return *this;};
+        inline typed3vector & operator = (typed3vector<t> &&a) noexcept {x = a.x; y = a.y; z = a.z; return *this;};
+        inline bool operator == (const typed3vector<t> &a) const noexcept {return (a.x == x && a.y == y && a.z == z);}
+        inline bool operator != (const typed3vector<t> &a) const noexcept {return (a.x != x || a.y != y || a.z != z);}
+        inline typed3vector & operator += (const typed3vector<t> &a) noexcept {x += a.x; y += a.y; z += a.z; return *this;};
+        inline typed3vector & operator += (const t &a) noexcept {x += a; y += a; z += a; return *this;};
+        inline typed3vector & operator -= (const typed3vector<t> &a) noexcept {x -= a.x; y -= a.y; z -= a.z; return *this;};
+        inline typed3vector & operator -= (const t &a) noexcept {x -= a; y -= a; z -= a; return *this;};
+        inline typed3vector & operator *= (const typed3vector<t> &a) noexcept {x *= a.x; y *= a.y; z *= a.z; return *this;};
+        inline typed3vector & operator /= (const typed3vector<t> &a) noexcept {x /= a.x; y /= a.y; z /= a.z; return *this;};
+        inline typed3vector & operator *= (const t &a) noexcept {x *= a; y *= a; z *= a; return *this;};
+        inline typed3vector & operator /= (const t &a) noexcept {x /= a; y /= a; z /= a; return *this;};
+        inline typed3vector operator - () const noexcept {return typed3vector<t>(-x, -y, -z);};
+        inline t dot(const typed3vector<t> &a) const noexcept {return x*a.x + y*a.y + z*a.z;};
         
-        inline typed2vector<t> xy() const {return typed2vector<t>(x, y);};
-        inline typed2vector<t> xz() const {return typed2vector<t>(x, z);};
-        inline typed2vector<t> yz() const {return typed2vector<t>(y, z);};
+        inline typed2vector<t> xy() const noexcept {return typed2vector<t>(x, y);};
+        inline typed2vector<t> xz() const noexcept {return typed2vector<t>(x, z);};
+        inline typed2vector<t> yz() const noexcept {return typed2vector<t>(y, z);};
         
-        inline typed3vector<t> xyz() const {return typed3vector<t>(x, y, z);};
-        inline typed3vector<t> xzy() const {return typed3vector<t>(x, z, y);};
-        inline typed3vector<t> yxz() const {return typed3vector<t>(y, x, z);};
-        inline typed3vector<t> yzx() const {return typed3vector<t>(y, z, x);};
-        inline typed3vector<t> zxy() const {return typed3vector<t>(z, x, y);};
-        inline typed3vector<t> zyx() const {return typed3vector<t>(z, y, x);};
+        inline typed3vector<t> xyz() const noexcept {return typed3vector<t>(x, y, z);};
+        inline typed3vector<t> xzy() const noexcept {return typed3vector<t>(x, z, y);};
+        inline typed3vector<t> yxz() const noexcept {return typed3vector<t>(y, x, z);};
+        inline typed3vector<t> yzx() const noexcept {return typed3vector<t>(y, z, x);};
+        inline typed3vector<t> zxy() const noexcept {return typed3vector<t>(z, x, y);};
+        inline typed3vector<t> zyx() const noexcept {return typed3vector<t>(z, y, x);};
         
         friend std::ostream & operator << (std::ostream &Out, const typed3vector<t> &a) {Out << "(" << a.x << ", " << a.y << ", " << a.z << ")"; return Out;};
         
@@ -109,68 +114,70 @@ template <typename t> class typed3vector
 template <typename t> class typed4vector
 {
     public:
-        inline typed4vector() : x(0), y(0), z(0), w(0) {};
-        explicit inline typed4vector(const t &a) : x(a), y(a), z(a), w(a) {};
-        inline typed4vector(const t &_x, const t &_y, const t &_z, const t &_w) : x(_x), y(_y), z(_z), w(_w) {};
-        inline typed4vector(const typed2vector<t> &a, const t &_z, const t &_w) : x(a.x), y(a.y), z(_z), w(_w) {};
-        inline typed4vector(const typed3vector<t> &a, const t &_w) : x(a.x), y(a.y), z(a.z), w(_w) {};
-        inline typed4vector(const typed4vector<t> &a) : x(a.x), y(a.y), z(a.z), w(a.w) {};
-        inline ~typed4vector() {};
+        inline typed4vector() noexcept : x(0), y(0), z(0), w(0) {};
+        explicit inline typed4vector(const t &a) noexcept : x(a), y(a), z(a), w(a) {};
+        inline typed4vector(const t &_x, const t &_y, const t &_z, const t &_w) noexcept : x(_x), y(_y), z(_z), w(_w) {};
+        inline typed4vector(const typed2vector<t> &a, const t &_z, const t &_w) noexcept : x(a.x), y(a.y), z(_z), w(_w) {};
+        inline typed4vector(const typed3vector<t> &a, const t &_w) noexcept : x(a.x), y(a.y), z(a.z), w(_w) {};
+        inline typed4vector(const typed4vector<t> &a) noexcept : x(a.x), y(a.y), z(a.z), w(a.w) {};
+        inline typed4vector(typed4vector<t> &&a) noexcept : x(a.x), y(a.y), z(a.z), w(a.w) {};
+        inline ~typed4vector() noexcept {};
         
-        inline typed4vector & operator = (const typed4vector<t> &a) {x = a.x; y = a.y; z = a.z; w = a.w; return *this;};
-        inline bool operator == (const typed4vector<t> &a) const {return (a.x == x && a.y == y && a.z == z && a.w == w);}
-        inline bool operator != (const typed4vector<t> &a) const {return (a.x != x || a.y != y || a.z != z || a.w != w);}
-        inline typed4vector & operator += (const typed4vector<t> &a) {x += a.x; y += a.y; z += a.z; w += a.w; return *this;};
-        inline typed4vector & operator += (const t &a) {x += a; y += a; z += a; w += a; return *this;};
-        inline typed4vector & operator -= (const typed4vector<t> &a) {x -= a.x; y -= a.y; z -= a.z; w -= a.w; return *this;};
-        inline typed4vector & operator -= (const t &a) {x -= a; y -= a; z -= a; w -= a; return *this;};
-        inline typed4vector & operator *= (const typed4vector<t> &a) {x *= a.x; y *= a.y; z *= a.z; w *= a.w; return *this;};
-        inline typed4vector & operator /= (const typed4vector<t> &a) {x /= a.x; y /= a.y; z /= a.z; w /= a.w; return *this;};
-        inline typed4vector & operator *= (const t &a) {x *= a; y *= a; z *= a; w *= a; return *this;};
-        inline typed4vector & operator /= (const t &a) {x /= a; y /= a; z /= a; w /= a; return *this;};
-        inline typed4vector operator - () const {return typed4vector<t>(-x, -y, -z, -w);};
-        inline t dot(const typed4vector<t> &a) const {return x*a.x + y*a.y + z*a.z + w*a.w;};
+        inline typed4vector & operator = (const typed4vector<t> &a) noexcept {x = a.x; y = a.y; z = a.z; w = a.w; return *this;};
+        inline typed4vector & operator = (typed4vector<t> &&a) noexcept {x = a.x; y = a.y; z = a.z; w = a.w; return *this;};
+        inline bool operator == (const typed4vector<t> &a) const noexcept {return (a.x == x && a.y == y && a.z == z && a.w == w);}
+        inline bool operator != (const typed4vector<t> &a) const noexcept {return (a.x != x || a.y != y || a.z != z || a.w != w);}
+        inline typed4vector & operator += (const typed4vector<t> &a) noexcept {x += a.x; y += a.y; z += a.z; w += a.w; return *this;};
+        inline typed4vector & operator += (const t &a) noexcept {x += a; y += a; z += a; w += a; return *this;};
+        inline typed4vector & operator -= (const typed4vector<t> &a) noexcept {x -= a.x; y -= a.y; z -= a.z; w -= a.w; return *this;};
+        inline typed4vector & operator -= (const t &a) noexcept {x -= a; y -= a; z -= a; w -= a; return *this;};
+        inline typed4vector & operator *= (const typed4vector<t> &a) noexcept {x *= a.x; y *= a.y; z *= a.z; w *= a.w; return *this;};
+        inline typed4vector & operator /= (const typed4vector<t> &a) noexcept {x /= a.x; y /= a.y; z /= a.z; w /= a.w; return *this;};
+        inline typed4vector & operator *= (const t &a) noexcept {x *= a; y *= a; z *= a; w *= a; return *this;};
+        inline typed4vector & operator /= (const t &a) noexcept {x /= a; y /= a; z /= a; w /= a; return *this;};
+        inline typed4vector operator - () const noexcept {return typed4vector<t>(-x, -y, -z, -w);};
+        inline t dot(const typed4vector<t> &a) const noexcept {return x*a.x + y*a.y + z*a.z + w*a.w;};
         
-        inline typed2vector<t> xy() const {return typed2vector<t>(x, y);};
-        inline typed3vector<t> xyz() const {return typed3vector<t>(x, y, z);};
+        inline typed2vector<t> xy() const noexcept {return typed2vector<t>(x, y);};
+        inline typed3vector<t> xyz() const noexcept {return typed3vector<t>(x, y, z);};
         
         friend std::ostream & operator << (std::ostream &Out, const typed4vector<t> &a) {Out << "(" << a.x << ", " << a.y << ", " << a.z << ", " << a.w << ")"; return Out;};
         
         t x, y, z, w;
 };
 
-template <typename t> typed2vector<t> & operator + (typed2vector<t> a, const typed2vector<t> &b) {return a += b;}
-template <typename t> typed2vector<t> & operator + (typed2vector<t> a, const t &b) {return a += b;}
-template <typename t> typed2vector<t> & operator - (typed2vector<t> a, const typed2vector<t> &b) {return a -= b;}
-template <typename t> typed2vector<t> & operator - (typed2vector<t> a, const t &b) {return a -= b;}
-template <typename t> typed2vector<t> & operator * (typed2vector<t> a, const typed2vector<t> &b) {return a *= b;}
-template <typename t> typed2vector<t> & operator / (typed2vector<t> a, const typed2vector<t> &b) {return a /= b;}
-template <typename t> typed2vector<t> & operator * (typed2vector<t> a, const t &b) {return a *= b;}
-template <typename t> typed2vector<t> & operator * (const t &b, typed2vector<t> a) {return a *= b;}
-template <typename t> typed2vector<t> & operator / (typed2vector<t> a, const t &b) {return a /= b;}
-template <typename t> typed2vector<t> & operator / (const t &b, typed2vector<t> a) {return typed2vector<t>(b/a.x, b/a.y);}
+template <typename t> inline typed2vector<t> operator + (const typed2vector<t> &a, const typed2vector<t> &b) noexcept {typed2vector<t> c(a); return c += b;}
+template <typename t> inline typed2vector<t> operator + (const typed2vector<t> &a, const t &b) noexcept {typed2vector<t> c(a); return c += b;}
+template <typename t> inline typed2vector<t> operator - (const typed2vector<t> &a, const typed2vector<t> &b) noexcept {typed2vector<t> c(a); return c -= b;}
+template <typename t> inline typed2vector<t> operator - (const typed2vector<t> &a, const t &b) noexcept {typed2vector<t> c(a); return c -= b;}
+template <typename t> inline typed2vector<t> operator * (const typed2vector<t> &a, const typed2vector<t> &b) noexcept {typed2vector<t> c(a); return c *= b;}
+template <typename t> inline typed2vector<t> operator / (const typed2vector<t> &a, const typed2vector<t> &b) noexcept {typed2vector<t> c(a); return c /= b;}
+template <typename t> inline typed2vector<t> operator * (const typed2vector<t> &a, const t &b) noexcept {typed2vector<t> c(a); return c *= b;}
+template <typename t> inline typed2vector<t> operator * (const t &b, const typed2vector<t> &a) noexcept {typed2vector<t> c(a); return c *= b;}
+template <typename t> inline typed2vector<t> operator / (const typed2vector<t> &a, const t &b) noexcept {typed2vector<t> c(a); return c /= b;}
+template <typename t> inline typed2vector<t> operator / (const t &b, const typed2vector<t> &a) noexcept {return typed2vector<t>(b/a.x, b/a.y);}
 
-template <typename t> typed3vector<t> & operator + (typed3vector<t> a, const typed3vector<t> &b) {return a += b;}
-template <typename t> typed3vector<t> & operator + (typed3vector<t> a, const t &b) {return a += b;}
-template <typename t> typed3vector<t> & operator - (typed3vector<t> a, const typed3vector<t> &b) {return a -= b;}
-template <typename t> typed3vector<t> & operator - (typed3vector<t> a, const t &b) {return a -= b;}
-template <typename t> typed3vector<t> & operator * (typed3vector<t> a, const typed3vector<t> &b) {return a *= b;}
-template <typename t> typed3vector<t> & operator / (typed3vector<t> a, const typed3vector<t> &b) {return a /= b;}
-template <typename t> typed3vector<t> & operator * (typed3vector<t> a, const t &b) {return a *= b;}
-template <typename t> typed3vector<t> & operator * (const t &b, typed3vector<t> a) {return a *= b;}
-template <typename t> typed3vector<t> & operator / (typed3vector<t> a, const t &b) {return a /= b;}
-template <typename t> typed3vector<t> operator / (const t &b, typed3vector<t> a) {return typed3vector<t>(b/a.x, b/a.y, b/a.z);}
+template <typename t> inline typed3vector<t> operator + (const typed3vector<t> &a, const typed3vector<t> &b) noexcept {typed3vector<t> c(a); return c += b;}
+template <typename t> inline typed3vector<t> operator + (const typed3vector<t> &a, const t &b) noexcept {typed3vector<t> c(a); return c += b;}
+template <typename t> inline typed3vector<t> operator - (const typed3vector<t> &a, const typed3vector<t> &b) noexcept {typed3vector<t> c(a); return c -= b;}
+template <typename t> inline typed3vector<t> operator - (const typed3vector<t> &a, const t &b) noexcept {typed3vector<t> c(a); return c -= b;}
+template <typename t> inline typed3vector<t> operator * (const typed3vector<t> &a, const typed3vector<t> &b) noexcept {typed3vector<t> c(a); return c *= b;}
+template <typename t> inline typed3vector<t> operator / (const typed3vector<t> &a, const typed3vector<t> &b) noexcept {typed3vector<t> c(a); return c /= b;}
+template <typename t> inline typed3vector<t> operator * (const typed3vector<t> &a, const t &b) noexcept {typed3vector<t> c(a); return c *= b;}
+template <typename t> inline typed3vector<t> operator * (const t &b, const typed3vector<t> &a) noexcept {typed3vector<t> c(a); return c *= b;}
+template <typename t> inline typed3vector<t> operator / (const typed3vector<t> &a, const t &b) noexcept {typed3vector<t> c(a); return c /= b;}
+template <typename t> inline typed3vector<t> operator / (const t &b, const typed3vector<t> &a) noexcept {return typed3vector<t>(b/a.x, b/a.y, b/a.z);}
 
-template <typename t> typed4vector<t> & operator + (typed4vector<t> a, const typed4vector<t> &b) {return a += b;}
-template <typename t> typed4vector<t> & operator + (typed4vector<t> a, const t &b) {return a += b;}
-template <typename t> typed4vector<t> & operator - (typed4vector<t> a, const typed4vector<t> &b) {return a -= b;}
-template <typename t> typed4vector<t> & operator - (typed4vector<t> a, const t &b) {return a -= b;}
-template <typename t> typed4vector<t> & operator * (typed4vector<t> a, const typed4vector<t> &b) {return a *= b;}
-template <typename t> typed4vector<t> & operator / (typed4vector<t> a, const typed4vector<t> &b) {return a /= b;}
-template <typename t> typed4vector<t> & operator * (typed4vector<t> a, const t &b) {return a *= b;}
-template <typename t> typed4vector<t> & operator * (const t &b, typed4vector<t> a) {return a *= b;}
-template <typename t> typed4vector<t> & operator / (typed4vector<t> a, const t &b) {return a /= b;}
-template <typename t> typed4vector<t> operator / (const t &b, typed4vector<t> a) {return typed4vector<t>(b/a.x, b/a.y, b/a.z, b/a.w);}
+template <typename t> inline typed4vector<t> operator + (const typed4vector<t> &a, const typed4vector<t> &b) noexcept {typed4vector<t> c(a); return c += b;}
+template <typename t> inline typed4vector<t> operator + (const typed4vector<t> &a, const t &b) noexcept {typed4vector<t> c(a); return c += b;}
+template <typename t> inline typed4vector<t> operator - (const typed4vector<t> &a, const typed4vector<t> &b) noexcept {typed4vector<t> c(a); return c -= b;}
+template <typename t> inline typed4vector<t> operator - (const typed4vector<t> &a, const t &b) noexcept {typed4vector<t> c(a); return c -= b;}
+template <typename t> inline typed4vector<t> operator * (const typed4vector<t> &a, const typed4vector<t> &b) noexcept {typed4vector<t> c(a); return c *= b;}
+template <typename t> inline typed4vector<t> operator / (const typed4vector<t> &a, const typed4vector<t> &b) noexcept {typed4vector<t> c(a); return c /= b;}
+template <typename t> inline typed4vector<t> operator * (const typed4vector<t> &a, const t &b) noexcept {typed4vector<t> c(a); return c *= b;}
+template <typename t> inline typed4vector<t> operator * (const t &b, const typed4vector<t> &a) noexcept {typed4vector<t> c(a); return c *= b;}
+template <typename t> inline typed4vector<t> operator / (const typed4vector<t> &a, const t &b) noexcept {typed4vector<t> c(a); return c /= b;}
+template <typename t> inline typed4vector<t> operator / (const t &b, const typed4vector<t> &a) noexcept {return typed4vector<t>(b/a.x, b/a.y, b/a.z, b/a.w);}
 
 template <typename t> typed2vector<t> min(const typed2vector<t> &a, const typed2vector<t> &b) {return typed2vector<t>(std::min(a.x, b.x), std::min(a.y, b.y));}
 template <typename t> typed2vector<t> max(const typed2vector<t> &a, const typed2vector<t> &b) {return typed2vector<t>(std::max(a.x, b.x), std::max(a.y, b.y));}

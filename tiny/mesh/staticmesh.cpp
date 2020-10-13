@@ -125,7 +125,7 @@ StaticMesh StaticMesh::createCylinderMesh(const float &radius, const float &heig
     for (int i = 0; i <= n; ++i)
     {
         const float ifrac = static_cast<float>(i)/static_cast<float>(n);
-        const float ca = cos(2.0f*M_PI*ifrac), sa = sin(2.0f*M_PI*ifrac);
+        const float ca = cosf(2.0f*M_PI*ifrac), sa = sinf(2.0f*M_PI*ifrac);
         
         mesh.vertices.push_back(StaticMeshVertex(vec2(ifrac, 0.0f), vec3(sa, 0.0f, -ca), vec3(ca, 0.0f, sa), vec3(radius*ca, 0.0f, radius*sa)));
         mesh.vertices.push_back(StaticMeshVertex(vec2(ifrac, 1.0f), vec3(sa, 0.0f, -ca), vec3(ca, 0.0f, sa), vec3(radius*ca, height, radius*sa)));

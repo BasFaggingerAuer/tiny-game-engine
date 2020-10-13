@@ -169,7 +169,7 @@ vec4 sampleTextureBilinear(const TextureType &texture, const vec2 &scale, const 
 {
     //Sample texture at the four points surrounding pos.
     const vec2 pos = vec2(a_pos.x/scale.x + 0.5f*static_cast<float>(texture.getWidth()), a_pos.y/scale.y + 0.5f*static_cast<float>(texture.getHeight()));
-    const ivec2 intPos = ivec2(floor(pos.x), floor(pos.y));
+    const ivec2 intPos = ivec2(static_cast<int>(floor(pos.x)), static_cast<int>(floor(pos.y)));
     const vec4 h00 = texture(intPos.x + 0, intPos.y + 0);
     const vec4 h01 = texture(intPos.x + 0, intPos.y + 1);
     const vec4 h10 = texture(intPos.x + 1, intPos.y + 0);
@@ -397,7 +397,7 @@ void cleanup()
     delete terrainLocalNormalTextures;
 }
 
-void update(const double &dt)
+void update(const float &dt)
 {
     //Move the camera around.
     application->updateSimpleCamera(dt, cameraPosition, cameraOrientation);
@@ -486,7 +486,7 @@ int main(int, char **)
         application = new os::SDLApplication(SCREEN_WIDTH, SCREEN_HEIGHT);
         setup();
     }
-    catch (std::exception &e)
+    catch (std::exception &)
     {
         cerr << "Unable to start application!" << endl;
         return -1;
@@ -494,7 +494,7 @@ int main(int, char **)
     
     while (application->isRunning())
     {
-        update(application->pollEvents());
+        update(static_cast<float>(application->pollEvents()));
         render();
         application->paint();
     }
