@@ -75,7 +75,7 @@ template <typename t> class typed3vector
         inline typed3vector() noexcept : x(0), y(0), z(0) {};
         explicit inline typed3vector(const t &a) noexcept : x(a), y(a), z(a) {};
         inline typed3vector(const t &_x, const t &_y, const t &_z) noexcept : x(_x), y(_y), z(_z) {};
-        inline typed3vector(const typed2vector<t> &a, const t &_z) noexcept : x(a.x), y(a.y), z(_z) {};
+        explicit inline typed3vector(const typed2vector<t> &a, const t &_z) noexcept : x(a.x), y(a.y), z(_z) {};
         inline typed3vector(const typed3vector<t> &a) noexcept : x(a.x), y(a.y), z(a.z) {};
         inline typed3vector(typed3vector<t> &&a) noexcept : x(a.x), y(a.y), z(a.z) {};
         inline ~typed3vector() noexcept {};

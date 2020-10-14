@@ -33,37 +33,36 @@
         <cubemap all="img/cm_wall3.png" />
         <cubemap all="img/cm_wall4.png" />
         <cubemap all="img/cm_tile_red.png" />
+        <cubemap all="img/cm_lava.png" />
     </voxelmap>
-    <charactertype name="HumanRanger" width="1.0" depth="1.0" height="2.0" mesh="rpg/archer.dae" max_instances="64" />
-    <charactertype name="HumanMage" width="1.0" depth="1.0" height="2.0" mesh="rpg/archmage.dae" max_instances="64" />
-    <charactertype name="HumanPaladin" width="1.0" depth="1.0" height="2.0" mesh="rpg/paladin.dae" max_instances="64" />
-    <charactertype name="HumanViking" width="1.0" depth="1.0" height="2.0" mesh="rpg/viking.dae" max_instances="64" />
-    <charactertype name="HumanSpear" width="1.0" depth="1.0" height="2.0" mesh="rpg/spartan.dae" max_instances="64" />
-    <charactertype name="HumanSpear2" width="1.0" depth="1.0" height="2.0" mesh="rpg/spearman.dae" max_instances="64" />
-    <charactertype name="Dwarf" width="1.0" depth="1.0" height="2.0" mesh="rpg/dwarf.dae" max_instances="64" />
-    <charactertype name="KrakenTentacle" width="3.0" depth="3.0" height="6.0" mesh="rpg/tentacle.dae" max_instances="64" />
-    <charactertype name="Kraken" width="9.0" depth="9.0" height="9.0" mesh="rpg/kraken.dae" max_instances="64" />
-    <charactertype name="Shark" width="3.0" depth="9.0" height="1.0" scale_height="1.0" mesh="rpg/shark.dae" max_instances="64" />
-    <charactertype name="Merman" width="1.0" depth="1.0" height="2.0" mesh="rpg/merman.dae" max_instances="64" />
+    <charactertype name="HumanRanger" width="1.0" depth="1.0" height="2.0" mesh="rpg/ElfRanger_28mm.dae" max_instances="64" />
+    <charactertype name="HumanMage" width="1.0" depth="1.0" height="2.0" mesh="rpg/Arch_Mage.dae" max_instances="64" />
+    <charactertype name="HumanPaladin" width="1.0" depth="1.0" height="2.0" mesh="rpg/paladin_sword_down.dae" max_instances="64" />
+    <charactertype name="HumanViking" width="1.0" depth="1.0" height="2.0" mesh="rpg/Viking.dae" max_instances="64" />
+    <charactertype name="HumanSpartan" width="1.0" depth="1.0" height="1.75" mesh="rpg/spartan.dae" max_instances="64" />
+    <charactertype name="Dwarf" width="1.0" depth="1.0" height="2.0" mesh="rpg/DwarfPaladinFigure.dae" max_instances="64" />
+    <charactertype name="KrakenTentacle" width="3.0" depth="3.0" height="6.0" mesh="rpg/Kraken_Tentacle.dae" max_instances="64" />
+    <charactertype name="Kraken" width="9.0" depth="9.0" height="9.0" mesh="rpg/Kraken_for_Print3.dae" max_instances="64" />
+    <charactertype name="Shark" width="3.0" depth="9.0" height="1.0" scale_height="1.0" mesh="rpg/great_white_2.dae" max_instances="64" />
+    <charactertype name="Merman" width="1.0" depth="1.0" height="2.0" mesh="rpg/Merfolk_DandD_character.dae" max_instances="64" />
     <charactertype name="Horse" width="1.0" depth="2.0" height="2.0" scale_height="0.7" mesh="rpg/horse.dae" max_instances="64" />
-    <charactertype name="RomanSpear" width="1.0" depth="1.0" height="2.0" mesh="rpg/legionnaire_spear.dae" max_instances="64" />
-    <charactertype name="RomanSword" width="1.0" depth="1.0" height="2.0" mesh="rpg/legionnaire_sword.dae" max_instances="64" />
-    <charactertype name="Shell" width="3.0" depth="3.0" height="2.0" mesh="rpg/seashell2.dae" scale_height="1.0" max_instances="64" />
-    <charactertype name="Tree" width="2.0" depth="2.0" height="4.0" mesh="rpg/tree.dae" max_instances="64" />
-    <charactertype name="Chriphon" width="1.0" depth="2.0" height="4.0" mesh="rpg/gryphon.dae" max_instances="64" />
+    <charactertype name="RomanSpear" width="1.0" depth="1.0" height="2.0" mesh="rpg/roman_legionary_spear.dae" max_instances="64" />
+    <charactertype name="RomanSword" width="1.0" depth="1.0" height="2.0" mesh="rpg/roman_legionary_sword.dae" max_instances="64" />
+    <charactertype name="Shell" width="3.0" depth="3.0" height="2.0" mesh="rpg/Large_Shell.dae" scale_height="1.0" max_instances="64" />
+    <charactertype name="Tree" width="2.0" depth="2.0" height="8.0" scale_height="0.05" mesh="rpg/Simple_Pine_Tree.dae" max_instances="64" />
+    <charactertype name="Chriphon" width="1.0" depth="2.0" height="4.0" mesh="rpg/gryphonflying.dae" max_instances="64" />
     <init command="terrainoffset 0.50 0.55" />
     <init command="sundirection 0.3 0.6 0.4" />
     <init command="addcharacter 1 'Laertes' 1 0.75" />
     <init command="updatecharacter 1 -1 0 0 0 0.75" />
     <init command="addcharacter 2 'Rodan' 2 0.15" />
     <init command="updatecharacter 2 0 0 0 0 0.15" />
-    <init command="addcharacter 3 'Tollie' 7 0.30" />
+    <init command="addcharacter 3 'Tollie' 6 0.30" />
     <init command="updatecharacter 3 1 0 1 0 0.30" />
-    <init command="addcharacter 4 'Julius' 3 0.45" />
+    <init command="addcharacter 4 'Julius' 4 0.45" />
     <init command="updatecharacter 4 -1 0 1 0 0.45" />
-    <init command="addcharacter 5 'Sven' 4 0.00" />
+    <init command="addcharacter 5 'Sven' 3 0.00" />
     <init command="updatecharacter 5 0 0 1 0 0.00" />
     <init command="addcharacter 6 'Augustus' 5 0.60" />
     <init command="updatecharacter 6 1 0 0 0 0.60" />
-    <init command="addcharacter 7 'Horse' 12 -1.00" />
 </rpg>

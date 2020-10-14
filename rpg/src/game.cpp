@@ -300,7 +300,8 @@ void Game::update(os::Application *application, const float &dt)
             
             if (application->isKeyPressedOnce('.'))
             {
-                ++selectedCharacterType;
+                if (characterTypes.empty()) selectedCharacterType = 0;
+                else selectedCharacterType = std::min<unsigned int>(++selectedCharacterType, std::max_element(characterTypes.cbegin(), characterTypes.cend(), [] (const std::pair<unsigned int, CharacterType *> &a, const std::pair<unsigned int, CharacterType *> &b) {return a.first < b.first;})->first);
             }
         }
     
