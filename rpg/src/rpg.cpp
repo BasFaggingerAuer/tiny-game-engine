@@ -34,8 +34,8 @@ int main(int argc, char **argv)
     
     try
     {
-        int screenWidth = 1920;
-        int screenHeight = 1080;
+        int screenWidth = 960;
+        int screenHeight = 540;
         
         if (argc != 2 && argc != 4)
         {

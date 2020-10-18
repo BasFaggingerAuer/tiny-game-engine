@@ -99,7 +99,7 @@ std::vector<Image> tiny::img::io::readFont(const std::string &fileName, const in
     {
         text[0] = static_cast<char>(i);
         SDL_Surface *data = TTF_RenderText_Blended(font, text, color);
-        Image image;
+        Image image = Image::createTestImage(8);
         
         if (!data)
         {

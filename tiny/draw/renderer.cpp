@@ -145,8 +145,9 @@ unsigned int detail::BoundProgram::numRenderables() const
     return renderableIndices.size();
 }
 
-Renderer::Renderer() :
+Renderer::Renderer(const bool & a_renderToDefaultFrameBuffer) :
     frameBufferIndex(0),
+    renderToDefaultFrameBuffer(a_renderToDefaultFrameBuffer),
     renderTargetNames(),
     renderTargetTextures(),
     depthTargetTexture(0),
@@ -175,7 +176,7 @@ Renderer::~Renderer()
 void Renderer::createFrameBuffer()
 {
     //Do not create the frame buffer if it already exists.
-    if (frameBufferIndex != 0) return;
+    if (frameBufferIndex != 0 || renderToDefaultFrameBuffer) return;
     
     GL_CHECK(glGenFramebuffers(1, &frameBufferIndex));
     
@@ -223,7 +224,7 @@ void Renderer::addRenderable(const unsigned int &renderableIndex, Renderable *re
         //Set program outputs.
         for (size_t i = 0; i < renderTargetNames.size(); ++i)
         {
-            std::cerr << "Bound '" << renderTargetNames[i].c_str() << "' to colour number " << i << " for program " << shaderProgram->getProgram().getIndex() << "." << std::endl;
+            std::cerr << "Bound '" << renderTargetNames[i].c_str() << "' to colour number " << i << " in frame buffer " << frameBufferIndex << " for program " << shaderProgram->getProgram().getIndex() << "." << std::endl;
             shaderProgram->bindRenderTarget(i, renderTargetNames[i]);
         }
         
@@ -299,57 +300,76 @@ void Renderer::addRenderTarget(const std::string &name)
     {
         std::cerr << "Warning: binding more than the maximum number (" << GL_MAX_DRAW_BUFFERS << ") of draw buffers!" << std::endl;
     }
+
+    if (renderToDefaultFrameBuffer && renderTargetNames.size() > 1)
+    {
+        std::cerr << "Warning: binding multiple outputs to default frame buffer!" << std::endl;
+        assert(false);
+    }
+
+    updateRenderTargets();
 }
 
 void Renderer::updateRenderTargets()
 {
-    if (frameBufferIndex == 0)
+    if (frameBufferIndex == 0 && !renderToDefaultFrameBuffer)
         createFrameBuffer();
     
-    std::vector<GLenum> drawBuffers;
+    GL_CHECK(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, frameBufferIndex));
     
-    drawBuffers.reserve(renderTargetTextures.size() + 1);
-    
-    GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, frameBufferIndex));
-    
-    for (size_t i = 0; i < renderTargetTextures.size(); ++i)
+    if (!renderToDefaultFrameBuffer)
     {
-        if (renderTargetTextures[i] != 0)
+        std::vector<GLenum> drawBuffers;
+        
+        drawBuffers.reserve(renderTargetTextures.size() + 1);
+
+        for (size_t i = 0; i < renderTargetTextures.size(); ++i)
         {
-            GL_CHECK(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, renderTargetTextures[i], 0));
-            drawBuffers.push_back(GL_COLOR_ATTACHMENT0 + i);
+            if (renderTargetTextures[i] != 0)
+            {
+                GL_CHECK(glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_COLOR_ATTACHMENT0 + i, GL_TEXTURE_2D, renderTargetTextures[i], 0));
+                drawBuffers.push_back(GL_COLOR_ATTACHMENT0 + i);
+            }
         }
-    }
     
-    GL_CHECK(glDrawBuffers(drawBuffers.size(), &drawBuffers[0]));
+        GL_CHECK(glDrawBuffers(drawBuffers.size(), &drawBuffers[0]));
+    }
+    else
+    {
+        //Draw directly to the screen backbuffer.
+        assert(frameBufferIndex == 0);
+        assert(renderTargetNames.size() == 1);
+        assert(renderTargetTextures.size() == 1);
+        assert(renderTargetTextures[0] == 0);
+        
+        GL_CHECK(glDrawBuffer(GL_BACK));
+    }
     
     if (depthTargetTexture != 0)
     {
-        GL_CHECK(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTargetTexture, 0));
+        GL_CHECK(glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTargetTexture, 0));
     }
     
-#ifndef NDEBUG    
-    if (glCheckFramebufferStatus(GL_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
+    if (glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
-        std::cerr << "Warning: frame buffer " << frameBufferIndex << " is incomplete: " << glCheckFramebufferStatus(GL_FRAMEBUFFER) << " (incomplete = " << GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT << ", wrong dimensions = " << GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT << ", missing attachment = " << GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT << ", unsupported = " << GL_FRAMEBUFFER_UNSUPPORTED << ")." << std::endl;
+        std::cerr << "Warning: frame buffer " << frameBufferIndex << " is incomplete: " << glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) << " (incomplete = " << GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT << ", wrong dimensions = " << GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT << ", missing attachment = " << GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT << ", unsupported = " << GL_FRAMEBUFFER_UNSUPPORTED << ")." << std::endl;
         assert(false);
     }
-#endif
     
-    GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+    GL_CHECK(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0));
 }
 
 void Renderer::clearTargets() const
 {
-    GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, frameBufferIndex));
+    GL_CHECK(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, frameBufferIndex));
     GL_CHECK(glDepthMask(GL_TRUE));
-    GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
-    GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+    GL_CHECK(glClear(depthTargetTexture != 0 ? GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT : GL_COLOR_BUFFER_BIT));
+    GL_CHECK(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0));
 }
 
 void Renderer::render() const
 {
-    GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, frameBufferIndex));
+    GL_CHECK(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, frameBufferIndex));
     //GL_CHECK(glPushAttrib(GL_VIEWPORT_BIT | GL_ENABLE_BIT));
     
     if (viewportSize.x > 0 && viewportSize.y > 0)
@@ -430,7 +450,7 @@ void Renderer::render() const
     uniformMap.unbindTextures();
     
     //GL_CHECK(glPopAttrib());
-    GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+    GL_CHECK(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0));
     
 #ifndef NDEBUG
     //std::cerr << "Switched shaders " << nrShaderProgramSwitches << " times for " << renderables.size() << " renderables." << std::endl;

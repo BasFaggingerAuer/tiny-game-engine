@@ -4,12 +4,19 @@ Microsoft Visual Studio Solution File, Format Version 12.00
 VisualStudioVersion = 16.0.30523.141
 MinimumVisualStudioVersion = 10.0.40219.1
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestTerrainFancy", "TestTerrainFancy\TestTerrainFancy.vcxproj", "{245AF60B-167C-4FB8-8579-52785646BE26}"
+	ProjectSection(ProjectDependencies) = postProject
+		{FF8DC128-C637-4095-A6CF-27004BC5FA0B} = {FF8DC128-C637-4095-A6CF-27004BC5FA0B}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Tanks", "Tanks\Tanks.vcxproj", "{021D50C6-750E-4981-9250-DD94DC5C2F9E}"
-EndProject
-Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TestTerrainFancyOpenVR", "TestTerrainFancyOpenVR\TestTerrainFancyOpenVR.vcxproj", "{AA25E28B-E8FB-477A-9F17-BD7EA7505C41}"
+	ProjectSection(ProjectDependencies) = postProject
+		{FF8DC128-C637-4095-A6CF-27004BC5FA0B} = {FF8DC128-C637-4095-A6CF-27004BC5FA0B}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "Rpg", "Rpg\Rpg.vcxproj", "{4B88D607-AD27-4301-8DD6-F933D399A9CA}"
+	ProjectSection(ProjectDependencies) = postProject
+		{FF8DC128-C637-4095-A6CF-27004BC5FA0B} = {FF8DC128-C637-4095-A6CF-27004BC5FA0B}
+	EndProjectSection
 EndProject
 Project("{8BC9CEB8-8B4A-11D0-8D11-00A0C91BC942}") = "TinyGameEngine", "TinyGameEngine.vcxproj", "{FF8DC128-C637-4095-A6CF-27004BC5FA0B}"
 EndProject
@@ -32,12 +39,6 @@ Global
 		{021D50C6-750E-4981-9250-DD94DC5C2F9E}.Release|Win32.ActiveCfg = Release|Win32
 		{021D50C6-750E-4981-9250-DD94DC5C2F9E}.Release|Win32.Build.0 = Release|Win32
 		{021D50C6-750E-4981-9250-DD94DC5C2F9E}.Release|x64.ActiveCfg = Release|Win32
-		{AA25E28B-E8FB-477A-9F17-BD7EA7505C41}.Debug|Win32.ActiveCfg = Debug|Win32
-		{AA25E28B-E8FB-477A-9F17-BD7EA7505C41}.Debug|Win32.Build.0 = Debug|Win32
-		{AA25E28B-E8FB-477A-9F17-BD7EA7505C41}.Debug|x64.ActiveCfg = Debug|Win32
-		{AA25E28B-E8FB-477A-9F17-BD7EA7505C41}.Release|Win32.ActiveCfg = Release|Win32
-		{AA25E28B-E8FB-477A-9F17-BD7EA7505C41}.Release|Win32.Build.0 = Release|Win32
-		{AA25E28B-E8FB-477A-9F17-BD7EA7505C41}.Release|x64.ActiveCfg = Release|Win32
 		{4B88D607-AD27-4301-8DD6-F933D399A9CA}.Debug|Win32.ActiveCfg = Debug|Win32
 		{4B88D607-AD27-4301-8DD6-F933D399A9CA}.Debug|Win32.Build.0 = Debug|Win32
 		{4B88D607-AD27-4301-8DD6-F933D399A9CA}.Debug|x64.ActiveCfg = Debug|x64

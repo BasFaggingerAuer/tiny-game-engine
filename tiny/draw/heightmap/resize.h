@@ -42,22 +42,22 @@ void computeResizedTexture(const TextureType1 &source, TextureType2 &dest, const
 "uniform vec2 addVec;\n"
 "\n"
 "in vec2 tex;\n"
-"out vec4 colour;\n"
+"out vec4 dest;\n"
 "\n"
 "void main(void)\n"
 "{\n"
-"   colour = texture(source, tex*scaleVec + addVec);\n"
+"   dest = texture(source, tex*scaleVec + addVec);\n"
 "}\n";
     
     inputTextures.push_back("source");
-    outputTextures.push_back("colour");
+    outputTextures.push_back("dest");
 
     ComputeTexture *computeTexture = new ComputeTexture(inputTextures, outputTextures, fragmentShader);
     
     computeTexture->uniformMap().setVec2Uniform(scale, "scaleVec");
     computeTexture->uniformMap().setVec2Uniform(add, "addVec");
     computeTexture->setInput(source, "source");
-    computeTexture->setOutput(dest, "colour");
+    computeTexture->setOutput(dest, "dest");
     computeTexture->compute();
     dest.getFromDevice();
     

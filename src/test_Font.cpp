@@ -60,7 +60,7 @@ void setup()
         text->addTextFragment(str.substr(i,1), draw::Colour(0,255-(i*255)/str.size(),(i*255)/str.size()));
     
     //Create a renderer and add the textbox to it, disabling depth reading and writing.
-    renderer = new draw::Renderer();
+    renderer = new draw::Renderer(true);
     renderer->addRenderable(0, text->getRenderable(), false, false, draw::BlendMix);
 
     //Reserve space such that text can be fully rendered, and set text.

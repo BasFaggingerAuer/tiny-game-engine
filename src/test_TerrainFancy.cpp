@@ -128,7 +128,7 @@ void computeTerrainTypeFromHeight(const TextureType1 &heightMap, TextureType2 &c
 "uniform float mapScale;\n"
 "\n"
 "in vec2 tex;\n"
-"out vec4 colour;\n"
+"out vec4 dest;\n"
 "\n"
 "void main(void)\n"
 "{\n"
@@ -146,17 +146,17 @@ void computeTerrainTypeFromHeight(const TextureType1 &heightMap, TextureType2 &c
 "	float mudFrac = (1.0f - grassFrac - forestFrac)*clamp(max(0.0f, 1.0f - 1.0f*slope), 0.0f, 1.0f);\n"
 "	float rockFrac = 1.0f - forestFrac - grassFrac - mudFrac;\n"
 "	\n"
-"   colour = vec4((0.0f*forestFrac + 1.0f*grassFrac + 2.0f*mudFrac + 3.0f*rockFrac)/255.0f, 0.0f, 0.0f, 0.0f);\n"
+"   dest = vec4((0.0f*forestFrac + 1.0f*grassFrac + 2.0f*mudFrac + 3.0f*rockFrac)/255.0f, 0.0f, 0.0f, 0.0f);\n"
 "}\n";
     
     inputTextures.push_back("source");
-    outputTextures.push_back("colour");
+    outputTextures.push_back("dest");
 
     draw::ComputeTexture *computeTexture = new draw::ComputeTexture(inputTextures, outputTextures, fragmentShader);
     
     computeTexture->uniformMap().setFloatUniform(2.0f*mapScale, "mapScale");
     computeTexture->setInput(heightMap, "source");
-    computeTexture->setOutput(colourMap, "colour");
+    computeTexture->setOutput(colourMap, "dest");
     computeTexture->compute();
     colourMap.getFromDevice();
     
@@ -467,6 +467,7 @@ void update(const float &dt)
     
     //Tell the world renderer that the camera has changed.
     worldRenderer->setCamera(cameraPosition, cameraOrientation);
+    worldRenderer->setScreenSize(application->getScreenWidth(), application->getScreenHeight());
 
 #ifdef ENABLE_OPENVR
     worldRenderer->update();

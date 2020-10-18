@@ -123,7 +123,7 @@ struct BoundRenderable
 class Renderer
 {
     public:
-        Renderer();
+        Renderer(const bool &);
         virtual ~Renderer();
         
         void addRenderable(const unsigned int &, Renderable *, const bool & = true, const bool & = true, const BlendMode & = BlendReplace, const CullMode & = CullBack);
@@ -179,6 +179,7 @@ class Renderer
         std::map<unsigned int, detail::BoundRenderable *> renderables;
         std::map<unsigned int, detail::BoundProgram *> shaderPrograms;
         GLuint frameBufferIndex;
+        bool renderToDefaultFrameBuffer;
         std::vector<std::string> renderTargetNames;
         std::vector<GLuint> renderTargetTextures;
         GLuint depthTargetTexture;

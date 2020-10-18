@@ -47,7 +47,7 @@ void computeDiamondSquareRefinement(const TextureType &source, TextureType &dest
     std::vector<std::string> outputTextures;
     
     inputTextures.push_back("source");
-    outputTextures.push_back("colour");
+    outputTextures.push_back("dest");
     
     const std::string diamondFragmentShader =
 "#version 150\n"
@@ -61,7 +61,7 @@ void computeDiamondSquareRefinement(const TextureType &source, TextureType &dest
 "uniform vec2 sourceStep;\n"
 "\n"
 "in vec2 tex;\n"
-"out vec4 colour;\n"
+"out vec4 dest;\n"
 "\n"
 "float rand(vec2 co)\n"
 "{\n"
@@ -77,26 +77,26 @@ void computeDiamondSquareRefinement(const TextureType &source, TextureType &dest
 "	//Are we at a corner?\n"
 "	if (twoStepMod.x == 0 && twoStepMod.y == 0)\n"
 "	{\n"
-"		colour = texture(source, tex);\n"
+"		dest = texture(source, tex);\n"
 "	}\n"
 "	//Are we at a diamond's vertex in a row?\n"
 "	else if (twoStepMod.y == 0 && stepMod.x == 0)\n"
 "	{\n"
 "		float h1 = texture(source, vec2(tex.x - sourceStep.x, tex.y)).x;\n"
 "		float h2 = texture(source, vec2(tex.x + sourceStep.x, tex.y)).x;\n"
-"		colour = vec4(0.5f*(h1 + h2) + amplitude*(0.5f + abs(h2 - h1))*rand(tex), 0.0f, 0.0f, 0.0f);\n"
+"		dest = vec4(0.5f*(h1 + h2) + amplitude*(0.5f + abs(h2 - h1))*rand(tex), 0.0f, 0.0f, 0.0f);\n"
 "	}\n"
 "	//Are we at a diamond's vertex in a column?\n"
 "	else if (twoStepMod.x == 0 && stepMod.y == 0)\n"
 "	{\n"
 "		float h1 = texture(source, vec2(tex.x, tex.y - sourceStep.y)).x;\n"
 "		float h2 = texture(source, vec2(tex.x, tex.y + sourceStep.y)).x;\n"
-"		colour = vec4(0.5f*(h1 + h2) + amplitude*(0.5f + abs(h2 - h1))*rand(tex), 0.0f, 0.0f, 0.0f);\n"
+"		dest = vec4(0.5f*(h1 + h2) + amplitude*(0.5f + abs(h2 - h1))*rand(tex), 0.0f, 0.0f, 0.0f);\n"
 "	}\n"
 "	//Otherwise just copy.\n"
 "	else\n"
 "	{\n"
-"		colour = texture(source, tex);\n"
+"		dest = texture(source, tex);\n"
 "	}\n"
 "}\n";
 		const std::string squareFragmentShader =
@@ -111,7 +111,7 @@ void computeDiamondSquareRefinement(const TextureType &source, TextureType &dest
 "uniform vec2 sourceStep;\n"
 "\n"
 "in vec2 tex;\n"
-"out vec4 colour;\n"
+"out vec4 dest;\n"
 "\n"
 "float rand(vec2 co)\n"
 "{\n"
@@ -131,12 +131,12 @@ void computeDiamondSquareRefinement(const TextureType &source, TextureType &dest
 "		float h2 = texture(source, vec2(tex.x + sourceStep.x, tex.y)).x;\n"
 "		float h3 = texture(source, vec2(tex.x, tex.y - sourceStep.y)).x;\n"
 "		float h4 = texture(source, vec2(tex.x, tex.y + sourceStep.y)).x;\n"
-"		colour = vec4(0.25f*(h1 + h2 + h3 + h4) + amplitude*(0.5f + abs(max(h2 - h1, h4 - h3)))*rand(tex), 0.0f, 0.0f, 0.0f);\n"
+"		dest = vec4(0.25f*(h1 + h2 + h3 + h4) + amplitude*(0.5f + abs(max(h2 - h1, h4 - h3)))*rand(tex), 0.0f, 0.0f, 0.0f);\n"
 "	}\n"
 "	//Otherwise just copy.\n"
 "	else\n"
 "	{\n"
-"		colour = texture(source, tex);\n"
+"		dest = texture(source, tex);\n"
 "	}\n"
 "}\n";
     
@@ -145,12 +145,12 @@ void computeDiamondSquareRefinement(const TextureType &source, TextureType &dest
     
     diamondComputeTexture->uniformMap().setFloatUniform(amplitude, "amplitude");
     diamondComputeTexture->uniformMap().setVec2Uniform(static_cast<float>(source.getWidth()), static_cast<float>(source.getHeight()), "sourceSize");
-    diamondComputeTexture->setOutput(*tmp[1], "colour");
+    diamondComputeTexture->setOutput(*tmp[1], "dest");
     
     squareComputeTexture->uniformMap().setFloatUniform(amplitude, "amplitude");
     squareComputeTexture->uniformMap().setVec2Uniform(static_cast<float>(source.getWidth()), static_cast<float>(source.getHeight()), "sourceSize");
     squareComputeTexture->setInput(*tmp[1], "source");
-    squareComputeTexture->setOutput(*tmp[0], "colour");
+    squareComputeTexture->setOutput(*tmp[0], "dest");
     
     //Run diamond-square.
     for (size_t step = stepSize/2; step >= 1; step >>= 1)
@@ -173,11 +173,11 @@ void computeDiamondSquareRefinement(const TextureType &source, TextureType &dest
         if (step == 1)
         {
             //Use given output texture as target for the final step.
-            squareComputeTexture->setOutput(dest, "colour");
+            squareComputeTexture->setOutput(dest, "dest");
         }
         else
         {
-            squareComputeTexture->setOutput(*tmp[0], "colour");
+            squareComputeTexture->setOutput(*tmp[0], "dest");
         }
         
         diamondComputeTexture->compute();

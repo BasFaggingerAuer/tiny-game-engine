@@ -61,7 +61,7 @@ void setup()
     font->setText(-1.0, -1.0, 0.1, aspectRatio, console->getText(1), *fontTexture);
     
     //Create a renderer and add the font to it, disabling depth reading and writing.
-    renderer = new draw::Renderer();
+    renderer = new draw::Renderer(true);
     renderer->addRenderable(0, font, false, false, draw::BlendMix);
 }
 

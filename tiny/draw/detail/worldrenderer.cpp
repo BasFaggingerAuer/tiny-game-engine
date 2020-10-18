@@ -21,7 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using namespace tiny::draw::detail;
 
 WorldRendererStageOne::WorldRendererStageOne(const float &aspectRatio) :
-    RendererWithCamera(aspectRatio)
+    RendererWithCamera(aspectRatio, false)
 {
     addRenderTarget("diffuse");
     addRenderTarget("worldNormal");
@@ -34,7 +34,7 @@ WorldRendererStageOne::~WorldRendererStageOne()
 }
 
 WorldRendererStageTwo::WorldRendererStageTwo(const float &aspectRatio) :
-    RendererWithCamera(aspectRatio)
+    RendererWithCamera(aspectRatio, true)
 {
     addRenderTarget("colour");
     uniformMap.addTexture("diffuseTexture");
@@ -47,3 +47,10 @@ WorldRendererStageTwo::~WorldRendererStageTwo()
 
 }
 
+void WorldRendererStageTwo::setScreenSize(const int &screenWidth, const int &screenHeight)
+{
+    uniformMap.setVec2Uniform(vec2(1.0f/static_cast<float>(screenWidth),
+                                   1.0f/static_cast<float>(screenHeight)),
+                              "inverseScreenSize");
+
+}

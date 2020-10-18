@@ -39,6 +39,12 @@ WorldRenderer::WorldRenderer(const int &screenWidth, const int &screenHeight) :
     screenToColourRenderer.setDiffuseSource(diffuseTexture);
     screenToColourRenderer.setNormalsSource(worldNormalTexture);
     screenToColourRenderer.setPositionsSource(worldPositionTexture);
+    setScreenSize(screenWidth, screenHeight);
+}
+
+void WorldRenderer::setScreenSize(const int &screenWidth, const int &screenHeight)
+{
+    screenToColourRenderer.setScreenSize(screenWidth, screenHeight);
 }
 
 WorldRenderer::~WorldRenderer()

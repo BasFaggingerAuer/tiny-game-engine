@@ -24,8 +24,8 @@ using namespace tiny::draw;
 const float RendererWithCamera::nearClippingPlane = 1.0e-1f;
 const float RendererWithCamera::farClippingPlane = 1.0e8f;
 
-RendererWithCamera::RendererWithCamera(const float &aspectRatio) :
-    Renderer(),
+RendererWithCamera::RendererWithCamera(const float &aspectRatio, const bool &a_renderToDefaultFrameBuffer) :
+    Renderer(a_renderToDefaultFrameBuffer),
     cameraToScreen(mat4::frustumMatrix(vec3(-0.07f*aspectRatio, -0.07f, nearClippingPlane), vec3(0.07f*aspectRatio, 0.07f, farClippingPlane))),
     cameraToWorld(mat4::identityMatrix()),
     worldToCamera(mat4::identityMatrix()),

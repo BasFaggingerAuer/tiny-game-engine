@@ -300,8 +300,17 @@ void Game::update(os::Application *application, const float &dt)
             
             if (application->isKeyPressedOnce('.'))
             {
-                if (characterTypes.empty()) selectedCharacterType = 0;
-                else selectedCharacterType = std::min<unsigned int>(++selectedCharacterType, std::max_element(characterTypes.cbegin(), characterTypes.cend(), [] (const std::pair<unsigned int, CharacterType *> &a, const std::pair<unsigned int, CharacterType *> &b) {return a.first < b.first;})->first);
+                auto m = std::max_element(characterTypes.cbegin(), characterTypes.cend(),
+                                          [] (const std::pair<unsigned int, CharacterType *> &lhs, const std::pair<unsigned int, CharacterType *> &rhs) {return lhs.first < rhs.first;});
+
+                if (m != characterTypes.cend())
+                {
+                    selectedCharacterType = std::min<unsigned int>(selectedCharacterType + 1, m->first);
+                }
+                else
+                {
+                    selectedCharacterType = 0;
+                }
             }
         }
     
@@ -531,6 +540,9 @@ void Game::update(os::Application *application, const float &dt)
     
     //Update console status.
     updateConsole();
+
+    //Update screen size in case it has changed.
+    renderer->setScreenSize(application->getScreenWidth(), application->getScreenHeight());
 }
 
 void Game::render()

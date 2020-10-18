@@ -57,6 +57,12 @@ vec4 IconTexture2D::addSingleIcon(const img::Image &image)
 {
     vec4 finalPosition = vec4(0.0f, 0.0f, 1.0f, 1.0f);
     bool found = false;
+
+    if (image.width == 0 || image.height == 0 || image.data.empty())
+    {
+        std::cerr << "Unable to pack an empty image into an icon texture!" << std::endl;
+        return finalPosition;
+    }
     
     //Find unoccupied cells to store the image.
     for (std::list<int>::iterator x0 = xBounds.begin(); x0 != xBounds.end() && !found; ++x0)
@@ -168,7 +174,7 @@ vec4 IconTexture2D::addSingleIcon(const img::Image &image)
     
     //Blit image.
     const ivec4 pos = subImages.back();
-    const unsigned char *srcPointer = &image.data[0];
+    const unsigned char *srcPointer = image.data.data();
     unsigned char *destPointer = &hostData[4*(pos.x + width*pos.y)];
     
     assert(pos.z == (int)image.width && pos.w == (int)image.height);

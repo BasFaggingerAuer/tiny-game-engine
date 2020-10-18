@@ -42,7 +42,7 @@ void computeColourFromHeight(const TextureType1 &heightMap, TextureType2 &colour
 "uniform float mapScale;\n"
 "\n"
 "in vec2 tex;\n"
-"out vec4 colour;\n"
+"out vec4 dest;\n"
 "\n"
 "void main(void)\n"
 "{\n"
@@ -57,17 +57,17 @@ void computeColourFromHeight(const TextureType1 &heightMap, TextureType2 &colour
 "   float mud = (1.0f - rock)*(n.y < 0.9f ? 1.0f : 0.0f);\n"
 "   float grass = 1.0f - rock - mud;\n"
 "   \n"
-"   colour = rock*vec4(0.6f, 0.6f, 0.6f, 1.0f) + mud*vec4(0.4f, 0.2f, 0.1f, 1.0f) + grass*vec4(0.2f, 0.5f, 0.1f, 1.0f);\n"
+"   dest = rock*vec4(0.6f, 0.6f, 0.6f, 1.0f) + mud*vec4(0.4f, 0.2f, 0.1f, 1.0f) + grass*vec4(0.2f, 0.5f, 0.1f, 1.0f);\n"
 "}\n";
     
     inputTextures.push_back("source");
-    outputTextures.push_back("colour");
+    outputTextures.push_back("dest");
 
     ComputeTexture *computeTexture = new ComputeTexture(inputTextures, outputTextures, fragmentShader);
     
     computeTexture->uniformMap().setFloatUniform(2.0f*mapScale, "mapScale");
     computeTexture->setInput(heightMap, "source");
-    computeTexture->setOutput(colourMap, "colour");
+    computeTexture->setOutput(colourMap, "dest");
     computeTexture->compute();
     colourMap.getFromDevice();
     

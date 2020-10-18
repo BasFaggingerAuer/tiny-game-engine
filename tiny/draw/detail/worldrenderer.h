@@ -70,13 +70,12 @@ class WorldRendererStageTwo : public RendererWithCamera
         WorldRendererStageTwo(const float &);
         virtual ~WorldRendererStageTwo();
         
+        void setScreenSize(const int &, const int &);
+
         template <typename TextureType>
         void setDiffuseSource(const TextureType &texture)
         {
             uniformMap.setTexture(texture, "diffuseTexture");
-            uniformMap.setVec2Uniform(vec2(1.0f/static_cast<float>(texture.getWidth()),
-                                           1.0f/static_cast<float>(texture.getHeight())),
-                                      "inverseScreenSize");
         }
         
         template <typename TextureType>

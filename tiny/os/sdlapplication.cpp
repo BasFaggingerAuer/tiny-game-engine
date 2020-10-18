@@ -87,8 +87,12 @@ SDLApplication::SDLApplication(const int &a_screenWidth,
     {
         screenFlags |= SDL_WINDOW_FULLSCREEN;
     }
+    else
+    {
+        screenFlags |= SDL_WINDOW_RESIZABLE;
+    }
     
-    screen = SDL_CreateWindow("", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, screenWidth, screenHeight, screenFlags);
+    screen = SDL_CreateWindow("TinyGameEngine", SDL_WINDOWPOS_CENTERED, SDL_WINDOWPOS_CENTERED, screenWidth, screenHeight, screenFlags);
     
     if (!screen)
     {
@@ -96,20 +100,13 @@ SDLApplication::SDLApplication(const int &a_screenWidth,
         throw std::exception();
     }
     
-#ifndef ENABLE_OPENVR
-    //Disable deprecated OpenGL functions and request version >= 3.2.
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
-    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 3);
-    //SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 2);
-    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
-#else
-    //Disable deprecated OpenGL functions < 4.1.
+    //Disable deprecated OpenGL functions and request version >= 4.
     SDL_GL_SetAttribute(SDL_GL_CONTEXT_MAJOR_VERSION, 4);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 1);
-	SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_MINOR_VERSION, 0);
+    SDL_GL_SetAttribute(SDL_GL_CONTEXT_PROFILE_MASK, SDL_GL_CONTEXT_PROFILE_CORE); //SDL_GL_CONTEXT_PROFILE_COMPATIBILITY);
     SDL_GL_SetAttribute(SDL_GL_MULTISAMPLEBUFFERS, 0);
 	SDL_GL_SetAttribute(SDL_GL_MULTISAMPLESAMPLES, 0);
-#endif
+    SDL_GL_SetAttribute(SDL_GL_DOUBLEBUFFER, 1);
     
     //Create rendering context.
     glContext = SDL_GL_CreateContext(screen);
@@ -291,6 +288,7 @@ void SDLApplication::initOpenGL()
     if (glGetString(GL_SHADING_LANGUAGE_VERSION)) std::cerr << "Using GLSL version " << glGetString(GL_SHADING_LANGUAGE_VERSION) << "." << std::endl;
     else std::cerr << "Cannot determine GLSL version!" << std::endl;
 
+    glViewport(0, 0, screenWidth, screenHeight);
     glClearColor(0.0, 0.0, 0.0, 0.0);
     glClearDepth(1.0);
     
@@ -304,6 +302,9 @@ void SDLApplication::initOpenGL()
 
     glEnable(GL_PRIMITIVE_RESTART);
     glPrimitiveRestartIndex(UINT_MAX);
+
+    glDisable(GL_SCISSOR_TEST);
+    glDisable(GL_STENCIL_TEST);
 
     glDisable(GL_MULTISAMPLE);
     
@@ -406,6 +407,15 @@ double SDLApplication::pollEvents()
         else if (event.type == SDL_TEXTINPUT)
         {
             collectedText += std::string(event.text.text);
+        }
+        else if (event.type == SDL_WINDOWEVENT)
+        {
+            if (event.window.event == SDL_WINDOWEVENT_SIZE_CHANGED)
+            {
+                screenWidth = event.window.data1;
+                screenHeight = event.window.data2;
+                glViewport(0, 0, screenWidth, screenHeight);
+            }
         }
         else if (event.type == SDL_QUIT)
         {
