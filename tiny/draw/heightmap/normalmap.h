@@ -59,7 +59,7 @@ void computeNormalMap(const TextureType1 &heightMap, TextureType2 &normalMap, co
     inputTextures.push_back("source");
     outputTextures.push_back("normal");
 
-    ComputeTexture *computeTexture = new ComputeTexture(inputTextures, outputTextures, fragmentShader);
+    ComputeTexture *computeTexture = new ComputeTexture(inputTextures, normalMap.getWidth(), normalMap.getHeight(), outputTextures, fragmentShader);
     
     computeTexture->uniformMap().setFloatUniform(2.0f*mapScale, "mapScale");
     computeTexture->setInput(heightMap, "source");

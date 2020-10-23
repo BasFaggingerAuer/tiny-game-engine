@@ -57,7 +57,7 @@ void computeTangentMap(const TextureType1 &heightMap, TextureType2 &tangentMap, 
     inputTextures.push_back("source");
     outputTextures.push_back("tangent");
 
-    ComputeTexture *computeTexture = new ComputeTexture(inputTextures, outputTextures, fragmentShader);
+    ComputeTexture *computeTexture = new ComputeTexture(inputTextures, tangentMap.getWidth(), tangentMap.getHeight(), outputTextures, fragmentShader);
     
     computeTexture->uniformMap().setFloatUniform(2.0f*mapScale, "mapScale");
     computeTexture->setInput(heightMap, "source");

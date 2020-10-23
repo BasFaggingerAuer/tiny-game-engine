@@ -145,13 +145,13 @@ unsigned int detail::BoundProgram::numRenderables() const
     return renderableIndices.size();
 }
 
-Renderer::Renderer(const bool & a_renderToDefaultFrameBuffer) :
+Renderer::Renderer(const bool & a_renderToDefaultFrameBuffer, const int &a_viewportWidth, const int &a_viewportHeight) :
     frameBufferIndex(0),
     renderToDefaultFrameBuffer(a_renderToDefaultFrameBuffer),
     renderTargetNames(),
     renderTargetTextures(),
     depthTargetTexture(0),
-    viewportSize(0, 0)
+    viewportSize(a_viewportWidth, a_viewportHeight)
 {
     
 }
@@ -171,6 +171,19 @@ Renderer::~Renderer()
     }
     
     destroyFrameBuffer();
+}
+
+void Renderer::setViewportSize(const int &a_viewportWidth, const int &a_viewportHeight)
+{
+    if (renderToDefaultFrameBuffer)
+    {
+        viewportSize = ivec2(a_viewportWidth, a_viewportHeight);
+    }
+    else
+    {
+        std::cerr << "Warning: It is not permitted to adjust the viewport size of a non-default target renderer!" << std::endl;
+        assert(false);
+    }
 }
 
 void Renderer::createFrameBuffer()
@@ -350,11 +363,13 @@ void Renderer::updateRenderTargets()
         GL_CHECK(glFramebufferTexture2D(GL_DRAW_FRAMEBUFFER, GL_DEPTH_ATTACHMENT, GL_TEXTURE_2D, depthTargetTexture, 0));
     }
     
+#ifndef NDEBUG
     if (glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) != GL_FRAMEBUFFER_COMPLETE)
     {
         std::cerr << "Warning: frame buffer " << frameBufferIndex << " is incomplete: " << glCheckFramebufferStatus(GL_DRAW_FRAMEBUFFER) << " (incomplete = " << GL_FRAMEBUFFER_INCOMPLETE_ATTACHMENT << ", wrong dimensions = " << GL_FRAMEBUFFER_INCOMPLETE_DIMENSIONS_EXT << ", missing attachment = " << GL_FRAMEBUFFER_INCOMPLETE_MISSING_ATTACHMENT << ", unsupported = " << GL_FRAMEBUFFER_UNSUPPORTED << ")." << std::endl;
         assert(false);
     }
+#endif
     
     GL_CHECK(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0));
 }

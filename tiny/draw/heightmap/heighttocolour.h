@@ -63,7 +63,7 @@ void computeColourFromHeight(const TextureType1 &heightMap, TextureType2 &colour
     inputTextures.push_back("source");
     outputTextures.push_back("dest");
 
-    ComputeTexture *computeTexture = new ComputeTexture(inputTextures, outputTextures, fragmentShader);
+    ComputeTexture *computeTexture = new ComputeTexture(inputTextures, colourMap.getWidth(), colourMap.getHeight(), outputTextures, fragmentShader);
     
     computeTexture->uniformMap().setFloatUniform(2.0f*mapScale, "mapScale");
     computeTexture->setInput(heightMap, "source");

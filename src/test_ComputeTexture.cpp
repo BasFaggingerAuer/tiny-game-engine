@@ -57,7 +57,7 @@ void setup()
     inputTextures.push_back("source");
     outputTextures.push_back("colour");
     
-    computeTexture = new tiny::draw::ComputeTexture(inputTextures, outputTextures, fragmentShader);
+    computeTexture = new tiny::draw::ComputeTexture(inputTextures, SCREEN_WIDTH, SCREEN_HEIGHT, outputTextures, fragmentShader);
     testTexture = new tiny::draw::RGBATexture2D(tiny::img::Image::createTestImage(256));
     computeTexture->setInput(*testTexture, "source");
 }

@@ -34,7 +34,7 @@ namespace draw
 class RendererWithCamera : public Renderer
 {
     public:
-        RendererWithCamera(const float &, const bool &);
+        RendererWithCamera(const float &, const bool &, const int &, const int &);
         virtual ~RendererWithCamera();
         
         void setProjectionMatrix(const mat4 &);

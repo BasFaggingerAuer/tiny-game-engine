@@ -280,7 +280,7 @@ void GameTerrain::applyUserAttributeMap(draw::RGBATexture2D &attributeMap, const
     inputTextures.push_back("source2");
     outputTextures.push_back("colour");
 
-    draw::ComputeTexture *computeTexture = new draw::ComputeTexture(inputTextures, outputTextures,
+    draw::ComputeTexture *computeTexture = new draw::ComputeTexture(inputTextures, attributeMap.getWidth(), attributeMap.getHeight(), outputTextures,
 "#version 150\n"
 "\n"
 "precision highp float;\n"
@@ -318,7 +318,7 @@ void GameTerrain::calculateAttributes(const tiny::draw::FloatTexture2D &heightMa
     inputTextures.push_back("source");
     outputTextures.push_back("colour");
 
-    draw::ComputeTexture *computeTexture = new draw::ComputeTexture(inputTextures, outputTextures, shaderCode);
+    draw::ComputeTexture *computeTexture = new draw::ComputeTexture(inputTextures, attributeMap.getWidth(), attributeMap.getHeight(), outputTextures, shaderCode);
     
     computeTexture->uniformMap().setFloatUniform(2.0f*scale, "mapScale");
     computeTexture->setInput(heightMap, "source");

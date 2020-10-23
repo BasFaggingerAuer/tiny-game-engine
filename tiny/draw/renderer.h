@@ -123,7 +123,7 @@ struct BoundRenderable
 class Renderer
 {
     public:
-        Renderer(const bool &);
+        Renderer(const bool &, const int &, const int &);
         virtual ~Renderer();
         
         void addRenderable(const unsigned int &, Renderable *, const bool & = true, const bool & = true, const BlendMode & = BlendReplace, const CullMode & = CullBack);
@@ -134,8 +134,11 @@ class Renderer
             std::cerr << "Binding texture " << texture.getIndex() << " as depth rendering target for frame buffer " << frameBufferIndex << "." << std::endl;
             depthTargetTexture = texture.getIndex();
             
-            if (static_cast<int>(texture.getWidth()) != viewportSize.x) viewportSize.x = texture.getWidth();
-            if (static_cast<int>(texture.getHeight()) != viewportSize.y) viewportSize.y = texture.getHeight();
+            if (static_cast<int>(texture.getWidth()) != viewportSize.x || static_cast<int>(texture.getHeight()) != viewportSize.y)
+            {
+                std::cerr << "Warning: Viewport size " << viewportSize.x << "x" << viewportSize.y << " is not equal to depth target texture size " << texture.getWidth() << "x" << texture.getHeight() << "!" << std::endl;
+                assert(false);
+            }
             
             updateRenderTargets();
         }
@@ -152,8 +155,11 @@ class Renderer
                     std::cerr << "Binding texture " << texture.getIndex() << " as rendering target '" << name << "' for frame buffer " << frameBufferIndex << "." << std::endl;
                     renderTargetTextures[i] = texture.getIndex();
                     
-                    if (static_cast<int>(texture.getWidth()) != viewportSize.x) viewportSize.x = texture.getWidth();
-                    if (static_cast<int>(texture.getHeight()) != viewportSize.y) viewportSize.y = texture.getHeight();
+                    if (static_cast<int>(texture.getWidth()) != viewportSize.x || static_cast<int>(texture.getHeight()) != viewportSize.y)
+                    {
+                        std::cerr << "Warning: Viewport size " << viewportSize.x << "x" << viewportSize.y << " is not equal to render target texture size " << texture.getWidth() << "x" << texture.getHeight() << "!" << std::endl;
+                        assert(false);
+                    }
                     
                     updateRenderTargets();
                     return;
@@ -165,6 +171,7 @@ class Renderer
         
         void clearTargets() const;
         void render() const;
+        void setViewportSize(const int &, const int &);
         
     protected:
         void addRenderTarget(const std::string &name);

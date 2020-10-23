@@ -27,8 +27,8 @@ WorldRenderer::WorldRenderer(const int &screenWidth, const int &screenHeight) :
     worldNormalTexture(screenWidth, screenHeight, tf::none),
     worldPositionTexture(screenWidth, screenHeight, tf::none),
     depthTexture(screenWidth, screenHeight),
-    worldToScreenRenderer(aspectRatio),
-    screenToColourRenderer(aspectRatio)
+    worldToScreenRenderer(aspectRatio, screenWidth, screenHeight),
+    screenToColourRenderer(aspectRatio, screenWidth, screenHeight)
 {
     //Link the two rendering stages.
     worldToScreenRenderer.setDiffuseTarget(diffuseTexture);

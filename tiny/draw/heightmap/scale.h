@@ -52,7 +52,7 @@ void computeScaledTexture(const TextureType1 &source, TextureType2 &dest, const 
     inputTextures.push_back("source");
     outputTextures.push_back("dest");
 
-    ComputeTexture *computeTexture = new ComputeTexture(inputTextures, outputTextures, fragmentShader);
+    ComputeTexture *computeTexture = new ComputeTexture(inputTextures, dest.getWidth(), dest.getHeight(), outputTextures, fragmentShader);
     
     computeTexture->uniformMap().setVec4Uniform(scale, "scaleVec");
     computeTexture->uniformMap().setVec4Uniform(add, "addVec");

@@ -96,7 +96,7 @@ class ComputeTextureInput : public Renderable
 class ComputeTextureOutput : public Renderer
 {
     public:
-        ComputeTextureOutput(const std::vector<std::string> &outputNames);
+        ComputeTextureOutput(const std::vector<std::string> &outputNames, const int &, const int &);
         ~ComputeTextureOutput();
         
         template <typename TextureType>
@@ -109,7 +109,7 @@ class ComputeTextureOutput : public Renderer
 class ComputeTexture
 {
     public:
-        ComputeTexture(const std::vector<std::string> &inputNames, const std::vector<std::string> &outputNames, const std::string &fragmentShaderCode);
+        ComputeTexture(const std::vector<std::string> &inputNames, const int &, const int &, const std::vector<std::string> &outputNames, const std::string &fragmentShaderCode);
         ~ComputeTexture();
         
         template <typename TextureType>

@@ -38,7 +38,7 @@ namespace detail
 class WorldRendererStageOne : public RendererWithCamera
 {
     public:
-        WorldRendererStageOne(const float &);
+        WorldRendererStageOne(const float &, const int &, const int &);
         virtual ~WorldRendererStageOne();
         
         template<typename T, size_t Channels>
@@ -67,7 +67,7 @@ class WorldRendererStageOne : public RendererWithCamera
 class WorldRendererStageTwo : public RendererWithCamera
 {
     public:
-        WorldRendererStageTwo(const float &);
+        WorldRendererStageTwo(const float &, const int &, const int &);
         virtual ~WorldRendererStageTwo();
         
         void setScreenSize(const int &, const int &);

@@ -716,12 +716,12 @@ void Game::readSkyResources(const std::string &path, TiXmlElement *el)
     std::cerr << "Reading sky resources..." << std::endl;
     
     std::string textureFileName = "";
-    int nrSteps = 128;
+    int nrSteps = 1;
     
     assert(std::string(el->Value()) == "sky");
     
     el->QueryStringAttribute("texture", &textureFileName);
-    el->QueryIntAttribute("nr_steps", &nrSteps);
+    el->QueryIntAttribute("nr_shadow_steps", &nrSteps);
     
     //Create sky box mesh and read gradient texture.
     skyBoxMesh = new draw::StaticMesh(mesh::StaticMesh::createCubeMesh(-1.0e6));

@@ -330,7 +330,7 @@ GameVoxelMap::GameVoxelMap(const std::string &path, TiXmlElement *el)
     }
     
     voxelCubeArrayTexture = new draw::RGBTexture2DCubeArray(cubeMaps.begin(), cubeMaps.end(), draw::tf::repeat | draw::tf::mipmap);
-    voxelMap = new draw::VoxelMap(std::max(width, std::max(height, depth))*4);
+    voxelMap = new draw::VoxelMap(std::max(width, std::max(height, depth))*3);
     
     if (text.empty())
     {

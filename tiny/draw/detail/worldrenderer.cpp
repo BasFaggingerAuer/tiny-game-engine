@@ -20,8 +20,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using namespace tiny::draw::detail;
 
-WorldRendererStageOne::WorldRendererStageOne(const float &aspectRatio) :
-    RendererWithCamera(aspectRatio, false)
+WorldRendererStageOne::WorldRendererStageOne(const float &aspectRatio, const int &screenWidth, const int &screenHeight) :
+    RendererWithCamera(aspectRatio, false, screenWidth, screenHeight)
 {
     addRenderTarget("diffuse");
     addRenderTarget("worldNormal");
@@ -33,8 +33,8 @@ WorldRendererStageOne::~WorldRendererStageOne()
 
 }
 
-WorldRendererStageTwo::WorldRendererStageTwo(const float &aspectRatio) :
-    RendererWithCamera(aspectRatio, true)
+WorldRendererStageTwo::WorldRendererStageTwo(const float &aspectRatio, const int &screenWidth, const int &screenHeight) :
+    RendererWithCamera(aspectRatio, true, screenWidth, screenHeight)
 {
     addRenderTarget("colour");
     uniformMap.addTexture("diffuseTexture");
@@ -53,4 +53,5 @@ void WorldRendererStageTwo::setScreenSize(const int &screenWidth, const int &scr
                                    1.0f/static_cast<float>(screenHeight)),
                               "inverseScreenSize");
 
+    this->setViewportSize(screenWidth, screenHeight);
 }

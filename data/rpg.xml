@@ -1,14 +1,14 @@
 <?xml version="1.0" encoding="UTF-8"?>
 <rpg>
     <console font="font/mensch.ttf" texture_size="512" font_size="48" />
-    <sky texture="img/sky.png" />
+    <sky texture="img/sky.png" nr_shadow_steps="48" />
     <terrain heightmap="img/tasmania.png" scale_width="3" scale_height="1617" scale_far="16" scale_detail="1024" attribute_shader="shader/desert.glsl" offset_x="0.50" offset_y="0.55">
         <biome diffuse="img/terrain/forest.jpg" normal="img/terrain/forest_normal.jpg" sound="sound/wind.ogg"/>
         <biome diffuse="img/terrain/grass.jpg" normal="img/terrain/grass_normal.jpg" sound="sound/crickets.ogg"/>
         <biome diffuse="img/terrain/dirt.jpg" normal="img/terrain/dirt_normal.jpg" sound="sound/forest.ogg"/>
         <biome diffuse="img/terrain/rocks.jpg" normal="img/terrain/rocks_normal.jpg" sound="sound/sheep.ogg"/>
     </terrain>
-    <voxelmap width="32" height="32" depth="32" scale="1.0" compressed_voxels="Gaaiaacafqzqh8HdqjarOcUqgydHWiobsXk0IxWemGcqcwGg8GyeGAecc2ybOwv72GRovVQFfvXvq1ujrBOU9Ic7uBpaWHvGIhkauNkko1PYcxYlsUKxCQtffN6uzHl5fjxYlwyaafBGowC0MuNkko1PYcxYlsUKxCQtffN6uzHl5fjxYlkTYQYQQu5vDDlPI*OaafRafRcdhTucalo6yXrpIfFGwM6urXPovw4sErYL8ItDQO4uNklCjxRi5sUwXdfaQtffN6uzHl5AfjxY1gSHtDQO4uNklCjVi5sEXRpay4f0rpSaGHvqFGo6OxwaOJEbD0ROnqRLaqh9c6OvHHpqFva0kwrB4OvlaAfROn8BeaT1cagwcTwda91caTc6ONkaAfROnCy4ZcGwXkAdR1bqp1b0kwrRy1cGwXkAdR1bqF1b0gwrRy1cGwXMDa0MDaDx3RfaDR2bqR2b0Tqcg">
+    <voxelmap width="32" height="32" depth="32" scale="1.0">
         <cubemap all="img/cm_dirt.png" />
         <cubemap all="img/cm_mud.png" />
         <cubemap all="img/cm_grass.png" />

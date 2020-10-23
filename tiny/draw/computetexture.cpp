@@ -85,8 +85,8 @@ void ComputeTextureInput::render(const ShaderProgram &program) const
     square.unbind(program);
 }
 
-ComputeTextureOutput::ComputeTextureOutput(const std::vector<std::string> &outputNames) :
-    Renderer(false)
+ComputeTextureOutput::ComputeTextureOutput(const std::vector<std::string> &outputNames, const int &textureWidth, const int &textureHeight) :
+    Renderer(false, textureWidth, textureHeight)
 {
     for (std::vector<std::string>::const_iterator i = outputNames.begin(); i != outputNames.end(); ++i)
     {
@@ -99,9 +99,9 @@ ComputeTextureOutput::~ComputeTextureOutput()
 
 }
 
-ComputeTexture::ComputeTexture(const std::vector<std::string> &inputNames, const std::vector<std::string> &outputNames, const std::string &fragmentShaderCode) :
+ComputeTexture::ComputeTexture(const std::vector<std::string> &inputNames, const int &outputTextureWidth, const int &outputTextureHeight, const std::vector<std::string> &outputNames, const std::string &fragmentShaderCode) :
     input(inputNames, fragmentShaderCode),
-    output(outputNames)
+    output(outputNames, outputTextureWidth, outputTextureHeight)
 {
     output.addRenderable(0, &input, false, false);
 }

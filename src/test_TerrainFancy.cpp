@@ -152,7 +152,7 @@ void computeTerrainTypeFromHeight(const TextureType1 &heightMap, TextureType2 &c
     inputTextures.push_back("source");
     outputTextures.push_back("dest");
 
-    draw::ComputeTexture *computeTexture = new draw::ComputeTexture(inputTextures, outputTextures, fragmentShader);
+    draw::ComputeTexture *computeTexture = new draw::ComputeTexture(inputTextures, colourMap.getWidth(), colourMap.getHeight(), outputTextures, fragmentShader);
     
     computeTexture->uniformMap().setFloatUniform(2.0f*mapScale, "mapScale");
     computeTexture->setInput(heightMap, "source");

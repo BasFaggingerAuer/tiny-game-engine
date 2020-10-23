@@ -190,7 +190,7 @@ void GameTerrain::calculateAttributes(const tiny::draw::FloatTexture2D &heightMa
     inputTextures.push_back("source");
     outputTextures.push_back("colour");
 
-    draw::ComputeTexture *computeTexture = new draw::ComputeTexture(inputTextures, outputTextures, shaderCode);
+    draw::ComputeTexture *computeTexture = new draw::ComputeTexture(inputTextures, attributeMap.getWidth(), attributeMap.getHeight(), outputTextures, shaderCode);
     
     computeTexture->uniformMap().setFloatUniform(2.0f*scale, "mapScale");
     computeTexture->setInput(heightMap, "source");

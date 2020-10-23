@@ -140,8 +140,8 @@ void computeDiamondSquareRefinement(const TextureType &source, TextureType &dest
 "	}\n"
 "}\n";
     
-    ComputeTexture *diamondComputeTexture = new ComputeTexture(inputTextures, outputTextures, diamondFragmentShader);
-    ComputeTexture *squareComputeTexture = new ComputeTexture(inputTextures, outputTextures, squareFragmentShader);
+    ComputeTexture *diamondComputeTexture = new ComputeTexture(inputTextures, dest.getWidth(), dest.getHeight(), outputTextures, diamondFragmentShader);
+    ComputeTexture *squareComputeTexture = new ComputeTexture(inputTextures, dest.getWidth(), dest.getHeight(), outputTextures, squareFragmentShader);
     
     diamondComputeTexture->uniformMap().setFloatUniform(amplitude, "amplitude");
     diamondComputeTexture->uniformMap().setVec2Uniform(static_cast<float>(source.getWidth()), static_cast<float>(source.getHeight()), "sourceSize");
