@@ -158,15 +158,6 @@ bool Game::msgRemovePlayer(const unsigned int &, std::ostream &out, bool &, cons
         host->sendMessage(msg);
     }
     
-    //Remove the player's character.
-    if (i->second.characterIndex > 0)
-    {
-        Message msg(msg::mt::removeCharacter);
-        
-        msg << i->second.characterIndex;
-        applyMessage(0, msg);
-    }
-    
     players.erase(i);
     out << "Removed player with index " << oldPlayerIndex << ".";
     
@@ -262,7 +253,11 @@ bool Game::msgRemoveCharacter(const unsigned int &, std::ostream &out, bool &bro
         return false;
     }
     
-    //TODO: Update characterIndex in Player.
+    for (auto p = players.begin(); p != players.end(); ++p)
+    {
+        if (p->second.characterIndex == characterIndex) p->second.characterIndex = 0;
+    }
+    
     characters.erase(characters.find(characterIndex));
     out << "Removed character with index " << characterIndex << ".";
     broadcast = true;
@@ -274,11 +269,13 @@ bool Game::msgUpdateCharacter(const unsigned int &senderIndex, std::ostream &out
                               const ivec3 &position, const int &rotation, const int &state, const float &color)
 {
     //Clients are only permitted to modify the status of their own characters.
+    /*
     if (senderIndex != 0 && players[senderIndex].characterIndex != characterIndex)
     {
         out << "Player tried to send update for wrong character!";
         return false;
     }
+    */
     
     std::map<unsigned int, CharacterInstance>::iterator i = characters.find(characterIndex);
     
@@ -352,15 +349,6 @@ bool Game::msgPlayerSpawnRequest(const unsigned int &senderIndex, std::ostream &
 
 bool Game::msgUpdateVoxel(const unsigned int &, std::ostream &out, bool &broadcast, const ivec3 &position, const unsigned int &value)
 {
-    //Enable collaborative map editing.
-    /*
-    if (senderIndex != 0)
-    {
-        out << "Player tried to send voxel update!";
-        return false;
-    }
-    */
-    
     if (value > 255u)
     {
         out << "Invalid voxel update index!";
@@ -375,12 +363,6 @@ bool Game::msgUpdateVoxel(const unsigned int &, std::ostream &out, bool &broadca
 
 bool Game::msgUpdateVoxelBasePlane(const unsigned int &senderIndex, std::ostream &out, bool &broadcast, const unsigned int &value)
 {
-    if (senderIndex != 0)
-    {
-        out << "Player tried to send voxel base plane update!";
-        return false;
-    }
-    
     if (value > 255u)
     {
         out << "Invalid voxel update index!";
@@ -407,34 +389,29 @@ bool Game::applyMessage(const unsigned int &senderIndex, const Message &message)
         assert(players.find(senderIndex) != players.end());
     }
 #endif
-    
-    //Commands that only the host can give.
-    if (senderIndex == 0)
+
+    //General commands.
+         if (message.id == msg::mt::help) ok = msgHelp(senderIndex, out, broadcast);
+    else if (message.id == msg::mt::disconnect) ok = msgDisconnect(senderIndex, out, broadcast);
+    else if (message.id == msg::mt::listCharacterTypes) ok = msgListCharacterTypes(senderIndex, out, broadcast);
+    else if (message.id == msg::mt::listCharacters) ok = msgListCharacters(senderIndex, out, broadcast);
+    else if (message.id == msg::mt::addCharacter) ok = msgAddCharacter(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].s256, message.data[2].iv1, message.data[3].v1);
+    else if (message.id == msg::mt::removeCharacter) ok = msgRemoveCharacter(senderIndex, out, broadcast, message.data[0].iv1);
+    else if (message.id == msg::mt::updateCharacter) ok = msgUpdateCharacter(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].iv3, message.data[2].iv1, message.data[3].iv1, message.data[4].v1);
+    else if (message.id == msg::mt::setPlayerCharacter) ok = msgSetPlayerCharacter(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].iv1);
+    else if (message.id == msg::mt::updateVoxel) ok = msgUpdateVoxel(senderIndex, out, broadcast, message.data[0].iv3, message.data[1].iv1);
+    else if (message.id == msg::mt::updateVoxelBasePlane) ok = msgUpdateVoxelBasePlane(senderIndex, out, broadcast, message.data[0].iv1);
+    else if (message.id == msg::mt::playerSpawnRequest) ok = msgPlayerSpawnRequest(senderIndex, out, broadcast, message.data[0].iv1);
+    else if (message.id == msg::mt::sunDirection) ok = msgSunDirection(senderIndex, out, broadcast, message.data[0].v3);
+    else if (senderIndex == 0)  //Commands that only the host can give.
     {
-             if (message.id == msg::mt::help) ok = msgHelp(senderIndex, out, broadcast);
-        else if (message.id == msg::mt::host) ok = msgHost(senderIndex, out, broadcast, message.data[0].iv1);
+             if (message.id == msg::mt::host) ok = msgHost(senderIndex, out, broadcast, message.data[0].iv1);
         else if (message.id == msg::mt::join) ok = msgJoin(senderIndex, out, broadcast, message.data[0].s256, message.data[1].iv1);
-        else if (message.id == msg::mt::disconnect) ok = msgDisconnect(senderIndex, out, broadcast);
         else if (message.id == msg::mt::addPlayer) ok = msgAddPlayer(senderIndex, out, broadcast, message.data[0].iv1);
         else if (message.id == msg::mt::removePlayer) ok = msgRemovePlayer(senderIndex, out, broadcast, message.data[0].iv1);
         else if (message.id == msg::mt::welcomePlayer) ok = msgWelcomePlayer(senderIndex, out, broadcast, message.data[0].iv1);
         else if (message.id == msg::mt::terrainOffset) ok = msgTerrainOffset(senderIndex, out, broadcast, message.data[0].v2);
-        else if (message.id == msg::mt::sunDirection) ok = msgSunDirection(senderIndex, out, broadcast, message.data[0].v3);
-        else if (message.id == msg::mt::listCharacterTypes) ok = msgListCharacterTypes(senderIndex, out, broadcast);
-        else if (message.id == msg::mt::listCharacters) ok = msgListCharacters(senderIndex, out, broadcast);
-        else if (message.id == msg::mt::addCharacter) ok = msgAddCharacter(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].s256, message.data[2].iv1, message.data[3].v1);
-        else if (message.id == msg::mt::removeCharacter) ok = msgRemoveCharacter(senderIndex, out, broadcast, message.data[0].iv1);
-        else if (message.id == msg::mt::updateCharacter) ok = msgUpdateCharacter(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].iv3, message.data[2].iv1, message.data[3].iv1, message.data[4].v1);
-        else if (message.id == msg::mt::setPlayerCharacter) ok = msgSetPlayerCharacter(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].iv1);
-        else if (message.id == msg::mt::updateVoxel) ok = msgUpdateVoxel(senderIndex, out, broadcast, message.data[0].iv3, message.data[1].iv1);
-        else if (message.id == msg::mt::updateVoxelBasePlane) ok = msgUpdateVoxelBasePlane(senderIndex, out, broadcast, message.data[0].iv1);
-        else if (message.id == msg::mt::playerSpawnRequest) ok = msgPlayerSpawnRequest(senderIndex, out, broadcast, message.data[0].iv1);
-    }
-    else
-    {
-        //Host messages received from clients.
-        if (message.id == msg::mt::updateCharacter) ok = msgUpdateCharacter(senderIndex, out, broadcast, message.data[0].iv1, message.data[1].iv3, message.data[2].iv1, message.data[3].iv1, message.data[4].v1);
-        else if (message.id == msg::mt::updateVoxel) ok = msgUpdateVoxel(senderIndex, out, broadcast, message.data[0].iv3, message.data[1].iv1);
+        
     }
     
     //Add message output to the console.

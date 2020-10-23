@@ -183,7 +183,7 @@ VariableData::VariableData(const std::string &a) :
 {
     if (s256.length() >= 255)
     {
-        std::cerr << "Warning: reducing string length for '" << s256 << "'!" << std::endl;
+        std::cerr << "Warning: reducing string length (" << s256.length() << ") for '" << s256 << "'!" << std::endl;
         s256 = s256.substr(0, 255);
     }
 }
@@ -476,7 +476,14 @@ size_t MessageType::dataToMessage(const unsigned char *data, Message &out) const
         }
         else if (i->type == vt::String256)
         {
-            std::string a = std::string((const char *)dataPtr, 256);
+            std::string a = "";
+            
+            for (int j = 0; j < 256; ++j)
+            {
+                if (!dataPtr[j]) break;
+
+                a.push_back(dataPtr[j]);
+            }
             
             dataPtr += 256;
             *msgPtr++ = VariableData(a);

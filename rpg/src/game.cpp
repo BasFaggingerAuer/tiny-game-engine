@@ -139,13 +139,13 @@ void Game::updateConsole() const
         {
             const vec4 c = i->second.getColor();
             
-            strm << "\\#fff" << i->first << (i->first == characterIndex ? "*(" : " (") << std::dec << std::setprecision(0) << std::fixed << 5*i->second.position.x << ", " << 5*i->second.position.y << ", " << 5*i->second.position.z << "): \\#" << std::hex << std::min(15, static_cast<int>(16.0f*c.x)) << std::min(15, static_cast<int>(16.0f*c.y)) << std::min(15, static_cast<int>(16.0f*c.z)) << i->second.name << std::endl;
+            strm << "\\#fff" << std::dec << i->first << (i->first == characterIndex ? "*(" : " (") << std::dec << std::setprecision(0) << std::fixed << 5*i->second.position.x << ", " << 5*i->second.position.y << ", " << 5*i->second.position.z << "): \\#" << std::hex << std::min(15, static_cast<int>(16.0f*c.x)) << std::min(15, static_cast<int>(16.0f*c.y)) << std::min(15, static_cast<int>(16.0f*c.z)) << i->second.name << std::endl;
         }
         
         if (characterIndex == 0)
         {
             strm << std::endl << "\\#fff";
-            strm << " Z/C = Prev./next character" << std::endl;
+            strm << (paintMode == Character ? "*" : " ") << "C = Create/delete characters" << std::endl;
             strm << (paintMode == VoxelReplace ? "*" : " ") << "V = Replace/Pick voxels" << std::endl;
             strm << (paintMode == VoxelAdd ? "*" : " ") << "B = Add/Remove voxels" << std::endl;
             strm << " P = Restore voxel palette" << std::endl;
@@ -276,23 +276,6 @@ void Game::update(os::Application *application, const float &dt)
                 }
             }
             
-            if (application->isKeyPressedOnce('z') &&
-                players[ownPlayerIndex].characterIndex > 1)
-            {
-                Message msg(msg::mt::setPlayerCharacter);
-    
-                msg << ownPlayerIndex << players[ownPlayerIndex].characterIndex - 1;
-                applyMessage(ownPlayerIndex, msg);
-            }
-            
-            if (application->isKeyPressedOnce('c'))
-            {
-                Message msg(msg::mt::setPlayerCharacter);
-    
-                msg << ownPlayerIndex << players[ownPlayerIndex].characterIndex + 1;
-                applyMessage(ownPlayerIndex, msg);
-            }
-            
             if (application->isKeyPressedOnce('m'))
             {
                 if (selectedCharacterType > 0) --selectedCharacterType;
@@ -334,8 +317,9 @@ void Game::update(os::Application *application, const float &dt)
             //We do not control a character.
             
             //Change edit mode.
-            if (application->isKeyPressedOnce('v')) paintMode = VoxelReplace;
-            if (application->isKeyPressedOnce('b')) paintMode = VoxelAdd;
+            if (application->isKeyPressedOnce('c')) paintMode = PaintMode::Character;
+            if (application->isKeyPressedOnce('v')) paintMode = PaintMode::VoxelReplace;
+            if (application->isKeyPressedOnce('b')) paintMode = PaintMode::VoxelAdd;
             if (application->isKeyPressedOnce('p')) voxelMap->createVoxelPalette();
             if (application->isKeyPressedOnce('\\'))
             {
@@ -366,8 +350,89 @@ void Game::update(os::Application *application, const float &dt)
                     
                     if (voxelHit.distance > 0.0f)
                     {
+                        //Find closest character.
+                        //Find closest character.
+                        int foundCharacter = -1;
+                        int characterDistanceSq = 32*32;
+
+                        if (true)
+                        {
+                            const ivec3 p = voxelHit.voxelIndices;
+                        
+                            for (std::map<unsigned int, CharacterInstance>::const_iterator i = characters.begin(); i != characters.end(); ++i)
+                            {
+                                const ivec3 d = i->second.position - p;
+                                const int distanceSq = d.x*d.x + d.z*d.z;
+                                        
+                                if (distanceSq < characterDistanceSq)
+                                {
+                                    foundCharacter = i->first;
+                                    characterDistanceSq = distanceSq;
+                                }
+                            }
+                        }
+
+                        //Select characters with the middle-mouse button.
+                        if (mouse.buttons == 4)
+                        {
+                            if (foundCharacter >= 0)
+                            {
+                                Message msg(msg::mt::setPlayerCharacter);
+                                        
+                                msg << ownPlayerIndex << foundCharacter;
+                                
+                                if (client) client->sendMessage(msg);
+                                else applyMessage(ownPlayerIndex, msg);
+                            }
+                        }
+
                         switch (paintMode)
                         {
+                            case Character:
+                                if (mouse.buttons == 1)
+                                {
+                                    //Create character.
+                                    const ivec3 p = voxelHit.voxelIndices;
+                                    
+                                    auto ct = characterTypes.find(selectedCharacterType);
+            
+                                    if (ct != characterTypes.end())
+                                    {
+                                        if (true)
+                                        {
+                                            Message msg(msg::mt::addCharacter);
+                                            
+                                            msg << ++lastCharacterIndex << ct->second->name << ct->first << -0.75f;
+
+                                            if (client) client->sendMessage(msg);
+                                            else applyMessage(ownPlayerIndex, msg);
+                                        }
+                                        
+                                        if (true)
+                                        {
+                                            Message msg(msg::mt::updateCharacter);
+                                        
+                                            msg << lastCharacterIndex << ivec3(p.x, 0, p.z) << 0 << 0 << -0.75f;
+                                            
+                                            if (client) client->sendMessage(msg);
+                                            else applyMessage(ownPlayerIndex, msg);
+                                        }
+                                    }
+                                }
+                                else if (mouse.buttons == 2)
+                                {
+                                    //Delete character.
+                                    if (foundCharacter >= 0 && characterDistanceSq <= 1)
+                                    {
+                                        Message msg(msg::mt::removeCharacter);
+                                        
+                                        msg << foundCharacter;
+                                        
+                                        if (client) client->sendMessage(msg);
+                                        else applyMessage(ownPlayerIndex, msg);
+                                    }
+                                }
+                                break;
                             case VoxelReplace:
                                 if (mouse.buttons == 1)
                                 {
@@ -381,33 +446,6 @@ void Game::update(os::Application *application, const float &dt)
                                 else if (mouse.buttons == 2)
                                 {
                                     paintVoxelType = voxelMap->getVoxel(voxelHit.voxelIndices);
-                                }
-                                else if (mouse.buttons == 4)
-                                {
-                                    //Find closest character.
-                                    const ivec3 p = voxelHit.voxelIndices;
-                                    int foundCharacter = -1;
-                                    int minDistanceSq = 5*5;
-                                    
-                                    for (std::map<unsigned int, CharacterInstance>::const_iterator i = characters.begin(); i != characters.end(); ++i)
-                                    {
-                                        const ivec3 d = i->second.position - p;
-                                        const int distanceSq = d.x*d.x + d.z*d.z;
-                                        
-                                        if (distanceSq < minDistanceSq)
-                                        {
-                                            foundCharacter = i->first;
-                                            minDistanceSq = distanceSq;
-                                        }
-                                    }
-                                    
-                                    if (foundCharacter >= 0)
-                                    {
-                                        Message msg(msg::mt::setPlayerCharacter);
-                                        
-                                        msg << ownPlayerIndex << foundCharacter;
-                                        applyMessage(ownPlayerIndex, msg);
-                                    }
                                 }
                                 break;
                             case VoxelAdd:
@@ -428,32 +466,6 @@ void Game::update(os::Application *application, const float &dt)
                                     
                                     if (client) client->sendMessage(msg);
                                     else applyMessage(ownPlayerIndex, msg);
-                                }
-                                else if (mouse.buttons == 4)
-                                {
-                                    //Find closest character.
-                                    const ivec3 p = voxelHit.voxelIndices;
-                                    
-                                    auto ct = characterTypes.find(selectedCharacterType);
-            
-                                    if (ct != characterTypes.end())
-                                    {
-                                        if (true)
-                                        {
-                                            Message msg(msg::mt::addCharacter);
-                                            
-                                            msg << ++lastCharacterIndex << ct->second->name << ct->first << -0.75f;
-                                            applyMessage(ownPlayerIndex, msg);
-                                        }
-                                        
-                                        if (true)
-                                        {
-                                            Message msg(msg::mt::updateCharacter);
-                                        
-                                            msg << lastCharacterIndex << ivec3(p.x, 0, p.z) << 0 << 0 << -0.75f;
-                                            applyMessage(ownPlayerIndex, msg);
-                                        }
-                                    }
                                 }
                                 break;
                         }

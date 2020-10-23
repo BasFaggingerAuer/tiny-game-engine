@@ -59,6 +59,7 @@ enum PaintMode
 {
     VoxelReplace,
     VoxelAdd,
+    Character
 };
 
 class Game
