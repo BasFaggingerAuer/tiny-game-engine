@@ -94,6 +94,8 @@ class ScreenIconHorde : public Renderable
         /** Erase the text currently in the ScreenIconHorde object. */
         void eraseText(void);
         
+        static std::string getColorCode(const float &, const float &, const float &);
+
         void setText(const float &, const float &, const float &, const float &, const std::string &, const IconTexture2D &);
 
         size_t maxNumIcons(void) const { return maxNrIcons; }

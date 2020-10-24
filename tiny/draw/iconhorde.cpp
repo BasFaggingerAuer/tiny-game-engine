@@ -15,6 +15,7 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <cstdlib>
+#include <sstream>
 
 #include <tiny/draw/iconhorde.h>
 
@@ -186,6 +187,15 @@ void ScreenIconHorde::eraseText(void)
     nrIcons = 0;
     for(size_t i = 0; i < maxNrIcons; i++) icons[i] = ScreenIconInstance();
     icons.sendToDevice();
+}
+
+std::string ScreenIconHorde::getColorCode(const float &r, const float &g, const float &b)
+{
+    std::stringstream strm;
+
+    strm << "\\#" << std::hex << std::min(15, static_cast<int>(16.0f*r)) << std::min(15, static_cast<int>(16.0f*g)) << std::min(15, static_cast<int>(16.0f*b));
+
+    return strm.str();
 }
 
 void ScreenIconHorde::setText(const float &x, const float &y, const float &size, const float &aspectRatio, const std::string &text, const IconTexture2D &map)

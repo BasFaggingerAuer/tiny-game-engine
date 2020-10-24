@@ -54,6 +54,7 @@ Game::Game(const os::Application *application, const std::string &path) :
     lastSoundSourceIndex(1),
     lastCharacterIndex(1),
     selectedCharacterType(0),
+    selectedCharacterColor(0.0f),
     translator(new GameMessageTranslator()),
     console(new GameConsole(this)),
     host(0),
@@ -135,21 +136,27 @@ void Game::updateConsole() const
             characterIndex = players.at(ownPlayerIndex).characterIndex;
         }
         
+        /*
         for (auto i = characters.begin(); i != characters.end(); ++i)
         {
             const vec4 c = i->second.getColor();
             
             strm << "\\#fff" << std::dec << i->first << (i->first == characterIndex ? "*(" : " (") << std::dec << std::setprecision(0) << std::fixed << 5*i->second.position.x << ", " << 5*i->second.position.y << ", " << 5*i->second.position.z << "): \\#" << std::hex << std::min(15, static_cast<int>(16.0f*c.x)) << std::min(15, static_cast<int>(16.0f*c.y)) << std::min(15, static_cast<int>(16.0f*c.z)) << i->second.name << std::endl;
         }
+        */
         
         if (characterIndex == 0)
         {
-            strm << std::endl << "\\#fff";
+            strm << "\\#fff";
             strm << (paintMode == Character ? "*" : " ") << "C = Create/delete characters" << std::endl;
             strm << (paintMode == VoxelReplace ? "*" : " ") << "V = Replace/Pick voxels" << std::endl;
             strm << (paintMode == VoxelAdd ? "*" : " ") << "B = Add/Remove voxels" << std::endl;
             strm << " P = Restore voxel palette" << std::endl;
             strm << " \\\\ = Flood base plane" << std::endl;
+            
+            const vec4 c = CharacterInstance::palette(selectedCharacterColor);
+
+            strm << " 0-9 = Select " << draw::ScreenIconHorde::getColorCode(c.x, c.y, c.z) << "color" << std::endl << "\\#fff";
             strm << " WASDQE = Move" << std::endl;
             strm << " IJKLOU = Look" << std::endl;
             strm << " F = Fast mode" << std::endl;
@@ -165,7 +172,7 @@ void Game::updateConsole() const
         else
         {
             strm << std::endl << "\\#fff";
-            strm << " 0: Return to voxel edit mode" << std::endl;
+            strm << " <Space>: Return to voxel edit mode" << std::endl;
             strm << " WASDQE = Move" << std::endl;
             strm << " F = Knock prone" << std::endl;
         }
@@ -253,7 +260,7 @@ void Game::update(os::Application *application, const float &dt)
     else
     {
         //Release control of characters.
-        if (application->isKeyPressedOnce('0') || application->isKeyPressedOnce(' '))
+        if (application->isKeyPressedOnce(' '))
         {
             Message msg(msg::mt::setPlayerCharacter);
 
@@ -261,39 +268,36 @@ void Game::update(os::Application *application, const float &dt)
             applyMessage(ownPlayerIndex, msg);
         }
         
-        //Direct character selection.
-        if (players.find(ownPlayerIndex) != players.end())
-        {
-            for (int i = 1; i < 10; ++i)
-            {
-                if (application->isKeyPressedOnce('0' + i) &&
-                    characters.find(i) != characters.end())
-                {
-                    Message msg(msg::mt::setPlayerCharacter);
-        
-                    msg << ownPlayerIndex << i;
-                    applyMessage(ownPlayerIndex, msg);
-                }
-            }
-            
-            if (application->isKeyPressedOnce('m'))
-            {
-                if (selectedCharacterType > 0) --selectedCharacterType;
-            }
-            
-            if (application->isKeyPressedOnce('.'))
-            {
-                auto m = std::max_element(characterTypes.cbegin(), characterTypes.cend(),
-                                          [] (const std::pair<unsigned int, CharacterType *> &lhs, const std::pair<unsigned int, CharacterType *> &rhs) {return lhs.first < rhs.first;});
+        //Select character color.
+        if (application->isKeyPressedOnce('0')) selectedCharacterColor = -1.0f;
+        if (application->isKeyPressedOnce('9')) selectedCharacterColor = -0.75f;
+        if (application->isKeyPressedOnce('1')) selectedCharacterColor =  0.125f;
+        if (application->isKeyPressedOnce('2')) selectedCharacterColor =  0.250f;
+        if (application->isKeyPressedOnce('3')) selectedCharacterColor =  0.375f;
+        if (application->isKeyPressedOnce('4')) selectedCharacterColor =  0.500f;
+        if (application->isKeyPressedOnce('5')) selectedCharacterColor =  0.625f;
+        if (application->isKeyPressedOnce('6')) selectedCharacterColor =  0.750f;
+        if (application->isKeyPressedOnce('7')) selectedCharacterColor =  0.875f;
+        if (application->isKeyPressedOnce('8')) selectedCharacterColor =  1.000f;
 
-                if (m != characterTypes.cend())
-                {
-                    selectedCharacterType = std::min<unsigned int>(selectedCharacterType + 1, m->first);
-                }
-                else
-                {
-                    selectedCharacterType = 0;
-                }
+        //Select character type.
+        if (application->isKeyPressedOnce('m'))
+        {
+            if (selectedCharacterType > 0) --selectedCharacterType;
+        }
+            
+        if (application->isKeyPressedOnce('.'))
+        {
+            auto m = std::max_element(characterTypes.cbegin(), characterTypes.cend(),
+                                        [] (const std::pair<unsigned int, CharacterType *> &lhs, const std::pair<unsigned int, CharacterType *> &rhs) {return lhs.first < rhs.first;});
+
+            if (m != characterTypes.cend())
+            {
+                selectedCharacterType = std::min<unsigned int>(selectedCharacterType + 1, m->first);
+            }
+            else
+            {
+                selectedCharacterType = 0;
             }
         }
     
@@ -402,7 +406,7 @@ void Game::update(os::Application *application, const float &dt)
                                         {
                                             Message msg(msg::mt::addCharacter);
                                             
-                                            msg << ++lastCharacterIndex << ct->second->name << ct->first << -0.75f;
+                                            msg << ++lastCharacterIndex << ct->second->name << ct->first << selectedCharacterColor;
 
                                             if (client) client->sendMessage(msg);
                                             else applyMessage(ownPlayerIndex, msg);
@@ -412,7 +416,7 @@ void Game::update(os::Application *application, const float &dt)
                                         {
                                             Message msg(msg::mt::updateCharacter);
                                         
-                                            msg << lastCharacterIndex << ivec3(p.x, 0, p.z) << 0 << 0 << -0.75f;
+                                            msg << lastCharacterIndex << ivec3(p.x, 0, p.z) << 0 << 0 << selectedCharacterColor;
                                             
                                             if (client) client->sendMessage(msg);
                                             else applyMessage(ownPlayerIndex, msg);
@@ -602,6 +606,7 @@ void Game::clear()
     //Reset all characters.
     lastCharacterIndex = 0;
     selectedCharacterType = 0;
+    selectedCharacterColor = 0.0f;
     characters.clear();
     
     //Reset camera.

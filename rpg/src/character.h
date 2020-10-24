@@ -42,11 +42,16 @@ struct CharacterInstance
     
     tiny::vec4 getColor() const
     {
-        return (color >= 0.0f ? tiny::vec4(0.5f*(1.0f + cosf(2.0f*static_cast<float>(M_PI)*(color + 0.0f/3.0f))),
-                                0.5f*(1.0f + cosf(2.0f*static_cast<float>(M_PI)*(color + 1.0f/3.0f))),
-                                0.5f*(1.0f + cosf(2.0f*static_cast<float>(M_PI)*(color + 2.0f/3.0f))),
+        return CharacterInstance::palette(color);
+    }
+
+    static tiny::vec4 palette(const float &c)
+    {
+        return (c >= 0.0f ? tiny::vec4(0.5f*(1.0f + cosf(2.0f*static_cast<float>(M_PI)*(c + 0.0f/3.0f))),
+                                0.5f*(1.0f + cosf(2.0f*static_cast<float>(M_PI)*(c + 1.0f/3.0f))),
+                                0.5f*(1.0f + cosf(2.0f*static_cast<float>(M_PI)*(c + 2.0f/3.0f))),
                                 1.0f) :
-                                tiny::vec4(-color, -color, -color, 1.0f));
+                                tiny::vec4(-c, -c, -c, 1.0f));    
     }
     
     unsigned int type;

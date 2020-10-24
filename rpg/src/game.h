@@ -145,6 +145,7 @@ class Game
         std::map<unsigned int, CharacterInstance> characters;
         unsigned int lastCharacterIndex;
         unsigned int selectedCharacterType;
+        float selectedCharacterColor;
         
         //Game starting state.
         std::list<std::string> initCommands;
