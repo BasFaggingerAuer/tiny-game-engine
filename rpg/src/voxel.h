@@ -48,7 +48,7 @@ class GameVoxelMap
         std::string getCompressedVoxels() const;
         
         tiny::draw::VoxelMap *voxelMap;
-        tiny::draw::RGTexture3D *voxelTexture;
+        tiny::draw::RGBATexture3D *voxelTexture;
         
     private:
         tiny::draw::RGBTexture2DCubeArray *voxelCubeArrayTexture;

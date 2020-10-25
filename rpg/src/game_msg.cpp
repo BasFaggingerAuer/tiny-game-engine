@@ -361,7 +361,7 @@ bool Game::msgUpdateVoxel(const unsigned int &, std::ostream &out, bool &broadca
     return true;
 }
 
-bool Game::msgUpdateVoxelBasePlane(const unsigned int &senderIndex, std::ostream &out, bool &broadcast, const unsigned int &value)
+bool Game::msgUpdateVoxelBasePlane(const unsigned int &, std::ostream &out, bool &broadcast, const unsigned int &value)
 {
     if (value > 255u)
     {
@@ -370,6 +370,7 @@ bool Game::msgUpdateVoxelBasePlane(const unsigned int &senderIndex, std::ostream
     }
     
     voxelMap->setVoxelBasePlane(value);
+    voxelMap->createVoxelPalette();
     broadcast = true;
     
     return true;

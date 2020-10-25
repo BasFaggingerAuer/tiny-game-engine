@@ -86,7 +86,7 @@ class Texture : public TextureInterface
                              a_width,
                              a_height,
                              a_depth),
-            hostData(a_width*a_height*a_depth*Channels)
+            hostData(a_width*a_height*a_depth*Channels, 0)
         {
             if (hostData.empty())
                 throw std::bad_alloc();

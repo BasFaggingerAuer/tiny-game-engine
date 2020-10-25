@@ -247,10 +247,10 @@ uint32_t bitsToVoxelRunCount(std::vector<bool> &bits, size_t &bp, const uint32_t
     return count;
 }
 
-draw::RGTexture3D *initializeVoxelTexture(const size_t &width, const size_t &height, const size_t &depth)
+draw::RGBATexture3D *initializeVoxelTexture(const size_t &width, const size_t &height, const size_t &depth)
 {
     //Initialize checkerboard voxel map.
-    draw::RGTexture3D *voxelTexture = new draw::RGTexture3D(width, height, depth, draw::tf::none);
+    draw::RGBATexture3D *voxelTexture = new draw::RGBATexture3D(width, height, depth, draw::tf::none);
     
     //Create checkerboard pattern.
     for (size_t z = 0; z < voxelTexture->getDepth(); ++z)
@@ -259,6 +259,11 @@ draw::RGTexture3D *initializeVoxelTexture(const size_t &width, const size_t &hei
         {
             for (size_t x = 0; x < voxelTexture->getWidth(); ++x)
             {
+                for (size_t c = 0; c < voxelTexture->getChannels(); ++c)
+                {
+                    (*voxelTexture)[voxelTexture->getChannels()*(z*voxelTexture->getHeight()*voxelTexture->getWidth() + y*voxelTexture->getWidth() + x) + c] = 0;
+                }
+
                 (*voxelTexture)[voxelTexture->getChannels()*(z*voxelTexture->getHeight()*voxelTexture->getWidth() + y*voxelTexture->getWidth() + x) + 1] = (((x ^ y ^ z) & 1) == 0 ? 116 : 140);
             }
         }
@@ -477,7 +482,7 @@ bool GameVoxelMap::createFromCompressedVoxels(const std::string &text, const flo
         }
     }
     
-    voxelTexture->sendToDevice();
+    draw::VoxelMap::clearDistanceMap(*voxelTexture);
     voxelMap->setVoxelMap(*voxelTexture, voxelSize);
     
     std::cerr << "Created voxel map from compressed data." << std::endl;
@@ -503,7 +508,7 @@ void GameVoxelMap::createVoxelPalette()
         }
     }
     
-    voxelTexture->sendToDevice();
+    draw::VoxelMap::clearDistanceMap(*voxelTexture);
 }
 
 void GameVoxelMap::setVoxelBasePlane(const int &v)
@@ -519,15 +524,26 @@ void GameVoxelMap::setVoxelBasePlane(const int &v)
             }
         }
     }
+
+    for (size_t z = 0; z < voxelTexture->getDepth(); ++z)
+    {
+        for (size_t y = 1; y < voxelTexture->getHeight(); ++y)
+        {
+            for (size_t x = 0; x < voxelTexture->getWidth(); ++x)
+            {
+                (*voxelTexture)[voxelTexture->getChannels()*(z*voxelTexture->getHeight()*voxelTexture->getWidth() + y*voxelTexture->getWidth() + x) + 0] = 0;
+            }
+        }
+    }
     
-    voxelTexture->sendToDevice();
+    draw::VoxelMap::clearDistanceMap(*voxelTexture);
 }
 
 void GameVoxelMap::setVoxel(const ivec3 &p, const int &v)
 {
     (*voxelTexture)[voxelTexture->getChannels()*(clamp<int>(p.z + voxelTexture->getDepth()/2, 0, voxelTexture->getDepth() - 1)*voxelTexture->getHeight()*voxelTexture->getWidth() + clamp<int>(p.y, 0, voxelTexture->getHeight() - 1)*voxelTexture->getWidth() + clamp<int>(p.x + voxelTexture->getWidth()/2, 0, voxelTexture->getWidth() - 1)) + 0] = v;
     
-    voxelTexture->sendToDevice();
+    draw::VoxelMap::clearDistanceMap(*voxelTexture);
 }
 
 int GameVoxelMap::getVoxel(const ivec3 &p) const

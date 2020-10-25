@@ -145,6 +145,31 @@ unsigned int detail::BoundProgram::numRenderables() const
     return renderableIndices.size();
 }
 
+detail::BoundRenderable::BoundRenderable(Renderable *a_renderable,
+                    const unsigned int &a_shaderProgramHash,
+                    const bool &a_readFromDepthTexture,
+                    const bool &a_writeToDepthTexture,
+                    const BlendMode &a_blendMode,
+                    const CullMode &a_cullMode) :
+        renderable(a_renderable),
+        shaderProgramHash(a_shaderProgramHash),
+        readFromDepthTexture(a_readFromDepthTexture),
+        writeToDepthTexture(a_writeToDepthTexture),
+        blendMode(a_blendMode),
+        cullMode(a_cullMode)
+{
+#ifdef RENDERER_PERFMON
+    GL_CHECK(glGenQueries(1, &timeQuery));
+#endif
+}
+
+detail::BoundRenderable::~BoundRenderable()
+{
+#ifdef RENDERER_PERFMON
+    if (timeQuery != 0) GL_CHECK(glDeleteQueries(1, &timeQuery));
+#endif
+}
+
 Renderer::Renderer(const bool & a_renderToDefaultFrameBuffer, const int &a_viewportWidth, const int &a_viewportHeight) :
     frameBufferIndex(0),
     renderToDefaultFrameBuffer(a_renderToDefaultFrameBuffer),
@@ -159,13 +184,13 @@ Renderer::Renderer(const bool & a_renderToDefaultFrameBuffer, const int &a_viewp
 Renderer::~Renderer()
 {
     //Free allocated bound renderables.
-    for (std::map<unsigned int, detail::BoundRenderable *>::iterator i = renderables.begin(); i != renderables.end(); ++i)
+    for (auto i = renderables.begin(); i != renderables.end(); ++i)
     {
         delete i->second;
     }
     
     //Free allocated renderable programs.
-    for (std::map<unsigned int, detail::BoundProgram *>::iterator i = shaderPrograms.begin(); i != shaderPrograms.end(); ++i)
+    for (auto i = shaderPrograms.begin(); i != shaderPrograms.end(); ++i)
     {
         delete i->second;
     }
@@ -382,7 +407,7 @@ void Renderer::clearTargets() const
     GL_CHECK(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0));
 }
 
-void Renderer::render() const
+std::vector<uint64_t> Renderer::render() const
 {
     GL_CHECK(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, frameBufferIndex));
     //GL_CHECK(glPushAttrib(GL_VIEWPORT_BIT | GL_ENABLE_BIT));
@@ -399,10 +424,14 @@ void Renderer::render() const
     
     uniformMap.bindTextures();
     
-    for (std::map<unsigned int, detail::BoundRenderable *>::const_iterator i = renderables.begin(); i != renderables.end(); ++i)
+    for (auto i = renderables.cbegin(); i != renderables.cend(); ++i)
     {
         const detail::BoundRenderable *renderable = i->second;
         
+#ifdef RENDERER_PERFMON
+        GL_CHECK(glBeginQuery(GL_TIME_ELAPSED, renderable->timeQuery));
+#endif
+
         if (renderable->readFromDepthTexture) GL_CHECK(glEnable(GL_DEPTH_TEST));
         else GL_CHECK(glDisable(GL_DEPTH_TEST));
         
@@ -458,6 +487,10 @@ void Renderer::render() const
         renderable->renderable->render(shaderProgram->getProgram());
         renderable->renderable->unbind();
         renderable->renderable->uniformMap.unbindTextures(uniformMap.getNrTextures());
+
+#ifdef RENDERER_PERFMON
+        GL_CHECK(glEndQuery(GL_TIME_ELAPSED));
+#endif
     }
     
     GL_CHECK(glUseProgram(0));
@@ -466,9 +499,29 @@ void Renderer::render() const
     
     //GL_CHECK(glPopAttrib());
     GL_CHECK(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0));
+
+    std::vector<uint64_t> renderTimesInNs;
+
+#ifdef RENDERER_PERFMON
+    //Do performance querying after all rendering is complete to allow asynchronous queries.
+    renderTimesInNs.reserve(renderables.size());
+
+    for (auto i = renderables.cbegin(); i != renderables.cend(); ++i)
+    {
+        const detail::BoundRenderable *renderable = i->second;
+
+        GLuint64 query = 0;
+
+        GL_CHECK(glGetQueryObjectui64v(renderable->timeQuery, GL_QUERY_RESULT, &query));
+
+        renderTimesInNs.push_back(static_cast<int64_t>(query));
+    }
+#endif
     
 #ifndef NDEBUG
     //std::cerr << "Switched shaders " << nrShaderProgramSwitches << " times for " << renderables.size() << " renderables." << std::endl;
 #endif
+
+    return renderTimesInNs;
 }
 

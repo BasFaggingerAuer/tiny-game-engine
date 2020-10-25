@@ -32,6 +32,10 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/draw/texture2d.h>
 #include <tiny/draw/uniformmap.h>
 
+#ifndef NDEBUG
+#define RENDERER_PERFMON
+#endif
+
 namespace tiny
 {
 
@@ -90,30 +94,24 @@ class BoundProgram
         std::set<unsigned int> renderableIndices;
 };
 
-struct BoundRenderable
+class BoundRenderable
 {
-    BoundRenderable(Renderable *a_renderable,
-                    const unsigned int &a_shaderProgramHash,
-                    const bool &a_readFromDepthTexture,
-                    const bool &a_writeToDepthTexture,
-                    const BlendMode &a_blendMode,
-                    const CullMode &a_cullMode) :
-        renderable(a_renderable),
-        shaderProgramHash(a_shaderProgramHash),
-        readFromDepthTexture(a_readFromDepthTexture),
-        writeToDepthTexture(a_writeToDepthTexture),
-        blendMode(a_blendMode),
-        cullMode(a_cullMode)
-    {
-
-    }
+    public:
+        BoundRenderable(Renderable *, const unsigned int &, const bool &, const bool &, const BlendMode &, const CullMode &);
+        BoundRenderable(const BoundRenderable &) = delete;
+        BoundRenderable & operator = (const BoundRenderable &) = delete;
+        ~BoundRenderable();
     
-    Renderable *renderable;
-    unsigned int shaderProgramHash;
-    bool readFromDepthTexture;
-    bool writeToDepthTexture;
-    BlendMode blendMode;
-    CullMode cullMode;
+        Renderable *renderable;
+        unsigned int shaderProgramHash;
+        bool readFromDepthTexture;
+        bool writeToDepthTexture;
+        BlendMode blendMode;
+        CullMode cullMode;
+
+#ifdef RENDERER_PERFMON
+        GLuint timeQuery;
+#endif
 };
 
 }
@@ -170,7 +168,7 @@ class Renderer
         }
         
         void clearTargets() const;
-        void render() const;
+        std::vector<uint64_t> render() const;
         void setViewportSize(const int &, const int &);
         
     protected:

@@ -66,6 +66,8 @@ Game::Game(const os::Application *application, const std::string &path) :
     
     //Create a renderer and add the font to it, disabling depth reading and writing.
     renderer = new draw::WorldRenderer(application->getScreenWidth(), application->getScreenHeight());
+    renderTimesInNs.clear();
+    renderNrFrames = 0;
     
     unsigned int index = 0;
     
@@ -148,7 +150,7 @@ void Game::updateConsole() const
         if (characterIndex == 0)
         {
             strm << "\\#fff";
-            strm << (paintMode == Character ? "*" : " ") << "C = Create/delete characters" << std::endl;
+            strm << (paintMode == Character ? "*" : " ") << "C = Create/delete character" << std::endl;
             strm << (paintMode == VoxelReplace ? "*" : " ") << "V = Replace/Pick voxels" << std::endl;
             strm << (paintMode == VoxelAdd ? "*" : " ") << "B = Add/Remove voxels" << std::endl;
             strm << " P = Restore voxel palette" << std::endl;
@@ -332,12 +334,16 @@ void Game::update(os::Application *application, const float &dt)
                 msg << paintVoxelType;
                 applyMessage(ownPlayerIndex, msg);
             }
-            if (application->isKeyPressedOnce('n'))
+            if (application->isKeyPressedOnce('z'))
             {
                 std::string text = voxelMap->getCompressedVoxels();
                 
                 std::cout << "Voxel map description:" << std::endl;
                 std::cout << text << std::endl;
+            }
+            if (application->isKeyPressedOnce('x'))
+            {
+                draw::VoxelMap::setDistanceMap(*(voxelMap->voxelTexture));
             }
             
             //Did the user click anywhere?
@@ -487,9 +493,9 @@ void Game::update(os::Application *application, const float &dt)
             
             application->updateSimpleCamera(dt, newPosition, cameraOrientation);
             newPosition.y = std::max(newPosition.y, terrain->getHeight(vec2(newPosition.x, newPosition.z)) + cameraRadius);
-            newPosition.x = clamp(newPosition.x, -0.5f*voxelMap->getScaledWidth(), 0.5f*voxelMap->getScaledWidth());
-            newPosition.y = clamp(newPosition.y, voxelMap->getScale() + cameraRadius, voxelMap->getScaledHeight());
-            newPosition.z = clamp(newPosition.z, -0.5f*voxelMap->getScaledDepth(), 0.5f*voxelMap->getScaledDepth());
+            newPosition.x = clamp(newPosition.x, -0.5f*voxelMap->getScaledWidth(), 0.5f*voxelMap->getScaledWidth() - voxelMap->getScale());
+            newPosition.y = clamp(newPosition.y, voxelMap->getScale() + cameraRadius, voxelMap->getScaledHeight() - voxelMap->getScale());
+            newPosition.z = clamp(newPosition.z, -0.5f*voxelMap->getScaledDepth(), 0.5f*voxelMap->getScaledDepth() - voxelMap->getScale());
             cameraPosition = newPosition;
         }
         else
@@ -564,7 +570,36 @@ void Game::update(os::Application *application, const float &dt)
 void Game::render()
 {
     renderer->clearTargets();
-    renderer->render();
+    auto deltaTimes = renderer->render();
+
+    if (!deltaTimes.empty())
+    {
+        if (deltaTimes.size() != renderTimesInNs.size())
+        {
+            renderTimesInNs = deltaTimes;
+            renderNrFrames = 1;
+        }
+        else
+        {
+            for (size_t i = 0; i < renderTimesInNs.size(); ++i)
+            {
+                renderTimesInNs[i] += deltaTimes[i];
+            }
+
+            if (++renderNrFrames >= 60)
+            {
+                std::cerr << "Render times in (us) for " << renderNrFrames << " frames:" << std::endl;
+
+                for (auto i = renderTimesInNs.cbegin(); i != renderTimesInNs.cend(); ++i)
+                {
+                    std::cerr << "    " << 1.0e-3*static_cast<double>(*i)/static_cast<double>(renderNrFrames) << std::endl;
+                }
+
+                renderTimesInNs = deltaTimes;
+                renderNrFrames = 1;
+            }
+        }
+    }
 }
 
 void Game::clear()
@@ -589,6 +624,9 @@ void Game::clear()
         console->addLine("Disconnected host from network.");
     }
     
+    //Reset performance timers.
+    renderTimesInNs.clear();
+
     //Remove all players except the current user.
     players.clear();
     ownPlayerIndex = 0;
@@ -615,6 +653,10 @@ void Game::clear()
     paintMode = VoxelReplace;
     paintVoxelType = 1;
     mouseTimer = 0.0f;
+
+    //Reset voxel map.
+    voxelMap->setVoxelBasePlane(1);
+    voxelMap->createVoxelPalette();
     
     //Run initialization commands.
     console->addLine("Running initialization...");
@@ -696,7 +738,7 @@ void Game::readResources(const std::string &path)
     }
     
     //Assign voxel map to the sky effect.
-    skyEffect->setVoxelMap(*(voxelMap->voxelTexture), voxelMap->getScale());
+    //skyEffect->setVoxelMap(*(voxelMap->voxelTexture), voxelMap->getScale());
 }
 
 void Game::readConsoleResources(const std::string &path, TiXmlElement *el)
@@ -733,21 +775,20 @@ void Game::readSkyResources(const std::string &path, TiXmlElement *el)
     std::cerr << "Reading sky resources..." << std::endl;
     
     std::string textureFileName = "";
-    int nrSteps = 1;
+    //int nrSteps = 1;
     
     assert(std::string(el->Value()) == "sky");
     
     el->QueryStringAttribute("texture", &textureFileName);
-    el->QueryIntAttribute("nr_shadow_steps", &nrSteps);
+    //el->QueryIntAttribute("nr_shadow_steps", &nrSteps);
     
     //Create sky box mesh and read gradient texture.
     skyBoxMesh = new draw::StaticMesh(mesh::StaticMesh::createCubeMesh(-1.0e6));
     skyBoxDiffuseTexture = new draw::RGBTexture2D(img::Image::createSolidImage());
     skyBoxMesh->setDiffuseTexture(*skyBoxDiffuseTexture);
     
-    skyEffect = new draw::effects::SunSkyVoxelMap(nrSteps);
+    skyEffect = new draw::effects::SunSky(); //VoxelMap(nrSteps);
     skyGradientTexture = new draw::RGBTexture2D(img::io::readImage(path + textureFileName), draw::tf::filter);
     skyEffect->setSkyTexture(*skyGradientTexture);
     skyEffect->setSun(normalize(vec3(0.4f, 0.8f, 0.4f)));
 }
-

@@ -94,10 +94,14 @@ void WorldRenderer::clearTargets() const
     worldToScreenRenderer.clearTargets();
 }
 
-void WorldRenderer::render() const
+std::vector<uint64_t> WorldRenderer::render() const
 {
-    worldToScreenRenderer.render();
-    screenToColourRenderer.render();
+    auto times1 = worldToScreenRenderer.render();
+    auto times2 = screenToColourRenderer.render();
+
+    times1.insert(times1.end(), times2.begin(), times2.end());
+    
+    return times1;
 }
 
 #ifdef ENABLE_OPENVR

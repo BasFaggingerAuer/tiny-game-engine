@@ -117,10 +117,8 @@ SDLApplication::SDLApplication(const int &a_screenWidth,
         throw std::exception();
     }
 
-#ifndef ENABLE_OPENVR
     //Enable v-sync.
     SDL_GL_SetSwapInterval(1);
-#endif
     
     if (fullScreen)
     {
