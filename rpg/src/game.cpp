@@ -401,31 +401,34 @@ void Game::update(os::Application *application, const float &dt)
                             case Character:
                                 if (mouse.buttons == 1)
                                 {
-                                    //Create character.
-                                    const ivec3 p = voxelHit.voxelIndices;
-                                    
-                                    auto ct = characterTypes.find(selectedCharacterType);
-            
-                                    if (ct != characterTypes.end())
+                                    //Create character (only if there is no character yet in this square).
+                                    if (foundCharacter < 0 || characterDistanceSq > 0)
                                     {
-                                        if (true)
+                                        const ivec3 p = voxelHit.voxelIndices;
+                                        
+                                        auto ct = characterTypes.find(selectedCharacterType);
+                
+                                        if (ct != characterTypes.end())
                                         {
-                                            Message msg(msg::mt::addCharacter);
-                                            
-                                            msg << ++lastCharacterIndex << ct->second->name << ct->first << selectedCharacterColor;
+                                            if (true)
+                                            {
+                                                Message msg(msg::mt::addCharacter);
+                                                
+                                                msg << ++lastCharacterIndex << ct->second->name << ct->first << selectedCharacterColor;
 
-                                            if (client) client->sendMessage(msg);
-                                            else applyMessage(ownPlayerIndex, msg);
-                                        }
-                                        
-                                        if (true)
-                                        {
-                                            Message msg(msg::mt::updateCharacter);
-                                        
-                                            msg << lastCharacterIndex << ivec3(p.x, 0, p.z) << 0 << 0 << selectedCharacterColor;
+                                                if (client) client->sendMessage(msg);
+                                                else applyMessage(ownPlayerIndex, msg);
+                                            }
                                             
-                                            if (client) client->sendMessage(msg);
-                                            else applyMessage(ownPlayerIndex, msg);
+                                            if (true)
+                                            {
+                                                Message msg(msg::mt::updateCharacter);
+                                            
+                                                msg << lastCharacterIndex << ivec3(p.x, 0, p.z) << 0 << 0 << selectedCharacterColor;
+                                                
+                                                if (client) client->sendMessage(msg);
+                                                else applyMessage(ownPlayerIndex, msg);
+                                            }
                                         }
                                     }
                                 }
