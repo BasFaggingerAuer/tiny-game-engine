@@ -46,6 +46,8 @@ enum mt_t
     updateCharacter,
     setPlayerCharacter,
     updateVoxel,
+    startVoxelMap,
+    chunkVoxelMap,
     updateVoxelBasePlane,
     playerSpawnRequest
 };

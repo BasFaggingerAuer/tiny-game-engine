@@ -284,13 +284,11 @@ GameVoxelMap::GameVoxelMap(const std::string &path, TiXmlElement *el)
     int height = 64;
     int depth = 64;
     float voxelSize = 1.0f;
-    std::string text = "";
     
     el->QueryIntAttribute("width", &width);
     el->QueryIntAttribute("height", &height);
     el->QueryIntAttribute("depth", &depth);
     el->QueryFloatAttribute("scale", &voxelSize);
-    el->QueryStringAttribute("compressed_voxels", &text);
     
     //Read cubemaps.
     std::vector<img::Image> cubeMaps;
@@ -337,20 +335,9 @@ GameVoxelMap::GameVoxelMap(const std::string &path, TiXmlElement *el)
     voxelCubeArrayTexture = new draw::RGBTexture2DCubeArray(cubeMaps.begin(), cubeMaps.end(), draw::tf::repeat | draw::tf::mipmap);
     voxelMap = new draw::VoxelMap(std::max(width, std::max(height, depth))*3);
     
-    if (text.empty())
-    {
-        voxelTexture = initializeVoxelTexture(width, height, depth);
-        setVoxelBasePlane(1);
-        createVoxelPalette();
-    }
-    else
-    {
-        if (!createFromCompressedVoxels(text, voxelSize))
-        {
-            std::cerr << "Unable to initialize voxel map from compressed data '" << text << "'!" << std::endl;
-            throw std::exception();
-        }
-    }
+    voxelTexture = initializeVoxelTexture(width, height, depth);
+    setVoxelBasePlane(1);
+    createVoxelPalette();
     
     voxelMap->setVoxelMap(*voxelTexture, voxelSize);
     voxelMap->setCubeMaps(*voxelCubeArrayTexture);
@@ -441,7 +428,7 @@ bool GameVoxelMap::createFromCompressedVoxels(const std::string &text, const flo
         return false;
     }
 
-    const uint32_t nrVoxels = width*width*width;
+    const uint32_t nrVoxels = width*height*depth;
     std::vector<uint8_t> orderedVoxels;
     
     while (orderedVoxels.size() < nrVoxels && bp < bits.size())

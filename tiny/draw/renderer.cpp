@@ -437,7 +437,7 @@ std::vector<uint64_t> Renderer::render() const
         
         GL_CHECK(glDepthMask(renderable->writeToDepthTexture ? GL_TRUE : GL_FALSE));
 
-        if (renderable->blendMode == BlendReplace)
+        if (renderable->blendMode == BlendMode::BlendReplace)
         {
             GL_CHECK(glDisable(GL_BLEND));
         }
@@ -445,21 +445,21 @@ std::vector<uint64_t> Renderer::render() const
         {
             GL_CHECK(glEnable(GL_BLEND));
             
-                 if (renderable->blendMode == BlendAdd) GL_CHECK(glBlendFunc(GL_SRC_ALPHA, GL_ONE));
-            else if (renderable->blendMode == BlendMix) GL_CHECK(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
+                 if (renderable->blendMode == BlendMode::BlendAdd) GL_CHECK(glBlendFunc(GL_SRC_ALPHA, GL_ONE));
+            else if (renderable->blendMode == BlendMode::BlendMix) GL_CHECK(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA));
         }
         
-        if (renderable->cullMode == CullBack)
+        if (renderable->cullMode == CullMode::CullBack)
         {
             GL_CHECK(glEnable(GL_CULL_FACE));
             GL_CHECK(glCullFace(GL_BACK));
         }
-        else if (renderable->cullMode == CullFront)
+        else if (renderable->cullMode == CullMode::CullFront)
         {
             GL_CHECK(glEnable(GL_CULL_FACE));
             GL_CHECK(glCullFace(GL_FRONT));
         }
-        else if (renderable->cullMode == CullNothing)
+        else if (renderable->cullMode == CullMode::CullNothing)
         {
             GL_CHECK(glDisable(GL_CULL_FACE));
         }

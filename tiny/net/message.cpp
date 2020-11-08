@@ -181,7 +181,7 @@ VariableData::VariableData(const std::string &a) :
     v4(),
     s256(a)
 {
-    if (s256.length() >= 255)
+    if (s256.length() > 255)
     {
         std::cerr << "Warning: reducing string length (" << s256.length() << ") for '" << s256 << "'!" << std::endl;
         s256 = s256.substr(0, 255);

@@ -432,6 +432,7 @@ double SDLApplication::pollEvents()
 void SDLApplication::paint()
 {
     SDL_GL_SwapWindow(screen);
+    SDL_Delay(10);
 }
 
 int SDLApplication::getScreenWidth() const

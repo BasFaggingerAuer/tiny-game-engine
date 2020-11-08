@@ -148,7 +148,7 @@ Game::Game(const os::Application *application, const std::string &path) :
     
     renderer->addWorldRenderable(index++, terrain->terrain);
     
-    renderer->addWorldRenderable(index++, forest->treeMeshes, true, true, draw::BlendReplace, draw::CullNothing);
+    renderer->addWorldRenderable(index++, forest->treeMeshes, true, true, draw::BlendMode::BlendReplace, draw::CullMode::CullNothing);
     renderer->addWorldRenderable(index++, forest->treeSprites);
     
     for (std::map<std::string, Faction *>::const_iterator i = factions.begin(); i != factions.end(); ++i)
@@ -163,7 +163,7 @@ Game::Game(const os::Application *application, const std::string &path) :
     }
     
     renderer->addScreenRenderable(index++, skyEffect, false, false);
-    renderer->addScreenRenderable(index++, logoLayer, false, false, draw::BlendMix);
+    renderer->addScreenRenderable(index++, logoLayer, false, false, draw::BlendMode::BlendMix);
     
     clear();
     

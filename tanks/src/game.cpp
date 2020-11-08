@@ -77,9 +77,9 @@ Game::Game(const os::Application *application, const std::string &path) :
     }
     
     renderer->addScreenRenderable(index++, skyEffect, false, false);
-    renderer->addScreenRenderable(index++, bulletHorde, true, false, tiny::draw::BlendAdd);
-    renderer->addScreenRenderable(index++, consoleBackground, false, false, draw::BlendMix);
-    renderer->addScreenRenderable(index++, font, false, false, draw::BlendMix);
+    renderer->addScreenRenderable(index++, bulletHorde, true, false, tiny::draw::BlendMode::BlendAdd);
+    renderer->addScreenRenderable(index++, consoleBackground, false, false, draw::BlendMode::BlendMix);
+    renderer->addScreenRenderable(index++, font, false, false, draw::BlendMode::BlendMix);
     
     clear();
 }

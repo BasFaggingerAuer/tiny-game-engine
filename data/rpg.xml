@@ -8,7 +8,7 @@
         <biome diffuse="img/terrain/dirt.jpg" normal="img/terrain/dirt_normal.jpg" sound="sound/forest.ogg"/>
         <biome diffuse="img/terrain/rocks.jpg" normal="img/terrain/rocks_normal.jpg" sound="sound/sheep.ogg"/>
     </terrain>
-    <voxelmap width="32" height="32" depth="32" scale="1.0">
+    <voxelmap width="64" height="32" depth="64" scale="1.0">
         <cubemap all="img/cm_dirt.png" />
         <cubemap all="img/cm_mud.png" />
         <cubemap all="img/cm_grass.png" />
@@ -40,12 +40,26 @@
     <charactertype name="HumanPaladin" width="1.0" depth="1.0" height="2.0" mesh="rpg/paladin_sword_down.dae" max_instances="64" />
     <charactertype name="HumanViking" width="1.0" depth="1.0" height="2.0" mesh="rpg/Viking.dae" max_instances="64" />
     <charactertype name="HumanSpartan" width="1.0" depth="1.0" height="1.75" mesh="rpg/spartan.dae" max_instances="64" />
-    <charactertype name="Dwarf" width="1.0" depth="1.0" height="2.0" mesh="rpg/DwarfPaladinFigure.dae" max_instances="64" />
+    <charactertype name="DwarfAxe" width="1.0" depth="1.0" height="2.0" mesh="rpg/DwarfPaladinFigure.dae" max_instances="64" />
+    <charactertype name="DwarfWarrior" width="1.0" depth="1.0" height="2.0" mesh="rpg/dwarven_warrior_by_kevin_mic.dae" max_instances="64" />
+    <charactertype name="DwarfHammer" width="1.0" depth="1.0" height="2.0" mesh="rpg/EpicDwarfFigure.dae" max_instances="64" />
+    <charactertype name="ElfRanger" width="1.0" depth="1.0" height="1.5" mesh="rpg/ElfRangerFigure.dae" max_instances="64" />
+    <charactertype name="ElfMage" width="1.0" depth="1.0" height="1.5" mesh="rpg/ElvenSorcererFigure.dae" max_instances="64" />
+    <charactertype name="HumanAcolyte" width="1.0" depth="1.0" height="1.5" mesh="rpg/Acolyte.dae" max_instances="64" />
+    <charactertype name="HumanCultist" width="1.0" depth="1.0" height="1.5" mesh="rpg/Cultist.dae" max_instances="64" />
+    <charactertype name="HumanAssassin" width="1.0" depth="1.0" height="2.0" mesh="rpg/assassin_crossbow_ready.dae" max_instances="64" />
+    <charactertype name="HumanWingedGuardian" width="1.0" depth="1.0" height="2.0" mesh="rpg/winged_guardian_defensive.dae" max_instances="64" />
+    <charactertype name="HumanArcher" width="1.0" depth="1.0" height="2.0" mesh="rpg/GrumpRangerFigure.dae" max_instances="64" />
+    <charactertype name="HumanOld" width="1.0" depth="1.0" height="2.0" mesh="rpg/old_man_standing_ready.dae" max_instances="64" />
+    <charactertype name="Cyclops" width="2.0" depth="2.0" height="4.0" mesh="rpg/CyclopsGeneric.dae" max_instances="64" />
+    <charactertype name="Dragon" width="4.0" depth="5.0" height="5.0" mesh="rpg/Adult_Red_Dragon.dae" max_instances="64" />
     <charactertype name="KrakenTentacle" width="3.0" depth="3.0" height="6.0" mesh="rpg/Kraken_Tentacle.dae" max_instances="64" />
     <charactertype name="Kraken" width="9.0" depth="9.0" height="9.0" mesh="rpg/Kraken_for_Print3.dae" max_instances="64" />
-    <charactertype name="Shark" width="3.0" depth="9.0" height="1.0" scale_height="1.0" mesh="rpg/great_white_2.dae" max_instances="64" />
+    <charactertype name="Shark" width="1.0" depth="3.0" height="1.0" scale_height="1.0" mesh="rpg/great_white_2.dae" max_instances="64" />
     <charactertype name="Merman" width="1.0" depth="1.0" height="2.0" mesh="rpg/Merfolk_DandD_character.dae" max_instances="64" />
+    <charactertype name="Merrow" width="1.0" depth="1.0" height="2.0" mesh="rpg/Merrow_updated_sculpted.dae" max_instances="64" />
     <charactertype name="Horse" width="1.0" depth="2.0" height="2.0" scale_height="0.7" mesh="rpg/horse.dae" max_instances="64" />
+    <charactertype name="Pegasus" width="1.0" depth="2.0" height="2.0" scale_height="0.3" mesh="rpg/Pegasus_Updated.dae" max_instances="64" />
     <charactertype name="RomanSpear" width="1.0" depth="1.0" height="2.0" mesh="rpg/roman_legionary_spear.dae" max_instances="64" />
     <charactertype name="RomanSword" width="1.0" depth="1.0" height="2.0" mesh="rpg/roman_legionary_sword.dae" max_instances="64" />
     <charactertype name="Shell" width="3.0" depth="3.0" height="2.0" mesh="rpg/Large_Shell.dae" scale_height="1.0" max_instances="64" />
@@ -59,9 +73,9 @@
     <init command="updatecharacter 2 0 0 0 0 0.15" />
     <init command="addcharacter 3 'Tollie' 6 0.30" />
     <init command="updatecharacter 3 1 0 1 0 0.30" />
-    <init command="addcharacter 4 'Julius' 4 0.45" />
+    <init command="addcharacter 4 'Julius' 3 0.45" />
     <init command="updatecharacter 4 -1 0 1 0 0.45" />
-    <init command="addcharacter 5 'Sven' 3 0.00" />
+    <init command="addcharacter 5 'Sven' 4 0.00" />
     <init command="updatecharacter 5 0 0 1 0 0.00" />
     <init command="addcharacter 6 'Augustus' 5 0.60" />
     <init command="updatecharacter 6 1 0 0 0 0.60" />

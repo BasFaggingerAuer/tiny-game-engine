@@ -42,14 +42,14 @@ namespace tiny
 namespace draw
 {
 
-enum CullMode
+enum class CullMode
 {
     CullBack,
     CullFront,
     CullNothing
 };
 
-enum BlendMode
+enum class BlendMode
 {
     BlendReplace,
     BlendAdd,
@@ -124,7 +124,7 @@ class Renderer
         Renderer(const bool &, const int &, const int &);
         virtual ~Renderer();
         
-        void addRenderable(const unsigned int &, Renderable *, const bool & = true, const bool & = true, const BlendMode & = BlendReplace, const CullMode & = CullBack);
+        void addRenderable(const unsigned int &, Renderable *, const bool & = true, const bool & = true, const BlendMode & = BlendMode::BlendReplace, const CullMode & = CullMode::CullBack);
         bool freeRenderable(const unsigned int &);
         
         void setDepthTextureTarget(const DepthTexture2D &texture)

@@ -67,6 +67,7 @@ bool Game::msgJoin(const unsigned int &, std::ostream &out, bool &, const std::s
         {
             clear();
             players.clear();
+            characters.clear();
             client = new GameClient(ip, port, this);
             out << "Joined game at " << ip << ":" << port << ".";
         }
@@ -122,15 +123,54 @@ bool Game::msgAddPlayer(const unsigned int &, std::ostream &out, bool &, const u
         }
         
         //Send all current players to the new client.
-        for (std::map<unsigned int, Player>::const_iterator j = players.begin(); j != players.end(); ++j)
+        for (auto j = players.cbegin(); j != players.cend(); ++j)
         {
             Message msg(msg::mt::addPlayer);
             
             msg << j->first;
             host->sendPrivateMessage(msg, newPlayerIndex);
         }
+
+        //TODO: Set sun/terrain state?
         
-        //TODO: Send game state to the new client.
+        //Send all current characters to the new client.
+        for (auto j = characters.cbegin(); j != characters.cend(); ++j)
+        {
+            Message msg(msg::mt::addCharacter);
+
+            msg << j->first << j->second.name << j->second.type << j->second.color;
+            host->sendPrivateMessage(msg, newPlayerIndex);
+        }
+
+        //Update all character positions.
+        for (auto j = characters.cbegin(); j != characters.cend(); ++j)
+        {
+            Message msg(msg::mt::updateCharacter);
+
+            msg << j->first << j->second.position << j->second.rotation << j->second.state << j->second.color;
+            host->sendPrivateMessage(msg, newPlayerIndex);
+        }
+
+        //Send voxel map.
+        if (true)
+        {
+            const std::string text = voxelMap->getCompressedVoxels();
+            const int chunkSize = 255;
+            int nrChunks = (static_cast<int>(text.size())/chunkSize) + (static_cast<int>(text.size()) % chunkSize == 0 ? 0 : 1);
+
+            Message msgStart(msg::mt::startVoxelMap);
+
+            msgStart << nrChunks;
+            host->sendPrivateMessage(msgStart, newPlayerIndex);
+            
+            for (int j = 0; j < nrChunks; ++j)
+            {
+                Message msg(msg::mt::chunkVoxelMap);
+                
+                msg << text.substr(chunkSize*j, chunkSize);
+                host->sendPrivateMessage(msg, newPlayerIndex);
+            }
+        }
     }
 
     players.insert(std::make_pair(newPlayerIndex, Player()));
@@ -361,6 +401,51 @@ bool Game::msgUpdateVoxel(const unsigned int &, std::ostream &out, bool &broadca
     return true;
 }
 
+bool Game::msgStartVoxelMap(const unsigned int &, std::ostream &out, bool &, const unsigned int &nrChunks)
+{
+    if (nrVoxelMapChunks > 0)
+    {
+        out << "Warning: Restarting voxel map update!";
+    }
+
+    out << "Receiving " << nrChunks << " voxel map chunks...";
+
+    nrVoxelMapChunks = nrChunks;
+    voxelMapChunks.clear();
+
+    return true;
+}
+
+bool Game::msgChunkVoxelMap(const unsigned int &, std::ostream &out, bool &, const std::string &chunk)
+{
+    if (nrVoxelMapChunks == 0)
+    {
+        out << "Received voxel map chunk without a started update!";
+        return false;
+    }
+
+    voxelMapChunks.push_back(chunk);
+
+    if (--nrVoxelMapChunks <= 0)
+    {
+        out << "Received all voxel map chunks, starting map update.";
+
+        std::string data = "";
+
+        for (auto i = voxelMapChunks.cbegin(); i != voxelMapChunks.cend(); ++i)
+        {
+            data += *i;
+        }
+
+        voxelMap->createFromCompressedVoxels(data, voxelMap->getScale());
+
+        nrVoxelMapChunks = 0;
+        voxelMapChunks.clear();
+    }
+
+    return true;
+}
+
 bool Game::msgUpdateVoxelBasePlane(const unsigned int &, std::ostream &out, bool &broadcast, const unsigned int &value)
 {
     if (value > 255u)
@@ -412,7 +497,8 @@ bool Game::applyMessage(const unsigned int &senderIndex, const Message &message)
         else if (message.id == msg::mt::removePlayer) ok = msgRemovePlayer(senderIndex, out, broadcast, message.data[0].iv1);
         else if (message.id == msg::mt::welcomePlayer) ok = msgWelcomePlayer(senderIndex, out, broadcast, message.data[0].iv1);
         else if (message.id == msg::mt::terrainOffset) ok = msgTerrainOffset(senderIndex, out, broadcast, message.data[0].v2);
-        
+        else if (message.id == msg::mt::startVoxelMap) ok = msgStartVoxelMap(senderIndex, out, broadcast, message.data[0].iv1);
+        else if (message.id == msg::mt::chunkVoxelMap) ok = msgChunkVoxelMap(senderIndex, out, broadcast, message.data[0].s256);
     }
     
     //Add message output to the console.

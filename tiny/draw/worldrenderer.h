@@ -49,8 +49,8 @@ class WorldRenderer
         void setScreenSize(const int &, const int &);
         vec3 getWorldDirection(const vec2 &) const;
         
-        void addWorldRenderable(const unsigned int &, Renderable *, const bool & = true, const bool & = true, const BlendMode & = BlendReplace, const CullMode & = CullBack);
-        void addScreenRenderable(const unsigned int &, Renderable *, const bool & = true, const bool & = true, const BlendMode & = BlendReplace, const CullMode & = CullBack);
+        void addWorldRenderable(const unsigned int &, Renderable *, const bool & = true, const bool & = true, const BlendMode & = BlendMode::BlendReplace, const CullMode & = CullMode::CullBack);
+        void addScreenRenderable(const unsigned int &, Renderable *, const bool & = true, const bool & = true, const BlendMode & = BlendMode::BlendReplace, const CullMode & = CullMode::CullBack);
         void freeWorldRenderable(const unsigned int &);
         void freeScreenRenderable(const unsigned int &);
         
@@ -79,8 +79,8 @@ class WorldRendererVR
         
         void setCamera(const vec3 &, const vec4 &);
         
-        void addWorldRenderable(const unsigned int &, Renderable *, const bool & = true, const bool & = true, const BlendMode & = BlendReplace, const CullMode & = CullBack);
-        void addScreenRenderable(const unsigned int &, Renderable *, const bool & = true, const bool & = true, const BlendMode & = BlendReplace, const CullMode & = CullBack);
+        void addWorldRenderable(const unsigned int &, Renderable *, const bool & = true, const bool & = true, const BlendMode & = BlendMode::BlendReplace, const CullMode & = CullMode::CullBack);
+        void addScreenRenderable(const unsigned int &, Renderable *, const bool & = true, const bool & = true, const BlendMode & = BlendMode::BlendReplace, const CullMode & = CullMode::CullBack);
         void freeWorldRenderable(const unsigned int &);
         void freeScreenRenderable(const unsigned int &);
         

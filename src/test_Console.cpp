@@ -62,7 +62,7 @@ void setup()
     
     //Create a renderer and add the font to it, disabling depth reading and writing.
     renderer = new draw::Renderer(true, SCREEN_WIDTH, SCREEN_HEIGHT);
-    renderer->addRenderable(0, font, false, false, draw::BlendMix);
+    renderer->addRenderable(0, font, false, false, draw::BlendMode::BlendMix);
 }
 
 void cleanup()

@@ -61,13 +61,13 @@ void setup()
     
     //Create a renderer and add the textbox to it, disabling depth reading and writing.
     renderer = new draw::Renderer(true, SCREEN_WIDTH, SCREEN_HEIGHT);
-    renderer->addRenderable(0, text->getRenderable(), false, false, draw::BlendMix);
+    renderer->addRenderable(0, text->getRenderable(), false, false, draw::BlendMode::BlendMix);
 
     //Reserve space such that text can be fully rendered, and set text.
     draw::Renderable * oldRenderable = 0;
     draw::Renderable * newRenderable = text->reserve(oldRenderable);
     if(oldRenderable) renderer->freeRenderable(0);
-    if(newRenderable) renderer->addRenderable(0, newRenderable, false, false, draw::BlendMix);
+    if(newRenderable) renderer->addRenderable(0, newRenderable, false, false, draw::BlendMode::BlendMix);
     text->setText();
 }
 

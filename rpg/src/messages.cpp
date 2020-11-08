@@ -208,6 +208,28 @@ class UpdateVoxel : public tiny::net::MessageType
         ~UpdateVoxel() {}
 };
 
+class StartVoxelMap : public tiny::net::MessageType
+{
+    public:
+        StartVoxelMap() : tiny::net::MessageType(mt::startVoxelMap, "startvoxelmap", "Start voxel map transmission.")
+        {
+            addVariableType("nr_chunks", tiny::net::vt::Integer);
+        }
+        
+        ~StartVoxelMap() {}
+};
+
+class ChunkVoxelMap : public tiny::net::MessageType
+{
+    public:
+        ChunkVoxelMap() : tiny::net::MessageType(mt::chunkVoxelMap, "chunkvoxelmap", "Send chunk of a voxel map transmission.")
+        {
+            addVariableType("chunk", tiny::net::vt::String256);
+        }
+        
+        ~ChunkVoxelMap() {}
+};
+
 class UpdateVoxelBasePlane : public tiny::net::MessageType
 {
     public:
@@ -255,6 +277,8 @@ GameMessageTranslator::GameMessageTranslator() :
     addMessageType(new msg::UpdateCharacter());
     addMessageType(new msg::SetPlayerCharacter());
     addMessageType(new msg::UpdateVoxel());
+    addMessageType(new msg::StartVoxelMap());
+    addMessageType(new msg::ChunkVoxelMap());
     addMessageType(new msg::UpdateVoxelBasePlane());
     addMessageType(new msg::PlayerSpawnRequest());
 }

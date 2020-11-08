@@ -55,7 +55,7 @@ class Player
         unsigned int characterIndex;
 };
 
-enum PaintMode
+enum class PaintMode
 {
     VoxelReplace,
     VoxelAdd,
@@ -94,15 +94,15 @@ class Game
         bool msgUpdateCharacter(const unsigned int &, std::ostream &, bool &, const unsigned int &, const tiny::ivec3 &, const int &, const int &, const float &);
         bool msgSetPlayerCharacter(const unsigned int &, std::ostream &, bool &, const unsigned int &, const unsigned int &);
         bool msgUpdateVoxel(const unsigned int &, std::ostream &, bool &, const tiny::ivec3 &, const unsigned int &);
+        bool msgStartVoxelMap(const unsigned int &, std::ostream &, bool &, const unsigned int &);
+        bool msgChunkVoxelMap(const unsigned int &, std::ostream &, bool &, const std::string &);
         bool msgUpdateVoxelBasePlane(const unsigned int &, std::ostream &, bool &, const unsigned int &);
         bool msgPlayerSpawnRequest(const unsigned int &, std::ostream &, bool &, const unsigned int &);
         
         void readResources(const std::string &);
-        void readCharacterResources(TiXmlElement *);
         void readConsoleResources(const std::string &, TiXmlElement *);
         void readSkyResources(const std::string &, TiXmlElement *);
         void readBulletHordeResources(const std::string &, TiXmlElement *);
-        void readVoxelMapResources(const std::string &, TiXmlElement *);
         
         //Renderer.
         const float aspectRatio;
@@ -136,12 +136,6 @@ class Game
         //Voxel map.
         GameVoxelMap *voxelMap;
         
-        float gravitationalConstant;
-        
-        //Sound sources.
-        std::map<unsigned int, tiny::snd::Source *> soundSources;
-        unsigned int lastSoundSourceIndex;
-        
         //Characters.
         std::map<unsigned int, CharacterType *> characterTypes;
         std::map<unsigned int, CharacterInstance> characters;
@@ -158,6 +152,10 @@ class Game
         GameHost *host;
         GameClient *client;
         unsigned int ownPlayerIndex;
+
+        //Received voxel map data.
+        int nrVoxelMapChunks;
+        std::list<std::string> voxelMapChunks;
         
         std::map<unsigned int, Player> players;
 };

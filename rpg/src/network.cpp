@@ -30,7 +30,7 @@ GameClient::GameClient(const std::string &hostName, const unsigned int &hostPort
     tiny::net::Client(hostName, hostPort, a_game->getTranslator()),
     game(a_game)
 {
-
+    
 }
 
 GameClient::~GameClient()

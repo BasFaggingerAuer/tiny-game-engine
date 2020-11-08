@@ -50,8 +50,6 @@ Player::~Player()
 Game::Game(const os::Application *application, const std::string &path) :
     aspectRatio(static_cast<float>(application->getScreenWidth())/static_cast<float>(application->getScreenHeight())),
     mouseSensitivity(48.0f),
-    gravitationalConstant(9.81f),
-    lastSoundSourceIndex(1),
     lastCharacterIndex(1),
     selectedCharacterType(0),
     selectedCharacterColor(0.0f),
@@ -59,7 +57,9 @@ Game::Game(const os::Application *application, const std::string &path) :
     console(new GameConsole(this)),
     host(0),
     client(0),
-    ownPlayerIndex(0)
+    ownPlayerIndex(0),
+    nrVoxelMapChunks(0),
+    voxelMapChunks()
 {
     readResources(path);
     consoleMode = false;
@@ -83,9 +83,9 @@ Game::Game(const os::Application *application, const std::string &path) :
     renderer->addWorldRenderable(index++, voxelMap->voxelMap);
     
     renderer->addScreenRenderable(index++, skyEffect, false, false);
-    renderer->addScreenRenderable(index++, fontWorld, false, false, draw::BlendMix);
-    renderer->addScreenRenderable(index++, consoleBackground, false, false, draw::BlendMix);
-    renderer->addScreenRenderable(index++, font, false, false, draw::BlendMix);
+    renderer->addScreenRenderable(index++, fontWorld, false, false, draw::BlendMode::BlendMix);
+    renderer->addScreenRenderable(index++, consoleBackground, false, false, draw::BlendMode::BlendMix);
+    renderer->addScreenRenderable(index++, font, false, false, draw::BlendMode::BlendMix);
     
     clear();
 }
@@ -150,9 +150,10 @@ void Game::updateConsole() const
         if (characterIndex == 0)
         {
             strm << "\\#fff";
-            strm << (paintMode == Character ? "*" : " ") << "C = Create/delete character" << std::endl;
-            strm << (paintMode == VoxelReplace ? "*" : " ") << "V = Replace/Pick voxels" << std::endl;
-            strm << (paintMode == VoxelAdd ? "*" : " ") << "B = Add/Remove voxels" << std::endl;
+            strm << " Z/X = Print/Optimize voxels" << std::endl;
+            strm << (paintMode == PaintMode::Character ? "*" : " ") << "C = Create/delete character" << std::endl;
+            strm << (paintMode == PaintMode::VoxelReplace ? "*" : " ") << "V = Replace/Pick voxels" << std::endl;
+            strm << (paintMode == PaintMode::VoxelAdd ? "*" : " ") << "B = Add/Remove voxels" << std::endl;
             strm << " P = Restore voxel palette" << std::endl;
             strm << " \\\\ = Flood base plane" << std::endl;
             
@@ -398,7 +399,7 @@ void Game::update(os::Application *application, const float &dt)
 
                         switch (paintMode)
                         {
-                            case Character:
+                            case PaintMode::Character:
                                 if (mouse.buttons == 1)
                                 {
                                     //Create character (only if there is no character yet in this square).
@@ -446,7 +447,7 @@ void Game::update(os::Application *application, const float &dt)
                                     }
                                 }
                                 break;
-                            case VoxelReplace:
+                            case PaintMode::VoxelReplace:
                                 if (mouse.buttons == 1)
                                 {
                                     Message msg(msg::mt::updateVoxel);
@@ -461,7 +462,7 @@ void Game::update(os::Application *application, const float &dt)
                                     paintVoxelType = voxelMap->getVoxel(voxelHit.voxelIndices);
                                 }
                                 break;
-                            case VoxelAdd:
+                            case PaintMode::VoxelAdd:
                                 if (mouse.buttons == 1)
                                 {
                                     Message msg(msg::mt::updateVoxel);
@@ -635,15 +636,6 @@ void Game::clear()
     ownPlayerIndex = 0;
     players.insert(std::make_pair(ownPlayerIndex, Player()));
     
-    //Remove all sound sources.
-    for (std::map<unsigned int, tiny::snd::Source *>::iterator i = soundSources.begin(); i != soundSources.end(); ++i)
-    {
-        delete i->second;
-    }
-    
-    soundSources.clear();
-    lastSoundSourceIndex = 1;
-    
     //Reset all characters.
     lastCharacterIndex = 0;
     selectedCharacterType = 0;
@@ -653,13 +645,16 @@ void Game::clear()
     //Reset camera.
     cameraPosition = vec3(0.0f, 10.0f, 0.0f);
     cameraOrientation = vec4(0.0f, 0.0f, 0.0f, 1.0f);
-    paintMode = VoxelReplace;
+    paintMode = PaintMode::VoxelReplace;
     paintVoxelType = 1;
     mouseTimer = 0.0f;
 
     //Reset voxel map.
     voxelMap->setVoxelBasePlane(1);
     voxelMap->createVoxelPalette();
+
+    nrVoxelMapChunks = 0;
+    voxelMapChunks.clear();
     
     //Run initialization commands.
     console->addLine("Running initialization...");
