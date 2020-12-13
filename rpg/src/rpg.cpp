@@ -34,23 +34,30 @@ int main(int argc, char **argv)
     
     try
     {
-        int screenWidth = 960;
-        int screenHeight = 540;
+        int screenWidth = 1600;
+        int screenHeight = 900;
+        std::string basePath = "";
         
-        if (argc != 2 && argc != 4)
+        if (argc != 1 && argc != 2 && argc != 4)
         {
-            std::cerr << "Usage: " << argv[0] << " path/to/resources [screenwidth screenheight]" << std::endl;
+            std::cerr << "Usage: " << argv[0] << " [path/to/resources/] [screenwidth screenheight]" << std::endl;
             throw std::exception();
         }
+
+        if (argc >= 2)
+        {
+            basePath = std::string(argv[1]);
+        }
         
-        if (argc == 4)
+        if (argc >= 4)
         {
             screenWidth = atoi(argv[2]);
             screenHeight = atoi(argv[3]);
         }
         
         application = new tiny::os::SDLApplication(screenWidth, screenHeight);
-        game = new rpg::Game(application, argv[1]);
+
+        game = new rpg::Game(application, basePath);
     }
     catch (std::exception &)
     {

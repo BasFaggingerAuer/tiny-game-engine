@@ -57,6 +57,7 @@ class Player
 
 enum class PaintMode
 {
+    None,
     VoxelReplace,
     VoxelAdd,
     Character

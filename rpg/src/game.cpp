@@ -24,8 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/img/io/image.h>
 #include <tiny/mesh/io/staticmesh.h>
 
-#include <tiny/snd/worldsounderer.h>
-
 #include <cstdio>
 #include <cstdlib>
 #include <sstream>
@@ -49,7 +47,7 @@ Player::~Player()
 
 Game::Game(const os::Application *application, const std::string &path) :
     aspectRatio(static_cast<float>(application->getScreenWidth())/static_cast<float>(application->getScreenHeight())),
-    mouseSensitivity(48.0f),
+    mouseSensitivity(64.0f),
     lastCharacterIndex(1),
     selectedCharacterType(0),
     selectedCharacterColor(0.0f),
@@ -163,6 +161,7 @@ void Game::updateConsole() const
             strm << " WASDQE = Move" << std::endl;
             strm << " IJKLOU = Look" << std::endl;
             strm << " F = Fast mode" << std::endl;
+            strm << " Mouse whl. = Select char." << std::endl;
             strm << " M/. = Select character type" << std::endl;
             
             auto ct = characterTypes.find(selectedCharacterType);
@@ -193,7 +192,7 @@ void Game::update(os::Application *application, const float &dt)
     if (client) client->listen(0.0);
 
     //Draw characters and their icons.
-    for (std::map<unsigned int, CharacterType *>::iterator i = characterTypes.begin(); i != characterTypes.end(); ++i)
+    for (auto i = characterTypes.begin(); i != characterTypes.end(); ++i)
     {
         i->second->clearInstances();
     }
@@ -201,7 +200,7 @@ void Game::update(os::Application *application, const float &dt)
     std::vector<draw::WorldIconInstance> iconInstances;
     const float fontHeightScale = 0.15f/fontTexture->getMaxIconDimensions().y;
     
-    for (std::map<unsigned int, CharacterInstance>::const_iterator i = characters.begin(); i != characters.end(); ++i)
+    for (auto i = characters.cbegin(); i != characters.cend(); ++i)
     {
         assert(characterTypes.find(i->second.type) != characterTypes.end());
         
@@ -223,8 +222,20 @@ void Game::update(os::Application *application, const float &dt)
         }
     }
     
-    for (std::map<unsigned int, CharacterType *>::iterator i = characterTypes.begin(); i != characterTypes.end(); ++i)
+    for (auto i = characterTypes.begin(); i != characterTypes.end(); ++i)
     {
+        if (i->first == selectedCharacterType && paintMode == PaintMode::Character)
+        {
+            //Show selected character type.
+            auto mouse = application->getMouseState(false);
+            auto voxelHit = voxelMap->getIntersection(cameraPosition, renderer->getWorldDirection(vec2(mouse.x, 1.0f - mouse.y)));
+            
+            if (voxelHit.distance > 0.0f)
+            {
+                i->second->addInstance(CharacterInstance(i->first, "", voxelHit.voxelIndices, 0, 0, selectedCharacterColor), 1.0f);
+            }
+        }
+
         i->second->updateInstances();
     }
     
@@ -324,10 +335,15 @@ void Game::update(os::Application *application, const float &dt)
             //We do not control a character.
             
             //Change edit mode.
-            if (application->isKeyPressedOnce('c')) paintMode = PaintMode::Character;
-            if (application->isKeyPressedOnce('v')) paintMode = PaintMode::VoxelReplace;
-            if (application->isKeyPressedOnce('b')) paintMode = PaintMode::VoxelAdd;
-            if (application->isKeyPressedOnce('p')) voxelMap->createVoxelPalette();
+            if (application->isKeyPressed('c')) paintMode = PaintMode::Character;
+            else if (application->isKeyPressed('v')) paintMode = PaintMode::VoxelReplace;
+            else if (application->isKeyPressed('b')) paintMode = PaintMode::VoxelAdd;
+            else paintMode = PaintMode::None;
+
+            if (application->isKeyPressed('p'))
+            {
+                voxelMap->createVoxelPalette();
+            }
             if (application->isKeyPressedOnce('\\'))
             {
                 Message msg(msg::mt::updateVoxelBasePlane);
@@ -496,6 +512,17 @@ void Game::update(os::Application *application, const float &dt)
             vec3 newPosition = cameraPosition;
             
             application->updateSimpleCamera(dt, newPosition, cameraOrientation);
+
+            if (paintMode == PaintMode::None)
+            {
+                const tiny::os::MouseState mouseState = application->getMouseState(true);
+                const vec2 mouseDelta = mouseSensitivity*dt*vec2(mouseState.x, mouseState.y);
+                
+                cameraOrientation = normalize(quatmul(quatrot(mouseDelta.x, tiny::vec3(0.0f, 1.0f, 0.0f)), 
+                                                quatmul(quatrot(mouseDelta.y, tiny::vec3(1.0f, 0.0f, 0.0f)), 
+                                                    cameraOrientation)));
+            }
+
             newPosition.y = std::max(newPosition.y, terrain->getHeight(vec2(newPosition.x, newPosition.z)) + cameraRadius);
             newPosition.x = clamp(newPosition.x, -0.5f*voxelMap->getScaledWidth(), 0.5f*voxelMap->getScaledWidth() - voxelMap->getScale());
             newPosition.y = clamp(newPosition.y, voxelMap->getScale() + cameraRadius, voxelMap->getScaledHeight() - voxelMap->getScale());
@@ -561,7 +588,6 @@ void Game::update(os::Application *application, const float &dt)
         
         //Tell the world renderer that the camera has changed.
         renderer->setCamera(cameraPosition, cameraOrientation);
-        snd::WorldSounderer::setCamera(cameraPosition, cameraOrientation);
     }
     
     //Update console status.
@@ -645,7 +671,7 @@ void Game::clear()
     //Reset camera.
     cameraPosition = vec3(0.0f, 10.0f, 0.0f);
     cameraOrientation = vec4(0.0f, 0.0f, 0.0f, 1.0f);
-    paintMode = PaintMode::VoxelReplace;
+    paintMode = PaintMode::None;
     paintVoxelType = 1;
     mouseTimer = 0.0f;
 
