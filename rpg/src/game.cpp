@@ -415,6 +415,8 @@ void Game::update(os::Application *application, const float &dt)
 
                         switch (paintMode)
                         {
+                            case PaintMode::None:
+                                break;
                             case PaintMode::Character:
                                 if (mouse.buttons == 1)
                                 {
@@ -762,7 +764,7 @@ void Game::readResources(const std::string &path)
     }
     
     //Assign voxel map to the sky effect.
-    //skyEffect->setVoxelMap(*(voxelMap->voxelTexture), voxelMap->getScale());
+    skyEffect->setVoxelMap(*(voxelMap->voxelTexture), voxelMap->getScale());
 }
 
 void Game::readConsoleResources(const std::string &path, TiXmlElement *el)
@@ -799,19 +801,19 @@ void Game::readSkyResources(const std::string &path, TiXmlElement *el)
     std::cerr << "Reading sky resources..." << std::endl;
     
     std::string textureFileName = "";
-    //int nrSteps = 1;
+    int nrSteps = 1;
     
     assert(std::string(el->Value()) == "sky");
     
     el->QueryStringAttribute("texture", &textureFileName);
-    //el->QueryIntAttribute("nr_shadow_steps", &nrSteps);
+    el->QueryIntAttribute("nr_shadow_steps", &nrSteps);
     
     //Create sky box mesh and read gradient texture.
     skyBoxMesh = new draw::StaticMesh(mesh::StaticMesh::createCubeMesh(-1.0e6));
     skyBoxDiffuseTexture = new draw::RGBTexture2D(img::Image::createSolidImage());
     skyBoxMesh->setDiffuseTexture(*skyBoxDiffuseTexture);
     
-    skyEffect = new draw::effects::SunSky(); //VoxelMap(nrSteps);
+    skyEffect = new draw::effects::SunSkyVoxelMap(nrSteps);
     skyGradientTexture = new draw::RGBTexture2D(img::io::readImage(path + textureFileName), draw::tf::filter);
     skyEffect->setSkyTexture(*skyGradientTexture);
     skyEffect->setSun(normalize(vec3(0.4f, 0.8f, 0.4f)));

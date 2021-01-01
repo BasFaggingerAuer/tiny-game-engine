@@ -118,7 +118,9 @@ std::string SunSkyVoxelMap::getFragmentShaderCode() const
 "   \n"
 "   //Voxel shadows.\n"
 "   \n"
+<< (nrSteps > 0 ? 
 "   diffuseFactor *= castRayShadow(positionToSun, position + epsilon*normal + 0.5f*voxelScale*vec3(voxelTextureSize.x, 0.0f, voxelTextureSize.z));\n"
+ : "") <<
 "   \n"
 "   vec3 objectColour = 1.4f*(0.5f + diffuseFactor)*diffuseColour;\n"
 "   \n"
