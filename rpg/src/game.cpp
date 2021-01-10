@@ -26,6 +26,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <cstdio>
 #include <cstdlib>
+#include <ctime>
 #include <sstream>
 
 #include "messages.h"
@@ -48,6 +49,7 @@ Player::~Player()
 Game::Game(const os::Application *application, const std::string &path) :
     aspectRatio(static_cast<float>(application->getScreenWidth())/static_cast<float>(application->getScreenHeight())),
     mouseSensitivity(64.0f),
+    mouseLook(true),
     lastCharacterIndex(1),
     selectedCharacterType(0),
     selectedCharacterColor(0.0f),
@@ -335,12 +337,20 @@ void Game::update(os::Application *application, const float &dt)
             //We do not control a character.
             
             //Change edit mode.
-            if (application->isKeyPressed('c')) paintMode = PaintMode::Character;
-            else if (application->isKeyPressed('v')) paintMode = PaintMode::VoxelReplace;
-            else if (application->isKeyPressed('b')) paintMode = PaintMode::VoxelAdd;
-            else paintMode = PaintMode::None;
+            if (mouseLook) {
+                if (application->isKeyPressed('c')) paintMode = PaintMode::Character;
+                else if (application->isKeyPressed('v')) paintMode = PaintMode::VoxelReplace;
+                else if (application->isKeyPressed('b')) paintMode = PaintMode::VoxelAdd;
+                else paintMode = PaintMode::None;
+            }
+            else {
+                if (application->isKeyPressedOnce('c')) paintMode = PaintMode::Character;
+                if (application->isKeyPressedOnce('v')) paintMode = PaintMode::VoxelReplace;
+                if (application->isKeyPressedOnce('b')) paintMode = PaintMode::VoxelAdd;
+                if (application->isKeyPressedOnce('n')) paintMode = PaintMode::None;
+            }
 
-            if (application->isKeyPressed('p'))
+            if (application->isKeyPressedOnce('p'))
             {
                 voxelMap->createVoxelPalette();
             }
@@ -353,10 +363,61 @@ void Game::update(os::Application *application, const float &dt)
             }
             if (application->isKeyPressedOnce('z'))
             {
-                std::string text = voxelMap->getCompressedVoxels();
+                //Export current map state to XML-friendly format.
+                const std::string levelFile = "level.xml";
                 
-                std::cout << "Voxel map description:" << std::endl;
-                std::cout << text << std::endl;
+                std::cerr << "Appending current map state to '" << levelFile << "'..." << std::endl;
+                
+                std::ofstream of(levelFile.c_str(), std::ios::app | std::ios::out);
+                std::time_t currentTime = std::time(nullptr);
+                
+                of << "Level export " << std::put_time(std::localtime(&currentTime), "%F %T") << ":" << std::endl;
+                
+                for (auto ch = characters.cbegin(); ch != characters.cend(); ++ch)
+                {
+                    Message msg(msg::mt::addCharacter);
+                    std::string str = "";
+
+                    msg << ch->first << ch->second.name << ch->second.type << ch->second.color;
+                    translator->messageToText(msg, str);
+                    of << "<init command=\"" << str << "\" />" << std::endl;
+                }
+
+                for (auto ch = characters.cbegin(); ch != characters.cend(); ++ch)
+                {
+                    Message msg(msg::mt::updateCharacter);
+                    std::string str = "";
+
+                    msg << ch->first << ch->second.position << ch->second.rotation << ch->second.state << ch->second.color;
+                    translator->messageToText(msg, str);
+                    of << "<init command=\"" << str << "\" />" << std::endl;
+                }
+
+                if (true)
+                {
+                    const std::string text = voxelMap->getCompressedVoxels();
+                    const int chunkSize = 255;
+                    int nrChunks = (static_cast<int>(text.size())/chunkSize) + (static_cast<int>(text.size()) % chunkSize == 0 ? 0 : 1);
+                    std::string str = "";
+
+                    Message msgStart(msg::mt::startVoxelMap);
+
+                    msgStart << nrChunks;
+                    translator->messageToText(msgStart, str);
+                    of << "<init command=\"" << str << "\" />" << std::endl;
+                    
+                    for (int ck = 0; ck < nrChunks; ++ck)
+                    {
+                        Message msg(msg::mt::chunkVoxelMap);
+                        
+                        msg << text.substr(chunkSize*ck, chunkSize);
+                        translator->messageToText(msg, str);
+                        of << "<init command=\"" << str << "\" />" << std::endl;
+                    }
+                }
+                of << "End of export." << std::endl << std::endl;
+                of.close();
+                std::cerr << "Export completed." << std::endl;
             }
             if (application->isKeyPressedOnce('x'))
             {
@@ -515,7 +576,7 @@ void Game::update(os::Application *application, const float &dt)
             
             application->updateSimpleCamera(dt, newPosition, cameraOrientation);
 
-            if (paintMode == PaintMode::None)
+            if (paintMode == PaintMode::None && mouseLook)
             {
                 const tiny::os::MouseState mouseState = application->getMouseState(true);
                 const vec2 mouseDelta = mouseSensitivity*dt*vec2(mouseState.x, mouseState.y);
@@ -733,6 +794,11 @@ void Game::readResources(const std::string &path)
         std::cerr << "This is not a valid RPG XML file!" << std::endl;
         throw std::exception();
     }
+    
+    int haveMouseLook = 1;
+    
+    root->QueryIntAttribute("mouse_look", &haveMouseLook);
+    mouseLook = (haveMouseLook != 0);
     
     //Read all parts of the XML file.
     for (TiXmlElement *el = root->FirstChildElement(); el; el = el->NextSiblingElement())

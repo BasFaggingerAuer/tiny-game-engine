@@ -1,5 +1,5 @@
 <?xml version="1.0" encoding="UTF-8"?>
-<rpg>
+<rpg mouse_look="0">
     <console font="font/mensch.ttf" texture_size="512" font_size="48" />
     <sky texture="img/sky.png" nr_shadow_steps="16" />
     <terrain heightmap="img/tasmania.png" scale_width="3" scale_height="1617" scale_far="16" scale_detail="1024" attribute_shader="shader/desert.glsl" offset_x="0.50" offset_y="0.55">
@@ -53,7 +53,7 @@
     <charactertype name="HumanOld" width="1.0" depth="1.0" height="2.0" mesh="rpg/old_man_standing_ready.dae" max_instances="64" />
     <charactertype name="Cyclops" width="2.0" depth="2.0" height="4.0" mesh="rpg/CyclopsGeneric.dae" max_instances="64" />
     <charactertype name="Dragon" width="4.0" depth="5.0" height="5.0" mesh="rpg/Adult_Red_Dragon.dae" max_instances="64" />
-    <charactertype name="KrakenTentacle" width="3.0" depth="3.0" height="6.0" mesh="rpg/Kraken_Tentacle.dae" max_instances="64" />
+    <charactertype name="KrakenTentacle" width="4.0" depth="4.0" height="6.0" mesh="rpg/Kraken_Tentacle.dae" max_instances="64" />
     <charactertype name="Kraken" width="9.0" depth="9.0" height="9.0" mesh="rpg/Kraken_for_Print3.dae" max_instances="64" />
     <charactertype name="Shark" width="1.0" depth="3.0" height="1.0" scale_height="1.0" mesh="rpg/great_white_2.dae" max_instances="64" />
     <charactertype name="Merman" width="1.0" depth="1.0" height="2.0" mesh="rpg/Merfolk_DandD_character.dae" max_instances="64" />
@@ -67,16 +67,41 @@
     <charactertype name="Chriphon" width="1.0" depth="2.0" height="4.0" mesh="rpg/gryphonflying.dae" max_instances="64" />
     <init command="terrainoffset 0.50 0.55" />
     <init command="sundirection 0.3 0.6 0.4" />
-    <init command="addcharacter 1 'Laertes' 1 0.75" />
-    <init command="updatecharacter 1 -1 0 0 0 0.75" />
-    <init command="addcharacter 2 'Rodan' 2 0.15" />
-    <init command="updatecharacter 2 0 0 0 0 0.15" />
-    <init command="addcharacter 3 'Tollie' 6 0.30" />
-    <init command="updatecharacter 3 1 0 1 0 0.30" />
-    <init command="addcharacter 4 'Julius' 3 0.45" />
-    <init command="updatecharacter 4 -1 0 1 0 0.45" />
-    <init command="addcharacter 5 'Sven' 4 0.00" />
-    <init command="updatecharacter 5 0 0 1 0 0.00" />
-    <init command="addcharacter 6 'Augustus' 5 0.60" />
-    <init command="updatecharacter 6 1 0 0 0 0.60" />
+<init command="addcharacter 1  'Laertes' 1 0.75" />
+<init command="addcharacter 2  'Rodan' 2 0.15" />
+<init command="addcharacter 3  'Tollie' 6 0.3" />
+<init command="addcharacter 4  'Julius' 3 0.45" />
+<init command="addcharacter 5  'Sven' 4 0" />
+<init command="addcharacter 6  'Augustus' 5 0.6" />
+<init command="addcharacter 7  'Cyclops' 17 -0.75" />
+<init command="addcharacter 8  'Cyclops' 17 -0.75" />
+<init command="addcharacter 9  'Cyclops' 17 -0.75" />
+<init command="addcharacter 10  'Cyclops' 17 -0.75" />
+<init command="addcharacter 11  'Cyclops' 17 -0.75" />
+<init command="addcharacter 12  'Cyclops' 17 -0.75" />
+<init command="addcharacter 13  'KrakenTentacle' 19 -0.75" />
+<init command="addcharacter 14  'HumanWingedGuardian' 14 0.875" />
+<init command="addcharacter 15  'HumanWingedGuardian' 14 1" />
+<init command="addcharacter 16  'HumanWingedGuardian' 14 0.625" />
+<init command="addcharacter 17  'HumanWingedGuardian' 14 0.375" />
+<init command="updatecharacter 1 -3 0 -13 -45 1 0.75" />
+<init command="updatecharacter 2 -7 0 -15 0 0 0.15" />
+<init command="updatecharacter 3 4 0 -11 0 1 0.3" />
+<init command="updatecharacter 4 -2 0 -11 0 1 0.45" />
+<init command="updatecharacter 5 4 0 -9 0 0 0" />
+<init command="updatecharacter 6 0 0 3 0 0 0.6" />
+<init command="updatecharacter 7 19 0 -4 0 0 -0.75" />
+<init command="updatecharacter 8 19 0 -2 0 0 -0.75" />
+<init command="updatecharacter 9 19 0 0 0 0 -0.75" />
+<init command="updatecharacter 10 19 0 2 0 0 -0.75" />
+<init command="updatecharacter 11 19 0 4 0 0 -0.75" />
+<init command="updatecharacter 12 19 0 6 0 0 -0.75" />
+<init command="updatecharacter 13 2 0 -11 0 0 -0.75" />
+<init command="updatecharacter 14 -2 0 -13 0 0 0.875" />
+<init command="updatecharacter 15 0 0 -10 0 0 1" />
+<init command="updatecharacter 16 5 0 -8 -180 0 0.625" />
+<init command="updatecharacter 17 0 0 7 -180 0 0.375" />
+<init command="startvoxelmap 2" />
+<init command="chunkvoxelmap  'abaiaaeaiqAiaGuScVigYGzyafaoqcSGgWdIGjubCHnOdFGqmcL4eTi50jO0SAG+oGJvSdWa2ayaBbmQCLpgqHkw5QuJsvTA1SwXakLfOEQDSHtNf4dWj8cOtVa*GZbSfqc*a0kGd48bN+4mKbSbWa2cyaNf4fqBaSInaRAahd40gGf4ybN2aSchd40gGf4yvN2aSkhd40zboTbqfwbOaRamGZcC6SiDQBHD9QFrfhjiiLf+40lGo9cyeo9cqbw'" />
+<init command="chunkvoxelmap  'bSkNolWPJuD6ScBa6yaNfydqhl4SQbSbOJbCwGnaDSInagWgalydGbSbqb2ayblb23a*a0kGhyfGc8cOZcC6mbRauGxaDgLthdyfWjCMMnagWgalydGbSfqc*a0re*a0kGd44WeC0AcoYAahVMGJLwWrRj4iRbC8AcowAbhTMGJSgWXRj4yPfC0AcoYAahVMGZ7NW5bn48++tDLe'" />
 </rpg>

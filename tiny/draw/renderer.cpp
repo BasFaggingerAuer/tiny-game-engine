@@ -513,7 +513,8 @@ std::vector<uint64_t> Renderer::render() const
         GLuint64 query = 0;
 
         GL_CHECK(glGetQueryObjectui64v(renderable->timeQuery, GL_QUERY_RESULT, &query));
-
+        
+        //TODO: Include renderable types using C++ typeid from <typeinfo>.
         renderTimesInNs.push_back(static_cast<int64_t>(query));
     }
 #endif

@@ -108,6 +108,7 @@ class Game
         //Renderer.
         const float aspectRatio;
         const float mouseSensitivity;
+        bool mouseLook;
         tiny::draw::WorldRenderer *renderer;
         std::vector<uint64_t> renderTimesInNs;
         uint64_t renderNrFrames;
