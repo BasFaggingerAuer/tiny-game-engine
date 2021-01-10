@@ -122,22 +122,30 @@ void CharacterType::addInstance(const CharacterInstance &instance, const float &
         const float a = (M_PI/180.0f)*static_cast<float>(instance.rotation);
         const vec4 r = quatrot(a, vec3(0.0f, 1.0f, 0.0f));
         vec4 rState = vec4(0.0f, 0.0f, 0.0f, 1.0f);
+        float s = 1.0f;
         
-        if (instance.state == 1)
+        //Downed characters.
+        if ((instance.state & 1) != 0)
         {
             rState = quatrot(0.5f*M_PI, vec3(1.0f, 0.0f, 0.0f));
         }
         
-        instances[nrInstances] = draw::StaticMeshInstance(vec4(static_cast<float>(instance.position.x) + 0.5f - cosf(a)*0.5f*(size.x - 1.0f) + sinf(a)*0.5f*(size.z - 1.0f),
+        //Enlarged characters.
+        if ((instance.state & 2) != 0)
+        {
+            s = 2.0f;
+        }
+        
+        instances[nrInstances] = draw::StaticMeshInstance(vec4(static_cast<float>(instance.position.x) + 0.5f - cosf(a)*0.5f*(s*size.x - 1.0f) + sinf(a)*0.5f*(s*size.z - 1.0f),
                                                                static_cast<float>(instance.position.y + baseHeight),
-                                                               static_cast<float>(instance.position.z) + 0.5f - sinf(a)*0.5f*(size.x - 1.0f) - cosf(a)*0.5f*(size.z - 1.0f),
-                                                               1.0f),
+                                                               static_cast<float>(instance.position.z) + 0.5f - sinf(a)*0.5f*(s*size.x - 1.0f) - cosf(a)*0.5f*(s*size.z - 1.0f),
+                                                               s),
                                                             quatmul(r, rState),
                                                             instance.getColor());
-        shadowInstances[nrInstances] = draw::StaticMeshInstance(vec4(static_cast<float>(instance.position.x) + 0.5f - cosf(a)*0.5f*(size.x - 1.0f) + sinf(a)*0.5f*(size.z - 1.0f),
+        shadowInstances[nrInstances] = draw::StaticMeshInstance(vec4(static_cast<float>(instance.position.x) + 0.5f - cosf(a)*0.5f*(s*size.x - 1.0f) + sinf(a)*0.5f*(s*size.z - 1.0f),
                                                                static_cast<float>(baseHeight),
-                                                               static_cast<float>(instance.position.z) + 0.5f - sinf(a)*0.5f*(size.x - 1.0f) - cosf(a)*0.5f*(size.z - 1.0f),
-                                                               1.0f),
+                                                               static_cast<float>(instance.position.z) + 0.5f - sinf(a)*0.5f*(s*size.x - 1.0f) - cosf(a)*0.5f*(s*size.z - 1.0f),
+                                                               s),
                                                             r,
                                                             instance.getColor());
         ++nrInstances;

@@ -179,6 +179,7 @@ void Game::updateConsole() const
             strm << " <Space>: Return to voxel edit mode" << std::endl;
             strm << " WASDQE = Move" << std::endl;
             strm << " F = Knock prone" << std::endl;
+            strm << " G = Enlarge" << std::endl;
         }
         
         font->setText(-1.0f, -1.0f, 0.05f, aspectRatio, strm.str(), *fontTexture);
@@ -605,7 +606,8 @@ void Game::update(os::Application *application, const float &dt)
             if (application->isKeyPressedOnce('e')) chr.position.y = std::max(0, chr.position.y - 1);
             if (application->isKeyPressedOnce('j')) chr.rotation += 45;
             if (application->isKeyPressedOnce('l')) chr.rotation -= 45;
-            if (application->isKeyPressedOnce('f')) chr.state = (chr.state != 0 ? 0 : 1);
+            if (application->isKeyPressedOnce('f')) chr.state ^= 1;
+            if (application->isKeyPressedOnce('g')) chr.state ^= 2;
             
             //Did the user click anywhere?
             auto mouse = application->getMouseState(false);
