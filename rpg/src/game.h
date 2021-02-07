@@ -110,7 +110,7 @@ class Game
         const float mouseSensitivity;
         bool mouseLook;
         tiny::draw::WorldRenderer *renderer;
-        std::vector<uint64_t> renderTimesInNs;
+        tiny::draw::RenderTimings renderTimesInNs;
         uint64_t renderNrFrames;
         
         tiny::vec3 cameraPosition;

@@ -126,6 +126,7 @@ class Terrain : public Renderable
     public:
         Terrain(const int &, const int &);
         ~Terrain();
+        std::string getTypeName() const;
         
         template <typename TextureType1, typename TextureType2>
         void setHeightTextures(const TextureType1 &heightTexture,

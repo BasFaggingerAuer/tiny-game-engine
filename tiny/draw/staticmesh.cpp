@@ -57,6 +57,10 @@ StaticMesh::~StaticMesh()
 
 }
 
+std::string StaticMesh::getTypeName() const {
+    return "StaticMesh";
+}
+
 size_t StaticMesh::bufferSize(void) const
 {
     return indices.size()*sizeof(unsigned int) + vertices.size()*sizeof(tiny::mesh::StaticMeshVertex);

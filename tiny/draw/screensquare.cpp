@@ -40,6 +40,10 @@ ScreenFillingSquareVertexBufferInterpreter::~ScreenFillingSquareVertexBufferInte
     
 }
 
+std::string ScreenFillingSquare::getTypeName() const {
+    return "ScreenFillingSquare";
+}
+
 void ScreenFillingSquareVertexBufferInterpreter::setSquareDimensions(
         float left, float top, float right, float bottom)
 {

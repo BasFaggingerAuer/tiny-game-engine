@@ -50,6 +50,7 @@ class ScreenFillingSquare : public Renderable
     public:
         ScreenFillingSquare();
         ~ScreenFillingSquare();
+        std::string getTypeName() const;
         
         std::string getVertexShaderCode() const;
 

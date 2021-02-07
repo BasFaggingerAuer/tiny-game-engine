@@ -51,6 +51,10 @@ AnimatedMeshHorde::~AnimatedMeshHorde()
 
 }
 
+std::string AnimatedMeshHorde::getTypeName() const {
+    return "AnimatedMeshHorde";
+}
+
 std::string AnimatedMeshHorde::getVertexShaderCode() const
 {
     return

@@ -46,6 +46,7 @@ class Renderable
         Renderable(const Renderable &a_renderable);
         virtual ~Renderable();
         
+        virtual std::string getTypeName() const;
         virtual std::string getVertexShaderCode() const = 0;
         virtual std::string getGeometryShaderCode() const;
         virtual std::string getFragmentShaderCode() const = 0;

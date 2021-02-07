@@ -94,6 +94,7 @@ class AnimatedMesh : public Renderable
     public:
         AnimatedMesh(const tiny::mesh::AnimatedMesh &);
         ~AnimatedMesh();
+        std::string getTypeName() const;
         
         template <typename TextureType>
         void setAnimationTexture(const TextureType &texture)

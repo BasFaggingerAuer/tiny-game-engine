@@ -116,6 +116,8 @@ class BoundRenderable
 
 }
 
+typedef std::vector<std::pair<std::string, uint64_t> > RenderTimings;
+
 /*! \p Renderer : a class capable of drawing \p Renderable objects to \p RenderTarget objects.
  */
 class Renderer
@@ -168,7 +170,7 @@ class Renderer
         }
         
         void clearTargets() const;
-        std::vector<uint64_t> render() const;
+        RenderTimings render() const;
         void setViewportSize(const int &, const int &);
         
     protected:

@@ -69,6 +69,7 @@ class StaticMeshHorde : public Renderable
     public:
         StaticMeshHorde(const tiny::mesh::StaticMesh &, const size_t &);
         ~StaticMeshHorde();
+        std::string getTypeName() const;
         
         template <typename TextureType>
         void setDiffuseTexture(const TextureType &texture)

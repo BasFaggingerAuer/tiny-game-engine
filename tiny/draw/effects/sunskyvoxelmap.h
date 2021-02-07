@@ -39,6 +39,7 @@ class SunSkyVoxelMap : public tiny::draw::ScreenFillingSquare
     public:
         SunSkyVoxelMap(const int &, const float & = 1.0e-3f);
         ~SunSkyVoxelMap();
+        std::string getTypeName() const;
         
         std::string getFragmentShaderCode() const;
         

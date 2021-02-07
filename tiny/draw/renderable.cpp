@@ -37,6 +37,10 @@ Renderable::~Renderable()
     GL_CHECK(glDeleteVertexArrays(1, &vertexArrayIndex));
 }
 
+std::string Renderable::getTypeName() const {
+    return "Renderable";
+}
+
 std::string Renderable::getGeometryShaderCode() const
 {
     return "";

@@ -38,6 +38,10 @@ VoxelMap::~VoxelMap()
 
 }
 
+std::string VoxelMap::getTypeName() const {
+    return "VoxelMap";
+}
+
 std::string VoxelMap::getFragmentShaderCode() const
 {
     std::stringstream strm;

@@ -63,6 +63,7 @@ class ScreenIconHorde : public Renderable
     public:
         ScreenIconHorde(const size_t &);
         ~ScreenIconHorde();
+        std::string getTypeName() const;
         
         std::string getVertexShaderCode() const;
         std::string getGeometryShaderCode() const;
@@ -146,6 +147,7 @@ class WorldIconHorde : public Renderable
     public:
         WorldIconHorde(const size_t &, const bool &);
         ~WorldIconHorde();
+        std::string getTypeName() const;
         
         std::string getVertexShaderCode() const;
         std::string getGeometryShaderCode() const;

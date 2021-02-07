@@ -48,6 +48,7 @@ class VoxelMap : public tiny::draw::ScreenFillingSquare
     public:
         VoxelMap(const int &, const float & = 1.4f, const float & = 1.0e-6f);
         ~VoxelMap();
+        std::string getTypeName() const;
         
         template <typename TextureType>
         VoxelIntersection getIntersection(const TextureType &voxelTexture, const vec3 &a_position, const vec3 &a_direction) const

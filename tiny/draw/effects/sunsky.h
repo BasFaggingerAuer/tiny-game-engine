@@ -39,6 +39,7 @@ class SunSky : public tiny::draw::ScreenFillingSquare
     public:
         SunSky();
         ~SunSky();
+        std::string getTypeName() const;
         
         std::string getFragmentShaderCode() const;
         

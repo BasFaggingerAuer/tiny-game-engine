@@ -69,6 +69,7 @@ class AnimatedMeshHorde : public Renderable
     public:
         AnimatedMeshHorde(const tiny::mesh::AnimatedMesh &, const size_t &);
         ~AnimatedMeshHorde();
+        std::string getTypeName() const;
         
         template <typename TextureType>
         void setAnimationTexture(const TextureType &texture)

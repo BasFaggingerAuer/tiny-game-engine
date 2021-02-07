@@ -37,6 +37,10 @@ SunSkyVoxelMap::~SunSkyVoxelMap()
 
 }
 
+std::string SunSkyVoxelMap::getTypeName() const {
+    return "SunSkyVoxelMap";
+}
+
 std::string SunSkyVoxelMap::getFragmentShaderCode() const
 {
     std::stringstream strm;

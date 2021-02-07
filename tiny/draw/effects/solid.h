@@ -39,6 +39,7 @@ class Solid : public tiny::draw::ScreenFillingSquare
     public:
         Solid();
         ~Solid();
+        std::string getTypeName() const;
         
         std::string getFragmentShaderCode() const;
         

@@ -35,6 +35,8 @@
         <cubemap all="img/cm_tile_red.png" />
         <cubemap all="img/cm_lava.png" />
     </voxelmap>
+    <charactertype name="HumanAchaeus" width="1.0" depth="1.0" height="2.0" mesh="rpg/Achaeus.dae" max_instances="64" />
+    <charactertype name="HumanGentleman" width="1.0" depth="1.0" height="1.6" mesh="rpg/VictorianGentleman.dae" max_instances="64" />
     <charactertype name="HumanRanger" width="1.0" depth="1.0" height="2.0" mesh="rpg/ElfRanger_28mm.dae" max_instances="64" />
     <charactertype name="HumanMage" width="1.0" depth="1.0" height="2.0" mesh="rpg/Arch_Mage.dae" max_instances="64" />
     <charactertype name="HumanPaladin" width="1.0" depth="1.0" height="2.0" mesh="rpg/paladin_sword_down.dae" max_instances="64" />
@@ -67,41 +69,6 @@
     <charactertype name="Chriphon" width="1.0" depth="2.0" height="4.0" mesh="rpg/gryphonflying.dae" max_instances="64" />
     <init command="terrainoffset 0.50 0.55" />
     <init command="sundirection 0.3 0.6 0.4" />
-<init command="addcharacter 1  'Laertes' 1 0.75" />
-<init command="addcharacter 2  'Rodan' 2 0.15" />
-<init command="addcharacter 3  'Tollie' 6 0.3" />
-<init command="addcharacter 4  'Julius' 3 0.45" />
-<init command="addcharacter 5  'Sven' 4 0" />
-<init command="addcharacter 6  'Augustus' 5 0.6" />
-<init command="addcharacter 7  'Cyclops' 17 -0.75" />
-<init command="addcharacter 8  'Cyclops' 17 -0.75" />
-<init command="addcharacter 9  'Cyclops' 17 -0.75" />
-<init command="addcharacter 10  'Cyclops' 17 -0.75" />
-<init command="addcharacter 11  'Cyclops' 17 -0.75" />
-<init command="addcharacter 12  'Cyclops' 17 -0.75" />
-<init command="addcharacter 13  'KrakenTentacle' 19 -0.75" />
-<init command="addcharacter 14  'HumanWingedGuardian' 14 0.875" />
-<init command="addcharacter 15  'HumanWingedGuardian' 14 1" />
-<init command="addcharacter 16  'HumanWingedGuardian' 14 0.625" />
-<init command="addcharacter 17  'HumanWingedGuardian' 14 0.375" />
-<init command="updatecharacter 1 -3 0 -13 -45 1 0.75" />
-<init command="updatecharacter 2 -7 0 -15 0 0 0.15" />
-<init command="updatecharacter 3 4 0 -11 0 1 0.3" />
-<init command="updatecharacter 4 -2 0 -11 0 1 0.45" />
-<init command="updatecharacter 5 4 0 -9 0 0 0" />
-<init command="updatecharacter 6 0 0 3 0 0 0.6" />
-<init command="updatecharacter 7 19 0 -4 0 0 -0.75" />
-<init command="updatecharacter 8 19 0 -2 0 0 -0.75" />
-<init command="updatecharacter 9 19 0 0 0 0 -0.75" />
-<init command="updatecharacter 10 19 0 2 0 0 -0.75" />
-<init command="updatecharacter 11 19 0 4 0 0 -0.75" />
-<init command="updatecharacter 12 19 0 6 0 0 -0.75" />
-<init command="updatecharacter 13 2 0 -11 0 0 -0.75" />
-<init command="updatecharacter 14 -2 0 -13 0 0 0.875" />
-<init command="updatecharacter 15 0 0 -10 0 0 1" />
-<init command="updatecharacter 16 5 0 -8 -180 0 0.625" />
-<init command="updatecharacter 17 0 0 7 -180 0 0.375" />
-<init command="startvoxelmap 2" />
-<init command="chunkvoxelmap  'abaiaaeaiqAiaGuScVigYGzyafaoqcSGgWdIGjubCHnOdFGqmcL4eTi50jO0SAG+oGJvSdWa2ayaBbmQCLpgqHkw5QuJsvTA1SwXakLfOEQDSHtNf4dWj8cOtVa*GZbSfqc*a0kGd48bN+4mKbSbWa2cyaNf4fqBaSInaRAahd40gGf4ybN2aSchd40gGf4yvN2aSkhd40zboTbqfwbOaRamGZcC6SiDQBHD9QFrfhjiiLf+40lGo9cyeo9cqbw'" />
-<init command="chunkvoxelmap  'bSkNolWPJuD6ScBa6yaNfydqhl4SQbSbOJbCwGnaDSInagWgalydGbSbqb2ayblb23a*a0kGhyfGc8cOZcC6mbRauGxaDgLthdyfWjCMMnagWgalydGbSfqc*a0re*a0kGd44WeC0AcoYAahVMGJLwWrRj4iRbC8AcowAbhTMGJSgWXRj4yPfC0AcoYAahVMGZ7NW5bn48++tDLe'" />
+    <init command="addcharacter 1 'Achaeus' 1 0.88" />
+    <init command="addcharacter 2 'Powell' 2 0.00" />
 </rpg>

@@ -55,7 +55,7 @@ class WorldRenderer
         void freeScreenRenderable(const unsigned int &);
         
         void clearTargets() const;
-        std::vector<uint64_t> render() const;
+        RenderTimings render() const;
         
     private:
         const float aspectRatio;

@@ -33,6 +33,10 @@ SunSky::~SunSky()
 
 }
 
+std::string SunSky::getTypeName() const {
+    return "SunSky";
+}
+
 std::string SunSky::getFragmentShaderCode() const
 {
     return std::string(

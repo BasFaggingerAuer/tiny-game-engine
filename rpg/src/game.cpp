@@ -71,7 +71,6 @@ Game::Game(const os::Application *application, const std::string &path) :
     
     unsigned int index = 0;
     
-    renderer->addWorldRenderable(index++, skyBoxMesh);
     renderer->addWorldRenderable(index++, terrain->terrain);
     
     for (std::map<unsigned int, CharacterType *>::const_iterator i = characterTypes.begin(); i != characterTypes.end(); ++i)
@@ -81,6 +80,7 @@ Game::Game(const os::Application *application, const std::string &path) :
     }
     
     renderer->addWorldRenderable(index++, voxelMap->voxelMap);
+    renderer->addWorldRenderable(index++, skyBoxMesh);
     
     renderer->addScreenRenderable(index++, skyEffect, false, false);
     renderer->addScreenRenderable(index++, fontWorld, false, false, draw::BlendMode::BlendMix);
@@ -150,7 +150,7 @@ void Game::updateConsole() const
         if (characterIndex == 0)
         {
             strm << "\\#fff";
-            strm << " Z/X = Print/Optimize voxels" << std::endl;
+            strm << " Z = Export game state" << std::endl;
             strm << (paintMode == PaintMode::Character ? "*" : " ") << "C = Create/delete character" << std::endl;
             strm << (paintMode == PaintMode::VoxelReplace ? "*" : " ") << "V = Replace/Pick voxels" << std::endl;
             strm << (paintMode == PaintMode::VoxelAdd ? "*" : " ") << "B = Add/Remove voxels" << std::endl;
@@ -182,9 +182,11 @@ void Game::updateConsole() const
             strm << " G = Enlarge" << std::endl;
         }
         
+        strm << "Controls:" << std::endl;
+        
         font->setText(-1.0f, -1.0f, 0.05f, aspectRatio, strm.str(), *fontTexture);
         consoleBackground->setColour(vec4(0.0f, 0.0f, 0.0f, 0.3f));
-        consoleBackground->setSquareDimensions(-1.0f, 1.0f, -0.6f, -1.0f);
+        consoleBackground->setSquareDimensions(-1.0f, -0.35f, -0.55f, -1.0f);
     }
 }
 
@@ -420,10 +422,12 @@ void Game::update(os::Application *application, const float &dt)
                 of.close();
                 std::cerr << "Export completed." << std::endl;
             }
+            /*
             if (application->isKeyPressedOnce('x'))
             {
                 draw::VoxelMap::setDistanceMap(*(voxelMap->voxelTexture));
             }
+            */
             
             //Did the user click anywhere?
             auto mouse = application->getMouseState(false);
@@ -678,16 +682,17 @@ void Game::render()
         {
             for (size_t i = 0; i < renderTimesInNs.size(); ++i)
             {
-                renderTimesInNs[i] += deltaTimes[i];
+                assert(renderTimesInNs[i].first == deltaTimes[i].first);
+                renderTimesInNs[i].second += deltaTimes[i].second;
             }
 
-            if (++renderNrFrames >= 60)
+            if (++renderNrFrames >= 240)
             {
-                std::cerr << "Render times in (us) for " << renderNrFrames << " frames:" << std::endl;
+                std::cerr << "Render times in (ms) for " << renderNrFrames << " frames:" << std::endl;
 
                 for (auto i = renderTimesInNs.cbegin(); i != renderTimesInNs.cend(); ++i)
                 {
-                    std::cerr << "    " << 1.0e-3*static_cast<double>(*i)/static_cast<double>(renderNrFrames) << std::endl;
+                    std::cerr << "    " << std::setw(16) << i->first << ": " << std::fixed << std::setw(1) << std::setprecision(4) << 1.0e-6*static_cast<double>(i->second)/static_cast<double>(renderNrFrames) << std::endl;
                 }
 
                 renderTimesInNs = deltaTimes;

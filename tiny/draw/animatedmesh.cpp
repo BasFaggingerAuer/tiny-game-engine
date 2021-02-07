@@ -73,6 +73,10 @@ AnimatedMesh::~AnimatedMesh()
 
 }
 
+std::string AnimatedMesh::getTypeName() const {
+    return "AnimatedMesh";
+}
+
 size_t AnimatedMesh::bufferSize(void) const
 {
     return indices.size()*sizeof(unsigned int) + vertices.size()*sizeof(tiny::mesh::AnimatedMeshVertex);

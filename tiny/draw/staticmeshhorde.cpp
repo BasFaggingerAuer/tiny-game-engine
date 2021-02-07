@@ -50,6 +50,10 @@ StaticMeshHorde::~StaticMeshHorde()
 
 }
 
+std::string StaticMeshHorde::getTypeName() const {
+    return "StaticMeshHorde";
+}
+
 std::string StaticMeshHorde::getVertexShaderCode() const
 {
     return

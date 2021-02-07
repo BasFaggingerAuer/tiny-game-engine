@@ -29,6 +29,10 @@ Solid::~Solid()
 
 }
 
+std::string Solid::getTypeName() const {
+    return "Solid";
+}
+
 std::string Solid::getFragmentShaderCode() const
 {
     return std::string(

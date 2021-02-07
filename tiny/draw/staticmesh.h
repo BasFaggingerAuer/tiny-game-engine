@@ -53,6 +53,7 @@ class StaticMesh : public Renderable
     public:
         StaticMesh(const tiny::mesh::StaticMesh &);
         ~StaticMesh();
+        std::string getTypeName() const;
         
         template <typename TextureType>
         void setDiffuseTexture(const TextureType &texture)

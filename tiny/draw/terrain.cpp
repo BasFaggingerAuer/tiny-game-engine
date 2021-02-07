@@ -273,6 +273,10 @@ Terrain::~Terrain()
 
 }
 
+std::string Terrain::getTypeName() const {
+    return "Terrain";
+}
+
 std::string Terrain::getVertexShaderCode() const
 {
     return std::string(

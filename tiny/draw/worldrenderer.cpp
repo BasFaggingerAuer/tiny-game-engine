@@ -94,7 +94,7 @@ void WorldRenderer::clearTargets() const
     worldToScreenRenderer.clearTargets();
 }
 
-std::vector<uint64_t> WorldRenderer::render() const
+RenderTimings WorldRenderer::render() const
 {
     auto times1 = worldToScreenRenderer.render();
     auto times2 = screenToColourRenderer.render();

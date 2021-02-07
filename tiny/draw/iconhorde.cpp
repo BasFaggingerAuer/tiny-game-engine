@@ -49,6 +49,10 @@ ScreenIconHorde::~ScreenIconHorde()
 
 }
 
+std::string ScreenIconHorde::getTypeName() const {
+    return "ScreenIconHorde";
+}
+
 std::string ScreenIconHorde::getVertexShaderCode() const
 {
     return std::string(
@@ -332,6 +336,10 @@ WorldIconHorde::WorldIconHorde(const size_t &a_maxNrIcons, const bool &a_fullIco
 WorldIconHorde::~WorldIconHorde()
 {
 
+}
+
+std::string WorldIconHorde::getTypeName() const {
+    return "WorldIconHorde";
 }
 
 std::string WorldIconHorde::getVertexShaderCode() const

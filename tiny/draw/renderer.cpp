@@ -407,7 +407,7 @@ void Renderer::clearTargets() const
     GL_CHECK(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0));
 }
 
-std::vector<uint64_t> Renderer::render() const
+RenderTimings Renderer::render() const
 {
     GL_CHECK(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, frameBufferIndex));
     //GL_CHECK(glPushAttrib(GL_VIEWPORT_BIT | GL_ENABLE_BIT));
@@ -500,7 +500,7 @@ std::vector<uint64_t> Renderer::render() const
     //GL_CHECK(glPopAttrib());
     GL_CHECK(glBindFramebuffer(GL_DRAW_FRAMEBUFFER, 0));
 
-    std::vector<uint64_t> renderTimesInNs;
+    RenderTimings renderTimesInNs;
 
 #ifdef RENDERER_PERFMON
     //Do performance querying after all rendering is complete to allow asynchronous queries.
@@ -514,8 +514,7 @@ std::vector<uint64_t> Renderer::render() const
 
         GL_CHECK(glGetQueryObjectui64v(renderable->timeQuery, GL_QUERY_RESULT, &query));
         
-        //TODO: Include renderable types using C++ typeid from <typeinfo>.
-        renderTimesInNs.push_back(static_cast<int64_t>(query));
+        renderTimesInNs.push_back(std::make_pair(renderable->renderable->getTypeName(), static_cast<int64_t>(query)));
     }
 #endif
     
