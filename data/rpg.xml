@@ -36,7 +36,8 @@
         <cubemap all="img/cm_lava.png" />
     </voxelmap>
     <charactertype name="HumanAchaeus" width="1.0" depth="1.0" height="2.0" mesh="rpg/Achaeus.dae" max_instances="64" />
-    <charactertype name="HumanGentleman" width="1.0" depth="1.0" height="1.6" mesh="rpg/VictorianGentleman.dae" max_instances="64" />
+    <charactertype name="HumanGentleman" width="1.0" depth="1.0" height="1.5" mesh="rpg/VictorianGentleman.dae" max_instances="64" />
+    <charactertype name="HumanHoplite" width="1.0" depth="1.0" height="2.3" scale_height="0.01" mesh="rpg/Hoplite45deg.dae" max_instances="64" />
     <charactertype name="HumanRanger" width="1.0" depth="1.0" height="2.0" mesh="rpg/ElfRanger_28mm.dae" max_instances="64" />
     <charactertype name="HumanMage" width="1.0" depth="1.0" height="2.0" mesh="rpg/Arch_Mage.dae" max_instances="64" />
     <charactertype name="HumanPaladin" width="1.0" depth="1.0" height="2.0" mesh="rpg/paladin_sword_down.dae" max_instances="64" />
@@ -67,8 +68,10 @@
     <charactertype name="Shell" width="3.0" depth="3.0" height="2.0" mesh="rpg/Large_Shell.dae" scale_height="1.0" max_instances="64" />
     <charactertype name="Tree" width="2.0" depth="2.0" height="8.0" scale_height="0.05" mesh="rpg/Simple_Pine_Tree.dae" max_instances="64" />
     <charactertype name="Chriphon" width="1.0" depth="2.0" height="4.0" mesh="rpg/gryphonflying.dae" max_instances="64" />
+    <charactertype name="Wolf" width="1.0" depth="1.0" height="1.0" mesh="moba/wolf_run.dae" max_instances="64" />
     <init command="terrainoffset 0.50 0.55" />
     <init command="sundirection 0.3 0.6 0.4" />
     <init command="addcharacter 1 'Achaeus' 1 0.88" />
     <init command="addcharacter 2 'Powell' 2 0.00" />
+    <init command="addcharacter 3 'Korakisfiri' 3 0.30" />
 </rpg>

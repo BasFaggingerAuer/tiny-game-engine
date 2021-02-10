@@ -74,13 +74,14 @@ CharacterType::CharacterType(const std::string &path, TiXmlElement *el)
         }
     }
     
+    const float plateauHeight = 0.05f;
     const std::pair<vec3, vec3> lowerBoundingBox = lowerMesh.getBoundingBox();
     const vec3 o = vec3(0.5f*(lowerBoundingBox.first.x + lowerBoundingBox.second.x), lowerBoundingBox.first.y, 0.5f*(lowerBoundingBox.first.z + lowerBoundingBox.second.z));
     const float s = minComponent(vec3(abs(size.xz() - 0.1f)/abs(lowerBoundingBox.second.xz() - lowerBoundingBox.first.xz()), abs(size.y)/abs(boundingBox.second.y - boundingBox.first.y)));
     
     for (std::vector<mesh::StaticMeshVertex>::iterator i = mesh.vertices.begin(); i != mesh.vertices.end(); ++i)
     {
-        i->position = s*(i->position - o);
+        i->position = s*(i->position - o) + vec3(0.0f, plateauHeight, 0.0f);
     }
     
     horde = new draw::StaticMeshHorde(mesh, maxNrInstances);
@@ -91,7 +92,7 @@ CharacterType::CharacterType(const std::string &path, TiXmlElement *el)
     shadowDiffuseTexture = new draw::RGBTexture2D(img::Image::createSolidImage());
     shadowNormalTexture = new draw::RGBTexture2D(img::Image::createUpNormalImage());
     
-    shadowHorde = new draw::StaticMeshHorde(mesh::StaticMesh::createBoxMesh(0.5f*size.x - 0.05f, 0.05f, 0.5f*size.z - 0.05f), maxNrInstances);
+    shadowHorde = new draw::StaticMeshHorde(mesh::StaticMesh::createBoxMesh(0.5f*size.x - 0.05f, plateauHeight, 0.5f*size.z - 0.05f), maxNrInstances);
     shadowHorde->setDiffuseTexture(*shadowDiffuseTexture);
     shadowHorde->setNormalTexture(*shadowNormalTexture);
     shadowInstances.resize(maxNrInstances);
