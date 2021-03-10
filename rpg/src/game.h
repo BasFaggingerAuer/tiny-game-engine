@@ -118,6 +118,8 @@ class Game
         float mouseTimer;
         PaintMode paintMode;
         int paintVoxelType;
+        bool startedVoxelSelection;
+        tiny::ivec3 voxelSelectionStart;
         
         //Console and font.
         bool consoleMode;

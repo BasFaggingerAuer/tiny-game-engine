@@ -71,7 +71,14 @@
     <charactertype name="Wolf" width="1.0" depth="1.0" height="1.0" mesh="moba/wolf_run.dae" max_instances="64" />
     <init command="terrainoffset 0.50 0.55" />
     <init command="sundirection 0.3 0.6 0.4" />
-    <init command="addcharacter 1 'Achaeus' 1 0.88" />
-    <init command="addcharacter 2 'Powell' 2 0.00" />
-    <init command="addcharacter 3 'Korakisfiri' 3 0.30" />
+    <init command="addcharacter 1 'Achaeus' 1 0" />
+    <init command="addcharacter 2 'Powell' 2 0" />
+    <init command="addcharacter 3 'Korakisfiri' 3 0" />
+    <init command="addcharacter 4 'Helios' 6 0" />
+    <init command="addcharacter 5 'Altis' 19 0" />
+    <init command="updatecharacter 1 0 0 0 0 0 0.88" />
+    <init command="updatecharacter 2 -1 0 0 0 0 0.50" />
+    <init command="updatecharacter 3 1 0 0 0 0 0.30" />
+    <init command="updatecharacter 4 2 0 0 0 0 0.00" />
+    <init command="updatecharacter 5 -2 0 0 0 0 0.70" />
 </rpg>

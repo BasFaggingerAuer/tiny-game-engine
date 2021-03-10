@@ -163,6 +163,7 @@ void Game::updateConsole() const
             strm << " WASDQE = Move" << std::endl;
             strm << " IJKLOU = Look" << std::endl;
             strm << " F = Fast mode" << std::endl;
+            strm << " G = Block replace/add voxels" << std::endl;
             strm << " Mouse whl. = Select char." << std::endl;
             strm << " M/. = Select character type" << std::endl;
             
@@ -186,7 +187,7 @@ void Game::updateConsole() const
         
         font->setText(-1.0f, -1.0f, 0.05f, aspectRatio, strm.str(), *fontTexture);
         consoleBackground->setColour(vec4(0.0f, 0.0f, 0.0f, 0.3f));
-        consoleBackground->setSquareDimensions(-1.0f, -0.35f, -0.55f, -1.0f);
+        consoleBackground->setSquareDimensions(-1.0f, -0.30f, -0.55f, -1.0f);
     }
 }
 
@@ -347,10 +348,26 @@ void Game::update(os::Application *application, const float &dt)
                 else paintMode = PaintMode::None;
             }
             else {
-                if (application->isKeyPressedOnce('c')) paintMode = PaintMode::Character;
-                if (application->isKeyPressedOnce('v')) paintMode = PaintMode::VoxelReplace;
-                if (application->isKeyPressedOnce('b')) paintMode = PaintMode::VoxelAdd;
-                if (application->isKeyPressedOnce('n')) paintMode = PaintMode::None;
+                if (application->isKeyPressedOnce('c'))
+                {
+                    paintMode = PaintMode::Character;
+                    startedVoxelSelection = false;
+                }
+                if (application->isKeyPressedOnce('v'))
+                {
+                    paintMode = PaintMode::VoxelReplace;
+                    startedVoxelSelection = false;
+                }
+                if (application->isKeyPressedOnce('b'))
+                {
+                    paintMode = PaintMode::VoxelAdd;
+                    startedVoxelSelection = false;
+                }
+                if (application->isKeyPressedOnce('n'))
+                {
+                    paintMode = PaintMode::None;
+                    startedVoxelSelection = false;
+                }
             }
 
             if (application->isKeyPressedOnce('p'))
@@ -428,10 +445,51 @@ void Game::update(os::Application *application, const float &dt)
                 draw::VoxelMap::setDistanceMap(*(voxelMap->voxelTexture));
             }
             */
-            
-            //Did the user click anywhere?
+
             auto mouse = application->getMouseState(false);
             
+            //Do we want to block-fill?
+            if (application->isKeyPressedOnce('g'))
+            {
+                //Check which voxel we hit.
+                auto voxelHit = voxelMap->getIntersection(cameraPosition, renderer->getWorldDirection(vec2(mouse.x, 1.0f - mouse.y)));
+
+                if (voxelHit.distance > 0.0f)
+                {
+                    if (!startedVoxelSelection)
+                    {
+                        startedVoxelSelection = true;
+                        voxelSelectionStart = voxelHit.voxelIndices;
+                    }
+                    else if (paintMode == PaintMode::VoxelReplace || paintMode == PaintMode::VoxelAdd)
+                    {
+                        const tiny::ivec3 v0 = tiny::min(voxelSelectionStart, voxelHit.voxelIndices);
+                        const tiny::ivec3 v1 = tiny::max(voxelSelectionStart, voxelHit.voxelIndices);
+                        const tiny::ivec3 dv = (paintMode == PaintMode::VoxelReplace ? tiny::ivec3(0, 0, 0) : voxelHit.normal);
+
+                        for (auto vx = v0.x; vx <= v1.x; ++vx)
+                        {
+                            for (auto vz = v0.z; vz <= v1.z; ++vz)
+                            {
+                                Message msg(msg::mt::updateVoxel);
+                                    
+                                msg << tiny::ivec3(vx, v0.y, vz) + dv << paintVoxelType;
+                                                
+                                if (client) client->sendMessage(msg);
+                                else applyMessage(ownPlayerIndex, msg);
+                            }
+                        }
+
+                        startedVoxelSelection = false;
+                    }
+                }
+                else
+                {
+                    startedVoxelSelection = false;
+                }
+            }
+
+            //Did the user click anywhere?
             if (mouse.buttons != 0)
             {
                 if (mouseTimer <= 0.0f || application->isKeyPressed('f'))
@@ -743,6 +801,8 @@ void Game::clear()
     cameraOrientation = vec4(0.0f, 0.0f, 0.0f, 1.0f);
     paintMode = PaintMode::None;
     paintVoxelType = 1;
+    startedVoxelSelection = false;
+    voxelSelectionStart = tiny::ivec3(0, 0, 0);
     mouseTimer = 0.0f;
 
     //Reset voxel map.
