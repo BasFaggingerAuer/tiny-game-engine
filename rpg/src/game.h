@@ -120,6 +120,8 @@ class Game
         int paintVoxelType;
         bool startedVoxelSelection;
         tiny::ivec3 voxelSelectionStart;
+        tiny::ivec3 voxelSelectionEnd;
+        int voxelAddHeight;
         
         //Console and font.
         bool consoleMode;

@@ -159,20 +159,36 @@ void Game::updateConsole() const
             
             const vec4 c = CharacterInstance::palette(selectedCharacterColor);
 
-            strm << " 0-9 = Select " << draw::ScreenIconHorde::getColorCode(c.x, c.y, c.z) << "color" << std::endl << "\\#fff";
+            if (paintMode == PaintMode::Character)
+            {
+                strm << " 0-9 = Select " << draw::ScreenIconHorde::getColorCode(c.x, c.y, c.z) << "color" << std::endl << "\\#fff";
+                strm << " M/. = Select character type" << std::endl;
+                
+                auto ct = characterTypes.find(selectedCharacterType);
+                
+                if (ct != characterTypes.end())
+                {
+                    strm << "       " << ct->second->name << std::endl;
+                }
+            }
+            if (paintMode == PaintMode::VoxelAdd)
+            {
+                strm << " 1-9 = Add voxel height " << voxelAddHeight << std::endl;
+            }
+            if (paintMode == PaintMode::VoxelAdd || paintMode == PaintMode::VoxelReplace)
+            {
+                strm << " G = Block replace/add voxels" << std::endl;
+                
+                if (startedVoxelSelection)
+                {
+                    strm << " " << 1 + std::abs(voxelSelectionEnd.x - voxelSelectionStart.x) << "x" << 1 + std::abs(voxelSelectionEnd.z - voxelSelectionStart.z) << std::endl;
+                }
+            }
+            
             strm << " WASDQE = Move" << std::endl;
             strm << " IJKLOU = Look" << std::endl;
             strm << " F = Fast mode" << std::endl;
-            strm << " G = Block replace/add voxels" << std::endl;
             strm << " Mouse whl. = Select char." << std::endl;
-            strm << " M/. = Select character type" << std::endl;
-            
-            auto ct = characterTypes.find(selectedCharacterType);
-            
-            if (ct != characterTypes.end())
-            {
-                strm << "       " << ct->second->name << std::endl;
-            }
         }
         else
         {
@@ -187,7 +203,7 @@ void Game::updateConsole() const
         
         font->setText(-1.0f, -1.0f, 0.05f, aspectRatio, strm.str(), *fontTexture);
         consoleBackground->setColour(vec4(0.0f, 0.0f, 0.0f, 0.3f));
-        consoleBackground->setSquareDimensions(-1.0f, -0.30f, -0.55f, -1.0f);
+        consoleBackground->setSquareDimensions(-1.0f, -0.20f, -0.55f, -1.0f);
     }
 }
 
@@ -288,39 +304,6 @@ void Game::update(os::Application *application, const float &dt)
             applyMessage(ownPlayerIndex, msg);
         }
         
-        //Select character color.
-        if (application->isKeyPressedOnce('0')) selectedCharacterColor = -1.0f;
-        if (application->isKeyPressedOnce('9')) selectedCharacterColor = -0.75f;
-        if (application->isKeyPressedOnce('1')) selectedCharacterColor =  0.125f;
-        if (application->isKeyPressedOnce('2')) selectedCharacterColor =  0.250f;
-        if (application->isKeyPressedOnce('3')) selectedCharacterColor =  0.375f;
-        if (application->isKeyPressedOnce('4')) selectedCharacterColor =  0.500f;
-        if (application->isKeyPressedOnce('5')) selectedCharacterColor =  0.625f;
-        if (application->isKeyPressedOnce('6')) selectedCharacterColor =  0.750f;
-        if (application->isKeyPressedOnce('7')) selectedCharacterColor =  0.875f;
-        if (application->isKeyPressedOnce('8')) selectedCharacterColor =  1.000f;
-
-        //Select character type.
-        if (application->isKeyPressedOnce('m'))
-        {
-            if (selectedCharacterType > 0) --selectedCharacterType;
-        }
-            
-        if (application->isKeyPressedOnce('.'))
-        {
-            auto m = std::max_element(characterTypes.cbegin(), characterTypes.cend(),
-                                        [] (const std::pair<unsigned int, CharacterType *> &lhs, const std::pair<unsigned int, CharacterType *> &rhs) {return lhs.first < rhs.first;});
-
-            if (m != characterTypes.cend())
-            {
-                selectedCharacterType = std::min<unsigned int>(selectedCharacterType + 1, m->first);
-            }
-            else
-            {
-                selectedCharacterType = 0;
-            }
-        }
-    
         //Do we control a character?
         unsigned int characterIndex = 0;
         
@@ -362,6 +345,7 @@ void Game::update(os::Application *application, const float &dt)
                 {
                     paintMode = PaintMode::VoxelAdd;
                     startedVoxelSelection = false;
+                    voxelAddHeight = 1;
                 }
                 if (application->isKeyPressedOnce('n'))
                 {
@@ -369,7 +353,55 @@ void Game::update(os::Application *application, const float &dt)
                     startedVoxelSelection = false;
                 }
             }
+            
+            //Select character color.
+            if (paintMode == PaintMode::Character)
+            {
+                if (application->isKeyPressedOnce('0')) selectedCharacterColor = -1.0f;
+                if (application->isKeyPressedOnce('9')) selectedCharacterColor = -0.75f;
+                if (application->isKeyPressedOnce('1')) selectedCharacterColor =  0.125f;
+                if (application->isKeyPressedOnce('2')) selectedCharacterColor =  0.250f;
+                if (application->isKeyPressedOnce('3')) selectedCharacterColor =  0.375f;
+                if (application->isKeyPressedOnce('4')) selectedCharacterColor =  0.500f;
+                if (application->isKeyPressedOnce('5')) selectedCharacterColor =  0.625f;
+                if (application->isKeyPressedOnce('6')) selectedCharacterColor =  0.750f;
+                if (application->isKeyPressedOnce('7')) selectedCharacterColor =  0.875f;
+                if (application->isKeyPressedOnce('8')) selectedCharacterColor =  1.000f;
+                
+                //Select character type.
+                if (application->isKeyPressedOnce('m'))
+                {
+                    if (selectedCharacterType > 0) --selectedCharacterType;
+                }
+                    
+                if (application->isKeyPressedOnce('.'))
+                {
+                    auto m = std::max_element(characterTypes.cbegin(), characterTypes.cend(),
+                                                [] (const std::pair<unsigned int, CharacterType *> &lhs, const std::pair<unsigned int, CharacterType *> &rhs) {return lhs.first < rhs.first;});
 
+                    if (m != characterTypes.cend())
+                    {
+                        selectedCharacterType = std::min<unsigned int>(selectedCharacterType + 1, m->first);
+                    }
+                    else
+                    {
+                        selectedCharacterType = 0;
+                    }
+                }
+            }
+            if (paintMode == PaintMode::VoxelAdd)
+            {
+                if (application->isKeyPressedOnce('1')) voxelAddHeight = 1;
+                if (application->isKeyPressedOnce('2')) voxelAddHeight = 2;
+                if (application->isKeyPressedOnce('3')) voxelAddHeight = 3;
+                if (application->isKeyPressedOnce('4')) voxelAddHeight = 4;
+                if (application->isKeyPressedOnce('5')) voxelAddHeight = 5;
+                if (application->isKeyPressedOnce('6')) voxelAddHeight = 6;
+                if (application->isKeyPressedOnce('7')) voxelAddHeight = 7;
+                if (application->isKeyPressedOnce('8')) voxelAddHeight = 8;
+                if (application->isKeyPressedOnce('9')) voxelAddHeight = 9;
+                if (application->isKeyPressedOnce('0')) voxelAddHeight = 10;
+            }
             if (application->isKeyPressedOnce('p'))
             {
                 voxelMap->createVoxelPalette();
@@ -446,41 +478,66 @@ void Game::update(os::Application *application, const float &dt)
             }
             */
 
-            auto mouse = application->getMouseState(false);
+            const auto mouse = application->getMouseState(false);
+            const auto voxelHit = voxelMap->getIntersection(cameraPosition, renderer->getWorldDirection(vec2(mouse.x, 1.0f - mouse.y)));
+            
+            //Are we working in block editing mode?
+            if (startedVoxelSelection && voxelHit.distance > 0.0f)
+            {
+                voxelSelectionEnd = voxelHit.voxelIndices;
+            }
             
             //Do we want to block-fill?
             if (application->isKeyPressedOnce('g'))
             {
-                //Check which voxel we hit.
-                auto voxelHit = voxelMap->getIntersection(cameraPosition, renderer->getWorldDirection(vec2(mouse.x, 1.0f - mouse.y)));
-
-                if (voxelHit.distance > 0.0f)
+                if (voxelHit.distance > 0.0f && (paintMode == PaintMode::VoxelReplace || paintMode == PaintMode::VoxelAdd))
                 {
+                    const tiny::ivec3 v0 = tiny::min(voxelSelectionStart, voxelSelectionEnd);
+                    const tiny::ivec3 v1 = tiny::max(voxelSelectionStart, voxelSelectionEnd);
+
                     if (!startedVoxelSelection)
                     {
                         startedVoxelSelection = true;
                         voxelSelectionStart = voxelHit.voxelIndices;
+                        voxelSelectionEnd = voxelHit.voxelIndices;
                     }
-                    else if (paintMode == PaintMode::VoxelReplace || paintMode == PaintMode::VoxelAdd)
+                    else
                     {
-                        const tiny::ivec3 v0 = tiny::min(voxelSelectionStart, voxelHit.voxelIndices);
-                        const tiny::ivec3 v1 = tiny::max(voxelSelectionStart, voxelHit.voxelIndices);
-                        const tiny::ivec3 dv = (paintMode == PaintMode::VoxelReplace ? tiny::ivec3(0, 0, 0) : voxelHit.normal);
-
-                        for (auto vx = v0.x; vx <= v1.x; ++vx)
+                        startedVoxelSelection = false;
+                        
+                        if (paintMode == PaintMode::VoxelReplace)
                         {
-                            for (auto vz = v0.z; vz <= v1.z; ++vz)
+                            for (auto vx = v0.x; vx <= v1.x; ++vx)
                             {
-                                Message msg(msg::mt::updateVoxel);
-                                    
-                                msg << tiny::ivec3(vx, v0.y, vz) + dv << paintVoxelType;
-                                                
-                                if (client) client->sendMessage(msg);
-                                else applyMessage(ownPlayerIndex, msg);
+                                for (auto vz = v0.z; vz <= v1.z; ++vz)
+                                {
+                                    Message msg(msg::mt::updateVoxel);
+                                        
+                                    msg << tiny::ivec3(vx, v0.y, vz) << paintVoxelType;
+                                                    
+                                    if (client) client->sendMessage(msg);
+                                    else applyMessage(ownPlayerIndex, msg);
+                                }
                             }
                         }
-
-                        startedVoxelSelection = false;
+                        if (paintMode == PaintMode::VoxelAdd)
+                        {
+                            for (auto vx = v0.x; vx <= v1.x; ++vx)
+                            {
+                                for (auto vz = v0.z; vz <= v1.z; ++vz)
+                                {
+                                    for (auto vy = 1; vy <= voxelAddHeight; ++vy)
+                                    {
+                                        Message msg(msg::mt::updateVoxel);
+                                        
+                                        msg << tiny::ivec3(vx, v0.y, vz) + vy*voxelHit.normal << paintVoxelType;
+                                                        
+                                        if (client) client->sendMessage(msg);
+                                        else applyMessage(ownPlayerIndex, msg);
+                                    }
+                                }
+                            }
+                        }
                     }
                 }
                 else
@@ -495,9 +552,6 @@ void Game::update(os::Application *application, const float &dt)
                 if (mouseTimer <= 0.0f || application->isKeyPressed('f'))
                 {
                     mouseTimer = 0.25f;
-                    
-                    //Check which voxel we hit.
-                    auto voxelHit = voxelMap->getIntersection(cameraPosition, renderer->getWorldDirection(vec2(mouse.x, 1.0f - mouse.y)));
                     
                     if (voxelHit.distance > 0.0f)
                     {
@@ -607,12 +661,15 @@ void Game::update(os::Application *application, const float &dt)
                             case PaintMode::VoxelAdd:
                                 if (mouse.buttons == 1)
                                 {
-                                    Message msg(msg::mt::updateVoxel);
-                                    
-                                    msg << voxelHit.voxelIndices + voxelHit.normal << paintVoxelType;
-                                    
-                                    if (client) client->sendMessage(msg);
-                                    else applyMessage(ownPlayerIndex, msg);
+                                    for (int vy = 1; vy <= voxelAddHeight; ++vy)
+                                    {
+                                        Message msg(msg::mt::updateVoxel);
+                                        
+                                        msg << voxelHit.voxelIndices + vy*voxelHit.normal << paintVoxelType;
+                                        
+                                        if (client) client->sendMessage(msg);
+                                        else applyMessage(ownPlayerIndex, msg);
+                                    }
                                 }
                                 else if (mouse.buttons == 2)
                                 {
@@ -793,7 +850,7 @@ void Game::clear()
     //Reset all characters.
     lastCharacterIndex = 0;
     selectedCharacterType = 0;
-    selectedCharacterColor = 0.0f;
+    selectedCharacterColor = -0.75f;
     characters.clear();
     
     //Reset camera.
@@ -803,6 +860,7 @@ void Game::clear()
     paintVoxelType = 1;
     startedVoxelSelection = false;
     voxelSelectionStart = tiny::ivec3(0, 0, 0);
+    voxelAddHeight = 1;
     mouseTimer = 0.0f;
 
     //Reset voxel map.
