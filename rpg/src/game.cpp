@@ -197,6 +197,7 @@ void Game::updateConsole() const
             strm << " WASDQE = Move" << std::endl;
             strm << " F = Knock prone" << std::endl;
             strm << " G = Enlarge" << std::endl;
+            strm << " 0-9 = Move radius (" << 5*characterVoxelRadius << ")" << std::endl;
         }
         
         strm << "Controls:" << std::endl;
@@ -298,6 +299,8 @@ void Game::update(os::Application *application, const float &dt)
         //Release control of characters.
         if (application->isKeyPressedOnce(' '))
         {
+            voxelMap->createCheckerboard();
+            
             Message msg(msg::mt::setPlayerCharacter);
 
             msg << ownPlayerIndex << 0;
@@ -324,13 +327,15 @@ void Game::update(os::Application *application, const float &dt)
             //We do not control a character.
             
             //Change edit mode.
-            if (mouseLook) {
+            if (mouseLook)
+            {
                 if (application->isKeyPressed('c')) paintMode = PaintMode::Character;
                 else if (application->isKeyPressed('v')) paintMode = PaintMode::VoxelReplace;
                 else if (application->isKeyPressed('b')) paintMode = PaintMode::VoxelAdd;
                 else paintMode = PaintMode::None;
             }
-            else {
+            else
+            {
                 if (application->isKeyPressedOnce('c'))
                 {
                     paintMode = PaintMode::Character;
@@ -715,7 +720,18 @@ void Game::update(os::Application *application, const float &dt)
         else
         {
             //We do control a character.
-            CharacterInstance &chr = characters[characterIndex];
+            CharacterInstance chr = characters[characterIndex];
+            int r = characterVoxelRadius;
+            
+            if (application->isKeyPressedOnce('1')) r = 1;
+            if (application->isKeyPressedOnce('2')) r = 2;
+            if (application->isKeyPressedOnce('3')) r = 3;
+            if (application->isKeyPressedOnce('4')) r = 4;
+            if (application->isKeyPressedOnce('5')) r = 5;
+            if (application->isKeyPressedOnce('6')) r = 6;
+            if (application->isKeyPressedOnce('7')) r = 12;
+            if (application->isKeyPressedOnce('8')) r = 24;
+            if (application->isKeyPressedOnce('9')) r = 48;
             
             if (application->isKeyPressedOnce('s')) chr.position.x = chr.position.x + 1;
             if (application->isKeyPressedOnce('w')) chr.position.x = chr.position.x - 1;
@@ -755,15 +771,29 @@ void Game::update(os::Application *application, const float &dt)
                 mouseTimer = 0.0f;
             }
             
-            //Is this a network game?
-            if (host || client)
+            //Indicate where the character can move.
+            if (chr != characters[characterIndex] || r != characterVoxelRadius)
             {
-                Message msg(msg::mt::updateCharacter);
+                characterVoxelRadius = r;
+                voxelMap->createCheckerboard();
+                voxelMap->lightCheckerboardSphere(chr.position, characterVoxelRadius);
+            }
+            
+            //Update if we changed the character.
+            if (chr != characters[characterIndex])
+            {
+                characters[characterIndex] = chr;
                 
-                msg << characterIndex << chr.position << chr.rotation << chr.state << chr.color;
-                
-                if (client) client->sendMessage(msg);
-                if (host) host->sendMessage(msg);
+                //Is this a network game?
+                if (host || client)
+                {
+                    Message msg(msg::mt::updateCharacter);
+                    
+                    msg << characterIndex << chr.position << chr.rotation << chr.state << chr.color;
+                    
+                    if (client) client->sendMessage(msg);
+                    if (host) host->sendMessage(msg);
+                }
             }
         }
         
@@ -852,6 +882,7 @@ void Game::clear()
     selectedCharacterType = 0;
     selectedCharacterColor = -0.75f;
     characters.clear();
+    characterVoxelRadius = 6;
     
     //Reset camera.
     cameraPosition = vec3(0.0f, 10.0f, 0.0f);

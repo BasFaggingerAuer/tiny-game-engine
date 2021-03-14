@@ -301,6 +301,7 @@ bool Game::msgRemoveCharacter(const unsigned int &, std::ostream &out, bool &bro
     characters.erase(characters.find(characterIndex));
     out << "Removed character with index " << characterIndex << ".";
     broadcast = true;
+    voxelMap->createCheckerboard();
     
     return true;
 }
@@ -357,6 +358,12 @@ bool Game::msgSetPlayerCharacter(const unsigned int &, std::ostream &out, bool &
     players[characterPlayerIndex].characterIndex = characterIndex;
     out << "Assigned player " << characterPlayerIndex << " to character " << characterIndex << ".";
     broadcast = true;
+    
+    if (characterPlayerIndex == ownPlayerIndex && characterIndex != 0)
+    {
+        voxelMap->createCheckerboard();
+        voxelMap->lightCheckerboardSphere(characters[characterIndex].position, characterVoxelRadius);
+    }
     
     return true;
 }

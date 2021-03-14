@@ -54,6 +54,16 @@ struct CharacterInstance
                                 tiny::vec4(-c, -c, -c, 1.0f));    
     }
     
+    bool operator != (const CharacterInstance &c) const
+    {
+        return (type != c.type ||
+                name != c.name ||
+                position != c.position ||
+                rotation != c.rotation ||
+                state != c.state ||
+                color != c.color);
+    }
+    
     unsigned int type;
     std::string name;
     tiny::ivec3 position;

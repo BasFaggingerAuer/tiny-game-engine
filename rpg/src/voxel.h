@@ -37,6 +37,8 @@ class GameVoxelMap
         void createVoxelPalette();
         bool createFromCompressedVoxels(const std::string &, const float &);
         void setVoxelBasePlane(const int &);
+        void createCheckerboard();
+        void lightCheckerboardSphere(const tiny::ivec3 &, const int &);
         void setVoxel(const tiny::ivec3 &, const int &);
         int getVoxel(const tiny::ivec3 &) const;
         float getScale() const;

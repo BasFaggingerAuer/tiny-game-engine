@@ -252,7 +252,6 @@ draw::RGBATexture3D *initializeVoxelTexture(const size_t &width, const size_t &h
     //Initialize checkerboard voxel map.
     draw::RGBATexture3D *voxelTexture = new draw::RGBATexture3D(width, height, depth, draw::tf::none);
     
-    //Create checkerboard pattern.
     for (size_t z = 0; z < voxelTexture->getDepth(); ++z)
     {
         for (size_t y = 0; y < voxelTexture->getHeight(); ++y)
@@ -263,8 +262,6 @@ draw::RGBATexture3D *initializeVoxelTexture(const size_t &width, const size_t &h
                 {
                     (*voxelTexture)[voxelTexture->getChannels()*(z*voxelTexture->getHeight()*voxelTexture->getWidth() + y*voxelTexture->getWidth() + x) + c] = 0;
                 }
-
-                (*voxelTexture)[voxelTexture->getChannels()*(z*voxelTexture->getHeight()*voxelTexture->getWidth() + y*voxelTexture->getWidth() + x) + 1] = (((x ^ y ^ z) & 1) == 0 ? 116 : 140);
             }
         }
     }
@@ -336,6 +333,7 @@ GameVoxelMap::GameVoxelMap(const std::string &path, TiXmlElement *el)
     voxelMap = new draw::VoxelMap(std::max(width, std::max(height, depth))*3);
     
     voxelTexture = initializeVoxelTexture(width, height, depth);
+    createCheckerboard();
     setVoxelBasePlane(1);
     createVoxelPalette();
     
@@ -456,6 +454,7 @@ bool GameVoxelMap::createFromCompressedVoxels(const std::string &text, const flo
     if (voxelTexture) delete voxelTexture;
     
     voxelTexture = initializeVoxelTexture(width, height, depth);
+    createCheckerboard();
     
     //Use a Z-curve for each constant-Y plane to improve compression.
     for (uint32_t y = 0; y < voxelTexture->getHeight(); ++y)
@@ -523,7 +522,48 @@ void GameVoxelMap::setVoxelBasePlane(const int &v)
         }
     }
     
+    createCheckerboard();
     draw::VoxelMap::clearDistanceMap(*voxelTexture);
+}
+
+void GameVoxelMap::createCheckerboard()
+{
+    //Create checkerboard pattern.
+    for (size_t z = 0; z < voxelTexture->getDepth(); ++z)
+    {
+        for (size_t y = 0; y < voxelTexture->getHeight(); ++y)
+        {
+            for (size_t x = 0; x < voxelTexture->getWidth(); ++x)
+            {
+                (*voxelTexture)[voxelTexture->getChannels()*(z*voxelTexture->getHeight()*voxelTexture->getWidth() + y*voxelTexture->getWidth() + x) + 1] = (((x ^ y ^ z) & 1) == 0 ? 116 : 140);
+            }
+        }
+    }
+
+    voxelTexture->sendToDevice();
+}
+
+void GameVoxelMap::lightCheckerboardSphere(const ivec3 &position, const int &r)
+{
+    const ivec3 p = position + ivec3(voxelTexture->getWidth()/2, 0, voxelTexture->getDepth()/2);
+    
+    for (int z = std::max<int>(p.z - r, 0); z <= std::min<int>(p.z + r, voxelTexture->getDepth()); ++z)
+    {
+        for (int y = std::max<int>(p.y - r, 0); y <= std::min<int>(p.y + r, voxelTexture->getHeight()); ++y)
+        {
+            for (int x = std::max<int>(p.x - r, 0); x <= std::min<int>(p.x + r, voxelTexture->getWidth()); ++x)
+            {
+                const int s = length2(ivec3(x, y, z) - p);
+                
+                if (s <= r*r)
+                {
+                    (*voxelTexture)[voxelTexture->getChannels()*(z*voxelTexture->getHeight()*voxelTexture->getWidth() + y*voxelTexture->getWidth() + x) + 1] = (((x ^ y ^ z) & 1) == 0 ? 188 : 164);
+                }
+            }
+        }
+    }
+    
+    voxelTexture->sendToDevice();
 }
 
 void GameVoxelMap::setVoxel(const ivec3 &p, const int &v)

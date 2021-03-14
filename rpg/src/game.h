@@ -122,6 +122,7 @@ class Game
         tiny::ivec3 voxelSelectionStart;
         tiny::ivec3 voxelSelectionEnd;
         int voxelAddHeight;
+        int characterVoxelRadius;
         
         //Console and font.
         bool consoleMode;
