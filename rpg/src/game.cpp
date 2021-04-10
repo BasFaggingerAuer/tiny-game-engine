@@ -92,6 +92,7 @@ Game::Game(const os::Application *application, const std::string &path) :
 
 Game::~Game()
 {
+    exportState("level.xml");
     clear();
     
     delete translator;
@@ -420,61 +421,7 @@ void Game::update(os::Application *application, const float &dt)
             }
             if (application->isKeyPressedOnce('z'))
             {
-                //Export current map state to XML-friendly format.
-                const std::string levelFile = "level.xml";
-                
-                std::cerr << "Appending current map state to '" << levelFile << "'..." << std::endl;
-                
-                std::ofstream of(levelFile.c_str(), std::ios::app | std::ios::out);
-                std::time_t currentTime = std::time(nullptr);
-                
-                of << "Level export " << std::put_time(std::localtime(&currentTime), "%F %T") << ":" << std::endl;
-                
-                for (auto ch = characters.cbegin(); ch != characters.cend(); ++ch)
-                {
-                    Message msg(msg::mt::addCharacter);
-                    std::string str = "";
-
-                    msg << ch->first << ch->second.name << ch->second.type << ch->second.color;
-                    translator->messageToText(msg, str);
-                    of << "<init command=\"" << str << "\" />" << std::endl;
-                }
-
-                for (auto ch = characters.cbegin(); ch != characters.cend(); ++ch)
-                {
-                    Message msg(msg::mt::updateCharacter);
-                    std::string str = "";
-
-                    msg << ch->first << ch->second.position << ch->second.rotation << ch->second.state << ch->second.color;
-                    translator->messageToText(msg, str);
-                    of << "<init command=\"" << str << "\" />" << std::endl;
-                }
-
-                if (true)
-                {
-                    const std::string text = voxelMap->getCompressedVoxels();
-                    const int chunkSize = 255;
-                    int nrChunks = (static_cast<int>(text.size())/chunkSize) + (static_cast<int>(text.size()) % chunkSize == 0 ? 0 : 1);
-                    std::string str = "";
-
-                    Message msgStart(msg::mt::startVoxelMap);
-
-                    msgStart << nrChunks;
-                    translator->messageToText(msgStart, str);
-                    of << "<init command=\"" << str << "\" />" << std::endl;
-                    
-                    for (int ck = 0; ck < nrChunks; ++ck)
-                    {
-                        Message msg(msg::mt::chunkVoxelMap);
-                        
-                        msg << text.substr(chunkSize*ck, chunkSize);
-                        translator->messageToText(msg, str);
-                        of << "<init command=\"" << str << "\" />" << std::endl;
-                    }
-                }
-                of << "End of export." << std::endl << std::endl;
-                of.close();
-                std::cerr << "Export completed." << std::endl;
+                exportState("level.xml");
             }
             /*
             if (application->isKeyPressedOnce('x'))
@@ -1040,3 +987,61 @@ void Game::readSkyResources(const std::string &path, TiXmlElement *el)
     skyEffect->setSkyTexture(*skyGradientTexture);
     skyEffect->setSun(normalize(vec3(0.4f, 0.8f, 0.4f)));
 }
+
+void Game::exportState(const std::string &levelFile) const
+{
+    //Export current map state to XML-friendly format.
+    std::cerr << "Appending current map state to '" << levelFile << "'..." << std::endl;
+    
+    std::ofstream of(levelFile.c_str(), std::ios::app | std::ios::out);
+    std::time_t currentTime = std::time(nullptr);
+    
+    of << "Level export " << std::put_time(std::localtime(&currentTime), "%F %T") << ":" << std::endl;
+    
+    for (auto ch = characters.cbegin(); ch != characters.cend(); ++ch)
+    {
+        Message msg(msg::mt::addCharacter);
+        std::string str = "";
+
+        msg << ch->first << ch->second.name << ch->second.type << ch->second.color;
+        translator->messageToText(msg, str);
+        of << "<init command=\"" << str << "\" />" << std::endl;
+    }
+
+    for (auto ch = characters.cbegin(); ch != characters.cend(); ++ch)
+    {
+        Message msg(msg::mt::updateCharacter);
+        std::string str = "";
+
+        msg << ch->first << ch->second.position << ch->second.rotation << ch->second.state << ch->second.color;
+        translator->messageToText(msg, str);
+        of << "<init command=\"" << str << "\" />" << std::endl;
+    }
+
+    if (true)
+    {
+        const std::string text = voxelMap->getCompressedVoxels();
+        const int chunkSize = 255;
+        int nrChunks = (static_cast<int>(text.size())/chunkSize) + (static_cast<int>(text.size()) % chunkSize == 0 ? 0 : 1);
+        std::string str = "";
+
+        Message msgStart(msg::mt::startVoxelMap);
+
+        msgStart << nrChunks;
+        translator->messageToText(msgStart, str);
+        of << "<init command=\"" << str << "\" />" << std::endl;
+        
+        for (int ck = 0; ck < nrChunks; ++ck)
+        {
+            Message msg(msg::mt::chunkVoxelMap);
+            
+            msg << text.substr(chunkSize*ck, chunkSize);
+            translator->messageToText(msg, str);
+            of << "<init command=\"" << str << "\" />" << std::endl;
+        }
+    }
+    of << "End of export." << std::endl << std::endl;
+    of.close();
+    std::cerr << "Export completed." << std::endl;
+}
+

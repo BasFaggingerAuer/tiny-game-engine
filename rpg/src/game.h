@@ -105,6 +105,8 @@ class Game
         void readSkyResources(const std::string &, TiXmlElement *);
         void readBulletHordeResources(const std::string &, TiXmlElement *);
         
+        void exportState(const std::string &) const;
+        
         //Renderer.
         const float aspectRatio;
         const float mouseSensitivity;
