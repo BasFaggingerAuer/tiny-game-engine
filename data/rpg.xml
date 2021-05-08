@@ -69,6 +69,7 @@
     <charactertype name="Tree" width="2.0" depth="2.0" height="8.0" scale_height="0.05" mesh="rpg/Simple_Pine_Tree.dae" max_instances="64" />
     <charactertype name="Chriphon" width="1.0" depth="2.0" height="4.0" mesh="rpg/gryphonflying.dae" max_instances="64" />
     <charactertype name="Wolf" width="1.0" depth="1.0" height="1.0" mesh="moba/wolf_run.dae" max_instances="64" />
+    <charactertype name="Bear" width="1.0" depth="2.0" height="1.0" mesh="rpg/bear_optimize.dae" max_instances="64" />
     <init command="terrainoffset 0.50 0.55" />
     <init command="sundirection 0.3 0.6 0.4" />
     <init command="addcharacter 1 'Achaeus' 1 0" />
