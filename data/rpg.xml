@@ -71,6 +71,7 @@
     <charactertype name="Wolf" width="1.0" depth="1.0" height="1.0" mesh="moba/wolf_run.dae" max_instances="64" />
     <charactertype name="Bear" width="1.0" depth="2.0" height="1.0" mesh="rpg/bear_optimize.dae" max_instances="64" />
     <charactertype name="Spider" width="1.0" depth="1.0" height="1.0" mesh="rpg/Spider_Thin.dae" max_instances="64" />
+    <charactertype name="Weasel" width="1.0" depth="1.0" height="1.0" mesh="rpg/Weasel.dae" max_instances="64" />
     <init command="terrainoffset 0.50 0.55" />
     <init command="sundirection 0.3 0.6 0.4" />
     <init command="addcharacter 1 'Achaeus' 1 0" />
