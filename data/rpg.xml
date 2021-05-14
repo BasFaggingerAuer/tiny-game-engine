@@ -75,6 +75,7 @@
     <charactertype name="Elk" width="1.0" depth="2.0" height="2.0" scale_height="0.1" mesh="rpg/Giant_Elk.dae" max_instances="64" />
     <charactertype name="Buffalo" width="2.0" depth="3.0" height="2.0" mesh="rpg/buffalo.dae" max_instances="64" />
     <charactertype name="Boar" width="1.0" depth="2.0" height="1.0" mesh="rpg/Julias_boar200.dae" max_instances="64" />
+    <charactertype name="Wererat" width="1.0" depth="1.0" height="2.0" mesh="rpg/wererat.dae" max_instances="64" />
     <init command="terrainoffset 0.50 0.55" />
     <init command="sundirection 0.3 0.6 0.4" />
     <init command="addcharacter 1 'Achaeus' 1 0" />
