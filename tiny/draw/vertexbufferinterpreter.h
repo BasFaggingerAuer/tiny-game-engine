@@ -103,7 +103,7 @@ class VertexBufferInterpreter : public VertexBuffer<T>
                     else GL_CHECK(glVertexAttribPointer(attributeLocation, i->numComponents, i->type, GL_FALSE, i->stride, (GLvoid *)(i->offset)));
                     
                     //Enable instanced data if required.
-                    if (divisor > 0) GL_CHECK(glVertexAttribDivisorARB(attributeLocation, divisor));
+                    if (divisor > 0) GL_CHECK(glVertexAttribDivisor(attributeLocation, divisor));
                 }
             }
             
@@ -118,7 +118,7 @@ class VertexBufferInterpreter : public VertexBuffer<T>
                 
                 if (attributeLocation >= 0)
                 {
-                    GL_CHECK(glVertexAttribDivisorARB(attributeLocation, 0));
+                    GL_CHECK(glVertexAttribDivisor(attributeLocation, 0));
                     GL_CHECK(glDisableVertexAttribArray(attributeLocation));
                 }
             }
