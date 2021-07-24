@@ -49,6 +49,7 @@ add_library(tinygame
             draw/detail/worldrenderer.cpp
             draw/staticmesh.cpp
             draw/staticmeshhorde.cpp
+            draw/staticmeshhordetexturearray.cpp
             draw/animatedmesh.cpp
             draw/animatedmeshhorde.cpp
             draw/icontexture2d.cpp
