@@ -102,30 +102,14 @@ struct RigidBodyCollision
     size_t b2SphereIndex; //Index of the second body's internal sphere.
 };
 
-class Constraint
+struct RigidBodyCollisionGeometry
 {
-    Constraint(const size_t &, const vec3 &,
-        const vec3 &,
-        const float &, const float & = 0.0f);
-    virtual ~Constraint();
-
-    size_t b1Index; //Index of the rigid body.
-    vec3 r1; //Relative position of constraint for b1 in global coordinates.
-    vec3 n; //Constraint outward normal direction at point of contact in global coordinates.
-    float alpha; //Compliance.
-    float lambda; //Lagrange multiplier.
-};
-
-class TwoBodyConstraint : public Constraint
-{
-    TwoBodyConstraint(const size_t &, const vec3 &,
-        const size_t &, const vec3 &,
-        const vec3 &,
-        const float &, const float & = 0.0f);
-    virtual ~TwoBodyConstraint();
-
-    size_t b2Index; //Index of the second rigid body in the constraint.
-    vec3 r2; //Relative position of constraint for b2 in global coordinates.
+    vec3 n; //Normal at point of collision.
+    RigidBodyState *b1; //Pointer to first body.
+    vec3 p1, v1; //Position and velocity of collision point in world coordinates of first body.
+    RigidBodyState *b2; //Pointer to second body.
+    vec3 p2, v2; //Position and velocity of collision point in world coordinates of second body.
+    bool isColliding; //Are the bodies colliding?
 };
 
 class SpatialSphereHasher

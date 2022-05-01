@@ -291,45 +291,65 @@ void RigidBodySystem::calculateInternalSpheres(const RigidBody *b)
 }
 
 void applyPositionConstraint(float &lambda, const float alpha,
-                             RigidBodyState &b1,
+                             RigidBodyState *b1,
                              const vec3 &r1,
-                             RigidBodyState &b2,
+                             RigidBodyState *b2,
                              const vec3 &r2,
                              const vec3 &dx)
 {
     const vec3 n = normalize(dx);
-    const float w1 = b1.invM + dot(cross(r1, n), b1.invI*cross(r1, n));
-    const float w2 = b2.invM + dot(cross(r2, n), b2.invI*cross(r2, n));
+    const float w1 = b1->invM + dot(cross(r1, n), b1->invI*cross(r1, n));
+    const float w2 = b2->invM + dot(cross(r2, n), b2->invI*cross(r2, n));
     const float dlambda = -(length(dx) + alpha*lambda)/(w1 + w2 + alpha);
     const vec3 p = dlambda*n;
 
-    b1.x += b1.invM*p;
-    b1.q += 0.5f*quatmul(vec4(b1.invI*cross(r1, p), 0.0f), b1.q);
-    b1.q = normalize(b1.q);
+    b1->x += b1->invM*p;
+    b1->q += 0.5f*quatmul(vec4(b1->invI*cross(r1, p), 0.0f), b1->q);
+    b1->q = normalize(b1->q);
     
-    b2.x -= b2.invM*p;
-    b2.q -= 0.5f*quatmul(vec4(b2.invI*cross(r2, p), 0.0f), b2.q);
-    b2.q = normalize(b2.q);
+    b2->x -= b2->invM*p;
+    b2->q -= 0.5f*quatmul(vec4(b2->invI*cross(r2, p), 0.0f), b2->q);
+    b2->q = normalize(b2->q);
 
     lambda += dlambda;
 }
 
-void applyVelocityConstraint(RigidBodyState &b1,
+void applyVelocityConstraint(RigidBodyState *b1,
                              const vec3 &r1,
-                             RigidBodyState &b2,
+                             RigidBodyState *b2,
                              const vec3 &r2,
                              const vec3 &n,
                              const vec3 &dv)
 {
-    const float w1 = b1.invM + dot(cross(r1, n), b1.invI*cross(r1, n));
-    const float w2 = b2.invM + dot(cross(r2, n), b2.invI*cross(r2, n));
+    const float w1 = b1->invM + dot(cross(r1, n), b1->invI*cross(r1, n));
+    const float w2 = b2->invM + dot(cross(r2, n), b2->invI*cross(r2, n));
     const vec3 p = (-1.0f/(w1 + w2))*dv;
 
-    b1.v += b1.invM*p;
-    b1.w += b1.invI*cross(r1, p);
+    b1->v += b1->invM*p;
+    b1->w += b1->invI*cross(r1, p);
     
-    b2.v -= b2.invM*p;
-    b2.w -= b2.invI*cross(r2, p);
+    b2->v -= b2->invM*p;
+    b2->w -= b2->invI*cross(r2, p);
+}
+
+RigidBodyCollisionGeometry getCollisionGeometry(std::vector<RigidBodyState> &bodies, const RigidBodyCollision &c)
+{
+    //Get pointers to bodies.
+    RigidBodyState *b1 = &bodies[c.b1Index];
+    RigidBodyState *b2 = &bodies[c.b2Index];
+
+    //Get potentially colliding internal spheres.
+    const vec4 s1 = vec4(b1->x + mat3::rotationMatrix(b1->q)*b1->spheres[c.b1SphereIndex].posAndRadius.xyz(), b1->spheres[c.b1SphereIndex].posAndRadius.w);
+    const vec4 s2 = vec4(b2->x + mat3::rotationMatrix(b2->q)*b2->spheres[c.b2SphereIndex].posAndRadius.xyz(), b2->spheres[c.b2SphereIndex].posAndRadius.w);
+
+    const vec3 n = normalize(s2.xyz() - s1.xyz());
+    const vec3 p1 = s1.xyz() + s1.w*n;
+    const vec3 p2 = s2.xyz() - s2.w*n;
+
+    return RigidBodyCollisionGeometry({n,
+                                       b1, p1, b1->v + cross(b1->w, p1 - b1->x),
+                                       b2, p2, b2->v + cross(b2->w, p2 - b2->x),
+                                       length(s1.xyz() - s2.xyz()) <= s1.w + s2.w});
 }
 
 void RigidBodySystem::update(const float &dt)
@@ -467,48 +487,32 @@ void RigidBodySystem::update(const float &dt)
         for (size_t i = 0; i < collisions.size(); ++i)
         {
             const RigidBodyCollision c = collisions[i];
-            RigidBodyState *b1 = &states[c.b1Index];
-            RigidBodyState *b2 = &states[c.b2Index];
-
-            //Get potentially colliding internal spheres.
-            const vec4 s1 = vec4(b1->x + mat3::rotationMatrix(b1->q)*b1->spheres[c.b1SphereIndex].posAndRadius.xyz(), b1->spheres[c.b1SphereIndex].posAndRadius.w);
-            const vec4 s2 = vec4(b2->x + mat3::rotationMatrix(b2->q)*b2->spheres[c.b2SphereIndex].posAndRadius.xyz(), b2->spheres[c.b2SphereIndex].posAndRadius.w);
+            auto cg = getCollisionGeometry(states, c);
 
             //Check for collision for the current body states.
-            if (length(s1.xyz() - s2.xyz()) <= s1.w + s2.w)
+            if (cg.isColliding)
             {
-                const vec3 n = normalize(s2.xyz() - s1.xyz());
-                const vec3 p1 = s1.xyz() + s1.w*n;
-                const vec3 p2 = s2.xyz() - s2.w*n;
-                const float d = dot(n, p1 - p2);
+                const float d = dot(cg.n, cg.p1 - cg.p2);
                 
                 //Apply position constraint to avoid object interpenetration.
-                applyPositionConstraint(lambdaCollisionN[i], 0.0f, *b1, p1 - b1->x, *b2, p2 - b2->x, d*n);
+                applyPositionConstraint(lambdaCollisionN[i], 0.0f, cg.b1, cg.p1 - cg.b1->x, cg.b2, cg.p2 - cg.b2->x, d*cg.n);
 
                 //Handle static friction.
-                const float w1 = b1->invM + dot(cross(p1, n), b1->invI*cross(p1, n));
-                const float w2 = b2->invM + dot(cross(p2, n), b2->invI*cross(p2, n));
+                const float w1 = cg.b1->invM + dot(cross(cg.p1, cg.n), cg.b1->invI*cross(cg.p1, cg.n));
+                const float w2 = cg.b2->invM + dot(cross(cg.p2, cg.n), cg.b2->invI*cross(cg.p2, cg.n));
 
                 //Get pre-states of the rigid bodies.
-                const RigidBodyState *preb1 = &preStates[c.b1Index];
-                const RigidBodyState *preb2 = &preStates[c.b2Index];
-                
-                const vec4 pres1 = vec4(preb1->x + mat3::rotationMatrix(preb1->q)*preb1->spheres[c.b1SphereIndex].posAndRadius.xyz(), preb1->spheres[c.b1SphereIndex].posAndRadius.w);
-                const vec4 pres2 = vec4(preb2->x + mat3::rotationMatrix(preb2->q)*preb1->spheres[c.b2SphereIndex].posAndRadius.xyz(), preb2->spheres[c.b2SphereIndex].posAndRadius.w);
-                
-                const vec3 pren = normalize(s2.xyz() - s1.xyz());
-                const vec3 prep1 = pres1.xyz() + pres1.w*pren;
-                const vec3 prep2 = pres2.xyz() - pres2.w*pren;
+                const auto precg = getCollisionGeometry(preStates, c);
                 
                 //Get tangential motion.
-                vec3 dx = (p1 - prep1) - (p2 - prep2);
+                vec3 dx = (cg.p1 - precg.p1) - (cg.p2 - precg.p2);
                 
-                dx -= dot(dx, n)*n;
+                dx -= dot(dx, cg.n)*cg.n;
 
                 //Static friction, restrict tangential motion if F_tangential <= mu_static * F_normal.
                 if (length(dx)/(w1 + w2) <= staticFrictionCoeff*std::abs(lambdaCollisionN[i]))
                 {
-                    applyPositionConstraint(lambdaCollisionT[i], 0.0f, *b1, p1 - b1->x, *b2, p2 - b2->x, dx);
+                    applyPositionConstraint(lambdaCollisionT[i], 0.0f, cg.b1, cg.p1 - cg.b1->x, cg.b2, cg.p2 - cg.b2->x, dx);
                 }
             }
         }
@@ -527,52 +531,33 @@ void RigidBodySystem::update(const float &dt)
         for (size_t i = 0; i < collisions.size(); ++i)
         {
             const RigidBodyCollision c = collisions[i];
-            RigidBodyState *b1 = &states[c.b1Index];
-            RigidBodyState *b2 = &states[c.b2Index];
-
-            //Get potentially colliding internal spheres.
-            const vec4 s1 = vec4(b1->x + mat3::rotationMatrix(b1->q)*b1->spheres[c.b1SphereIndex].posAndRadius.xyz(), b1->spheres[c.b1SphereIndex].posAndRadius.w);
-            const vec4 s2 = vec4(b2->x + mat3::rotationMatrix(b2->q)*b2->spheres[c.b2SphereIndex].posAndRadius.xyz(), b2->spheres[c.b2SphereIndex].posAndRadius.w);
+            auto cg = getCollisionGeometry(states, c);
 
             //Did we have a collision?
             if (lambdaCollisionN[i] != 0.0f)
             {
-                const vec3 n = normalize(s2.xyz() - s1.xyz());
-                const vec3 p1 = s1.xyz() + s1.w*n;
-                const vec3 p2 = s2.xyz() - s2.w*n;
-
                 //Determine normal and tangential relative velocities.
-                vec3 vt = (b1->v + cross(b1->w, p1 - b1->x)) -
-                          (b2->v + cross(b2->w, p2 - b2->x));
-                const float vn = dot(vt, n);
+                vec3 vt = cg.v1 - cg.v2;
+                const float vn = dot(vt, cg.n);
 
-                vt -= vn*n;
-
-                //Get pre-state normal velocity.
-                const RigidBodyState *preb1 = &preStates[c.b1Index];
-                const RigidBodyState *preb2 = &preStates[c.b2Index];
-                
-                const vec4 pres1 = vec4(preb1->x + mat3::rotationMatrix(preb1->q)*preb1->spheres[c.b1SphereIndex].posAndRadius.xyz(), preb1->spheres[c.b1SphereIndex].posAndRadius.w);
-                const vec4 pres2 = vec4(preb2->x + mat3::rotationMatrix(preb2->q)*preb1->spheres[c.b2SphereIndex].posAndRadius.xyz(), preb2->spheres[c.b2SphereIndex].posAndRadius.w);
-                
-                const vec3 pren = normalize(s2.xyz() - s1.xyz());
-                const vec3 prep1 = pres1.xyz() + pres1.w*pren;
-                const vec3 prep2 = pres2.xyz() - pres2.w*pren;
-            
-                //Determine normal and tangential relative velocities.
-                const vec3 prev = (preb1->v + cross(preb1->w, prep1 - preb1->x)) -
-                                  (preb2->v + cross(preb2->w, prep2 - preb2->x));
-                //FIXME: Use n or previous n?
-                const float prevn = dot(prev, n);
+                vt -= vn*cg.n;
 
                 //Apply dynamic friction.
-                applyVelocityConstraint(*b1, p1 - b1->x, *b2, p2 - b2->x, n,
+                applyVelocityConstraint(cg.b1, cg.p1 - cg.b1->x, cg.b2, cg.p2 - cg.b2->x, cg.n,
                                         std::min(dynamicFrictionCoeff*std::abs(lambdaCollisionN[i])/h, length(vt))*normalize(vt));
                 
+                //Get pre-state normal velocity.
+                const auto precg = getCollisionGeometry(preStates, c);
+
+                //Determine normal and tangential relative velocities.
+                //FIXME: Use n or previous n?
+                const float prevn = dot(precg.v1 - precg.v2, cg.n);
+
                 //Perform restitution in case of collisions that are not resting contacts.
                 if (std::abs(prevn) > h*minCollisionNormalVelocity)
                 {
-                    applyVelocityConstraint(*b1, p1 - b1->x, *b2, p2 - b2->x, n, (vn + std::max(0.0f, restitutionCoeff*prevn))*n);
+                    applyVelocityConstraint(cg.b1, cg.p1 - cg.b1->x, cg.b2, cg.p2 - cg.b2->x, cg.n,
+                                            (vn + std::max(0.0f, restitutionCoeff*prevn))*cg.n);
                 }
             }
         }
