@@ -68,6 +68,7 @@ class RigidBody
         HardSphereInstance boundingSphere;
         
         float inverseMass;
+        //TODO: Orient body such that this is a diagonal matrix to make inversion more efficient.
         mat3 inverseInertia;
 
         vec3 position;
@@ -75,6 +76,56 @@ class RigidBody
         vec3 linearMomentum;
         vec3 angularMomentum;
         
+};
+
+struct RigidBodyState
+{
+    RigidBodyState() = default;
+    RigidBodyState(const RigidBody &);
+
+    float invM; //Inverse mass.
+    mat3 invI; //Inverse inertia tensor.
+    vec3 x; //Position.
+    vec4 q; //Orientation.
+    vec3 v; //Linear velocity.
+    vec3 w; //Angular velocity.
+
+    //FIXME: This is horrendous.
+    std::vector<HardSphereInstance> spheres;
+};
+
+struct RigidBodyCollision
+{
+    size_t b1Index; //Index of the first rigid body.
+    size_t b1SphereIndex; //Index of the first body's internal sphere.
+    size_t b2Index; //Index of the second rigid body.
+    size_t b2SphereIndex; //Index of the second body's internal sphere.
+};
+
+class Constraint
+{
+    Constraint(const size_t &, const vec3 &,
+        const vec3 &,
+        const float &, const float & = 0.0f);
+    virtual ~Constraint();
+
+    size_t b1Index; //Index of the rigid body.
+    vec3 r1; //Relative position of constraint for b1 in global coordinates.
+    vec3 n; //Constraint outward normal direction at point of contact in global coordinates.
+    float alpha; //Compliance.
+    float lambda; //Lagrange multiplier.
+};
+
+class TwoBodyConstraint : public Constraint
+{
+    TwoBodyConstraint(const size_t &, const vec3 &,
+        const size_t &, const vec3 &,
+        const vec3 &,
+        const float &, const float & = 0.0f);
+    virtual ~TwoBodyConstraint();
+
+    size_t b2Index; //Index of the second rigid body in the constraint.
+    vec3 r2; //Relative position of constraint for b2 in global coordinates.
 };
 
 class SpatialSphereHasher
@@ -94,7 +145,7 @@ class SpatialSphereHasher
 class RigidBodySystem
 {
     public:
-        RigidBodySystem(const size_t & = 4, const float & = 1.0e-6f, const size_t & = 2003, const float & = 4.0f, const float & = 0.5f);
+        RigidBodySystem(const size_t & = 4, const float & = 1.0e-6f, const size_t & = 2003, const float & = 4.0f, const float & = 0.5f, const float & = 2.0f);
         virtual ~RigidBodySystem();
         
         void addRigidBody(const unsigned int &, RigidBody *);
@@ -123,6 +174,7 @@ class RigidBodySystem
     protected:
         void integratePositionsAndCalculateBoundingSpheres(const float &);
         void integratePositionsAndCalculateInternalSpheres(const RigidBody *, const float &);
+        void calculateInternalSpheres(const RigidBody *);
         virtual void applyExternalForces(const float &);
     
         float time;
@@ -135,6 +187,7 @@ class RigidBodySystem
         
         const size_t nrCollisionIterations;
         const float collisionEpsilon;
+        const float collisionSphereMargin;
         SpatialSphereHasher boundingSphereHasher;
         SpatialSphereHasher internalSphereHasher;
 };

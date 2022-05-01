@@ -23,6 +23,7 @@ set(CMAKE_MODULE_PATH ${CMAKE_MODULE_PATH} ${TINY_SOURCE_DIR})
 # OpenVR support (still experimental, only for test_TerrainFancy).
 set(ENABLE_OPENVR FALSE)
 
+set(OpenGL_GL_PREFERENCE LEGACY)
 
 # Find all required libraries.
 find_package(OpenGL REQUIRED)
