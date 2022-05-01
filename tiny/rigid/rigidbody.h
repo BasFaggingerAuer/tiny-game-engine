@@ -170,6 +170,9 @@ class RigidBodySystem
                 }
             }
         }
+
+        float getTime() const;
+        float getTotalEnergy() const;
         
     protected:
         void integratePositionsAndCalculateBoundingSpheres(const float &);
@@ -178,6 +181,8 @@ class RigidBodySystem
         virtual void applyExternalForces(const float &);
     
         float time;
+        float totalEnergy;
+
         std::map<unsigned int, RigidBody *> bodies;
         std::vector<HardSphereInstance> bodyBoundingSpheres;
         std::vector<HardSphereInstance> bodyInternalSpheres;

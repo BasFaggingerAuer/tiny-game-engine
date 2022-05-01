@@ -187,6 +187,7 @@ RigidBodyState::RigidBodyState(const RigidBody &b)
 
 RigidBodySystem::RigidBodySystem(const size_t &a_nrCollisionIterations, const float &a_collisionEpsilon, const size_t &nrBuckets, const float &boundingSphereBucketSize, const float &internalSphereBucketSize, const float &a_collisionSphereMargin) :
     time(0.0f),
+    totalEnergy(0.0f),
     bodies(),
     boundingPlanes(),
     nrCollisionIterations(a_nrCollisionIterations),
@@ -201,6 +202,16 @@ RigidBodySystem::RigidBodySystem(const size_t &a_nrCollisionIterations, const fl
 RigidBodySystem::~RigidBodySystem()
 {
     //The user should free the rigid bodies.
+}
+
+float RigidBodySystem::getTime() const
+{
+    return time;
+}
+
+float RigidBodySystem::getTotalEnergy() const
+{
+    return totalEnergy;
 }
 
 void RigidBodySystem::addRigidBody(const unsigned int &index, RigidBody *body)
@@ -407,11 +418,11 @@ void RigidBodySystem::update(const float &dt)
     const float h = dt/static_cast<float>(nrSubSteps);
 
     //Minimum velocity below which there is no restitution for collisions.
-    const float minCollisionNormalVelocity = 2.0f*9.81f;
+    const float minCollisionNormalVelocity = 0.1f; //2.0f*9.81f;
     
     //Friction coefficients. (TODO: Move to classes.)
-    const float staticFrictionCoeff = 0.0f; //0.61f;  //~aluminum on steel.
-    const float dynamicFrictionCoeff = 0.0f; //0.47f; //~aluminum on steel.
+    const float staticFrictionCoeff = 0.61f;  //~aluminum on steel.
+    const float dynamicFrictionCoeff = 0.47f; //~aluminum on steel.
     const float restitutionCoeff = 1.0f; //0.5f*(0.63f + 0.93f); //steel ball on steel surface, average.
     
     //TODO: Re-organize this.
@@ -537,32 +548,31 @@ void RigidBodySystem::update(const float &dt)
 
                 vt -= vn*n;
 
+                //Get pre-state normal velocity.
+                const RigidBodyState *preb1 = &preStates[c.b1Index];
+                const RigidBodyState *preb2 = &preStates[c.b2Index];
+                
+                const vec4 pres1 = vec4(preb1->x + mat3::rotationMatrix(preb1->q)*preb1->spheres[c.b1SphereIndex].posAndRadius.xyz(), preb1->spheres[c.b1SphereIndex].posAndRadius.w);
+                const vec4 pres2 = vec4(preb2->x + mat3::rotationMatrix(preb2->q)*preb1->spheres[c.b2SphereIndex].posAndRadius.xyz(), preb2->spheres[c.b2SphereIndex].posAndRadius.w);
+                
+                const vec3 pren = normalize(s2.xyz() - s1.xyz());
+                const vec3 prep1 = pres1.xyz() + pres1.w*pren;
+                const vec3 prep2 = pres2.xyz() - pres2.w*pren;
+            
+                //Determine normal and tangential relative velocities.
+                const vec3 prev = (preb1->v + cross(preb1->w, prep1 - preb1->x)) -
+                                  (preb2->v + cross(preb2->w, prep2 - preb2->x));
+                //FIXME: Use n or previous n?
+                const float prevn = dot(prev, n);
+
                 //Apply dynamic friction.
                 applyVelocityConstraint(*b1, p1 - b1->x, *b2, p2 - b2->x, n,
-                    std::min(dynamicFrictionCoeff*std::abs(lambdaCollisionN[i])/h, length(vt))*normalize(vt));
+                                        std::min(dynamicFrictionCoeff*std::abs(lambdaCollisionN[i])/h, length(vt))*normalize(vt));
                 
                 //Perform restitution in case of collisions that are not resting contacts.
-                if (std::abs(vn) > h*minCollisionNormalVelocity)
+                if (std::abs(prevn) > h*minCollisionNormalVelocity)
                 {
-                    //Get pre-state normal velocity.
-                    const RigidBodyState *preb1 = &preStates[c.b1Index];
-                    const RigidBodyState *preb2 = &preStates[c.b2Index];
-                    
-                    const vec4 pres1 = vec4(preb1->x + mat3::rotationMatrix(preb1->q)*preb1->spheres[c.b1SphereIndex].posAndRadius.xyz(), preb1->spheres[c.b1SphereIndex].posAndRadius.w);
-                    const vec4 pres2 = vec4(preb2->x + mat3::rotationMatrix(preb2->q)*preb1->spheres[c.b2SphereIndex].posAndRadius.xyz(), preb2->spheres[c.b2SphereIndex].posAndRadius.w);
-                    
-                    const vec3 pren = normalize(s2.xyz() - s1.xyz());
-                    const vec3 prep1 = pres1.xyz() + pres1.w*pren;
-                    const vec3 prep2 = pres2.xyz() - pres2.w*pren;
-                
-                    //Determine normal and tangential relative velocities.
-                    const vec3 prev = (preb1->v + cross(preb1->w, prep1 - preb1->x)) -
-                                      (preb2->v + cross(preb2->w, prep2 - preb2->x));
-                    //FIXME: Use n or previous n?
-                    const float prevn = dot(prev, n);
-                    
-                    applyVelocityConstraint(*b1, p1 - b1->x, *b2, p2 - b2->x, n,
-                        (vn - std::max(-restitutionCoeff*prevn, 0.0f))*n);
+                    applyVelocityConstraint(*b1, p1 - b1->x, *b2, p2 - b2->x, n, (vn + std::max(0.0f, restitutionCoeff*prevn))*n);
                 }
             }
         }
@@ -584,6 +594,13 @@ void RigidBodySystem::update(const float &dt)
             b->angularMomentum = I*states[j].w;
             ++j;
         }
+    }
+
+    totalEnergy = 0.0f;
+    
+    for (auto i = bodies.cbegin(); i != bodies.end(); ++i)
+    {
+        totalEnergy += i->second->getEnergy();
     }
     
     //Increment global time.

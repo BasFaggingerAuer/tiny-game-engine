@@ -46,6 +46,7 @@ draw::RGBATexture2D *sphereDiffuseTexture = 0;
 
 rigid::RigidBodySystem *rigidBodySystem = 0;
 std::list<rigid::RigidBody *> rigidBodies;
+float lastEnergyTime = -10.0f;
 
 draw::Renderable *screenEffect = 0;
 
@@ -58,7 +59,7 @@ void setup()
     const int nrBalls = 4;
     
     rigidBodySystem = new rigid::RigidBodySystem();
-    rigidBodies.push_back(new rigid::RigidBody(1.0f, {rigid::HardSphereInstance(vec3(0.0f, 0.0f, 0.0f), 0.25f)}, vec3(-2.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(1.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f)));
+    rigidBodies.push_back(new rigid::RigidBody(1.0f, {rigid::HardSphereInstance(vec3(0.0f, 0.0f, 0.0f), 0.25f)}, vec3(-1.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(1.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f)));
     
     for (int i = 0; i < nrBalls; ++i)
     {
@@ -107,6 +108,12 @@ void update(const double &dt)
 {
     //Update the rigid bodies.
     rigidBodySystem->update(dt);
+
+    if (rigidBodySystem->getTime() > lastEnergyTime + 0.5f)
+    {
+        lastEnergyTime = rigidBodySystem->getTime();
+        std::cout << "Total energy: " << rigidBodySystem->getTotalEnergy() << "." << std::endl;
+    }
     
     //Get rigid body positions and send them to the static mesh horde.
     sphereMeshInstances.clear();
