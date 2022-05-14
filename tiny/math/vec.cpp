@@ -92,3 +92,15 @@ ivec4 tiny::to_int(const vec4 &a)
     return ivec4(static_cast<int>(a.x), static_cast<int>(a.y), static_cast<int>(a.z), static_cast<int>(a.w));
 }
 
+std::tuple<vec3, mat3> mat3::eigenDecomposition() const
+{
+    const auto [e, E] = tiny::eigenDecomposition<float, 3>({{{v00, v01, v02},
+                                                             {v10, v11, v12},
+                                                             {v20, v21, v22}}});
+    
+    return {vec3(e[0], e[1], e[2]), mat3(E[0][0], E[1][0], E[2][0],
+                                         E[0][1], E[1][1], E[2][1],
+                                         E[0][2], E[1][2], E[2][2])};
+}
+
+

@@ -25,103 +25,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using namespace tiny;
 using namespace tiny::rigid;
 
-RigidBody::RigidBody(const float &mass, const std::vector<HardSphereInstance> &a_spheres, const vec3 &a_position, const vec4 &a_orientation, const vec3 &a_linearMomentum, const vec3 &a_angularMomentum) :
-    spheres(a_spheres),
-    inverseMass(1.0f/mass),
-    position(a_position),
-    orientation(a_orientation),
-    linearMomentum(a_linearMomentum),
-    angularMomentum(a_angularMomentum)
-{
-    calculateSphereParameters();
-}
-
-RigidBody::RigidBody(const RigidBody &a) :
-    spheres(a.spheres),
-    boundingSphere(a.boundingSphere),
-    inverseMass(a.inverseMass),
-    inverseInertia(a.inverseInertia),
-    position(a.position),
-    orientation(a.orientation),
-    linearMomentum(a.linearMomentum),
-    angularMomentum(a.angularMomentum)
-{
-    calculateSphereParameters();
-}
-
-RigidBody::~RigidBody()
-{
-
-}
-
-float RigidBody::getEnergy() const
-{
-    //Calculate energy of this rigid body.
-    const mat3 invI = mat3(orientation)*inverseInertia*mat3(quatconj(orientation));
-
-    return 0.5f*inverseMass*length2(linearMomentum) + 0.5f*dot(angularMomentum, invI*angularMomentum);
-}
-
-void RigidBody::calculateSphereParameters()
-{
-    //For now, distribute the mass uniformly over the volume of all spheres, assuming there are no overlaps.
-    std::vector<float> volumePerSphere(spheres.size(), 0.0f);
-    float totalVolume = 0.0f;
-    
-    for (size_t i = 0; i < spheres.size(); ++i)
-    {
-        const float r = spheres[i].posAndRadius.w;
-        
-        totalVolume += (volumePerSphere[i] = (4.0f*M_PI/3.0f)*r*r*r);
-    }
-    
-    const float totalMass = 1.0f/inverseMass;
-    std::vector<float> massPerSphere(spheres.size(), 0.0f);
-    
-    for (size_t i = 0; i < spheres.size(); ++i)
-    {
-        massPerSphere[i] = totalMass*(volumePerSphere[i]/totalVolume);
-    }
-    
-    //Ensure that the object's spheres are centered around the center of mass.
-    vec3 centerOfMass = vec3(0.0f, 0.0f, 0.0f);
-    
-    for (size_t i = 0; i < spheres.size(); ++i)
-    {
-        centerOfMass += massPerSphere[i]*spheres[i].posAndRadius.xyz();
-    }
-    
-    centerOfMass /= totalMass;
-    
-    for (std::vector<HardSphereInstance>::iterator i = spheres.begin(); i != spheres.end(); ++i)
-    {
-        i->posAndRadius -= vec4(centerOfMass, 0.0f);
-    }
-    
-    //Calculate bounding sphere containing all internal spheres.
-    float maxRadius = 0.0f;
-    
-    for (std::vector<HardSphereInstance>::const_iterator i = spheres.begin(); i != spheres.end(); ++i)
-    {
-        maxRadius = std::max(maxRadius, length(i->posAndRadius.xyz()) + i->posAndRadius.w);
-    }
-    
-    boundingSphere = vec4(0.0f, 0.0f, 0.0f, maxRadius);
-    
-    //Calculate inverse inertia tensor.
-    mat3 inertia(0.0f);
-    
-    for (size_t i = 0; i < spheres.size(); ++i)
-    {
-        const vec4 s = spheres[i].posAndRadius;
-        
-        inertia += (2.0f*massPerSphere[i]*s.w*s.w/5.0f)*mat3::identityMatrix() +
-                   massPerSphere[i]*(length2(s.xyz())*mat3::identityMatrix() - mat3::outerProductMatrix(s.xyz(), s.xyz()));
-    }
-    
-    inverseInertia = inertia.inverted();
-}
-
 SpatialSphereHasher::SpatialSphereHasher(const size_t &nrBuckets, const float &boxSize) :
     invBoxSize(1.0f/boxSize),
     buckets(nrBuckets, std::list<size_t>())
@@ -134,7 +37,7 @@ SpatialSphereHasher::~SpatialSphereHasher()
 
 }
 
-void SpatialSphereHasher::hashObjects(const std::vector<HardSphereInstance> &objects)
+void SpatialSphereHasher::hashObjects(const std::vector<vec4> &objects)
 {
     //Clear current buckets.
     for (std::vector<std::list<size_t>>::iterator i = buckets.begin(); i != buckets.end(); ++i)
@@ -145,11 +48,11 @@ void SpatialSphereHasher::hashObjects(const std::vector<HardSphereInstance> &obj
     //Sort spheres into buckets.
     size_t count = 0;
     
-    for (std::vector<HardSphereInstance>::const_iterator i = objects.begin(); i != objects.end(); ++i)
+    for (std::vector<vec4>::const_iterator i = objects.begin(); i != objects.end(); ++i)
     {
         //Find range of boxes covered by this sphere.
-        const ivec4 lo = to_int(floor(invBoxSize*(i->posAndRadius - i->posAndRadius.w)));
-        const ivec4 hi = to_int( ceil(invBoxSize*(i->posAndRadius + i->posAndRadius.w)));
+        const ivec3 lo = to_int(floor(invBoxSize*(i->xyz() - i->w)));
+        const ivec3 hi = to_int( ceil(invBoxSize*(i->xyz() + i->w)));
         
         for (int z = lo.z; z <= hi.z; ++z)
         {
@@ -174,25 +77,13 @@ const std::vector<std::list<size_t>> *SpatialSphereHasher::getBuckets() const
     return &buckets;
 }
 
-RigidBodyState::RigidBodyState(const RigidBody &b)
-{
-    invM = b.inverseMass;
-    invI = mat3::rotationMatrix(b.orientation)*b.inverseInertia*mat3::rotationMatrix(quatconj(b.orientation));
-    x = b.position;
-    q = b.orientation;
-    v = invM*b.linearMomentum;
-    w = invI*b.angularMomentum;
-    spheres = b.spheres;
-}
-
-RigidBodySystem::RigidBodySystem(const size_t &a_nrCollisionIterations, const float &a_collisionEpsilon, const size_t &nrBuckets, const float &boundingSphereBucketSize, const float &internalSphereBucketSize, const float &a_collisionSphereMargin) :
+RigidBodySystem::RigidBodySystem(const size_t &nrBuckets, const float &boundingSphereBucketSize, const float &internalSphereBucketSize, const float &a_collisionSphereMargin, const int &a_nrSubSteps) :
     time(0.0f),
     totalEnergy(0.0f),
     bodies(),
     boundingPlanes(),
-    nrCollisionIterations(a_nrCollisionIterations),
-    collisionEpsilon(a_collisionEpsilon),
     collisionSphereMargin(a_collisionSphereMargin),
+    nrSubSteps(a_nrSubSteps),
     boundingSphereHasher(nrBuckets, boundingSphereBucketSize),
     internalSphereHasher(nrBuckets, internalSphereBucketSize)
 {
@@ -201,7 +92,7 @@ RigidBodySystem::RigidBodySystem(const size_t &a_nrCollisionIterations, const fl
 
 RigidBodySystem::~RigidBodySystem()
 {
-    //The user should free the rigid bodies.
+    
 }
 
 float RigidBodySystem::getTime() const
@@ -214,79 +105,82 @@ float RigidBodySystem::getTotalEnergy() const
     return totalEnergy;
 }
 
-void RigidBodySystem::addRigidBody(const unsigned int &index, RigidBody *body)
+void RigidBodySystem::addRigidBody(const float &totalMass, std::vector<vec4> spheres,
+    const vec3 &x, const vec3 &v, const vec4 &a_q, const vec3 & a_w)
 {
-    //Verify that this index is not yet in use.
-    std::map<unsigned int, RigidBody *>::iterator j = bodies.find(index);
-    
-    if (j != bodies.end())
-    {
-        std::cerr << "A rigid body with index " << index << " has already been added!" << std::endl;
-        throw std::exception();
-    }
-    
-    bodies.insert(std::make_pair(index, body));
-}
+    //Add a rigid body to the system.
 
-bool RigidBodySystem::freeRigidBody(const unsigned int &index)
-{
-    //Verify that this index is in use.
-    std::map<unsigned int, RigidBody *>::iterator j = bodies.find(index);
+    //For now, distribute the mass uniformly over the volume of all spheres, assuming there are no overlaps.
+    std::vector<float> volumePerSphere(spheres.size(), 0.0f);
+    float totalVolume = 0.0f;
     
-    if (j == bodies.end())
+    for (size_t i = 0; i < spheres.size(); ++i)
     {
-        std::cerr << "Unable to find rigid body with index " << index << "!" << std::endl;
-        return false;
-    }
-    
-    bodies.erase(j);
-    
-    return true;
-}
-
-void RigidBodySystem::integratePositionsAndCalculateBoundingSpheres(const float &dt)
-{
-    //This could be separated and parallelized for better performance.
-    
-    //This should not affect the capacity (so not cause spurious reallocations).
-    bodyBoundingSpheres.clear();
-    
-    for (std::map<unsigned int, RigidBody *>::const_iterator i = bodies.begin(); i != bodies.end(); ++i)
-    {
-        //Integrate position and orientation.
-        const RigidBody *b = i->second;
-        //x + dt*v, v = Minv*P
-        const vec3 x = b->position + (dt*b->inverseMass)*b->linearMomentum;
+        const float r = spheres[i].w;
         
-        //Include safety margin due to object motion.
-        bodyBoundingSpheres.push_back(vec4(x, b->boundingSphere.posAndRadius.w + collisionSphereMargin*dt*b->inverseMass*length(b->linearMomentum)));
+        totalVolume += (volumePerSphere[i] = (4.0f*M_PI/3.0f)*r*r*r);
     }
-}
-
-void RigidBodySystem::integratePositionsAndCalculateInternalSpheres(const RigidBody *b, const float &dt)
-{
-    //Integrate position and orientation.
-    //x + dt*v, v = Minv*P
-    const vec3 x = b->position + (dt*b->inverseMass)*b->linearMomentum;
-    //Iinv = R*Iinv0*Rinv
-    const mat3 invI = mat3::rotationMatrix(b->orientation)*b->inverseInertia*mat3::rotationMatrix(quatconj(b->orientation));
-    //q + dt*0.5*(omega, 0)*q, omega = Iinv*L
-    const mat3 R = mat3::rotationMatrix(normalize(b->orientation + (dt*0.5f)*quatmul(vec4(invI*b->angularMomentum, 0.0f), b->orientation)));
     
-    for (std::vector<HardSphereInstance>::const_iterator j = b->spheres.begin(); j != b->spheres.end(); ++j)
+    std::vector<float> massPerSphere(spheres.size(), 0.0f);
+    
+    for (size_t i = 0; i < spheres.size(); ++i)
     {
-        bodyInternalSpheres.push_back(vec4(x + R*j->posAndRadius.xyz(), j->posAndRadius.w));
+        massPerSphere[i] = totalMass*(volumePerSphere[i]/totalVolume);
     }
+    
+    //Ensure that the object's spheres are centered around the center of mass.
+    vec3 centerOfMass = vec3(0.0f, 0.0f, 0.0f);
+    
+    for (size_t i = 0; i < spheres.size(); ++i)
+    {
+        centerOfMass += massPerSphere[i]*spheres[i].xyz();
+    }
+    
+    centerOfMass /= totalMass;
+    
+    for (auto &s : spheres)
+    {
+        s -= vec4(centerOfMass, 0.0f);
+    }
+    
+    //Calculate bounding sphere containing all internal spheres.
+    float maxRadius = 0.0f;
+    
+    for (std::vector<vec4>::const_iterator i = spheres.begin(); i != spheres.end(); ++i)
+    {
+        maxRadius = std::max(maxRadius, length(i->xyz()) + i->w);
+    }
+    
+    //Calculate inertia tensor.
+    mat3 inertia(0.0f);
+    
+    for (size_t i = 0; i < spheres.size(); ++i)
+    {
+        const vec4 s = spheres[i];
+        
+        inertia += (2.0f*massPerSphere[i]*s.w*s.w/5.0f)*mat3::identityMatrix() +
+                   massPerSphere[i]*(length2(s.xyz())*mat3::identityMatrix() - mat3::outerProductMatrix(s.xyz(), s.xyz()));
+    }
+
+    //Rotate rigid body such that the intertia tensor is diagonal.
+    const auto [e, E] = inertia.eigenDecomposition();
+    const vec4 q = quatmul(a_q, quatconj(E.getRotation()));
+    const vec3 w = mat3::rotationMatrix(quatconj(E.getRotation()))*a_w;
+
+    //Add rigid body to system.
+    bodies.push_back({1.0f/totalMass, 1.0f/e, x, q, v, w, vec3(0.0f), vec3(0.0f), maxRadius, bodyInternalSpheres.size(), bodyInternalSpheres.size() + spheres.size()});
+    bodyInternalSpheres.insert(bodyInternalSpheres.end(), spheres.begin(), spheres.end());
 }
 
-void RigidBodySystem::calculateInternalSpheres(const RigidBody *b)
+void RigidBodySystem::calculateInternalSpheres(const RigidBodyState &b)
 {
-    const vec3 x = b->position;
-    const mat3 R = mat3::rotationMatrix(b->orientation);
+    const mat3 R = mat3::rotationMatrix(b.q);
 
-    for (std::vector<HardSphereInstance>::const_iterator j = b->spheres.begin(); j != b->spheres.end(); ++j)
+    for (size_t i = b.firstInternalSphere; i < b.lastInternalSphere; ++i)
     {
-        bodyInternalSpheres.push_back(vec4(x + R*j->posAndRadius.xyz(), j->posAndRadius.w));
+        const vec4 s = bodyInternalSpheres[i];
+
+        collSpheres.push_back(vec4(b.x + R*s.xyz(), s.w));
     }
 }
 
@@ -298,17 +192,17 @@ void applyPositionConstraint(float &lambda, const float alpha,
                              const vec3 &dx)
 {
     const vec3 n = normalize(dx);
-    const float w1 = b1->invM + dot(cross(r1, n), b1->invI*cross(r1, n));
-    const float w2 = b2->invM + dot(cross(r2, n), b2->invI*cross(r2, n));
+    const float w1 = b1->invM + dot(cross(r1, n), b1->getInvI()*cross(r1, n));
+    const float w2 = b2->invM + dot(cross(r2, n), b2->getInvI()*cross(r2, n));
     const float dlambda = -(length(dx) + alpha*lambda)/(w1 + w2 + alpha);
     const vec3 p = dlambda*n;
 
     b1->x += b1->invM*p;
-    b1->q += 0.5f*quatmul(vec4(b1->invI*cross(r1, p), 0.0f), b1->q);
+    b1->q += 0.5f*quatmul(vec4(b1->getInvI()*cross(r1, p), 0.0f), b1->q);
     b1->q = normalize(b1->q);
     
     b2->x -= b2->invM*p;
-    b2->q -= 0.5f*quatmul(vec4(b2->invI*cross(r2, p), 0.0f), b2->q);
+    b2->q -= 0.5f*quatmul(vec4(b2->getInvI()*cross(r2, p), 0.0f), b2->q);
     b2->q = normalize(b2->q);
 
     lambda += dlambda;
@@ -321,26 +215,28 @@ void applyVelocityConstraint(RigidBodyState *b1,
                              const vec3 &n,
                              const vec3 &dv)
 {
-    const float w1 = b1->invM + dot(cross(r1, n), b1->invI*cross(r1, n));
-    const float w2 = b2->invM + dot(cross(r2, n), b2->invI*cross(r2, n));
+    const float w1 = b1->invM + dot(cross(r1, n), b1->getInvI()*cross(r1, n));
+    const float w2 = b2->invM + dot(cross(r2, n), b2->getInvI()*cross(r2, n));
     const vec3 p = (-1.0f/(w1 + w2))*dv;
 
     b1->v += b1->invM*p;
-    b1->w += b1->invI*cross(r1, p);
+    b1->w += b1->getInvI()*cross(r1, p);
     
     b2->v -= b2->invM*p;
-    b2->w -= b2->invI*cross(r2, p);
+    b2->w -= b2->getInvI()*cross(r2, p);
 }
 
-RigidBodyCollisionGeometry getCollisionGeometry(std::vector<RigidBodyState> &bodies, const RigidBodyCollision &c)
+RigidBodyCollisionGeometry RigidBodySystem::getCollisionGeometry(std::vector<RigidBodyState> &bds, const RigidBodyCollision &c) const
 {
     //Get pointers to bodies.
-    RigidBodyState *b1 = &bodies[c.b1Index];
-    RigidBodyState *b2 = &bodies[c.b2Index];
+    RigidBodyState *b1 = &bds[c.b1Index];
+    RigidBodyState *b2 = &bds[c.b2Index];
 
     //Get potentially colliding internal spheres.
-    const vec4 s1 = vec4(b1->x + mat3::rotationMatrix(b1->q)*b1->spheres[c.b1SphereIndex].posAndRadius.xyz(), b1->spheres[c.b1SphereIndex].posAndRadius.w);
-    const vec4 s2 = vec4(b2->x + mat3::rotationMatrix(b2->q)*b2->spheres[c.b2SphereIndex].posAndRadius.xyz(), b2->spheres[c.b2SphereIndex].posAndRadius.w);
+    vec4 is = bodyInternalSpheres[b1->firstInternalSphere + c.b1SphereIndex];
+    const vec4 s1 = vec4(b1->x + mat3::rotationMatrix(b1->q)*is.xyz(), is.w);
+    is = bodyInternalSpheres[b2->firstInternalSphere + c.b2SphereIndex];
+    const vec4 s2 = vec4(b2->x + mat3::rotationMatrix(b2->q)*is.xyz(), is.w);
 
     const vec3 n = normalize(s2.xyz() - s1.xyz());
     const vec3 p1 = s1.xyz() + s1.w*n;
@@ -359,30 +255,26 @@ void RigidBodySystem::update(const float &dt)
     //Detect all collision pairs for the current state.
 
     //This should not affect the capacity (so not cause spurious reallocations).
-    bodyBoundingSpheres.clear();
-    
-    for (auto i = bodies.cbegin(); i != bodies.cend(); ++i)
+    collSpheres.clear();
+
+    for (const auto &b : bodies)
     {
-        //Integrate position and orientation.
-        const RigidBody *b = i->second;
-        
-        bodyBoundingSpheres.push_back(vec4(b->position, b->boundingSphere.posAndRadius.w));
+        collSpheres.push_back(vec4(b.x, (1.0f + dt*collisionSphereMargin)*b.radius));
     }
     
-    boundingSphereHasher.hashObjects(bodyBoundingSpheres);
+    boundingSphereHasher.hashObjects(collSpheres);
 
     //Check which objects can potentially intersect.
-    auto buckets = boundingSphereHasher.getBuckets();
     std::set<std::pair<size_t, size_t>> intersectingObjects;
     
-    for (auto bucket = buckets->cbegin(); bucket != buckets->cend(); ++bucket)
+    for (const auto &bucket : *boundingSphereHasher.getBuckets())
     {
-        for (auto bucketB1 = bucket->cbegin(); bucketB1 != bucket->cend(); ++bucketB1)
+        for (auto bucketB1 = bucket.cbegin(); bucketB1 != bucket.cend(); ++bucketB1)
         {
-            for (auto bucketB2 = std::next(bucketB1); bucketB2 != bucket->cend(); ++bucketB2)
+            for (auto bucketB2 = std::next(bucketB1); bucketB2 != bucket.cend(); ++bucketB2)
             {
-                const vec4 s1 = bodyBoundingSpheres[*bucketB1].posAndRadius;
-                const vec4 s2 = bodyBoundingSpheres[*bucketB2].posAndRadius;
+                const vec4 s1 = collSpheres[*bucketB1];
+                const vec4 s2 = collSpheres[*bucketB2];
                 
                 if (length(s1.xyz() - s2.xyz()) <= (1.0f + dt*collisionSphereMargin)*(s1.w + s2.w))
                 {
@@ -396,45 +288,44 @@ void RigidBodySystem::update(const float &dt)
     //Find all collision points between potentially intersecting objects.
     std::vector<RigidBodyCollision> collisions;
 
-    for (auto intersection = intersectingObjects.cbegin(); intersection != intersectingObjects.cend(); ++intersection)
+    for (const auto &intersection : intersectingObjects)
     {
-        RigidBody *b1 = std::next(bodies.begin(), intersection->first)->second;
-        RigidBody *b2 = std::next(bodies.begin(), intersection->second)->second;
+        const RigidBodyState &b1 = bodies[intersection.first];
+        const RigidBodyState &b2 = bodies[intersection.second];
+        const size_t nrB1Spheres = b1.lastInternalSphere - b1.firstInternalSphere;
         
-        bodyInternalSpheres.clear();
+        collSpheres.clear();
         calculateInternalSpheres(b1);
         calculateInternalSpheres(b2);
-        internalSphereHasher.hashObjects(bodyInternalSpheres);
-        buckets = internalSphereHasher.getBuckets();
+        internalSphereHasher.hashObjects(collSpheres);
         
-        for (auto bucket = buckets->cbegin(); bucket != buckets->cend(); ++bucket)
+        for (const auto &bucket : *internalSphereHasher.getBuckets())
         {
             //By construction, we know that spheres inside the buckets are sorted by object (i.e., internal spheres of b1 always precede internal spheres of b2 in each bucket).
-            auto b2Start = bucket->cbegin();
+            auto b2Start = bucket.cbegin();
             
-            while (b2Start != bucket->cend() && *b2Start < b1->spheres.size()) ++b2Start;
+            while (b2Start != bucket.cend() && *b2Start < nrB1Spheres) ++b2Start;
             
-            for (auto bucketB1 = bucket->cbegin(); bucketB1 != b2Start; ++bucketB1)
+            for (auto bucketB1 = bucket.cbegin(); bucketB1 != b2Start; ++bucketB1)
             {
-                for (auto bucketB2 = b2Start; bucketB2 != bucket->cend(); ++bucketB2)
+                for (auto bucketB2 = b2Start; bucketB2 != bucket.cend(); ++bucketB2)
                 {
                     //Do the internal spheres intersect?
-                    const vec4 s1 = bodyInternalSpheres[*bucketB1].posAndRadius;
-                    const vec4 s2 = bodyInternalSpheres[*bucketB2].posAndRadius;
+                    const vec4 s1 = collSpheres[*bucketB1];
+                    const vec4 s2 = collSpheres[*bucketB2];
 
                     if (length(s1.xyz() - s2.xyz()) <= (1.0f + dt*collisionSphereMargin)*(s1.w + s2.w))
                     {
-                        //If so, add a collision.
-                        collisions.push_back(RigidBodyCollision({intersection->first, *bucketB1,
-                                                                 intersection->second, *bucketB2 - b1->spheres.size()}));
+                        //If so, add a potential collision.
+                        collisions.push_back(RigidBodyCollision({intersection.first, *bucketB1,
+                                                                 intersection.second, *bucketB2 - nrB1Spheres}));
                     }
                 }
             }
         }
     }
     
-    //Perform substeps. (TODO: Move to classes.)
-    const int nrSubSteps = 16;
+    //Perform substeps.
     const float h = dt/static_cast<float>(nrSubSteps);
 
     //Minimum velocity below which there is no restitution for collisions.
@@ -444,38 +335,32 @@ void RigidBodySystem::update(const float &dt)
     const float staticFrictionCoeff = 0.61f;  //~aluminum on steel.
     const float dynamicFrictionCoeff = 0.47f; //~aluminum on steel.
     const float restitutionCoeff = 1.0f; //0.5f*(0.63f + 0.93f); //steel ball on steel surface, average.
-    
-    //TODO: Re-organize this.
-    std::vector<RigidBodyState> preStates;
-    std::vector<RigidBodyState> states;
+
+    //Zero force/torque accumulators.
+    for (auto &b : bodies)
+    {
+        b.f = vec3(0.0f);
+        b.t = vec3(0.0f);
+    }
+
+    //Apply forces.
+    applyExternalForces();
     
     for (int iSubStep = 0; iSubStep < nrSubSteps; ++iSubStep)
     {
         //Store pre-update positions and velocities.
-        preStates.clear();
+        preBodies = bodies;
 
-        for (auto i = bodies.cbegin(); i != bodies.cend(); ++i)
+
+        //Apply momenta.
+        for (auto &b : bodies)
         {
-            preStates.push_back(RigidBodyState(*i->second));
-        }
+            b.v += (h*b.invM)*b.f;
+            b.x += h*b.v;
 
-        //Apply forces.
-        applyExternalForces(h);
-
-        //Apply momenta. (TODO: Clean this up.)
-        states.clear();
-
-        for (auto i = bodies.begin(); i != bodies.end(); ++i)
-        {
-            RigidBody *b = i->second;
-            const mat3 invI = mat3::rotationMatrix(b->orientation)*b->inverseInertia*mat3::rotationMatrix(quatconj(b->orientation));
-
-            b->position += h*b->inverseMass*b->linearMomentum;
-            //FIXME: Angular momentum update equation does not play well with >0 time increments due to changing orientation.
-            b->orientation += 0.5f*h*quatmul(vec4(invI*b->angularMomentum, 0.0f), b->orientation);
-            b->orientation = normalize(b->orientation);
-
-            states.push_back(RigidBodyState(*b));
+            b.w += h*(b.getInvI()*b.t);
+            b.q += (0.5f*h)*quatmul(vec4(b.w, 0.0f), b.q);
+            b.q = normalize(b.q);
         }
 
         //Solve positions.
@@ -487,7 +372,7 @@ void RigidBodySystem::update(const float &dt)
         for (size_t i = 0; i < collisions.size(); ++i)
         {
             const RigidBodyCollision c = collisions[i];
-            auto cg = getCollisionGeometry(states, c);
+            auto cg = getCollisionGeometry(bodies, c);
 
             //Check for collision for the current body states.
             if (cg.isColliding)
@@ -498,11 +383,11 @@ void RigidBodySystem::update(const float &dt)
                 applyPositionConstraint(lambdaCollisionN[i], 0.0f, cg.b1, cg.p1 - cg.b1->x, cg.b2, cg.p2 - cg.b2->x, d*cg.n);
 
                 //Handle static friction.
-                const float w1 = cg.b1->invM + dot(cross(cg.p1, cg.n), cg.b1->invI*cross(cg.p1, cg.n));
-                const float w2 = cg.b2->invM + dot(cross(cg.p2, cg.n), cg.b2->invI*cross(cg.p2, cg.n));
+                const float w1 = cg.b1->invM + dot(cross(cg.p1, cg.n), cg.b1->getInvI()*cross(cg.p1, cg.n));
+                const float w2 = cg.b2->invM + dot(cross(cg.p2, cg.n), cg.b2->getInvI()*cross(cg.p2, cg.n));
 
                 //Get pre-states of the rigid bodies.
-                const auto precg = getCollisionGeometry(preStates, c);
+                const auto precg = getCollisionGeometry(preBodies, c);
                 
                 //Get tangential motion.
                 vec3 dx = (cg.p1 - precg.p1) - (cg.p2 - precg.p2);
@@ -518,20 +403,20 @@ void RigidBodySystem::update(const float &dt)
         }
 
         //Update velocities.
-        for (size_t i = 0; i < states.size(); ++i)
+        for (size_t i = 0; i < bodies.size(); ++i)
         {
-            states[i].v = (states[i].x - preStates[i].x)/h;
+            bodies[i].v = (bodies[i].x - preBodies[i].x)/h;
 
-            vec4 dq = states[i].q*quatconj(preStates[i].q);
-
-            states[i].w = (dq.w >= 0.0f ? 2.0f/h : -2.0f/h)*dq.xyz();
+            vec4 dq = bodies[i].q*quatconj(preBodies[i].q);
+            
+            bodies[i].w = (dq.w >= 0.0f ? 2.0f/h : -2.0f/h)*dq.xyz();
         }
 
         //Solve velocities.
         for (size_t i = 0; i < collisions.size(); ++i)
         {
             const RigidBodyCollision c = collisions[i];
-            auto cg = getCollisionGeometry(states, c);
+            auto cg = getCollisionGeometry(bodies, c);
 
             //Did we have a collision?
             if (lambdaCollisionN[i] != 0.0f)
@@ -547,7 +432,7 @@ void RigidBodySystem::update(const float &dt)
                                         std::min(dynamicFrictionCoeff*std::abs(lambdaCollisionN[i])/h, length(vt))*normalize(vt));
                 
                 //Get pre-state normal velocity.
-                const auto precg = getCollisionGeometry(preStates, c);
+                const auto precg = getCollisionGeometry(preBodies, c);
 
                 //Determine normal and tangential relative velocities.
                 //FIXME: Use n or previous n?
@@ -561,251 +446,22 @@ void RigidBodySystem::update(const float &dt)
                 }
             }
         }
-
-        //Store results.
-        //TODO: Re-organize this.
-        int j = 0;
-
-        for (auto i = bodies.begin(); i != bodies.end(); ++i)
-        {
-            RigidBody *b = i->second;
-            
-            b->position = states[j].x;
-            b->orientation = states[j].q;
-            b->linearMomentum = states[j].v/states[j].invM;
-            
-            const mat3 I = mat3::rotationMatrix(b->orientation)*b->inverseInertia.inverted()*mat3::rotationMatrix(quatconj(b->orientation));
-
-            b->angularMomentum = I*states[j].w;
-            ++j;
-        }
     }
 
     totalEnergy = 0.0f;
     
-    for (auto i = bodies.cbegin(); i != bodies.end(); ++i)
+    for (const auto &b : bodies)
     {
-        totalEnergy += i->second->getEnergy();
+        totalEnergy += b.getEnergy();
     }
     
     //Increment global time.
     time += dt;
 }
 
-/*
-void RigidBodySystem::update(const float &dt)
-{
-    //Use the semi-implicit Euler method as symplectic integrator.
-    
-    //Update positions.
-    bool noCollisions = false;
-    float elasticity = 1.0f;
-    
-    for (size_t iCollision = 0; iCollision < nrCollisionIterations && !noCollisions; ++iCollision)
-    {
-        //Remove all energy for the final collision round to prevent object intersection.
-        elasticity *= (iCollision < nrCollisionIterations - 1 ? 1.0f : 0.0f);
-        
-        //Integrate positions.
-        integratePositionsAndCalculateBoundingSpheres(dt);
-        
-        //Check for collisions.
-        noCollisions = true;
-        
-        boundingSphereHasher.hashObjects(bodyBoundingSpheres);
-        
-        //Check which objects can potentially intersect.
-        const std::vector<std::list<size_t>> *buckets = boundingSphereHasher.getBuckets();
-        std::list<std::pair<size_t, size_t>> intersectingObjects;
-        
-        for (std::vector<std::list<size_t>>::const_iterator bucket = buckets->begin(); bucket != buckets->end(); ++bucket)
-        {
-            for (std::list<size_t>::const_iterator bucketB1 = bucket->begin(); bucketB1 != bucket->end(); ++bucketB1)
-            {
-                for (std::list<size_t>::const_iterator bucketB2 = std::next(bucketB1); bucketB2 != bucket->end(); ++bucketB2)
-                {
-                    if (length(bodyBoundingSpheres[*bucketB1].posAndRadius.xyz() - bodyBoundingSpheres[*bucketB2].posAndRadius.xyz()) <=
-                               bodyBoundingSpheres[*bucketB1].posAndRadius.w + bodyBoundingSpheres[*bucketB2].posAndRadius.w)
-                    {
-                        intersectingObjects.push_back(std::make_pair(*bucketB1, *bucketB2));
-                    }
-                }
-            }
-        }
-        
-        //Intersect internal spheres of these potentially intersecting objects and resolve collisions.
-        for (std::list<std::pair<size_t, size_t>>::const_iterator intersection = intersectingObjects.begin(); intersection != intersectingObjects.end(); ++intersection)
-        {
-            RigidBody *b1 = std::next(bodies.begin(), intersection->first)->second;
-            RigidBody *b2 = std::next(bodies.begin(), intersection->second)->second;
-            
-            bodyInternalSpheres.clear();
-            integratePositionsAndCalculateInternalSpheres(b1, dt);
-            integratePositionsAndCalculateInternalSpheres(b2, dt);
-            internalSphereHasher.hashObjects(bodyInternalSpheres);
-            buckets = internalSphereHasher.getBuckets();
-            
-            for (std::vector<std::list<size_t>>::const_iterator bucket = buckets->begin(); bucket != buckets->end(); ++bucket)
-            {
-                //By construction, we know that spheres inside the buckets are sorted by object (i.e., internal spheres of b1 always precede internal spheres of b2 in each bucket).
-                std::list<size_t>::const_iterator b2Start = bucket->begin();
-                
-                while (b2Start != bucket->end() && *b2Start < b1->spheres.size()) ++b2Start;
-                
-                for (std::list<size_t>::const_iterator bucketB1 = bucket->begin(); bucketB1 != b2Start; ++bucketB1)
-                {
-                    for (std::list<size_t>::const_iterator bucketB2 = b2Start; bucketB2 != bucket->end(); ++bucketB2)
-                    {
-                        //Do the internal spheres intersect?
-                        if (length(bodyInternalSpheres[*bucketB1].posAndRadius.xyz() - bodyInternalSpheres[*bucketB2].posAndRadius.xyz()) <=
-                               bodyInternalSpheres[*bucketB1].posAndRadius.w + bodyInternalSpheres[*bucketB2].posAndRadius.w)
-                        {
-                            const vec4 s1 = bodyInternalSpheres[*bucketB1].posAndRadius;
-                            const vec4 s2 = bodyInternalSpheres[*bucketB2].posAndRadius;
-                            const vec3 z = (1.0f/(s1.w + s2.w))*(s2.w*s1.xyz() + s1.w*s2.xyz());
-                            const vec3 n = normalize(s1.xyz() - s2.xyz());
-                            const mat3 invI1 = mat3::rotationMatrix(b1->orientation)*b1->inverseInertia*mat3::rotationMatrix(quatconj(b1->orientation));
-                            const mat3 invI2 = mat3::rotationMatrix(b2->orientation)*b2->inverseInertia*mat3::rotationMatrix(quatconj(b2->orientation));
-                            
-                            //Calculate relative velocity with small bias to prevent single-precision fluctuations from causing spurious collisions.
-                            const float relVelocity = dot(n, (b1->inverseMass*b1->linearMomentum + cross(invI1*b1->angularMomentum, z - b1->position)) - 
-                                                             (b2->inverseMass*b2->linearMomentum + cross(invI2*b2->angularMomentum, z - b2->position)));
-                            
-                            if (relVelocity < -collisionEpsilon)
-                            {
-                                //We have a collision --> update bodies.
-                                const vec3 z1 = cross(z - b1->position, n);
-                                const vec3 z2 = cross(z - b2->position, n);
-                                const float alpha = -(1.0f + elasticity)*
-                                                   (  b1->inverseMass*dot(b1->linearMomentum, n) + dot(z1, invI1*b1->angularMomentum)
-                                                    - b2->inverseMass*dot(b2->linearMomentum, n) - dot(z2, invI2*b2->angularMomentum))/
-                                                   (  b1->inverseMass + dot(z1, invI1*z1)
-                                                    + b2->inverseMass + dot(z2, invI2*z2));
-                                
-                                b1->linearMomentum += alpha*n;
-                                b1->angularMomentum += alpha*z1;
-                                
-                                b2->linearMomentum -= alpha*n;
-                                b2->angularMomentum -= alpha*z2;
-                                
-                                noCollisions = false;
-                            }
-                            else if (relVelocity <= collisionEpsilon)
-                            {
-                                //TODO: Store this as a resting contact.
-                            }
-                            //else the objects are separating, which is fine.
-                        }
-                    }
-                }
-            }
-        }
-    }
-
-#ifndef NDEBUG
-    //Check that all colliding objects are indeed separating.
-    if (true)
-    {
-        boundingSphereHasher.hashObjects(bodyBoundingSpheres);
-        
-        //Check which objects can potentially intersect.
-        const std::vector<std::list<size_t>> *buckets = boundingSphereHasher.getBuckets();
-        std::list<std::pair<size_t, size_t>> intersectingObjects;
-        
-        for (std::vector<std::list<size_t>>::const_iterator bucket = buckets->begin(); bucket != buckets->end(); ++bucket)
-        {
-            for (std::list<size_t>::const_iterator bucketB1 = bucket->begin(); bucketB1 != bucket->end(); ++bucketB1)
-            {
-                for (std::list<size_t>::const_iterator bucketB2 = std::next(bucketB1); bucketB2 != bucket->end(); ++bucketB2)
-                {
-                    if (length(bodyBoundingSpheres[*bucketB1].posAndRadius.xyz() - bodyBoundingSpheres[*bucketB2].posAndRadius.xyz()) <=
-                               bodyBoundingSpheres[*bucketB1].posAndRadius.w + bodyBoundingSpheres[*bucketB2].posAndRadius.w)
-                    {
-                        intersectingObjects.push_back(std::make_pair(*bucketB1, *bucketB2));
-                    }
-                }
-            }
-        }
-        
-        //Intersect internal spheres of these potentially intersecting objects and resolve collisions.
-        for (std::list<std::pair<size_t, size_t>>::const_iterator intersection = intersectingObjects.begin(); intersection != intersectingObjects.end(); ++intersection)
-        {
-            RigidBody *b1 = std::next(bodies.begin(), intersection->first)->second;
-            RigidBody *b2 = std::next(bodies.begin(), intersection->second)->second;
-            
-            bodyInternalSpheres.clear();
-            integratePositionsAndCalculateInternalSpheres(b1, dt);
-            integratePositionsAndCalculateInternalSpheres(b2, dt);
-            internalSphereHasher.hashObjects(bodyInternalSpheres);
-            buckets = internalSphereHasher.getBuckets();
-            
-            for (std::vector<std::list<size_t>>::const_iterator bucket = buckets->begin(); bucket != buckets->end(); ++bucket)
-            {
-                //By construction, we know that spheres inside the buckets are sorted by object (i.e., internal spheres of b1 always precede internal spheres of b2 in each bucket).
-                std::list<size_t>::const_iterator b2Start = bucket->begin();
-                
-                while (b2Start != bucket->end() && *b2Start < b1->spheres.size()) ++b2Start;
-                
-                for (std::list<size_t>::const_iterator bucketB1 = bucket->begin(); bucketB1 != b2Start; ++bucketB1)
-                {
-                    for (std::list<size_t>::const_iterator bucketB2 = b2Start; bucketB2 != bucket->end(); ++bucketB2)
-                    {
-                        //Do the internal spheres intersect?
-                        if (length(bodyInternalSpheres[*bucketB1].posAndRadius.xyz() - bodyInternalSpheres[*bucketB2].posAndRadius.xyz()) <=
-                               bodyInternalSpheres[*bucketB1].posAndRadius.w + bodyInternalSpheres[*bucketB2].posAndRadius.w)
-                        {
-                            const vec4 s1 = bodyInternalSpheres[*bucketB1].posAndRadius;
-                            const vec4 s2 = bodyInternalSpheres[*bucketB2].posAndRadius;
-                            const vec3 z = (1.0f/(s1.w + s2.w))*(s2.w*s1.xyz() + s1.w*s2.xyz());
-                            const vec3 n = normalize(s1.xyz() - s2.xyz());
-                            const mat3 invI1 = mat3::rotationMatrix(b1->orientation)*b1->inverseInertia*mat3::rotationMatrix(quatconj(b1->orientation));
-                            const mat3 invI2 = mat3::rotationMatrix(b2->orientation)*b2->inverseInertia*mat3::rotationMatrix(quatconj(b2->orientation));
-                            
-                            //Calculate relative velocity with small bias to prevent single-precision fluctuations from causing spurious collisions.
-                            const float relVelocity = dot(n, (b1->inverseMass*b1->linearMomentum + cross(invI1*b1->angularMomentum, z - b1->position)) - 
-                                                             (b2->inverseMass*b2->linearMomentum + cross(invI2*b2->angularMomentum, z - b2->position)));
-                            
-                            if (relVelocity < -collisionEpsilon)
-                            {
-                                //We should no longer have interpenetrating objects moving further into each other.
-                                std::cerr << "Colliding objects are moving into each other!" << std::endl;
-                                assert(false);
-                            }
-                        }
-                    }
-                }
-            }
-        }
-    }
-#endif
-    
-    //Actually integrate positions.
-    for (std::map<unsigned int, RigidBody *>::iterator i = bodies.begin(); i != bodies.end(); ++i)
-    {
-        //Integrate position and orientation.
-        RigidBody *b = i->second;
-        //x + dt*v, v = Minv*P
-        b->position += (dt*b->inverseMass)*b->linearMomentum;
-        //Iinv = R*Iinv0*Rinv
-        const mat3 invI = mat3::rotationMatrix(b->orientation)*b->inverseInertia*mat3::rotationMatrix(quatconj(b->orientation));
-        //q + dt*0.5*(omega, 0)*q, omega = Iinv*L
-        b->orientation = normalize(b->orientation + (dt*0.5f)*quatmul(vec4(invI*b->angularMomentum, 0.0f), b->orientation));
-    }
-    
-    //Query forces.
-    applyExternalForces(dt);
-    
-    //Update velocities.
-    //TODO: Add normal force/resting contact calculation.
-    
-    //Increment global time.
-    time += dt;
-}
-*/
-
-void RigidBodySystem::applyExternalForces(const float &)
+void RigidBodySystem::applyExternalForces()
 {
     //To be implemented by the user (e.g., gravity).
-    //b->linearMomentum += dt*vec3(0.0f, -9.81f/b->inverseMass, 0.0f);
+    //b.f = vec3(0.0f, -9.81f/b.invM, 0.0f);
 }
 

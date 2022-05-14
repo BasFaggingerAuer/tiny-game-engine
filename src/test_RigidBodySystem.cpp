@@ -45,7 +45,6 @@ draw::StaticMeshHorde *sphereMeshHorde = 0;
 draw::RGBATexture2D *sphereDiffuseTexture = 0;
 
 rigid::RigidBodySystem *rigidBodySystem = 0;
-std::list<rigid::RigidBody *> rigidBodies;
 float lastEnergyTime = -10.0f;
 
 draw::Renderable *screenEffect = 0;
@@ -59,19 +58,14 @@ void setup()
     const int nrBalls = 4;
     
     rigidBodySystem = new rigid::RigidBodySystem();
-    rigidBodies.push_back(new rigid::RigidBody(1.0f, {rigid::HardSphereInstance(vec3(0.0f, 0.0f, 0.0f), 0.25f)}, vec3(-1.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(1.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f)));
+    rigidBodySystem->addRigidBody(1.0f, {vec4(0.0f, 0.0f, 0.0f, 0.25f)}, vec3(-1.0f, 0.0f, 0.0f), vec3(1.0f, 0.0f, 0.0f));
     
     for (int i = 0; i < nrBalls; ++i)
     {
-        rigidBodies.push_back(new rigid::RigidBody(1.0f, {rigid::HardSphereInstance(vec3(0.0f, 0.0f, 0.0f), 0.25f)}, vec3(0.55f*static_cast<float>(i), 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f)));
+        rigidBodySystem->addRigidBody(1.0f, {vec4(0.0f, 0.0f, 0.0f, 0.25f)}, vec3(0.55f*static_cast<float>(i), 0.0f, 0.0f));
     }
     
-    rigidBodies.push_back(new rigid::RigidBody(1.0e8f, {rigid::HardSphereInstance(vec3(0.0f, 0.0f, 0.0f), 0.25f)}, vec3(0.55f*static_cast<float>(nrBalls + 1), 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f)));
-    
-    for (std::list<rigid::RigidBody *>::iterator i = rigidBodies.begin(); i != rigidBodies.end(); ++i)
-    {
-        rigidBodySystem->addRigidBody(std::distance(rigidBodies.begin(), i), *i);
-    }
+    rigidBodySystem->addRigidBody(1.0e8f, {vec4(0.0f, 0.0f, 0.0f, 0.25f)}, vec3(0.55f*static_cast<float>(nrBalls + 1), 0.0f, 0.0f));
     
     //Create a cube mesh and paint it with a texture.
     sphereMeshHorde = new draw::StaticMeshHorde(mesh::StaticMesh::createIcosahedronMesh(1.0f), 1024);
@@ -97,11 +91,6 @@ void cleanup()
     delete sphereDiffuseTexture;
     
     delete rigidBodySystem;
-    
-    for (std::list<rigid::RigidBody *>::iterator i = rigidBodies.begin(); i != rigidBodies.end(); ++i)
-    {
-        delete *i;
-    }
 }
 
 void update(const double &dt)

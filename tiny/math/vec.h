@@ -17,6 +17,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #pragma once
 
 #include <iostream>
+#include <tuple>
+#include <array>
 #include <cmath>
 
 #ifdef ENABLE_OPENVR
@@ -441,6 +443,12 @@ class mat3
             v01(y.x), v11(y.y), v21(y.z),
             v02(z.x), v12(z.y), v22(z.z)
         {};
+
+        explicit inline mat3(const vec3 &a) :
+            v00(a.x),  v10(0.0f), v20(0.0f),
+            v01(0.0f), v11(a.y),  v21(0.0f),
+            v02(0.0f), v12(0.0f), v22(a.z)
+        {};
         
         explicit inline mat3(const vec4 &a) :
             v00(1.0f - 2.0f*(a.y*a.y + a.z*a.z)),
@@ -588,6 +596,8 @@ class mat3
                     t*(v01*v12 - v02*v11), t*(v02*v10 - v00*v12), t*(v00*v11 - v01*v10));
         };
 
+        std::tuple<vec3, mat3> eigenDecomposition() const;
+        
         inline vec4 getRotation() const
         {
             //From http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/index.htm.
@@ -659,7 +669,7 @@ class mat3
                 2.0f*(a.y*a.z + a.w*a.x),
                 1.0f - 2.0f*(a.x*a.x + a.y*a.y));
         };
-        
+
         float v00, v10, v20;
         float v01, v11, v21;
         float v02, v12, v22;
@@ -1078,6 +1088,33 @@ class mat4
 
 inline mat4 & operator * (mat4 a, const mat4 &b) {return a *= b;}
 inline mat4 & operator * (const float &b, mat4 a) {return a *= b;}
+
+//Perform eigendecomposition using Jacobi's algorithm.
+//https://en.wikipedia.org/wiki/Jacobi_eigenvalue_algorithm
+template<typename t, size_t n>
+std::tuple<std::array<t, n>,
+    std::array<std::array<t, n>, n>> eigenDecomposition(std::array<std::array<t, n>, n> a)
+{
+    //Start with identity matrix for eigenvectors.
+    std::array<std::array<t, n>, n> E;
+    
+    for (size_t i = 0; i < n; ++i) {
+        for (size_t j = 0; j < n; ++j) {
+            E[i][j] = (i == j ? t(1.0) : t(0.0));
+        }
+    }
+
+    //TODO: Implement algorithm.
+    
+    //Eigenvalues are on the diagonal.
+    std::array<t, n> e;
+
+    for (size_t i = 0; i < n; ++i) {
+        e[i] = a[i][i];
+    }
+    
+    return {e, E};
+}
 
 vec4 quatmul(const vec4 &, const vec4 &);
 vec4 quatconj(const vec4 &);

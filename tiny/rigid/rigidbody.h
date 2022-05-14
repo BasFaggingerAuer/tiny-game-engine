@@ -31,67 +31,49 @@ namespace tiny
 namespace rigid
 {
 
-struct HardSphereInstance
-{
-    HardSphereInstance()
-    {
-
-    }
-
-    HardSphereInstance(const vec3 &_pos, const float &_rad) :
-        posAndRadius(vec4(_pos.x, _pos.y, _pos.z, _rad))
-    {
-
-    }
-
-    HardSphereInstance(const vec4 &_posAndRadius) :
-        posAndRadius(_posAndRadius)
-    {
-
-    }
-
-    vec4 posAndRadius;
-};
-
-class RigidBody
+class SpatialSphereHasher
 {
     public:
-        RigidBody(const float &, const std::vector<HardSphereInstance> &, const vec3 & = vec3(0.0f, 0.0f, 0.0f), const vec4 & = vec4(0.0f, 0.0f, 0.0f, 1.0f), const vec3 & = vec3(0.0f, 0.0f, 0.0f), const vec3 & = vec3(0.0f, 0.0f, 0.0f));
-        RigidBody(const RigidBody &);
-        virtual ~RigidBody();
-
-        float getEnergy() const;
-        void calculateSphereParameters();
+        SpatialSphereHasher(const size_t &, const float &);
+        ~SpatialSphereHasher();
         
-        //Rigid body collision detection is performed by decomposing the rigid body into hard spheres and performing only sphere-sphere collisions. This permits us to not consider all vertex/edge/plane collision cases at the cost of increased computation time.
-        std::vector<HardSphereInstance> spheres;
-        HardSphereInstance boundingSphere;
+        void hashObjects(const std::vector<vec4> &);
+        const std::vector<std::list<size_t>> *getBuckets() const;
         
-        float inverseMass;
-        //TODO: Orient body such that this is a diagonal matrix to make inversion more efficient.
-        mat3 inverseInertia;
-
-        vec3 position;
-        vec4 orientation;
-        vec3 linearMomentum;
-        vec3 angularMomentum;
-        
+    private:
+        const float invBoxSize;
+        std::vector<std::list<size_t>> buckets;
 };
 
 struct RigidBodyState
 {
-    RigidBodyState() = default;
-    RigidBodyState(const RigidBody &);
-
     float invM; //Inverse mass.
-    mat3 invI; //Inverse inertia tensor.
+    vec3 invI; //Inverse inertia tensor diagonal.
     vec3 x; //Position.
     vec4 q; //Orientation.
     vec3 v; //Linear velocity.
     vec3 w; //Angular velocity.
+    vec3 f; //Force accumulator.
+    vec3 t; //Torque accumulator.
+    
+    float radius; //Size of rigid body.
+    size_t firstInternalSphere; //Index of first internal sphere.
+    size_t lastInternalSphere; //Index of last internal sphere.
+    
+    mat3 getI() const
+    {
+        return mat3::rotationMatrix(q)*mat3(1.0f/invI)*mat3::rotationMatrix(quatconj(q));
+    }
 
-    //FIXME: This is horrendous.
-    std::vector<HardSphereInstance> spheres;
+    mat3 getInvI() const
+    {
+        return mat3::rotationMatrix(q)*mat3(invI)*mat3::rotationMatrix(quatconj(q));
+    }
+
+    float getEnergy() const
+    {
+        return (0.5f/invM)*length2(v) + 0.5f*dot(w, getI()*w);
+    }
 };
 
 struct RigidBodyCollision
@@ -111,29 +93,17 @@ struct RigidBodyCollisionGeometry
     vec3 p2, v2; //Position and velocity of collision point in world coordinates of second body.
     bool isColliding; //Are the bodies colliding?
 };
-
-class SpatialSphereHasher
-{
-    public:
-        SpatialSphereHasher(const size_t &, const float &);
-        ~SpatialSphereHasher();
         
-        void hashObjects(const std::vector<HardSphereInstance> &);
-        const std::vector<std::list<size_t>> *getBuckets() const;
-        
-    private:
-        const float invBoxSize;
-        std::vector<std::list<size_t>> buckets;
-};
-
 class RigidBodySystem
 {
     public:
-        RigidBodySystem(const size_t & = 4, const float & = 1.0e-6f, const size_t & = 2003, const float & = 4.0f, const float & = 0.5f, const float & = 2.0f);
+        RigidBodySystem(const size_t & = 2003, const float & = 4.0f, const float & = 0.5f, const float & = 2.0f, const int & = 16);
         virtual ~RigidBodySystem();
         
-        void addRigidBody(const unsigned int &, RigidBody *);
-        bool freeRigidBody(const unsigned int &);
+        void addRigidBody(const float &, std::vector<vec4>,
+            const vec3 &, const vec3 & = vec3(0.0f, 0.0f, 0.0f),
+            const vec4 & = vec4(0.0f, 0.0f, 0.0f, 1.0f), const vec3 & = vec3(0.0f, 0.0f, 0.0f));
+        //TODO: Ability to remove rigid bodies.
         
         void update(const float &);
         
@@ -142,15 +112,15 @@ class RigidBodySystem
         template <typename Container>
         void getInternalSphereStaticMeshes(Container &out) const
         {
-            for (std::map<unsigned int, RigidBody *>::const_iterator i = bodies.begin(); i != bodies.end(); ++i)
+            for (const auto &b : bodies)
             {
-                //Integrate position and orientation.
-                const RigidBody *b = i->second;
-                const mat3 R = mat3::rotationMatrix(b->orientation);
-            
-                for (std::vector<HardSphereInstance>::const_iterator j = b->spheres.begin(); j != b->spheres.end(); ++j)
+                const mat3 R = mat3::rotationMatrix(b.q);
+                
+                for (size_t i = b.firstInternalSphere; i < b.lastInternalSphere; ++i)
                 {
-                    out.push_back(tiny::draw::StaticMeshInstance(vec4(b->position + R*j->posAndRadius.xyz(), j->posAndRadius.w), b->orientation));
+                    const vec4 s = bodyInternalSpheres[i];
+
+                    out.push_back(tiny::draw::StaticMeshInstance(vec4(b.x + R*s.xyz(), s.w), b.q));
                 }
             }
         }
@@ -159,26 +129,28 @@ class RigidBodySystem
         float getTotalEnergy() const;
         
     protected:
-        void integratePositionsAndCalculateBoundingSpheres(const float &);
-        void integratePositionsAndCalculateInternalSpheres(const RigidBody *, const float &);
-        void calculateInternalSpheres(const RigidBody *);
-        virtual void applyExternalForces(const float &);
+        virtual void applyExternalForces();
     
         float time;
         float totalEnergy;
 
-        std::map<unsigned int, RigidBody *> bodies;
-        std::vector<HardSphereInstance> bodyBoundingSpheres;
-        std::vector<HardSphereInstance> bodyInternalSpheres;
-        
+        std::vector<RigidBodyState> bodies;
+
         //Planes through which no rigid body may pass.
         std::vector<vec4> boundingPlanes;
         
-        const size_t nrCollisionIterations;
-        const float collisionEpsilon;
         const float collisionSphereMargin;
+        const int nrSubSteps;
         SpatialSphereHasher boundingSphereHasher;
         SpatialSphereHasher internalSphereHasher;
+
+    private:
+        std::vector<RigidBodyState> preBodies;
+        std::vector<vec4> bodyInternalSpheres;
+        std::vector<vec4> collSpheres;
+
+        void calculateInternalSpheres(const RigidBodyState &);
+        RigidBodyCollisionGeometry getCollisionGeometry(std::vector<RigidBodyState> &, const RigidBodyCollision &) const;
 };
 
 }
