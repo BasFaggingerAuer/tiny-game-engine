@@ -29,6 +29,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define M_PI 3.14159265358979323846f
 #endif
 
+#define EPS 1.0e-6
+
 namespace tiny
 {
 
@@ -236,9 +238,9 @@ template <typename t> t length2(const typed2vector<t> &a) noexcept {return dot(a
 template <typename t> t length2(const typed3vector<t> &a) noexcept {return dot(a, a);}
 template <typename t> t length2(const typed4vector<t> &a) noexcept {return dot(a, a);}
 
-template <typename t> typed2vector<t> normalize(const typed2vector<t> &a) noexcept {t l = dot(a, a); l = (l > static_cast<t>(1.0e-8) ? static_cast<t>(1.0/sqrt(l)) : static_cast<t>(1.0)); return typed2vector<t>(a.x*l, a.y*l);}
-template <typename t> typed3vector<t> normalize(const typed3vector<t> &a) noexcept {t l = dot(a, a); l = (l > static_cast<t>(1.0e-8) ? static_cast<t>(1.0/sqrt(l)) : static_cast<t>(1.0)); return typed3vector<t>(a.x*l, a.y*l, a.z*l);}
-template <typename t> typed4vector<t> normalize(const typed4vector<t> &a) noexcept {t l = dot(a, a); l = (l > static_cast<t>(1.0e-8) ? static_cast<t>(1.0/sqrt(l)) : static_cast<t>(1.0)); return typed4vector<t>(a.x*l, a.y*l, a.z*l, a.w*l);}
+template <typename t> typed2vector<t> normalize(const typed2vector<t> &a) noexcept {t l = dot(a, a); l = (l > static_cast<t>(EPS) ? static_cast<t>(1.0/sqrt(l)) : static_cast<t>(1.0)); return typed2vector<t>(a.x*l, a.y*l);}
+template <typename t> typed3vector<t> normalize(const typed3vector<t> &a) noexcept {t l = dot(a, a); l = (l > static_cast<t>(EPS) ? static_cast<t>(1.0/sqrt(l)) : static_cast<t>(1.0)); return typed3vector<t>(a.x*l, a.y*l, a.z*l);}
+template <typename t> typed4vector<t> normalize(const typed4vector<t> &a) noexcept {t l = dot(a, a); l = (l > static_cast<t>(EPS) ? static_cast<t>(1.0/sqrt(l)) : static_cast<t>(1.0)); return typed4vector<t>(a.x*l, a.y*l, a.z*l, a.w*l);}
 
 typedef typed2vector<int> ivec2;
 typedef typed2vector<float> vec2;
@@ -1113,33 +1115,6 @@ class mat4
 
 inline mat4 & operator * (mat4 a, const mat4 &b) noexcept {return a *= b;}
 inline mat4 & operator * (const float &b, mat4 a) noexcept {return a *= b;}
-
-//Perform eigendecomposition using Jacobi's algorithm for symmetric matrices.
-//https://en.wikipedia.org/wiki/Jacobi_eigenvalue_algorithm
-template<typename t, size_t n>
-std::tuple<std::array<t, n>,
-    std::array<std::array<t, n>, n>> eigenDecompositionSym(std::array<std::array<t, n>, n> a)
-{
-    //Start with identity matrix for eigenvectors.
-    std::array<std::array<t, n>, n> E;
-    
-    for (size_t i = 0; i < n; ++i) {
-        for (size_t j = 0; j < n; ++j) {
-            E[i][j] = (i == j ? t(1.0) : t(0.0));
-        }
-    }
-
-    //TODO: Implement algorithm.
-    
-    //Eigenvalues are on the diagonal.
-    std::array<t, n> e;
-
-    for (size_t i = 0; i < n; ++i) {
-        e[i] = a[i][i];
-    }
-    
-    return {e, E};
-}
 
 }
 

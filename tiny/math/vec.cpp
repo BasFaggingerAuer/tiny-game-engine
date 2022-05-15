@@ -17,6 +17,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <cstdlib>
 
 #include <tiny/math/vec.h>
+#include <tiny/math/genmat.h>
 
 using namespace tiny;
 
@@ -73,13 +74,9 @@ ivec4 tiny::to_int(const vec4 &a) noexcept
 
 std::tuple<vec3, mat3> mat3::eigenDecompositionSym() const
 {
-    const auto [e, E] = tiny::eigenDecompositionSym<float, 3>({{{v00, v01, v02},
-                                                                {v10, v11, v12},
-                                                                {v20, v21, v22}}});
+    const auto [e, E] = tiny::eigenDecompositionSym<float, 3>(fromFixedSizeMatrix(*this));
     
-    return {vec3(e[0], e[1], e[2]), mat3(E[0][0], E[1][0], E[2][0],
-                                         E[0][1], E[1][1], E[2][1],
-                                         E[0][2], E[1][2], E[2][2])};
+    return {toFixedSizeVector(e), toFixedSizeMatrix(E)};
 }
 
 

@@ -66,6 +66,15 @@ void setup()
     }
     
     rigidBodySystem->addRigidBody(1.0e8f, {vec4(0.0f, 0.0f, 0.0f, 0.25f)}, vec3(0.55f*static_cast<float>(nrBalls + 1), 0.0f, 0.0f));
+
+    rigidBodySystem->addRigidBody(1.0f, {vec4(0.0f, 0.0f, 0.0f, 0.5f),
+                                         vec4(1.0f, 0.0f, 0.0f, 0.5f),
+                                         vec4(2.0f, 0.0f, 0.0f, 0.5f),
+                                         vec4(3.0f, 0.0f, 0.0f, 0.5f),
+                                         vec4(0.0f, -1.0f, 0.0f, 0.5f),
+                                         vec4(0.0f, -2.0f, 0.0f, 0.5f),
+                                         vec4(0.0f, -3.0f, 0.0f, 0.5f),
+                                         }, vec3(-5.0f, 1.5f, 0.0f));
     
     //Create a cube mesh and paint it with a texture.
     sphereMeshHorde = new draw::StaticMeshHorde(mesh::StaticMesh::createIcosahedronMesh(1.0f), 1024);
