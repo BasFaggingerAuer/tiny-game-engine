@@ -105,12 +105,13 @@ float RigidBodySystem::getTotalEnergy() const
     return totalEnergy;
 }
 
-void RigidBodySystem::addRigidBody(const float &totalMass, std::vector<vec4> spheres,
+void RigidBodySystem::addRigidBody(const float &totalMass, const std::vector<vec4> &a_spheres,
     const vec3 &x, const vec3 &v, const vec4 &a_q, const vec3 & a_w)
 {
     //Add a rigid body to the system.
 
     //For now, distribute the mass uniformly over the volume of all spheres, assuming there are no overlaps.
+    std::vector<vec4> spheres = a_spheres;
     std::vector<float> volumePerSphere(spheres.size(), 0.0f);
     float totalVolume = 0.0f;
     
@@ -163,7 +164,7 @@ void RigidBodySystem::addRigidBody(const float &totalMass, std::vector<vec4> sph
     }
 
     //Rotate rigid body such that the intertia tensor is diagonal.
-    const auto [e, E] = inertia.eigenDecomposition();
+    const auto [e, E] = inertia.eigenDecompositionSym();
     const vec4 q = quatmul(a_q, quatconj(E.getRotation()));
     const vec3 w = mat3::rotationMatrix(quatconj(E.getRotation()))*a_w;
 
@@ -172,7 +173,7 @@ void RigidBodySystem::addRigidBody(const float &totalMass, std::vector<vec4> sph
     bodyInternalSpheres.insert(bodyInternalSpheres.end(), spheres.begin(), spheres.end());
 }
 
-void RigidBodySystem::calculateInternalSpheres(const RigidBodyState &b)
+void RigidBodySystem::calculateInternalSpheres(const RigidBodyState &b, const float &dt)
 {
     const mat3 R = mat3::rotationMatrix(b.q);
 
@@ -180,7 +181,7 @@ void RigidBodySystem::calculateInternalSpheres(const RigidBodyState &b)
     {
         const vec4 s = bodyInternalSpheres[i];
 
-        collSpheres.push_back(vec4(b.x + R*s.xyz(), s.w));
+        collSpheres.push_back(vec4(b.x + R*s.xyz(), (1.0f + dt*collisionSphereMargin)*s.w));
     }
 }
 
@@ -295,8 +296,8 @@ void RigidBodySystem::update(const float &dt)
         const size_t nrB1Spheres = b1.lastInternalSphere - b1.firstInternalSphere;
         
         collSpheres.clear();
-        calculateInternalSpheres(b1);
-        calculateInternalSpheres(b2);
+        calculateInternalSpheres(b1, dt);
+        calculateInternalSpheres(b2, dt);
         internalSphereHasher.hashObjects(collSpheres);
         
         for (const auto &bucket : *internalSphereHasher.getBuckets())

@@ -100,7 +100,7 @@ class RigidBodySystem
         RigidBodySystem(const size_t & = 2003, const float & = 4.0f, const float & = 0.5f, const float & = 2.0f, const int & = 16);
         virtual ~RigidBodySystem();
         
-        void addRigidBody(const float &, std::vector<vec4>,
+        void addRigidBody(const float &, const std::vector<vec4> &,
             const vec3 &, const vec3 & = vec3(0.0f, 0.0f, 0.0f),
             const vec4 & = vec4(0.0f, 0.0f, 0.0f, 1.0f), const vec3 & = vec3(0.0f, 0.0f, 0.0f));
         //TODO: Ability to remove rigid bodies.
@@ -149,7 +149,7 @@ class RigidBodySystem
         std::vector<vec4> bodyInternalSpheres;
         std::vector<vec4> collSpheres;
 
-        void calculateInternalSpheres(const RigidBodyState &);
+        void calculateInternalSpheres(const RigidBodyState &, const float &);
         RigidBodyCollisionGeometry getCollisionGeometry(std::vector<RigidBodyState> &, const RigidBodyCollision &) const;
 };
 

@@ -20,27 +20,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 using namespace tiny;
 
-//Quaternion specific operations.
-vec4 tiny::quatmul(const vec4 &a, const vec4 &b)
-{
-    return vec4(a.w*b.x + b.w*a.x + a.y*b.z - a.z*b.y,
-        a.w*b.y + b.w*a.y + a.z*b.x - a.x*b.z,
-        a.w*b.z + b.w*a.z + a.x*b.y - a.y*b.x,
-        a.w*b.w - (a.x*b.x + a.y*b.y + a.z*b.z));
-}
-
-vec4 tiny::quatconj(const vec4 &a)
-{
-    return vec4(-a.x, -a.y, -a.z, a.w);
-}
-
-vec4 tiny::quatrot(const float &alpha, const vec3 &a)
-{
-    const float s = sin(0.5f*alpha);
-    
-    return vec4(s*a.x, s*a.y, s*a.z, cos(0.5f*alpha));
-}
-
 vec2 tiny::randomVec2(const float &s)
 {
     return vec2(2.0f*s*static_cast<float>(rand())/static_cast<float>(RAND_MAX) - s,
@@ -62,41 +41,41 @@ vec4 tiny::randomVec4(const float &s)
                 2.0f*s*static_cast<float>(rand())/static_cast<float>(RAND_MAX) - s);
 }
 
-vec2 tiny::to_float(const ivec2 &a)
+vec2 tiny::to_float(const ivec2 &a) noexcept
 {
     return vec2(static_cast<float>(a.x), static_cast<float>(a.y));
 }
 
-vec3 tiny::to_float(const ivec3 &a)
+vec3 tiny::to_float(const ivec3 &a) noexcept
 {
     return vec3(static_cast<float>(a.x), static_cast<float>(a.y), static_cast<float>(a.z));
 }
 
-vec4 tiny::to_float(const ivec4 &a)
+vec4 tiny::to_float(const ivec4 &a) noexcept
 {
     return vec4(static_cast<float>(a.x), static_cast<float>(a.y), static_cast<float>(a.z), static_cast<float>(a.w));
 }
 
-ivec2 tiny::to_int(const vec2 &a)
+ivec2 tiny::to_int(const vec2 &a) noexcept
 {
     return ivec2(static_cast<int>(a.x), static_cast<int>(a.y));
 }
 
-ivec3 tiny::to_int(const vec3 &a)
+ivec3 tiny::to_int(const vec3 &a) noexcept
 {
     return ivec3(static_cast<int>(a.x), static_cast<int>(a.y), static_cast<int>(a.z));
 }
 
-ivec4 tiny::to_int(const vec4 &a)
+ivec4 tiny::to_int(const vec4 &a) noexcept
 {
     return ivec4(static_cast<int>(a.x), static_cast<int>(a.y), static_cast<int>(a.z), static_cast<int>(a.w));
 }
 
-std::tuple<vec3, mat3> mat3::eigenDecomposition() const
+std::tuple<vec3, mat3> mat3::eigenDecompositionSym() const
 {
-    const auto [e, E] = tiny::eigenDecomposition<float, 3>({{{v00, v01, v02},
-                                                             {v10, v11, v12},
-                                                             {v20, v21, v22}}});
+    const auto [e, E] = tiny::eigenDecompositionSym<float, 3>({{{v00, v01, v02},
+                                                                {v10, v11, v12},
+                                                                {v20, v21, v22}}});
     
     return {vec3(e[0], e[1], e[2]), mat3(E[0][0], E[1][0], E[2][0],
                                          E[0][1], E[1][1], E[2][1],

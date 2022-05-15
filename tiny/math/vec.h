@@ -35,7 +35,7 @@ namespace tiny
 //Why does C++ not offer a mod()-operation that is >= 0?
 //From https://stackoverflow.com/questions/14997165/fastest-way-to-get-a-positive-modulo-in-c-c.
 template <typename t>
-inline t modnonneg(const t &a, const t &b) {return ((a % b) + b) % b;}
+inline t modnonneg(const t &a, const t &b) noexcept {return ((a % b) + b) % b;}
 
 template <typename t> class typed2vector
 {
@@ -181,64 +181,64 @@ template <typename t> inline typed4vector<t> operator * (const t &b, const typed
 template <typename t> inline typed4vector<t> operator / (const typed4vector<t> &a, const t &b) noexcept {typed4vector<t> c(a); return c /= b;}
 template <typename t> inline typed4vector<t> operator / (const t &b, const typed4vector<t> &a) noexcept {return typed4vector<t>(b/a.x, b/a.y, b/a.z, b/a.w);}
 
-template <typename t> typed2vector<t> min(const typed2vector<t> &a, const typed2vector<t> &b) {return typed2vector<t>(std::min(a.x, b.x), std::min(a.y, b.y));}
-template <typename t> typed2vector<t> max(const typed2vector<t> &a, const typed2vector<t> &b) {return typed2vector<t>(std::max(a.x, b.x), std::max(a.y, b.y));}
-template <typename t> typed3vector<t> min(const typed3vector<t> &a, const typed3vector<t> &b) {return typed3vector<t>(std::min(a.x, b.x), std::min(a.y, b.y), std::min(a.z, b.z));}
-template <typename t> typed3vector<t> max(const typed3vector<t> &a, const typed3vector<t> &b) {return typed3vector<t>(std::max(a.x, b.x), std::max(a.y, b.y), std::max(a.z, b.z));}
-template <typename t> typed4vector<t> min(const typed4vector<t> &a, const typed4vector<t> &b) {return typed4vector<t>(std::min(a.x, b.x), std::min(a.y, b.y), std::min(a.z, b.z), std::min(a.w, b.w));}
-template <typename t> typed4vector<t> max(const typed4vector<t> &a, const typed4vector<t> &b) {return typed4vector<t>(std::max(a.x, b.x), std::max(a.y, b.y), std::max(a.z, b.z), std::max(a.w, b.w));}
+template <typename t> typed2vector<t> min(const typed2vector<t> &a, const typed2vector<t> &b) noexcept {return typed2vector<t>(std::min(a.x, b.x), std::min(a.y, b.y));}
+template <typename t> typed2vector<t> max(const typed2vector<t> &a, const typed2vector<t> &b) noexcept {return typed2vector<t>(std::max(a.x, b.x), std::max(a.y, b.y));}
+template <typename t> typed3vector<t> min(const typed3vector<t> &a, const typed3vector<t> &b) noexcept {return typed3vector<t>(std::min(a.x, b.x), std::min(a.y, b.y), std::min(a.z, b.z));}
+template <typename t> typed3vector<t> max(const typed3vector<t> &a, const typed3vector<t> &b) noexcept {return typed3vector<t>(std::max(a.x, b.x), std::max(a.y, b.y), std::max(a.z, b.z));}
+template <typename t> typed4vector<t> min(const typed4vector<t> &a, const typed4vector<t> &b) noexcept {return typed4vector<t>(std::min(a.x, b.x), std::min(a.y, b.y), std::min(a.z, b.z), std::min(a.w, b.w));}
+template <typename t> typed4vector<t> max(const typed4vector<t> &a, const typed4vector<t> &b) noexcept {return typed4vector<t>(std::max(a.x, b.x), std::max(a.y, b.y), std::max(a.z, b.z), std::max(a.w, b.w));}
 
-template <typename t> t minComponent(const typed2vector<t> &a) {return (a.x <= a.y ? a.x : a.y);}
-template <typename t> t minComponent(const typed3vector<t> &a) {return (a.x <= a.y ? (a.x <= a.z ? a.x : a.z) : (a.y <= a.z ? a.y : a.z));}
+template <typename t> t minComponent(const typed2vector<t> &a) noexcept {return (a.x <= a.y ? a.x : a.y);}
+template <typename t> t minComponent(const typed3vector<t> &a) noexcept {return (a.x <= a.y ? (a.x <= a.z ? a.x : a.z) : (a.y <= a.z ? a.y : a.z));}
 
-template <typename t> t maxComponent(const typed2vector<t> &a) {return (a.x >= a.y ? a.x : a.y);}
-template <typename t> t maxComponent(const typed3vector<t> &a) {return (a.x >= a.y ? (a.x >= a.z ? a.x : a.z) : (a.y >= a.z ? a.y : a.z));}
+template <typename t> t maxComponent(const typed2vector<t> &a) noexcept {return (a.x >= a.y ? a.x : a.y);}
+template <typename t> t maxComponent(const typed3vector<t> &a) noexcept {return (a.x >= a.y ? (a.x >= a.z ? a.x : a.z) : (a.y >= a.z ? a.y : a.z));}
 
-template <typename t> t t_abs(const t &a) {return (a < t(0) ? -a : a);}
-template <typename t> typed2vector<t> abs(const typed2vector<t> &a) {return typed2vector<t>(t_abs(a.x), t_abs(a.y));}
-template <typename t> typed3vector<t> abs(const typed3vector<t> &a) {return typed3vector<t>(t_abs(a.x), t_abs(a.y), t_abs(a.z));}
-template <typename t> typed4vector<t> abs(const typed4vector<t> &a) {return typed4vector<t>(t_abs(a.x), t_abs(a.y), t_abs(a.z), t_abs(a.w));}
+template <typename t> t t_abs(const t &a) noexcept {return (a < t(0) ? -a : a);}
+template <typename t> typed2vector<t> abs(const typed2vector<t> &a) noexcept {return typed2vector<t>(t_abs(a.x), t_abs(a.y));}
+template <typename t> typed3vector<t> abs(const typed3vector<t> &a) noexcept {return typed3vector<t>(t_abs(a.x), t_abs(a.y), t_abs(a.z));}
+template <typename t> typed4vector<t> abs(const typed4vector<t> &a) noexcept {return typed4vector<t>(t_abs(a.x), t_abs(a.y), t_abs(a.z), t_abs(a.w));}
 
-template <typename t> t clamp(const t &a, const t &b, const t &c) {return (a < b ? b : (a > c ? c : a));}
-template <typename t> typed2vector<t> clamp(const typed2vector<t> &a, const typed2vector<t> &b, const typed2vector<t> &c) {return typed2vector<t>(clamp(a.x, b.x, c.x), clamp(a.y, b.y, c.y));}
-template <typename t> typed3vector<t> clamp(const typed3vector<t> &a, const typed3vector<t> &b, const typed3vector<t> &c) {return typed3vector<t>(clamp(a.x, b.x, c.x), clamp(a.y, b.y, c.y), clamp(a.z, b.z, c.z));}
-template <typename t> typed4vector<t> clamp(const typed4vector<t> &a, const typed4vector<t> &b, const typed4vector<t> &c) {return typed4vector<t>(clamp(a.x, b.x, c.x), clamp(a.y, b.y, c.y), clamp(a.z, b.z, c.z), clamp(a.w, b.w, c.w));}
+template <typename t> t clamp(const t &a, const t &b, const t &c) noexcept {return (a < b ? b : (a > c ? c : a));}
+template <typename t> typed2vector<t> clamp(const typed2vector<t> &a, const typed2vector<t> &b, const typed2vector<t> &c) noexcept {return typed2vector<t>(clamp(a.x, b.x, c.x), clamp(a.y, b.y, c.y));}
+template <typename t> typed3vector<t> clamp(const typed3vector<t> &a, const typed3vector<t> &b, const typed3vector<t> &c) noexcept {return typed3vector<t>(clamp(a.x, b.x, c.x), clamp(a.y, b.y, c.y), clamp(a.z, b.z, c.z));}
+template <typename t> typed4vector<t> clamp(const typed4vector<t> &a, const typed4vector<t> &b, const typed4vector<t> &c) noexcept {return typed4vector<t>(clamp(a.x, b.x, c.x), clamp(a.y, b.y, c.y), clamp(a.z, b.z, c.z), clamp(a.w, b.w, c.w));}
 
-template <typename t> t step(const t &a, const t &b) {return (b < a ? t(0) : t(1));}
-template <typename t> typed2vector<t> step(const typed2vector<t> &a, const typed2vector<t> &b) {return typed2vector<t>(step(a.x, b.x), step(a.y, b.y));}
-template <typename t> typed3vector<t> step(const typed3vector<t> &a, const typed3vector<t> &b) {return typed3vector<t>(step(a.x, b.x), step(a.y, b.y), step(a.z, b.z));}
-template <typename t> typed4vector<t> step(const typed4vector<t> &a, const typed4vector<t> &b) {return typed4vector<t>(step(a.x, b.x), step(a.y, b.y), step(a.z, b.z), step(a.w, b.w));}
+template <typename t> t step(const t &a, const t &b) noexcept {return (b < a ? t(0) : t(1));}
+template <typename t> typed2vector<t> step(const typed2vector<t> &a, const typed2vector<t> &b) noexcept {return typed2vector<t>(step(a.x, b.x), step(a.y, b.y));}
+template <typename t> typed3vector<t> step(const typed3vector<t> &a, const typed3vector<t> &b) noexcept {return typed3vector<t>(step(a.x, b.x), step(a.y, b.y), step(a.z, b.z));}
+template <typename t> typed4vector<t> step(const typed4vector<t> &a, const typed4vector<t> &b) noexcept {return typed4vector<t>(step(a.x, b.x), step(a.y, b.y), step(a.z, b.z), step(a.w, b.w));}
 
-template <typename t> typed2vector<t> floor(const typed2vector<t> &a) {return typed2vector<t>(std::floor(a.x), std::floor(a.y));}
-template <typename t> typed3vector<t> floor(const typed3vector<t> &a) {return typed3vector<t>(std::floor(a.x), std::floor(a.y), std::floor(a.z));}
-template <typename t> typed4vector<t> floor(const typed4vector<t> &a) {return typed4vector<t>(std::floor(a.x), std::floor(a.y), std::floor(a.z), std::floor(a.w));}
+template <typename t> typed2vector<t> floor(const typed2vector<t> &a) noexcept {return typed2vector<t>(std::floor(a.x), std::floor(a.y));}
+template <typename t> typed3vector<t> floor(const typed3vector<t> &a) noexcept {return typed3vector<t>(std::floor(a.x), std::floor(a.y), std::floor(a.z));}
+template <typename t> typed4vector<t> floor(const typed4vector<t> &a) noexcept {return typed4vector<t>(std::floor(a.x), std::floor(a.y), std::floor(a.z), std::floor(a.w));}
 
-template <typename t> typed2vector<t> ceil(const typed2vector<t> &a) {return typed2vector<t>(std::ceil(a.x), std::ceil(a.y));}
-template <typename t> typed3vector<t> ceil(const typed3vector<t> &a) {return typed3vector<t>(std::ceil(a.x), std::ceil(a.y), std::ceil(a.z));}
-template <typename t> typed4vector<t> ceil(const typed4vector<t> &a) {return typed4vector<t>(std::ceil(a.x), std::ceil(a.y), std::ceil(a.z), std::ceil(a.w));}
+template <typename t> typed2vector<t> ceil(const typed2vector<t> &a) noexcept {return typed2vector<t>(std::ceil(a.x), std::ceil(a.y));}
+template <typename t> typed3vector<t> ceil(const typed3vector<t> &a) noexcept {return typed3vector<t>(std::ceil(a.x), std::ceil(a.y), std::ceil(a.z));}
+template <typename t> typed4vector<t> ceil(const typed4vector<t> &a) noexcept {return typed4vector<t>(std::ceil(a.x), std::ceil(a.y), std::ceil(a.z), std::ceil(a.w));}
 
-template <typename t> t fract(const t &a) {return a - std::floor(a);}
-template <typename t> typed2vector<t> fract(const typed2vector<t> &a) {return typed2vector<t>(fract(a.x), fract(a.y));}
-template <typename t> typed3vector<t> fract(const typed3vector<t> &a) {return typed3vector<t>(fract(a.x), fract(a.y), fract(a.z));}
-template <typename t> typed4vector<t> fract(const typed4vector<t> &a) {return typed4vector<t>(fract(a.x), fract(a.y), fract(a.z), fract(a.w));}
+template <typename t> t fract(const t &a) noexcept {return a - std::floor(a);}
+template <typename t> typed2vector<t> fract(const typed2vector<t> &a) noexcept {return typed2vector<t>(fract(a.x), fract(a.y));}
+template <typename t> typed3vector<t> fract(const typed3vector<t> &a) noexcept {return typed3vector<t>(fract(a.x), fract(a.y), fract(a.z));}
+template <typename t> typed4vector<t> fract(const typed4vector<t> &a) noexcept {return typed4vector<t>(fract(a.x), fract(a.y), fract(a.z), fract(a.w));}
 
-template <typename t> t dot(const typed2vector<t> &a, const typed2vector<t> &b) {return a.x*b.x + a.y*b.y;}
-template <typename t> t dot(const typed3vector<t> &a, const typed3vector<t> &b) {return a.x*b.x + a.y*b.y + a.z*b.z;}
-template <typename t> t dot(const typed4vector<t> &a, const typed4vector<t> &b) {return a.x*b.x + a.y*b.y + a.z*b.z + a.w*b.w;}
+template <typename t> t dot(const typed2vector<t> &a, const typed2vector<t> &b) noexcept {return a.x*b.x + a.y*b.y;}
+template <typename t> t dot(const typed3vector<t> &a, const typed3vector<t> &b) noexcept {return a.x*b.x + a.y*b.y + a.z*b.z;}
+template <typename t> t dot(const typed4vector<t> &a, const typed4vector<t> &b) noexcept {return a.x*b.x + a.y*b.y + a.z*b.z + a.w*b.w;}
 
-template <typename t> typed3vector<t> cross(const typed3vector<t> &a, const typed3vector<t> &b) {return typed3vector<t>(a.y*b.z - a.z*b.y, a.z*b.x - a.x*b.z, a.x*b.y - a.y*b.x);}
+template <typename t> typed3vector<t> cross(const typed3vector<t> &a, const typed3vector<t> &b) noexcept {return typed3vector<t>(a.y*b.z - a.z*b.y, a.z*b.x - a.x*b.z, a.x*b.y - a.y*b.x);}
 
-template <typename t> t length(const typed2vector<t> &a) {return sqrtf(dot(a, a));}
-template <typename t> t length(const typed3vector<t> &a) {return sqrtf(dot(a, a));}
-template <typename t> t length(const typed4vector<t> &a) {return sqrtf(dot(a, a));}
+template <typename t> t length(const typed2vector<t> &a) noexcept {return sqrtf(dot(a, a));}
+template <typename t> t length(const typed3vector<t> &a) noexcept {return sqrtf(dot(a, a));}
+template <typename t> t length(const typed4vector<t> &a) noexcept {return sqrtf(dot(a, a));}
 
-template <typename t> t length2(const typed2vector<t> &a) {return dot(a, a);}
-template <typename t> t length2(const typed3vector<t> &a) {return dot(a, a);}
-template <typename t> t length2(const typed4vector<t> &a) {return dot(a, a);}
+template <typename t> t length2(const typed2vector<t> &a) noexcept {return dot(a, a);}
+template <typename t> t length2(const typed3vector<t> &a) noexcept {return dot(a, a);}
+template <typename t> t length2(const typed4vector<t> &a) noexcept {return dot(a, a);}
 
-template <typename t> typed2vector<t> normalize(const typed2vector<t> &a) {t l = dot(a, a); l = (l > static_cast<t>(1.0e-8) ? static_cast<t>(1.0/sqrt(l)) : static_cast<t>(1.0)); return typed2vector<t>(a.x*l, a.y*l);}
-template <typename t> typed3vector<t> normalize(const typed3vector<t> &a) {t l = dot(a, a); l = (l > static_cast<t>(1.0e-8) ? static_cast<t>(1.0/sqrt(l)) : static_cast<t>(1.0)); return typed3vector<t>(a.x*l, a.y*l, a.z*l);}
-template <typename t> typed4vector<t> normalize(const typed4vector<t> &a) {t l = dot(a, a); l = (l > static_cast<t>(1.0e-8) ? static_cast<t>(1.0/sqrt(l)) : static_cast<t>(1.0)); return typed4vector<t>(a.x*l, a.y*l, a.z*l, a.w*l);}
+template <typename t> typed2vector<t> normalize(const typed2vector<t> &a) noexcept {t l = dot(a, a); l = (l > static_cast<t>(1.0e-8) ? static_cast<t>(1.0/sqrt(l)) : static_cast<t>(1.0)); return typed2vector<t>(a.x*l, a.y*l);}
+template <typename t> typed3vector<t> normalize(const typed3vector<t> &a) noexcept {t l = dot(a, a); l = (l > static_cast<t>(1.0e-8) ? static_cast<t>(1.0/sqrt(l)) : static_cast<t>(1.0)); return typed3vector<t>(a.x*l, a.y*l, a.z*l);}
+template <typename t> typed4vector<t> normalize(const typed4vector<t> &a) noexcept {t l = dot(a, a); l = (l > static_cast<t>(1.0e-8) ? static_cast<t>(1.0/sqrt(l)) : static_cast<t>(1.0)); return typed4vector<t>(a.x*l, a.y*l, a.z*l, a.w*l);}
 
 typedef typed2vector<int> ivec2;
 typedef typed2vector<float> vec2;
@@ -247,57 +247,82 @@ typedef typed3vector<float> vec3;
 typedef typed4vector<int> ivec4;
 typedef typed4vector<float> vec4;
 
-vec2 to_float(const ivec2 &a);
-vec3 to_float(const ivec3 &a);
-vec4 to_float(const ivec4 &a);
+vec2 to_float(const ivec2 &a) noexcept;
+vec3 to_float(const ivec3 &a) noexcept;
+vec4 to_float(const ivec4 &a) noexcept;
 
-ivec2 to_int(const vec2 &a);
-ivec3 to_int(const vec3 &a);
-ivec4 to_int(const vec4 &a);
+ivec2 to_int(const vec2 &a) noexcept;
+ivec3 to_int(const vec3 &a) noexcept;
+ivec4 to_int(const vec4 &a) noexcept;
 
-template <typename t> ivec2 lessThanEqual(const typed2vector<t> &a, const typed2vector<t> &b) {return ivec2(a.x <= b.x ? 1 : 0, a.y <= b.y ? 1 : 0);}
-template <typename t> ivec3 lessThanEqual(const typed3vector<t> &a, const typed3vector<t> &b) {return ivec3(a.x <= b.x ? 1 : 0, a.y <= b.y ? 1 : 0, a.z <= b.z ? 1 : 0);}
-template <typename t> ivec4 lessThanEqual(const typed4vector<t> &a, const typed4vector<t> &b) {return ivec4(a.x <= b.x ? 1 : 0, a.y <= b.y ? 1 : 0, a.z <= b.z ? 1 : 0, a.w <= b.w ? 1 : 0);}
+template <typename t> ivec2 lessThanEqual(const typed2vector<t> &a, const typed2vector<t> &b) noexcept {return ivec2(a.x <= b.x ? 1 : 0, a.y <= b.y ? 1 : 0);}
+template <typename t> ivec3 lessThanEqual(const typed3vector<t> &a, const typed3vector<t> &b) noexcept {return ivec3(a.x <= b.x ? 1 : 0, a.y <= b.y ? 1 : 0, a.z <= b.z ? 1 : 0);}
+template <typename t> ivec4 lessThanEqual(const typed4vector<t> &a, const typed4vector<t> &b) noexcept {return ivec4(a.x <= b.x ? 1 : 0, a.y <= b.y ? 1 : 0, a.z <= b.z ? 1 : 0, a.w <= b.w ? 1 : 0);}
 
 //Integer specific bit operations.
-inline ivec2 operator % (const ivec2 &a, const ivec2 &b) {return ivec2(a.x % b.x, a.y % b.y);}
-inline ivec2 operator % (const ivec2 &a, const int &b) {return ivec2(a.x % b, a.y % b);}
-inline ivec2 operator & (const ivec2 &a, const ivec2 &b) {return ivec2(a.x & b.x, a.y & b.y);}
-inline ivec2 operator & (const ivec2 &a, const int &b) {return ivec2(a.x & b, a.y & b);}
-inline ivec2 operator | (const ivec2 &a, const ivec2 &b) {return ivec2(a.x | b.x, a.y | b.y);}
-inline ivec2 operator | (const ivec2 &a, const int &b) {return ivec2(a.x | b, a.y | b);}
-inline ivec2 operator >> (const ivec2 &a, const ivec2 &b) {return ivec2(a.x >> b.x, a.y >> b.y);}
-inline ivec2 operator >> (const ivec2 &a, const int &b) {return ivec2(a.x >> b, a.y >> b);}
-inline ivec2 operator << (const ivec2 &a, const ivec2 &b) {return ivec2(a.x << b.x, a.y << b.y);}
-inline ivec2 operator << (const ivec2 &a, const int &b) {return ivec2(a.x << b, a.y << b);}
-inline bool operator < (const ivec2 &a, const ivec2 &b) {return (a.x == b.x ? a.y < b.y : a.x < b.x);}
+inline ivec2 operator % (const ivec2 &a, const ivec2 &b) noexcept {return ivec2(a.x % b.x, a.y % b.y);}
+inline ivec2 operator % (const ivec2 &a, const int &b) noexcept {return ivec2(a.x % b, a.y % b);}
+inline ivec2 operator & (const ivec2 &a, const ivec2 &b) noexcept {return ivec2(a.x & b.x, a.y & b.y);}
+inline ivec2 operator & (const ivec2 &a, const int &b) noexcept {return ivec2(a.x & b, a.y & b);}
+inline ivec2 operator | (const ivec2 &a, const ivec2 &b) noexcept {return ivec2(a.x | b.x, a.y | b.y);}
+inline ivec2 operator | (const ivec2 &a, const int &b) noexcept {return ivec2(a.x | b, a.y | b);}
+inline ivec2 operator >> (const ivec2 &a, const ivec2 &b) noexcept {return ivec2(a.x >> b.x, a.y >> b.y);}
+inline ivec2 operator >> (const ivec2 &a, const int &b) noexcept {return ivec2(a.x >> b, a.y >> b);}
+inline ivec2 operator << (const ivec2 &a, const ivec2 &b) noexcept {return ivec2(a.x << b.x, a.y << b.y);}
+inline ivec2 operator << (const ivec2 &a, const int &b) noexcept {return ivec2(a.x << b, a.y << b);}
+inline bool operator < (const ivec2 &a, const ivec2 &b) noexcept {return (a.x == b.x ? a.y < b.y : a.x < b.x);}
+
+//Quaternion specific operations.
+inline vec4 quatmul(const vec4 &a, const vec4 &b) noexcept
+{
+    return vec4(a.w*b.x + b.w*a.x + a.y*b.z - a.z*b.y,
+        a.w*b.y + b.w*a.y + a.z*b.x - a.x*b.z,
+        a.w*b.z + b.w*a.z + a.x*b.y - a.y*b.x,
+        a.w*b.w - (a.x*b.x + a.y*b.y + a.z*b.z));
+}
+
+inline vec4 quatconj(const vec4 &a) noexcept
+{
+    return vec4(-a.x, -a.y, -a.z, a.w);
+}
+
+inline vec4 quatrot(const float &alpha, const vec3 &a) noexcept
+{
+    const float s = sin(0.5f*alpha);
+    
+    return vec4(s*a.x, s*a.y, s*a.z, cos(0.5f*alpha));
+}
+
+vec2 randomVec2(const float & = 1.0f);
+vec3 randomVec3(const float & = 1.0f);
+vec4 randomVec4(const float & = 1.0f);
 
 class mat2
 {
     public:
-        inline mat2() {};
-        explicit inline mat2(const float &a) :
+        inline mat2() noexcept {};
+        explicit inline mat2(const float &a) noexcept :
             v00(a), v10(a),
             v01(a), v11(a)
         {};
-        inline mat2(const mat2 &a) :
+        inline mat2(const mat2 &a) noexcept :
             v00(a.v00), v10(a.v10),
             v01(a.v01), v11(a.v11)
         {};
         inline mat2(const float &_v00, const float &_v10,
-                const float &_v01, const float &_v11) :
+                const float &_v01, const float &_v11) noexcept :
             v00(_v00), v10(_v10),
             v01(_v01), v11(_v11)
         {};
         
-        explicit inline mat2(const vec2 &x, const vec2 &y) :
+        explicit inline mat2(const vec2 &x, const vec2 &y) noexcept :
             v00(x.x), v10(x.y),
             v01(y.x), v11(y.y)
         {};
         
-        inline ~mat2() {};
+        inline ~mat2() noexcept {};
 
-        inline mat2 & operator = (const mat2 &b)
+        inline mat2 & operator = (const mat2 &b) noexcept
         {
             v00 = b.v00;
             v10 = b.v10;
@@ -306,7 +331,7 @@ class mat2
             return *this;
         };
 
-        inline mat2 & operator += (const mat2 &b)
+        inline mat2 & operator += (const mat2 &b) noexcept
         {
             v00 += b.v00;
             v10 += b.v10;
@@ -315,7 +340,7 @@ class mat2
             return *this;
         };
 
-        inline mat2 & operator -= (const mat2 &b)
+        inline mat2 & operator -= (const mat2 &b) noexcept
         {
             v00 -= b.v00;
             v10 -= b.v10;
@@ -324,13 +349,13 @@ class mat2
             return *this;
         };
         
-        inline mat2 operator - (const mat2 &b) const
+        inline mat2 operator - (const mat2 &b) const noexcept
         {
             return mat2(v00 - b.v00, v10 - b.v10,
                         v01 - b.v01, v11 - b.v11);
         };
 
-        inline mat2 & operator *= (const mat2 &b)
+        inline mat2 & operator *= (const mat2 &b) noexcept
         {
             const mat2 c(
                 v00*b.v00 + v01*b.v10,
@@ -342,7 +367,7 @@ class mat2
             return *this;
         };
         
-        inline mat2 operator * (const mat2 &b) const
+        inline mat2 operator * (const mat2 &b) const noexcept
         {
             return mat2(
                 v00*b.v00 + v01*b.v10,
@@ -352,7 +377,7 @@ class mat2
                 v10*b.v01 + v11*b.v11);
         };
 
-        inline mat2 & operator *= (const float &b)
+        inline mat2 & operator *= (const float &b) noexcept
         {
             v00 *= b;
             v10 *= b;
@@ -361,37 +386,37 @@ class mat2
             return *this;
         };
 
-        inline mat2 operator * (const float &b) const
+        inline mat2 operator * (const float &b) const noexcept
         {
             return mat2(b*v00, b*v10,
                         b*v01, b*v11);
         };
 
-        inline mat2 operator / (const float &b) const
+        inline mat2 operator / (const float &b) const noexcept
         {
             return mat2(v00/b, v10/b,
                         v01/b, v11/b);
         };
 
-        inline vec2 operator * (const vec2 &a) const
+        inline vec2 operator * (const vec2 &a) const noexcept
         {
             return vec2(v00*a.x + v01*a.y,
                     v10*a.x + v11*a.y);
         };
 
-        inline mat2 transposed() const
+        inline mat2 transposed() const noexcept
         {
             return mat2(v00, v01,
                         v10, v11);
         };
         
-        inline mat2 adjugated() const
+        inline mat2 adjugated() const noexcept
         {
             return mat2( v11, -v10,
                         -v01,  v00);
         };
         
-        inline mat2 inverted() const
+        inline mat2 inverted() const noexcept
         {
             const float t = 1.0f/(v00*v11 - v10*v01);
 
@@ -399,7 +424,7 @@ class mat2
                         -t*v01,  t*v00);
         };
 
-        static mat2 identityMatrix()
+        inline static mat2 identityMatrix() noexcept
         {
             return mat2(1.0, 0.0,
                         0.0, 1.0);
@@ -420,37 +445,37 @@ class mat3
 {
     public:
         inline mat3() {};
-        explicit inline mat3(const float &a) :
+        explicit inline mat3(const float &a) noexcept :
             v00(a), v10(a), v20(a),
             v01(a), v11(a), v21(a),
             v02(a), v12(a), v22(a)
         {};
-        inline mat3(const mat3 &a) :
+        inline mat3(const mat3 &a) noexcept :
             v00(a.v00), v10(a.v10), v20(a.v20),
             v01(a.v01), v11(a.v11), v21(a.v21),
             v02(a.v02), v12(a.v12), v22(a.v22)
         {};
         inline mat3(const float &_v00, const float &_v10, const float &_v20,
                 const float &_v01, const float &_v11, const float &_v21,
-                const float &_v02, const float &_v12, const float &_v22) :
+                const float &_v02, const float &_v12, const float &_v22) noexcept :
             v00(_v00), v10(_v10), v20(_v20),
             v01(_v01), v11(_v11), v21(_v21),
             v02(_v02), v12(_v12), v22(_v22)
         {};
         
-        inline mat3(const vec3 &x, const vec3 &y, const vec3 &z) :
+        inline mat3(const vec3 &x, const vec3 &y, const vec3 &z) noexcept :
             v00(x.x), v10(x.y), v20(x.z),
             v01(y.x), v11(y.y), v21(y.z),
             v02(z.x), v12(z.y), v22(z.z)
         {};
 
-        explicit inline mat3(const vec3 &a) :
+        explicit inline mat3(const vec3 &a) noexcept :
             v00(a.x),  v10(0.0f), v20(0.0f),
             v01(0.0f), v11(a.y),  v21(0.0f),
             v02(0.0f), v12(0.0f), v22(a.z)
         {};
         
-        explicit inline mat3(const vec4 &a) :
+        explicit inline mat3(const vec4 &a) noexcept :
             v00(1.0f - 2.0f*(a.y*a.y + a.z*a.z)),
             v10(2.0f*(a.x*a.y - a.w*a.z)),
             v20(2.0f*(a.x*a.z + a.w*a.y)),
@@ -462,9 +487,9 @@ class mat3
             v22(1.0f - 2.0f*(a.x*a.x + a.y*a.y))
         {};
 
-        inline ~mat3() {};
+        inline ~mat3() noexcept {};
 
-        inline mat3 & operator = (const mat3 &b)
+        inline mat3 & operator = (const mat3 &b) noexcept
         {
             v00 = b.v00;
             v10 = b.v10;
@@ -478,7 +503,7 @@ class mat3
             return *this;
         };
 
-        inline mat3 & operator += (const mat3 &b)
+        inline mat3 & operator += (const mat3 &b) noexcept
         {
             v00 += b.v00;
             v10 += b.v10;
@@ -492,7 +517,7 @@ class mat3
             return *this;
         };
 
-        inline mat3 & operator -= (const mat3 &b)
+        inline mat3 & operator -= (const mat3 &b) noexcept
         {
             v00 -= b.v00;
             v10 -= b.v10;
@@ -506,7 +531,7 @@ class mat3
             return *this;
         };
 
-        inline mat3 & operator *= (const mat3 &b)
+        inline mat3 & operator *= (const mat3 &b) noexcept
         {
             const mat3 c(
                 v00*b.v00 + v01*b.v10 + v02*b.v20,
@@ -524,7 +549,7 @@ class mat3
             return *this;
         };
 
-        inline mat3 & operator *= (const float &b)
+        inline mat3 & operator *= (const float &b) noexcept
         {
             v00 *= b;
             v10 *= b;
@@ -538,28 +563,28 @@ class mat3
             return *this;
         };
 
-        inline mat3 operator * (const float &b) const
+        inline mat3 operator * (const float &b) const noexcept
         {
             return mat3(b*v00, b*v10, b*v20,
                         b*v01, b*v11, b*v21,
                         b*v02, b*v12, b*v22);
         };
 
-        inline mat3 operator / (const float &b) const
+        inline mat3 operator / (const float &b) const noexcept
         {
             return mat3(v00/b, v10/b, v20/b,
                         v01/b, v11/b, v21/b,
                         v02/b, v12/b, v22/b);
         };
 
-        inline vec3 operator * (const vec3 &a) const
+        inline vec3 operator * (const vec3 &a) const noexcept
         {
             return vec3(v00*a.x + v01*a.y + v02*a.z,
                     v10*a.x + v11*a.y + v12*a.z,
                     v20*a.x + v21*a.y + v22*a.z);
         };
 
-        inline void toOpenGL(float * const v) const
+        inline void toOpenGL(float * const v) const noexcept
         {
             v[ 0] = v00;
             v[ 1] = v10;
@@ -579,14 +604,14 @@ class mat3
             v[15] = 1.0f;
         };
         
-        inline mat3 transposed() const
+        inline mat3 transposed() const noexcept
         {
             return mat3(v00, v01, v02,
                         v10, v11, v12,
                         v20, v21, v22);
         };
         
-        inline mat3 inverted() const
+        inline mat3 inverted() const noexcept
         {
             const float t = 1.0f/(v00*(v11*v22 - v12*v21) - v01*(v10*v22 - v12*v20) + v02*(v10*v21 - v11*v20));
 
@@ -596,9 +621,9 @@ class mat3
                     t*(v01*v12 - v02*v11), t*(v02*v10 - v00*v12), t*(v00*v11 - v01*v10));
         };
 
-        std::tuple<vec3, mat3> eigenDecomposition() const;
+        std::tuple<vec3, mat3> eigenDecompositionSym() const;
         
-        inline vec4 getRotation() const
+        inline vec4 getRotation() const noexcept
         {
             //From http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/index.htm.
             const float t = v00 + v11 + v22;
@@ -635,28 +660,28 @@ class mat3
             return normalize(q);
         };
         
-        static mat3 identityMatrix()
+        inline static mat3 identityMatrix() noexcept
         {
             return mat3(1.0, 0.0, 0.0,
                         0.0, 1.0, 0.0,
                         0.0, 0.0, 1.0);
         };
 
-        static mat3 outerProductMatrix(const vec3 &a, const vec3 &b)
+        inline static mat3 outerProductMatrix(const vec3 &a, const vec3 &b) noexcept
         {
             return mat3(a.x*b.x, a.y*b.x, a.z*b.x,
                         a.x*b.y, a.y*b.y, a.z*b.y,
                         a.x*b.z, a.y*b.z, a.z*b.z);
         };
         
-        static mat3 scaleMatrix(const vec3 &a)
+        inline static mat3 scaleMatrix(const vec3 &a) noexcept
         {
             return mat3(a.x, 0.0, 0.0,
                         0.0, a.y, 0.0,
                         0.0, 0.0, a.z);
         };
         
-        static mat3 rotationMatrix(const vec4 &a)
+        inline static mat3 rotationMatrix(const vec4 &a) noexcept
         {
             return mat3(
                 1.0f - 2.0f*(a.y*a.y + a.z*a.z),
@@ -683,22 +708,22 @@ class mat3
         };
 };
 
-inline mat3 & operator + (mat3 a, const mat3 &b) {return a += b;}
-inline mat3 & operator - (mat3 a, const mat3 &b) {return a -= b;}
-inline mat3 & operator * (mat3 a, const mat3 &b) {return a *= b;}
-inline mat3 & operator * (const float &b, mat3 a) {return a *= b;}
+inline mat3 & operator + (mat3 a, const mat3 &b) noexcept {return a += b;}
+inline mat3 & operator - (mat3 a, const mat3 &b) noexcept {return a -= b;}
+inline mat3 & operator * (mat3 a, const mat3 &b) noexcept {return a *= b;}
+inline mat3 & operator * (const float &b, mat3 a) noexcept {return a *= b;}
 
 class mat4
 {
     public:
         inline mat4() {};
-        explicit inline mat4(const float &a) :
+        explicit inline mat4(const float &a) noexcept :
             v00(a), v10(a), v20(a), v30(a),
             v01(a), v11(a), v21(a), v31(a),
             v02(a), v12(a), v22(a), v32(a),
             v03(a), v13(a), v23(a), v33(a)
         {};
-        inline mat4(const mat4 &a) :
+        inline mat4(const mat4 &a) noexcept :
             v00(a.v00), v10(a.v10), v20(a.v20), v30(a.v30),
             v01(a.v01), v11(a.v11), v21(a.v21), v31(a.v31),
             v02(a.v02), v12(a.v12), v22(a.v22), v32(a.v32),
@@ -707,28 +732,28 @@ class mat4
         inline mat4(const float &_v00, const float &_v10, const float &_v20, const float &_v30,
                 const float &_v01, const float &_v11, const float &_v21, const float &_v31,
                 const float &_v02, const float &_v12, const float &_v22, const float &_v32,
-                const float &_v03, const float &_v13, const float &_v23, const float &_v33) :
+                const float &_v03, const float &_v13, const float &_v23, const float &_v33) noexcept :
             v00(_v00), v10(_v10), v20(_v20), v30(_v30),
             v01(_v01), v11(_v11), v21(_v21), v31(_v31),
             v02(_v02), v12(_v12), v22(_v22), v32(_v32),
             v03(_v03), v13(_v13), v23(_v23), v33(_v33)
         {};
 
-        inline mat4(const mat3 &a) :
+        inline mat4(const mat3 &a) noexcept :
             v00(a.v00), v10(a.v10), v20(a.v20), v30(0.0f),
             v01(a.v01), v11(a.v11), v21(a.v21), v31(0.0f),
             v02(a.v02), v12(a.v12), v22(a.v22), v32(0.0f),
             v03(0.0f),  v13(0.0f),  v23(0.0f),  v33(1.0f)
         {};
         
-        explicit inline mat4(const vec3 &x, const vec3 &y, const vec3 &z, const vec3 &b = vec3(0.0f, 0.0f, 0.0f)) :
+        explicit inline mat4(const vec3 &x, const vec3 &y, const vec3 &z, const vec3 &b = vec3(0.0f, 0.0f, 0.0f)) noexcept :
             v00(x.x), v10(x.y), v20(x.z), v30(0.0f),
             v01(y.x), v11(y.y), v21(y.z), v31(0.0f),
             v02(z.x), v12(z.y), v22(z.z), v32(0.0f),
             v03(b.x), v13(b.y), v23(b.z), v33(1.0f)
         {};
         
-        explicit inline mat4(const vec4 &a, const vec3 &b = vec3(0.0f, 0.0f, 0.0f)) :
+        explicit inline mat4(const vec4 &a, const vec3 &b = vec3(0.0f, 0.0f, 0.0f)) noexcept :
             v00(1.0f - 2.0f*(a.y*a.y + a.z*a.z)),
             v10(2.0f*(a.x*a.y - a.w*a.z)),
             v20(2.0f*(a.x*a.z + a.w*a.y)),
@@ -748,7 +773,7 @@ class mat4
         {};
 
 #ifdef ENABLE_OPENVR
-        inline mat4(const vr::HmdMatrix44_t &a) :
+        inline mat4(const vr::HmdMatrix44_t &a) noexcept :
             v00(a.m[0][0]),
             v10(a.m[1][0]),
             v20(a.m[2][0]),
@@ -767,7 +792,7 @@ class mat4
             v33(a.m[3][3])
         {};
 
-        inline mat4(const vr::HmdMatrix34_t &a) :
+        inline mat4(const vr::HmdMatrix34_t &a) noexcept :
             v00(a.m[0][0]),
             v10(a.m[1][0]),
             v20(a.m[2][0]),
@@ -787,9 +812,9 @@ class mat4
         {};
 #endif
 
-        inline ~mat4() {};
+        inline ~mat4() noexcept {};
         
-        inline mat4 & operator = (const mat4 &b)
+        inline mat4 & operator = (const mat4 &b) noexcept
         {
             v00 = b.v00;
             v10 = b.v10;
@@ -811,7 +836,7 @@ class mat4
         };
 
 
-        inline mat4 & operator *= (const mat4 &b)
+        inline mat4 & operator *= (const mat4 &b) noexcept
         {
             const mat4 c(
                 v00*b.v00 + v01*b.v10 + v02*b.v20 + v03*b.v30,
@@ -837,7 +862,7 @@ class mat4
             return *this;
         };
 
-        inline mat4 & operator *= (const float &b)
+        inline mat4 & operator *= (const float &b) noexcept
         {
             v00 *= b;
             v10 *= b;
@@ -858,7 +883,7 @@ class mat4
             return *this;
         };
         
-        inline mat4 operator * (const float &b) const
+        inline mat4 operator * (const float &b) const noexcept
         {
             return mat4(b*v00, b*v10, b*v20, b*v30,
                         b*v01, b*v11, b*v21, b*v31,
@@ -866,7 +891,7 @@ class mat4
                         b*v03, b*v13, b*v23, b*v33);
         };
 
-        inline mat4 operator / (const float &b) const
+        inline mat4 operator / (const float &b) const noexcept
         {
             return mat4(v00/b, v10/b, v20/b, v30/b,
                         v01/b, v11/b, v21/b, v31/b,
@@ -874,14 +899,14 @@ class mat4
                         v03/b, v13/b, v23/b, v33/b);
         };
 
-        inline vec3 operator * (const vec3 &a) const
+        inline vec3 operator * (const vec3 &a) const noexcept
         {
             return vec3(v00*a.x + v01*a.y + v02*a.z + v03,
                         v10*a.x + v11*a.y + v12*a.z + v13,
                         v20*a.x + v21*a.y + v22*a.z + v23);
         };
 
-        inline vec4 operator * (const vec4 &a) const
+        inline vec4 operator * (const vec4 &a) const noexcept
         {
             return vec4(v00*a.x + v01*a.y + v02*a.z + v03*a.w,
                         v10*a.x + v11*a.y + v12*a.z + v13*a.w,
@@ -889,7 +914,7 @@ class mat4
                         v30*a.x + v31*a.y + v32*a.z + v33*a.w);
         };
 
-        inline void toOpenGL(float * const v) const
+        inline void toOpenGL(float * const v) const noexcept
         {
             v[ 0] = v00;
             v[ 1] = v10;
@@ -909,7 +934,7 @@ class mat4
             v[15] = v33;
         };
         
-        inline mat4 transposed() const
+        inline mat4 transposed() const noexcept
         {
             return mat4(v00, v01, v02, v03,
                         v10, v11, v12, v13,
@@ -917,7 +942,7 @@ class mat4
                         v30, v31, v32, v33);
         };
         
-        inline mat4 inverted() const
+        inline mat4 inverted() const noexcept
         {
             return mat4(v00, v01, v02, 0.0f,
                 v10, v11, v12, 0.0f,
@@ -928,7 +953,7 @@ class mat4
                 1.0f);
         };
         
-        inline mat4 invertedFull() const
+        inline mat4 invertedFull() const noexcept
         {
             //Less efficient version of https://lxjk.github.io/2017/09/03/Fast-4x4-Matrix-Inverse-with-SSE-SIMD-Explained.html.
             const mat2 A = mat2(v00, v10, v01, v11);
@@ -953,7 +978,7 @@ class mat4
                         Y.v01, Y.v11, W.v01, W.v11)/dM;
         };
 
-        inline mat4 &setTranslation(const vec3 &a)
+        inline mat4 &setTranslation(const vec3 &a) noexcept
         {
             v03 = a.x;
             v13 = a.y;
@@ -962,12 +987,12 @@ class mat4
             return *this;
         };
         
-        inline vec3 getTranslation() const
+        inline vec3 getTranslation() const noexcept
         {
             return vec3(v03, v13, v23);
         };
         
-        inline vec4 getRotation() const
+        inline vec4 getRotation() const noexcept
         {
             //From http://www.euclideanspace.com/maths/geometry/rotations/conversions/matrixToQuaternion/index.htm.
             const float t = v00 + v11 + v22;
@@ -1004,7 +1029,7 @@ class mat4
             return normalize(q);
         };
         
-        static mat4 identityMatrix()
+        inline static mat4 identityMatrix() noexcept
         {
             return mat4(1.0, 0.0, 0.0, 0.0,
                         0.0, 1.0, 0.0, 0.0,
@@ -1012,7 +1037,7 @@ class mat4
                         0.0, 0.0, 0.0, 1.0);
         };
         
-        static mat4 translationMatrix(const vec3 &a)
+        inline static mat4 translationMatrix(const vec3 &a) noexcept
         {
             return mat4(1.0f, 0.0f, 0.0f, 0.0f,
                         0.0f, 1.0f, 0.0f, 0.0f,
@@ -1020,7 +1045,7 @@ class mat4
                         a.x, a.y, a.z, 1.0f);
         };
         
-        static mat4 scaleMatrix(const vec3 &a)
+        inline static mat4 scaleMatrix(const vec3 &a) noexcept
         {
             return mat4(a.x, 0.0, 0.0, 0.0,
                         0.0, a.y, 0.0, 0.0,
@@ -1028,7 +1053,7 @@ class mat4
                         0.0, 0.0, 0.0, 1.0);
         };
         
-        static mat4 rotationMatrix(const vec4 &a)
+        inline static mat4 rotationMatrix(const vec4 &a) noexcept
         {
             return mat4(
                 1.0f - 2.0f*(a.y*a.y + a.z*a.z),
@@ -1046,7 +1071,7 @@ class mat4
                 0.0f, 0.0f, 0.0f, 1.0f);
         };
         
-        static mat4 frustumMatrix(const vec3 &a, const vec3 &b)
+        inline static mat4 frustumMatrix(const vec3 &a, const vec3 &b) noexcept
         {
             const vec3 c = vec3(1.0f/(b.x - a.x), 1.0f/(b.y - a.y), 1.0f/(b.z - a.z));
             
@@ -1086,14 +1111,14 @@ class mat4
         };
 };
 
-inline mat4 & operator * (mat4 a, const mat4 &b) {return a *= b;}
-inline mat4 & operator * (const float &b, mat4 a) {return a *= b;}
+inline mat4 & operator * (mat4 a, const mat4 &b) noexcept {return a *= b;}
+inline mat4 & operator * (const float &b, mat4 a) noexcept {return a *= b;}
 
-//Perform eigendecomposition using Jacobi's algorithm.
+//Perform eigendecomposition using Jacobi's algorithm for symmetric matrices.
 //https://en.wikipedia.org/wiki/Jacobi_eigenvalue_algorithm
 template<typename t, size_t n>
 std::tuple<std::array<t, n>,
-    std::array<std::array<t, n>, n>> eigenDecomposition(std::array<std::array<t, n>, n> a)
+    std::array<std::array<t, n>, n>> eigenDecompositionSym(std::array<std::array<t, n>, n> a)
 {
     //Start with identity matrix for eigenvectors.
     std::array<std::array<t, n>, n> E;
@@ -1115,14 +1140,6 @@ std::tuple<std::array<t, n>,
     
     return {e, E};
 }
-
-vec4 quatmul(const vec4 &, const vec4 &);
-vec4 quatconj(const vec4 &);
-vec4 quatrot(const float &, const vec3 &);
-
-vec2 randomVec2(const float & = 1.0f);
-vec3 randomVec3(const float & = 1.0f);
-vec4 randomVec4(const float & = 1.0f);
 
 }
 
