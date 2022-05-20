@@ -54,9 +54,9 @@ configure_file(config.h.cmake ${CMAKE_BINARY_DIR}/config.h)
 
 # Set compilation flags.
 set(CMAKE_CXX_STANDARD 17)
-set(CMAKE_CXX_FLAGS "-O2 -g -Wall -Wextra -Wshadow -std=c++17 -pedantic -DRENDERER_PERFMON")
+set(CMAKE_CXX_FLAGS "-O2 -g -Wall -Wextra -Wshadow -std=c++17 -pedantic -fsanitize=address -DRENDERER_PERFMON")
 #set(CMAKE_CXX_FLAGS "-O3 -Wall -DNDEBUG")
-#set(CMAKE_EXE_LINKER_FLAGS "-lrt")
+set(CMAKE_EXE_LINKER_FLAGS "-static-libasan")
 #set(CMAKE_VERBOSE_MAKEFILE true)
 
 

@@ -74,6 +74,19 @@ struct RigidBodyState
     {
         return (0.5f/invM)*length2(v) + 0.5f*dot(w, getI()*w);
     }
+    
+    friend std::ostream & operator << (std::ostream &Out, const RigidBodyState &b)
+    {
+        Out << "Body (m = " << 1.0f/b.invM << ", I = " << 1.0f/b.invI << ")" << std::endl
+            << "    position    = " << b.x << std::endl
+            << "    orientation = " << b.q << std::endl
+            << "    lin. vel.   = " << b.v << std::endl
+            << "    ang. vel.   = " << b.w << std::endl
+            << "    force       = " << b.f << std::endl
+            << "    torque      = " << b.t << std::endl;
+
+        return Out;
+    }
 };
 
 struct RigidBodyCollision

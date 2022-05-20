@@ -171,6 +171,8 @@ void RigidBodySystem::addRigidBody(const float &totalMass, const std::vector<vec
     //Add rigid body to system.
     bodies.push_back({1.0f/totalMass, 1.0f/e, x, q, v, w, vec3(0.0f), vec3(0.0f), maxRadius, bodyInternalSpheres.size(), bodyInternalSpheres.size() + spheres.size()});
     bodyInternalSpheres.insert(bodyInternalSpheres.end(), spheres.begin(), spheres.end());
+
+    std::cout << "Added " << bodies.back();
 }
 
 void RigidBodySystem::calculateInternalSpheres(const RigidBodyState &b, const float &dt)
@@ -213,9 +215,9 @@ void applyVelocityConstraint(RigidBodyState *b1,
                              const vec3 &r1,
                              RigidBodyState *b2,
                              const vec3 &r2,
-                             const vec3 &n,
                              const vec3 &dv)
 {
+    const vec3 n = normalize(dv);
     const float w1 = b1->invM + dot(cross(r1, n), b1->getInvI()*cross(r1, n));
     const float w2 = b2->invM + dot(cross(r2, n), b2->getInvI()*cross(r2, n));
     const vec3 p = (-1.0f/(w1 + w2))*dv;
@@ -351,8 +353,7 @@ void RigidBodySystem::update(const float &dt)
     {
         //Store pre-update positions and velocities.
         preBodies = bodies;
-
-
+        
         //Apply momenta.
         for (auto &b : bodies)
         {
@@ -363,9 +364,9 @@ void RigidBodySystem::update(const float &dt)
             b.q += (0.5f*h)*quatmul(vec4(b.w, 0.0f), b.q);
             b.q = normalize(b.q);
         }
-
+        
         //Solve positions.
-
+        
         //Collisions.
         std::vector<float> lambdaCollisionN(collisions.size(), 0.0f);
         std::vector<float> lambdaCollisionT(collisions.size(), 0.0f);
@@ -402,14 +403,14 @@ void RigidBodySystem::update(const float &dt)
                 }
             }
         }
-
+        
         //Update velocities.
         for (size_t i = 0; i < bodies.size(); ++i)
         {
             bodies[i].v = (bodies[i].x - preBodies[i].x)/h;
 
-            vec4 dq = bodies[i].q*quatconj(preBodies[i].q);
-            
+            const vec4 dq = quatmul(bodies[i].q, quatconj(preBodies[i].q));
+
             bodies[i].w = (dq.w >= 0.0f ? 2.0f/h : -2.0f/h)*dq.xyz();
         }
 
@@ -429,7 +430,7 @@ void RigidBodySystem::update(const float &dt)
                 vt -= vn*cg.n;
 
                 //Apply dynamic friction.
-                applyVelocityConstraint(cg.b1, cg.p1 - cg.b1->x, cg.b2, cg.p2 - cg.b2->x, cg.n,
+                applyVelocityConstraint(cg.b1, cg.p1 - cg.b1->x, cg.b2, cg.p2 - cg.b2->x,
                                         std::min(dynamicFrictionCoeff*std::abs(lambdaCollisionN[i])/h, length(vt))*normalize(vt));
                 
                 //Get pre-state normal velocity.
@@ -442,7 +443,7 @@ void RigidBodySystem::update(const float &dt)
                 //Perform restitution in case of collisions that are not resting contacts.
                 if (std::abs(prevn) > h*minCollisionNormalVelocity)
                 {
-                    applyVelocityConstraint(cg.b1, cg.p1 - cg.b1->x, cg.b2, cg.p2 - cg.b2->x, cg.n,
+                    applyVelocityConstraint(cg.b1, cg.p1 - cg.b1->x, cg.b2, cg.p2 - cg.b2->x,
                                             (vn + std::max(0.0f, restitutionCoeff*prevn))*cg.n);
                 }
             }
