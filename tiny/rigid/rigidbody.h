@@ -45,7 +45,7 @@ class SpatialSphereHasher
         std::vector<std::list<size_t>> buckets;
 };
 
-struct RigidBodyState
+struct RigidBody
 {
     float invM; //Inverse mass.
     vec3 invI; //Inverse inertia tensor diagonal.
@@ -70,14 +70,9 @@ struct RigidBodyState
         return mat3::rotationMatrix(q)*mat3(invI)*mat3::rotationMatrix(quatconj(q));
     }
 
-    float getEnergy() const
+    friend std::ostream & operator << (std::ostream &Out, const RigidBody &b)
     {
-        return (0.5f/invM)*length2(v) + 0.5f*dot(w, getI()*w);
-    }
-    
-    friend std::ostream & operator << (std::ostream &Out, const RigidBodyState &b)
-    {
-        Out << "Body (m = " << 1.0f/b.invM << ", I = " << 1.0f/b.invI << ")" << std::endl
+        Out << "Rigid body (m = " << 1.0f/b.invM << ", I = " << 1.0f/b.invI << ")" << std::endl
             << "    position    = " << b.x << std::endl
             << "    orientation = " << b.q << std::endl
             << "    lin. vel.   = " << b.v << std::endl
@@ -100,9 +95,9 @@ struct RigidBodyCollision
 struct RigidBodyCollisionGeometry
 {
     vec3 n; //Normal at point of collision.
-    RigidBodyState *b1; //Pointer to first body.
+    RigidBody *b1; //Pointer to first body.
     vec3 p1, v1; //Position and velocity of collision point in world coordinates of first body.
-    RigidBodyState *b2; //Pointer to second body.
+    RigidBody *b2; //Pointer to second body.
     vec3 p2, v2; //Position and velocity of collision point in world coordinates of second body.
     bool isColliding; //Are the bodies colliding?
 };
@@ -139,15 +134,29 @@ class RigidBodySystem
         }
 
         float getTime() const;
-        float getTotalEnergy() const;
         
+        friend std::ostream & operator << (std::ostream &Out, const RigidBodySystem &b)
+        {
+            Out << "Rigid body system: "
+                << b.bodies.size() << " rigid bodies"
+                << ", t = " << b.time
+                << ", E = " << b.totalEnergy
+                << ", P = " << b.totalLinearMomentum
+                << ", L = " << b.totalAngularMomentum
+                << std::endl;
+
+            return Out;
+        }
+
     protected:
         virtual void applyExternalForces();
     
         float time;
         float totalEnergy;
+        vec3 totalLinearMomentum;
+        vec3 totalAngularMomentum;
 
-        std::vector<RigidBodyState> bodies;
+        std::vector<RigidBody> bodies;
 
         //Planes through which no rigid body may pass.
         std::vector<vec4> boundingPlanes;
@@ -158,12 +167,12 @@ class RigidBodySystem
         SpatialSphereHasher internalSphereHasher;
 
     private:
-        std::vector<RigidBodyState> preBodies;
+        std::vector<RigidBody> preBodies;
         std::vector<vec4> bodyInternalSpheres;
         std::vector<vec4> collSpheres;
 
-        void calculateInternalSpheres(const RigidBodyState &, const float &);
-        RigidBodyCollisionGeometry getCollisionGeometry(std::vector<RigidBodyState> &, const RigidBodyCollision &) const;
+        void calculateInternalSpheres(const RigidBody &, const float &);
+        RigidBodyCollisionGeometry getCollisionGeometry(std::vector<RigidBody> &, const RigidBodyCollision &) const;
 };
 
 }

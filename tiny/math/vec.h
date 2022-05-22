@@ -29,7 +29,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define M_PI 3.14159265358979323846f
 #endif
 
-#define EPS 1.0e-6
+#define EPS 1.0e-6f
 
 namespace tiny
 {
@@ -183,64 +183,64 @@ template <typename t> inline typed4vector<t> operator * (const t &b, const typed
 template <typename t> inline typed4vector<t> operator / (const typed4vector<t> &a, const t &b) noexcept {typed4vector<t> c(a); return c /= b;}
 template <typename t> inline typed4vector<t> operator / (const t &b, const typed4vector<t> &a) noexcept {return typed4vector<t>(b/a.x, b/a.y, b/a.z, b/a.w);}
 
-template <typename t> typed2vector<t> min(const typed2vector<t> &a, const typed2vector<t> &b) noexcept {return typed2vector<t>(std::min(a.x, b.x), std::min(a.y, b.y));}
-template <typename t> typed2vector<t> max(const typed2vector<t> &a, const typed2vector<t> &b) noexcept {return typed2vector<t>(std::max(a.x, b.x), std::max(a.y, b.y));}
-template <typename t> typed3vector<t> min(const typed3vector<t> &a, const typed3vector<t> &b) noexcept {return typed3vector<t>(std::min(a.x, b.x), std::min(a.y, b.y), std::min(a.z, b.z));}
-template <typename t> typed3vector<t> max(const typed3vector<t> &a, const typed3vector<t> &b) noexcept {return typed3vector<t>(std::max(a.x, b.x), std::max(a.y, b.y), std::max(a.z, b.z));}
-template <typename t> typed4vector<t> min(const typed4vector<t> &a, const typed4vector<t> &b) noexcept {return typed4vector<t>(std::min(a.x, b.x), std::min(a.y, b.y), std::min(a.z, b.z), std::min(a.w, b.w));}
-template <typename t> typed4vector<t> max(const typed4vector<t> &a, const typed4vector<t> &b) noexcept {return typed4vector<t>(std::max(a.x, b.x), std::max(a.y, b.y), std::max(a.z, b.z), std::max(a.w, b.w));}
+template <typename t> inline typed2vector<t> min(const typed2vector<t> &a, const typed2vector<t> &b) noexcept {return typed2vector<t>(std::min(a.x, b.x), std::min(a.y, b.y));}
+template <typename t> inline typed2vector<t> max(const typed2vector<t> &a, const typed2vector<t> &b) noexcept {return typed2vector<t>(std::max(a.x, b.x), std::max(a.y, b.y));}
+template <typename t> inline typed3vector<t> min(const typed3vector<t> &a, const typed3vector<t> &b) noexcept {return typed3vector<t>(std::min(a.x, b.x), std::min(a.y, b.y), std::min(a.z, b.z));}
+template <typename t> inline typed3vector<t> max(const typed3vector<t> &a, const typed3vector<t> &b) noexcept {return typed3vector<t>(std::max(a.x, b.x), std::max(a.y, b.y), std::max(a.z, b.z));}
+template <typename t> inline typed4vector<t> min(const typed4vector<t> &a, const typed4vector<t> &b) noexcept {return typed4vector<t>(std::min(a.x, b.x), std::min(a.y, b.y), std::min(a.z, b.z), std::min(a.w, b.w));}
+template <typename t> inline typed4vector<t> max(const typed4vector<t> &a, const typed4vector<t> &b) noexcept {return typed4vector<t>(std::max(a.x, b.x), std::max(a.y, b.y), std::max(a.z, b.z), std::max(a.w, b.w));}
 
-template <typename t> t minComponent(const typed2vector<t> &a) noexcept {return (a.x <= a.y ? a.x : a.y);}
-template <typename t> t minComponent(const typed3vector<t> &a) noexcept {return (a.x <= a.y ? (a.x <= a.z ? a.x : a.z) : (a.y <= a.z ? a.y : a.z));}
+template <typename t> inline t minComponent(const typed2vector<t> &a) noexcept {return (a.x <= a.y ? a.x : a.y);}
+template <typename t> inline t minComponent(const typed3vector<t> &a) noexcept {return (a.x <= a.y ? (a.x <= a.z ? a.x : a.z) : (a.y <= a.z ? a.y : a.z));}
 
-template <typename t> t maxComponent(const typed2vector<t> &a) noexcept {return (a.x >= a.y ? a.x : a.y);}
-template <typename t> t maxComponent(const typed3vector<t> &a) noexcept {return (a.x >= a.y ? (a.x >= a.z ? a.x : a.z) : (a.y >= a.z ? a.y : a.z));}
+template <typename t> inline t maxComponent(const typed2vector<t> &a) noexcept {return (a.x >= a.y ? a.x : a.y);}
+template <typename t> inline t maxComponent(const typed3vector<t> &a) noexcept {return (a.x >= a.y ? (a.x >= a.z ? a.x : a.z) : (a.y >= a.z ? a.y : a.z));}
 
-template <typename t> t t_abs(const t &a) noexcept {return (a < t(0) ? -a : a);}
-template <typename t> typed2vector<t> abs(const typed2vector<t> &a) noexcept {return typed2vector<t>(t_abs(a.x), t_abs(a.y));}
-template <typename t> typed3vector<t> abs(const typed3vector<t> &a) noexcept {return typed3vector<t>(t_abs(a.x), t_abs(a.y), t_abs(a.z));}
-template <typename t> typed4vector<t> abs(const typed4vector<t> &a) noexcept {return typed4vector<t>(t_abs(a.x), t_abs(a.y), t_abs(a.z), t_abs(a.w));}
+template <typename t> inline t t_abs(const t &a) noexcept {return (a < t(0) ? -a : a);}
+template <typename t> inline typed2vector<t> abs(const typed2vector<t> &a) noexcept {return typed2vector<t>(t_abs(a.x), t_abs(a.y));}
+template <typename t> inline typed3vector<t> abs(const typed3vector<t> &a) noexcept {return typed3vector<t>(t_abs(a.x), t_abs(a.y), t_abs(a.z));}
+template <typename t> inline typed4vector<t> abs(const typed4vector<t> &a) noexcept {return typed4vector<t>(t_abs(a.x), t_abs(a.y), t_abs(a.z), t_abs(a.w));}
 
-template <typename t> t clamp(const t &a, const t &b, const t &c) noexcept {return (a < b ? b : (a > c ? c : a));}
-template <typename t> typed2vector<t> clamp(const typed2vector<t> &a, const typed2vector<t> &b, const typed2vector<t> &c) noexcept {return typed2vector<t>(clamp(a.x, b.x, c.x), clamp(a.y, b.y, c.y));}
-template <typename t> typed3vector<t> clamp(const typed3vector<t> &a, const typed3vector<t> &b, const typed3vector<t> &c) noexcept {return typed3vector<t>(clamp(a.x, b.x, c.x), clamp(a.y, b.y, c.y), clamp(a.z, b.z, c.z));}
-template <typename t> typed4vector<t> clamp(const typed4vector<t> &a, const typed4vector<t> &b, const typed4vector<t> &c) noexcept {return typed4vector<t>(clamp(a.x, b.x, c.x), clamp(a.y, b.y, c.y), clamp(a.z, b.z, c.z), clamp(a.w, b.w, c.w));}
+template <typename t> inline t clamp(const t &a, const t &b, const t &c) noexcept {return (a < b ? b : (a > c ? c : a));}
+template <typename t> inline typed2vector<t> clamp(const typed2vector<t> &a, const typed2vector<t> &b, const typed2vector<t> &c) noexcept {return typed2vector<t>(clamp(a.x, b.x, c.x), clamp(a.y, b.y, c.y));}
+template <typename t> inline typed3vector<t> clamp(const typed3vector<t> &a, const typed3vector<t> &b, const typed3vector<t> &c) noexcept {return typed3vector<t>(clamp(a.x, b.x, c.x), clamp(a.y, b.y, c.y), clamp(a.z, b.z, c.z));}
+template <typename t> inline typed4vector<t> clamp(const typed4vector<t> &a, const typed4vector<t> &b, const typed4vector<t> &c) noexcept {return typed4vector<t>(clamp(a.x, b.x, c.x), clamp(a.y, b.y, c.y), clamp(a.z, b.z, c.z), clamp(a.w, b.w, c.w));}
 
-template <typename t> t step(const t &a, const t &b) noexcept {return (b < a ? t(0) : t(1));}
-template <typename t> typed2vector<t> step(const typed2vector<t> &a, const typed2vector<t> &b) noexcept {return typed2vector<t>(step(a.x, b.x), step(a.y, b.y));}
-template <typename t> typed3vector<t> step(const typed3vector<t> &a, const typed3vector<t> &b) noexcept {return typed3vector<t>(step(a.x, b.x), step(a.y, b.y), step(a.z, b.z));}
-template <typename t> typed4vector<t> step(const typed4vector<t> &a, const typed4vector<t> &b) noexcept {return typed4vector<t>(step(a.x, b.x), step(a.y, b.y), step(a.z, b.z), step(a.w, b.w));}
+template <typename t> inline t step(const t &a, const t &b) noexcept {return (b < a ? t(0) : t(1));}
+template <typename t> inline typed2vector<t> step(const typed2vector<t> &a, const typed2vector<t> &b) noexcept {return typed2vector<t>(step(a.x, b.x), step(a.y, b.y));}
+template <typename t> inline typed3vector<t> step(const typed3vector<t> &a, const typed3vector<t> &b) noexcept {return typed3vector<t>(step(a.x, b.x), step(a.y, b.y), step(a.z, b.z));}
+template <typename t> inline typed4vector<t> step(const typed4vector<t> &a, const typed4vector<t> &b) noexcept {return typed4vector<t>(step(a.x, b.x), step(a.y, b.y), step(a.z, b.z), step(a.w, b.w));}
 
-template <typename t> typed2vector<t> floor(const typed2vector<t> &a) noexcept {return typed2vector<t>(std::floor(a.x), std::floor(a.y));}
-template <typename t> typed3vector<t> floor(const typed3vector<t> &a) noexcept {return typed3vector<t>(std::floor(a.x), std::floor(a.y), std::floor(a.z));}
-template <typename t> typed4vector<t> floor(const typed4vector<t> &a) noexcept {return typed4vector<t>(std::floor(a.x), std::floor(a.y), std::floor(a.z), std::floor(a.w));}
+template <typename t> inline typed2vector<t> floor(const typed2vector<t> &a) noexcept {return typed2vector<t>(std::floor(a.x), std::floor(a.y));}
+template <typename t> inline typed3vector<t> floor(const typed3vector<t> &a) noexcept {return typed3vector<t>(std::floor(a.x), std::floor(a.y), std::floor(a.z));}
+template <typename t> inline typed4vector<t> floor(const typed4vector<t> &a) noexcept {return typed4vector<t>(std::floor(a.x), std::floor(a.y), std::floor(a.z), std::floor(a.w));}
 
-template <typename t> typed2vector<t> ceil(const typed2vector<t> &a) noexcept {return typed2vector<t>(std::ceil(a.x), std::ceil(a.y));}
-template <typename t> typed3vector<t> ceil(const typed3vector<t> &a) noexcept {return typed3vector<t>(std::ceil(a.x), std::ceil(a.y), std::ceil(a.z));}
-template <typename t> typed4vector<t> ceil(const typed4vector<t> &a) noexcept {return typed4vector<t>(std::ceil(a.x), std::ceil(a.y), std::ceil(a.z), std::ceil(a.w));}
+template <typename t> inline typed2vector<t> ceil(const typed2vector<t> &a) noexcept {return typed2vector<t>(std::ceil(a.x), std::ceil(a.y));}
+template <typename t> inline typed3vector<t> ceil(const typed3vector<t> &a) noexcept {return typed3vector<t>(std::ceil(a.x), std::ceil(a.y), std::ceil(a.z));}
+template <typename t> inline typed4vector<t> ceil(const typed4vector<t> &a) noexcept {return typed4vector<t>(std::ceil(a.x), std::ceil(a.y), std::ceil(a.z), std::ceil(a.w));}
 
-template <typename t> t fract(const t &a) noexcept {return a - std::floor(a);}
-template <typename t> typed2vector<t> fract(const typed2vector<t> &a) noexcept {return typed2vector<t>(fract(a.x), fract(a.y));}
-template <typename t> typed3vector<t> fract(const typed3vector<t> &a) noexcept {return typed3vector<t>(fract(a.x), fract(a.y), fract(a.z));}
-template <typename t> typed4vector<t> fract(const typed4vector<t> &a) noexcept {return typed4vector<t>(fract(a.x), fract(a.y), fract(a.z), fract(a.w));}
+template <typename t> inline t fract(const t &a) noexcept {return a - std::floor(a);}
+template <typename t> inline typed2vector<t> fract(const typed2vector<t> &a) noexcept {return typed2vector<t>(fract(a.x), fract(a.y));}
+template <typename t> inline typed3vector<t> fract(const typed3vector<t> &a) noexcept {return typed3vector<t>(fract(a.x), fract(a.y), fract(a.z));}
+template <typename t> inline typed4vector<t> fract(const typed4vector<t> &a) noexcept {return typed4vector<t>(fract(a.x), fract(a.y), fract(a.z), fract(a.w));}
 
-template <typename t> t dot(const typed2vector<t> &a, const typed2vector<t> &b) noexcept {return a.x*b.x + a.y*b.y;}
-template <typename t> t dot(const typed3vector<t> &a, const typed3vector<t> &b) noexcept {return a.x*b.x + a.y*b.y + a.z*b.z;}
-template <typename t> t dot(const typed4vector<t> &a, const typed4vector<t> &b) noexcept {return a.x*b.x + a.y*b.y + a.z*b.z + a.w*b.w;}
+template <typename t> inline t dot(const typed2vector<t> &a, const typed2vector<t> &b) noexcept {return a.x*b.x + a.y*b.y;}
+template <typename t> inline t dot(const typed3vector<t> &a, const typed3vector<t> &b) noexcept {return a.x*b.x + a.y*b.y + a.z*b.z;}
+template <typename t> inline t dot(const typed4vector<t> &a, const typed4vector<t> &b) noexcept {return a.x*b.x + a.y*b.y + a.z*b.z + a.w*b.w;}
 
-template <typename t> typed3vector<t> cross(const typed3vector<t> &a, const typed3vector<t> &b) noexcept {return typed3vector<t>(a.y*b.z - a.z*b.y, a.z*b.x - a.x*b.z, a.x*b.y - a.y*b.x);}
+template <typename t> inline typed3vector<t> cross(const typed3vector<t> &a, const typed3vector<t> &b) noexcept {return typed3vector<t>(a.y*b.z - a.z*b.y, a.z*b.x - a.x*b.z, a.x*b.y - a.y*b.x);}
 
-template <typename t> t length(const typed2vector<t> &a) noexcept {return sqrtf(dot(a, a));}
-template <typename t> t length(const typed3vector<t> &a) noexcept {return sqrtf(dot(a, a));}
-template <typename t> t length(const typed4vector<t> &a) noexcept {return sqrtf(dot(a, a));}
+template <typename t> inline t length(const typed2vector<t> &a) noexcept {return std::sqrt(dot(a, a));}
+template <typename t> inline t length(const typed3vector<t> &a) noexcept {return std::sqrt(dot(a, a));}
+template <typename t> inline t length(const typed4vector<t> &a) noexcept {return std::sqrt(dot(a, a));}
 
-template <typename t> t length2(const typed2vector<t> &a) noexcept {return dot(a, a);}
-template <typename t> t length2(const typed3vector<t> &a) noexcept {return dot(a, a);}
-template <typename t> t length2(const typed4vector<t> &a) noexcept {return dot(a, a);}
+template <typename t> inline t length2(const typed2vector<t> &a) noexcept {return dot(a, a);}
+template <typename t> inline t length2(const typed3vector<t> &a) noexcept {return dot(a, a);}
+template <typename t> inline t length2(const typed4vector<t> &a) noexcept {return dot(a, a);}
 
-template <typename t> typed2vector<t> normalize(const typed2vector<t> &a) noexcept {t l = dot(a, a); l = (l > static_cast<t>(EPS) ? static_cast<t>(1.0/sqrt(l)) : static_cast<t>(1.0)); return typed2vector<t>(a.x*l, a.y*l);}
-template <typename t> typed3vector<t> normalize(const typed3vector<t> &a) noexcept {t l = dot(a, a); l = (l > static_cast<t>(EPS) ? static_cast<t>(1.0/sqrt(l)) : static_cast<t>(1.0)); return typed3vector<t>(a.x*l, a.y*l, a.z*l);}
-template <typename t> typed4vector<t> normalize(const typed4vector<t> &a) noexcept {t l = dot(a, a); l = (l > static_cast<t>(EPS) ? static_cast<t>(1.0/sqrt(l)) : static_cast<t>(1.0)); return typed4vector<t>(a.x*l, a.y*l, a.z*l, a.w*l);}
+template <typename t> inline typed2vector<t> normalize(const typed2vector<t> &a) noexcept {t l = 1.0f/std::max(length(a), EPS); return typed2vector<t>(a.x*l, a.y*l);}
+template <typename t> inline typed3vector<t> normalize(const typed3vector<t> &a) noexcept {t l = 1.0f/std::max(length(a), EPS); return typed3vector<t>(a.x*l, a.y*l, a.z*l);}
+template <typename t> inline typed4vector<t> normalize(const typed4vector<t> &a) noexcept {t l = 1.0f/std::max(length(a), EPS); return typed4vector<t>(a.x*l, a.y*l, a.z*l, a.w*l);}
 
 typedef typed2vector<int> ivec2;
 typedef typed2vector<float> vec2;
@@ -249,17 +249,16 @@ typedef typed3vector<float> vec3;
 typedef typed4vector<int> ivec4;
 typedef typed4vector<float> vec4;
 
-vec2 to_float(const ivec2 &a) noexcept;
-vec3 to_float(const ivec3 &a) noexcept;
-vec4 to_float(const ivec4 &a) noexcept;
+inline vec2 to_float(const ivec2 &a) noexcept {return vec2(static_cast<float>(a.x), static_cast<float>(a.y));}
+inline vec3 to_float(const ivec3 &a) noexcept {return vec3(static_cast<float>(a.x), static_cast<float>(a.y), static_cast<float>(a.z));}
+inline vec4 to_float(const ivec4 &a) noexcept {return vec4(static_cast<float>(a.x), static_cast<float>(a.y), static_cast<float>(a.z), static_cast<float>(a.w));}
+inline ivec2 to_int(const vec2 &a) noexcept {return ivec2(static_cast<int>(a.x), static_cast<int>(a.y));}
+inline ivec3 to_int(const vec3 &a) noexcept {return ivec3(static_cast<int>(a.x), static_cast<int>(a.y), static_cast<int>(a.z));}
+inline ivec4 to_int(const vec4 &a) noexcept {return ivec4(static_cast<int>(a.x), static_cast<int>(a.y), static_cast<int>(a.z), static_cast<int>(a.w));}
 
-ivec2 to_int(const vec2 &a) noexcept;
-ivec3 to_int(const vec3 &a) noexcept;
-ivec4 to_int(const vec4 &a) noexcept;
-
-template <typename t> ivec2 lessThanEqual(const typed2vector<t> &a, const typed2vector<t> &b) noexcept {return ivec2(a.x <= b.x ? 1 : 0, a.y <= b.y ? 1 : 0);}
-template <typename t> ivec3 lessThanEqual(const typed3vector<t> &a, const typed3vector<t> &b) noexcept {return ivec3(a.x <= b.x ? 1 : 0, a.y <= b.y ? 1 : 0, a.z <= b.z ? 1 : 0);}
-template <typename t> ivec4 lessThanEqual(const typed4vector<t> &a, const typed4vector<t> &b) noexcept {return ivec4(a.x <= b.x ? 1 : 0, a.y <= b.y ? 1 : 0, a.z <= b.z ? 1 : 0, a.w <= b.w ? 1 : 0);}
+template <typename t> inline ivec2 lessThanEqual(const typed2vector<t> &a, const typed2vector<t> &b) noexcept {return ivec2(a.x <= b.x ? 1 : 0, a.y <= b.y ? 1 : 0);}
+template <typename t> inline ivec3 lessThanEqual(const typed3vector<t> &a, const typed3vector<t> &b) noexcept {return ivec3(a.x <= b.x ? 1 : 0, a.y <= b.y ? 1 : 0, a.z <= b.z ? 1 : 0);}
+template <typename t> inline ivec4 lessThanEqual(const typed4vector<t> &a, const typed4vector<t> &b) noexcept {return ivec4(a.x <= b.x ? 1 : 0, a.y <= b.y ? 1 : 0, a.z <= b.z ? 1 : 0, a.w <= b.w ? 1 : 0);}
 
 //Integer specific bit operations.
 inline ivec2 operator % (const ivec2 &a, const ivec2 &b) noexcept {return ivec2(a.x % b.x, a.y % b.y);}

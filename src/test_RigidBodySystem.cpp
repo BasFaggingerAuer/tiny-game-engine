@@ -58,16 +58,16 @@ void setup()
     const int nrBalls = 4;
     
     rigidBodySystem = new rigid::RigidBodySystem();
-    rigidBodySystem->addRigidBody(1.0f, {vec4(0.0f, 0.0f, 0.0f, 0.25f)}, vec3(-1.0f, 0.0f, 0.0f), vec3(1.0f, 0.0f, 0.0f));
+    rigidBodySystem->addRigidBody(1.0f, {vec4(0.0f, 0.0f, 0.0f, 0.25f)}, vec3(-1.0f, 0.0f, 0.0f), vec3(1.5f, 0.0f, 0.0f));
     
     for (int i = 0; i < nrBalls; ++i)
     {
         rigidBodySystem->addRigidBody(1.0f, {vec4(0.0f, 0.0f, 0.0f, 0.25f)}, vec3(0.55f*static_cast<float>(i), 0.0f, 0.0f));
     }
     
-    rigidBodySystem->addRigidBody(1.0e8f, {vec4(0.0f, 0.0f, 0.0f, 0.25f)}, vec3(0.55f*static_cast<float>(nrBalls + 1), 0.0f, 0.0f));
-
-    rigidBodySystem->addRigidBody(1.0f, {vec4(0.0f, 0.0f, 0.0f, 0.5f),
+    rigidBodySystem->addRigidBody(1.0e2f, {vec4(0.0f, 0.0f, 0.0f, 0.25f)}, vec3(0.55f*static_cast<float>(nrBalls + 1), 0.0f, 0.0f));
+    
+    rigidBodySystem->addRigidBody(7.0f, {vec4(0.0f, 0.0f, 0.0f, 0.5f),
                                          vec4(1.0f, 0.0f, 0.0f, 0.5f),
                                          vec4(2.0f, 0.0f, 0.0f, 0.5f),
                                          vec4(3.0f, 0.0f, 0.0f, 0.5f),
@@ -76,7 +76,6 @@ void setup()
                                          vec4(0.0f, -3.0f, 0.0f, 0.5f),
                                          },
                                          vec3(-5.0f, 1.5f, 0.0f), vec3(0.0f, 0.0f, 0.0f));
-//                                         vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(0.1f, 1.0f, 0.0f));
     
     //Create a cube mesh and paint it with a texture.
     sphereMeshHorde = new draw::StaticMeshHorde(mesh::StaticMesh::createIcosahedronMesh(1.0f), 1024);
@@ -112,7 +111,7 @@ void update(const double &dt)
     if (rigidBodySystem->getTime() > lastEnergyTime + 0.5f)
     {
         lastEnergyTime = rigidBodySystem->getTime();
-        std::cout << "Total energy: " << rigidBodySystem->getTotalEnergy() << "." << std::endl;
+        std::cout << *rigidBodySystem;
     }
     
     //Get rigid body positions and send them to the static mesh horde.
