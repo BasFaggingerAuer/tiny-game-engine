@@ -59,6 +59,10 @@ struct RigidBody
     float radius; //Size of rigid body.
     size_t firstInternalSphere; //Index of first internal sphere.
     size_t lastInternalSphere; //Index of last internal sphere.
+
+    float staticFriction; //Static friction coefficient.
+    float dynamicFriction; //Dynamic friction coefficient.
+    float restitution; //Restitution coefficient for collisions.
     
     mat3 getI() const
     {
@@ -110,7 +114,8 @@ class RigidBodySystem
         
         void addRigidBody(const float &, const std::vector<vec4> &,
             const vec3 &, const vec3 & = vec3(0.0f, 0.0f, 0.0f),
-            const vec4 & = vec4(0.0f, 0.0f, 0.0f, 1.0f), const vec3 & = vec3(0.0f, 0.0f, 0.0f));
+            const vec4 & = vec4(0.0f, 0.0f, 0.0f, 1.0f), const vec3 & = vec3(0.0f, 0.0f, 0.0f),
+            const float & = 0.6f, const float & = 0.5f, const float & = 0.7f); //Friction/restitution ~steel/aluminum.
         //TODO: Ability to remove rigid bodies.
         
         void update(const float &);

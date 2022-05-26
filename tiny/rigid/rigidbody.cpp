@@ -103,7 +103,8 @@ float RigidBodySystem::getTime() const
 }
 
 void RigidBodySystem::addRigidBody(const float &totalMass, const std::vector<vec4> &a_spheres,
-    const vec3 &x, const vec3 &v, const vec4 &a_q, const vec3 & a_w)
+    const vec3 &x, const vec3 &v, const vec4 &a_q, const vec3 & a_w,
+    const float &a_statFric, const float &a_dynFric, const float &a_rest)
 {
     //Add a rigid body to the system.
 
@@ -166,7 +167,9 @@ void RigidBodySystem::addRigidBody(const float &totalMass, const std::vector<vec
     const vec3 w = mat3::rotationMatrix(quatconj(E.getRotation()))*a_w;
 
     //Add rigid body to system.
-    bodies.push_back({1.0f/totalMass, 1.0f/e, x, q, v, w, vec3(0.0f), vec3(0.0f), maxRadius, bodyInternalSpheres.size(), bodyInternalSpheres.size() + spheres.size()});
+    bodies.push_back({1.0f/totalMass, 1.0f/e, x, q, v, w, vec3(0.0f), vec3(0.0f),
+        maxRadius, bodyInternalSpheres.size(), bodyInternalSpheres.size() + spheres.size(),
+        a_statFric, a_dynFric, a_rest});
     bodyInternalSpheres.insert(bodyInternalSpheres.end(), spheres.begin(), spheres.end());
 
     std::cout << "Added " << bodies.back();
@@ -337,11 +340,6 @@ void RigidBodySystem::update(const float &dt)
     //Minimum velocity below which there is no restitution for collisions.
     const float minCollisionNormalVelocity = 0.1f; //2.0f*9.81f;
     
-    //Friction coefficients. (TODO: Move to classes.)
-    const float staticFrictionCoeff = 0.61f;  //~aluminum on steel.
-    const float dynamicFrictionCoeff = 0.47f; //~aluminum on steel.
-    const float restitutionCoeff = 0.5f*(0.63f + 0.93f); //steel ball on steel surface, average.
-
     //Zero force/torque accumulators.
     for (auto &b : bodies)
     {
@@ -382,6 +380,7 @@ void RigidBodySystem::update(const float &dt)
             if (cg.isColliding)
             {
                 const float d = dot(cg.n, cg.p1 - cg.p2);
+                const float staticFrictionCoeff = std::sqrt(cg.b1->staticFriction*cg.b2->staticFriction);
                 
                 //Apply position constraint to avoid object interpenetration.
                 lambdaCollisionN[i] = applyPositionConstraint(0.0f, 0.0f, cg.b1, cg.b2, 0.5f*(cg.p1 + cg.p2), d*cg.n);
@@ -428,6 +427,8 @@ void RigidBodySystem::update(const float &dt)
                 //Determine normal and tangential relative velocities.
                 vec3 vt = cg.v1 - cg.v2;
                 const float vn = dot(vt, cg.n);
+                const float dynamicFrictionCoeff = std::sqrt(cg.b1->dynamicFriction*cg.b2->dynamicFriction);
+                const float restitutionCoeff = std::sqrt(cg.b1->restitution*cg.b2->restitution);
 
                 vt -= vn*cg.n;
 
