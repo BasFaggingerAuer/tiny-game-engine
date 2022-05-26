@@ -45,6 +45,12 @@ class SpatialSphereHasher
         std::vector<std::list<size_t>> buckets;
 };
 
+enum class RigidBodyGeometry
+{
+    Spheres,
+    Plane
+};
+
 struct RigidBody
 {
     float invM; //Inverse mass.
@@ -55,14 +61,23 @@ struct RigidBody
     vec3 w; //Angular velocity.
     vec3 f; //Force accumulator.
     vec3 t; //Torque accumulator.
+
+    bool movable; //Is the object movable at all (default yes).
+    RigidBodyGeometry geometry; //Type of object geometry.
     
+    //For Spheres geometry.
     float radius; //Size of rigid body.
     size_t firstInternalSphere; //Index of first internal sphere.
     size_t lastInternalSphere; //Index of last internal sphere.
 
+    //For Plane geometry.
+    vec4 plane;
+    
+    //TODO: Move to material class.
     float staticFriction; //Static friction coefficient.
     float dynamicFriction; //Dynamic friction coefficient.
     float restitution; //Restitution coefficient for collisions.
+    float softness; //Inverse material hardness.
     
     mat3 getI() const
     {
@@ -112,10 +127,13 @@ class RigidBodySystem
         RigidBodySystem(const size_t & = 2003, const float & = 4.0f, const float & = 0.5f, const float & = 2.0f, const int & = 16);
         virtual ~RigidBodySystem();
         
-        void addRigidBody(const float &, const std::vector<vec4> &,
+        void addInfinitePlaneBody(const vec4 &,
+            const float & = 0.6f, const float & = 0.5f, const float & = 0.7f, const float & = 0.0f); //Friction/restitution ~steel/aluminum.
+
+        void addSpheresRigidBody(const float &, const std::vector<vec4> &,
             const vec3 &, const vec3 & = vec3(0.0f, 0.0f, 0.0f),
             const vec4 & = vec4(0.0f, 0.0f, 0.0f, 1.0f), const vec3 & = vec3(0.0f, 0.0f, 0.0f),
-            const float & = 0.6f, const float & = 0.5f, const float & = 0.7f); //Friction/restitution ~steel/aluminum.
+            const float & = 0.6f, const float & = 0.5f, const float & = 0.7f, const float & = 0.0f); //Friction/restitution ~steel/aluminum.
         //TODO: Ability to remove rigid bodies.
         
         void update(const float &);
@@ -162,10 +180,8 @@ class RigidBodySystem
         vec3 totalAngularMomentum;
 
         std::vector<RigidBody> bodies;
+        std::vector<size_t> planeBodyIndices;
 
-        //Planes through which no rigid body may pass.
-        std::vector<vec4> boundingPlanes;
-        
         const float collisionSphereMargin;
         const int nrSubSteps;
         SpatialSphereHasher boundingSphereHasher;
@@ -178,6 +194,7 @@ class RigidBodySystem
 
         void calculateInternalSpheres(const RigidBody &, const float &);
         RigidBodyCollisionGeometry getCollisionGeometry(std::vector<RigidBody> &, const RigidBodyCollision &) const;
+        float addMarginToRadius(const float, const float) const;
 };
 
 }

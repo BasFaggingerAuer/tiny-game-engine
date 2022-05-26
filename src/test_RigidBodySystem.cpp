@@ -36,6 +36,36 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using namespace std;
 using namespace tiny;
 
+class GravitySystem : public rigid::RigidBodySystem
+{
+    public:
+        GravitySystem() : RigidBodySystem()
+        {
+            //Add ground plane.
+            addInfinitePlaneBody(vec4(0.0f, 1.0f, 0.0f, 0.0f));
+
+            //Add some rigid bodies.
+            for (int i = 0; i < 4; ++i)
+            {
+                addSpheresRigidBody(1.0f, {vec4(0.0f, 0.0f, 0.0f, 0.3f)}, vec3(i, 2.0f, 0.0f), vec3(0.0f, i, 0.0f));
+            }
+        }
+
+        ~GravitySystem()
+        {
+
+        }
+    
+    protected:
+        void applyExternalForces()
+        {
+            for (auto &b : bodies)
+            {
+                b.f = vec3(0.0f, -9.81f/b.invM, 0.0f); //Gravity.
+            }
+        }
+};
+
 os::Application *application = 0;
 
 draw::WorldRenderer *worldRenderer = 0;
@@ -55,9 +85,11 @@ vec4 cameraOrientation = vec4(0.0f, 0.0f, 0.0f, 1.0f);
 void setup()
 {
     //Create a rigid body scene.
+    rigidBodySystem = new GravitySystem();
+
+    /*
     const int nrBalls = 4;
     
-    rigidBodySystem = new rigid::RigidBodySystem();
     rigidBodySystem->addRigidBody(1.0f, {vec4(0.0f, 0.0f, 0.0f, 0.25f)}, vec3(-1.0f, 0.0f, 0.0f), vec3(5.5f, 0.0f, 0.0f));
     
     for (int i = 0; i < nrBalls; ++i)
@@ -76,6 +108,7 @@ void setup()
                                          vec4(0.0f, -3.0f, 0.0f, 0.5f),
                                          },
                                          vec3(-5.0f, 1.5f, 0.0f), vec3(0.0f, 0.0f, 0.0f));
+    */
     
     //Create a cube mesh and paint it with a texture.
     sphereMeshHorde = new draw::StaticMeshHorde(mesh::StaticMesh::createIcosahedronMesh(1.0f), 1024);
