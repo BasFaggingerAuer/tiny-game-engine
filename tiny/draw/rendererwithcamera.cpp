@@ -49,7 +49,7 @@ void RendererWithCamera::setProjectionMatrix(const mat4 &matrix)
 
 void RendererWithCamera::setCamera(const vec3 &position, const vec4 &orientation)
 {
-    cameraToWorld = mat4(orientation, position);
+    cameraToWorld = mat4::rotationTranslationMatrix(orientation, position);
     worldToCamera = cameraToWorld.inverted();
     cameraPosition = position;
     updateCameraUniforms();

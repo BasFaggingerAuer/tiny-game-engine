@@ -144,7 +144,7 @@ void Game::update(os::Application *application, const float &dt)
         //TODO: Express this in terms of t.angles?
         t.q = normalize(t.q);
         
-        const mat4 ori(t.q);
+        const mat4 ori = mat4::rotationMatrix(t.q);
         bool airborne = false;
         
         if (t.x.y <= terrain->getHeight(vec2(t.x.x, t.x.z)) + 0.01f)

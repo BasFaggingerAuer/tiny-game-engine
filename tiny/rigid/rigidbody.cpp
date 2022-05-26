@@ -109,7 +109,7 @@ void RigidBodySystem::addRigidBody(const float &totalMass, const std::vector<vec
 
     //For now, distribute the mass uniformly over the volume of all spheres, assuming there are no overlaps.
     std::vector<vec4> spheres = a_spheres;
-    std::vector<float> volumePerSphere(spheres.size(), 0.0f);
+    std::vector<float> volumePerSphere(spheres.size());
     float totalVolume = 0.0f;
     
     for (size_t i = 0; i < spheres.size(); ++i)
@@ -119,7 +119,7 @@ void RigidBodySystem::addRigidBody(const float &totalMass, const std::vector<vec
         totalVolume += (volumePerSphere[i] = (4.0f*M_PI/3.0f)*r*r*r);
     }
     
-    std::vector<float> massPerSphere(spheres.size(), 0.0f);
+    std::vector<float> massPerSphere(spheres.size());
     
     for (size_t i = 0; i < spheres.size(); ++i)
     {
@@ -127,7 +127,7 @@ void RigidBodySystem::addRigidBody(const float &totalMass, const std::vector<vec
     }
     
     //Ensure that the object's spheres are centered around the center of mass.
-    vec3 centerOfMass = vec3(0.0f, 0.0f, 0.0f);
+    vec3 centerOfMass = vec3(0.0f);
     
     for (size_t i = 0; i < spheres.size(); ++i)
     {
@@ -340,7 +340,7 @@ void RigidBodySystem::update(const float &dt)
     //Friction coefficients. (TODO: Move to classes.)
     const float staticFrictionCoeff = 0.61f;  //~aluminum on steel.
     const float dynamicFrictionCoeff = 0.47f; //~aluminum on steel.
-    const float restitutionCoeff = 1.0f; //0.5f*(0.63f + 0.93f); //steel ball on steel surface, average.
+    const float restitutionCoeff = 0.5f*(0.63f + 0.93f); //steel ball on steel surface, average.
 
     //Zero force/torque accumulators.
     for (auto &b : bodies)

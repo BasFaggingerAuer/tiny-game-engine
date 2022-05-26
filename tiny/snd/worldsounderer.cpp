@@ -37,7 +37,7 @@ WorldSounderer::~WorldSounderer()
 
 void WorldSounderer::setCamera(const vec3 &position, const vec4 &orientation, const vec3 &velocity)
 {
-    const mat4 m = mat4(orientation);
+    const mat4 m = mat4::rotationMatrix(orientation);
     const vec3 at = m*vec3(0.0f, 0.0f,-1.0f);
     const vec3 up = m*vec3(0.0f, 1.0f, 0.0f);
     const ALfloat ori[] = {at.x, at.y, at.z, up.x, up.y, up.z};

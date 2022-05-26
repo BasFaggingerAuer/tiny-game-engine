@@ -62,12 +62,12 @@ struct RigidBody
     
     mat3 getI() const
     {
-        return mat3::rotationMatrix(q)*mat3(1.0f/invI)*mat3::rotationMatrix(quatconj(q));
+        return mat3::rotationMatrix(q)*mat3::scaleMatrix(1.0f/invI)*mat3::rotationMatrix(quatconj(q));
     }
 
     mat3 getInvI() const
     {
-        return mat3::rotationMatrix(q)*mat3(invI)*mat3::rotationMatrix(quatconj(q));
+        return mat3::rotationMatrix(q)*mat3::scaleMatrix(invI)*mat3::rotationMatrix(quatconj(q));
     }
 
     friend std::ostream & operator << (std::ostream &Out, const RigidBody &b)

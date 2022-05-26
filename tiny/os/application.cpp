@@ -94,9 +94,10 @@ void Application::updateSimpleCamera(const float &dt, vec3 &cameraPosition, vec4
 
     cameraOrientation = normalize(cameraOrientation);
 
-    vec3 vel = mat4(cameraOrientation)*vec3((isKeyPressed('d') && isKeyPressed('a')) ? 0.0f : (isKeyPressed('d') ? 1.0f : (isKeyPressed('a') ? -1.0f : 0.0f)),
-                                            (isKeyPressed('q') && isKeyPressed('e')) ? 0.0f : (isKeyPressed('q') ? 1.0f : (isKeyPressed('e') ? -1.0f : 0.0f)),
-                                            (isKeyPressed('s') && isKeyPressed('w')) ? 0.0f : (isKeyPressed('s') ? 1.0f : (isKeyPressed('w') ? -1.0f : 0.0f)));
+    vec3 vel = mat4::rotationMatrix(cameraOrientation)*
+        vec3((isKeyPressed('d') && isKeyPressed('a')) ? 0.0f : (isKeyPressed('d') ? 1.0f : (isKeyPressed('a') ? -1.0f : 0.0f)),
+             (isKeyPressed('q') && isKeyPressed('e')) ? 0.0f : (isKeyPressed('q') ? 1.0f : (isKeyPressed('e') ? -1.0f : 0.0f)),
+             (isKeyPressed('s') && isKeyPressed('w')) ? 0.0f : (isKeyPressed('s') ? 1.0f : (isKeyPressed('w') ? -1.0f : 0.0f)));
     
     cameraPosition += ds*normalize(vel);
 }

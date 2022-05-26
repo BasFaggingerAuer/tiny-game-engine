@@ -444,8 +444,8 @@ void Game::update(os::Application *application, const float &dt)
             {
                 if (voxelHit.distance > 0.0f && (paintMode == PaintMode::VoxelReplace || paintMode == PaintMode::VoxelAdd))
                 {
-                    const tiny::ivec3 v0 = tiny::min(voxelSelectionStart, voxelSelectionEnd);
-                    const tiny::ivec3 v1 = tiny::max(voxelSelectionStart, voxelSelectionEnd);
+                    const tiny::ivec3 v0 = min(voxelSelectionStart, voxelSelectionEnd);
+                    const tiny::ivec3 v1 = max(voxelSelectionStart, voxelSelectionEnd);
 
                     if (!startedVoxelSelection)
                     {

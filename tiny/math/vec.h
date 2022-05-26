@@ -36,8 +36,11 @@ namespace tiny
 
 //Why does C++ not offer a mod()-operation that is >= 0?
 //From https://stackoverflow.com/questions/14997165/fastest-way-to-get-a-positive-modulo-in-c-c.
-template <typename t>
-inline t modnonneg(const t &a, const t &b) noexcept {return ((a % b) + b) % b;}
+template <typename t> inline t modnonneg(const t &a, const t &b) noexcept {return ((a % b) + b) % b;}
+template <typename t> inline t t_abs(const t &a) noexcept {return (a < t(0) ? -a : a);}
+template <typename t> inline t clamp(const t &a, const t &b, const t &c) noexcept {return (a < b ? b : (a > c ? c : a));}
+template <typename t> inline t step(const t &a, const t &b) noexcept {return (b < a ? t(0) : t(1));}
+template <typename t> inline t fract(const t &a) noexcept {return a - std::floor(a);}
 
 template <typename t> class typed2vector
 {
@@ -63,11 +66,38 @@ template <typename t> class typed2vector
         inline typed2vector & operator *= (const t &a) noexcept {x *= a; y *= a; return *this;};
         inline typed2vector & operator /= (const t &a) noexcept {x /= a; y /= a; return *this;};
         inline typed2vector operator - () const noexcept {return typed2vector<t>(-x, -y);};
-        inline t dot(const typed2vector<t> &a) const noexcept {return x*a.x + y*a.y;};
         
+        inline friend typed2vector<t> operator + (typed2vector<t> a, const typed2vector<t> &b) noexcept {return a += b;}
+        inline friend typed2vector<t> operator + (typed2vector<t> a, const t &b) noexcept {return a += b;}
+        inline friend typed2vector<t> operator + (const t &b, typed2vector<t> a) noexcept {return a += b;}
+        inline friend typed2vector<t> operator - (typed2vector<t> a, const typed2vector<t> &b) noexcept {return a -= b;}
+        inline friend typed2vector<t> operator - (typed2vector<t> a, const t &b) noexcept {return a -= b;}
+        inline friend typed2vector<t> operator - (const t &b, typed2vector<t> a) noexcept {return typed2vector<t>(b - a.x, b - a.y);}
+        inline friend typed2vector<t> operator * (typed2vector<t> a, const typed2vector<t> &b) noexcept {return a *= b;}
+        inline friend typed2vector<t> operator * (typed2vector<t> a, const t &b) noexcept {return a *= b;}
+        inline friend typed2vector<t> operator * (const t &b, typed2vector<t> a) noexcept {return a *= b;}
+        inline friend typed2vector<t> operator / (typed2vector<t> a, const typed2vector<t> &b) noexcept {return a /= b;}
+        inline friend typed2vector<t> operator / (typed2vector<t> a, const t &b) noexcept {return a /= b;}
+        inline friend typed2vector<t> operator / (const t &b, typed2vector<t> a) noexcept {return typed2vector<t>(b/a.x, b/a.y);}
+
         inline typed2vector<t> xy() const noexcept {return typed2vector<t>(x, y);};
         inline typed2vector<t> yx() const noexcept {return typed2vector<t>(y, x);};
         
+        inline friend typed2vector<t> min(const typed2vector<t> &a, const typed2vector<t> &b) noexcept {return typed2vector<t>(std::min(a.x, b.x), std::min(a.y, b.y));}
+        inline friend typed2vector<t> max(const typed2vector<t> &a, const typed2vector<t> &b) noexcept {return typed2vector<t>(std::max(a.x, b.x), std::max(a.y, b.y));}
+        inline friend typed2vector<t> abs(const typed2vector<t> &a) noexcept {return typed2vector<t>(t_abs(a.x), t_abs(a.y));}
+        inline friend typed2vector<t> clamp(const typed2vector<t> &a, const typed2vector<t> &b, const typed2vector<t> &c) noexcept {return typed2vector<t>(clamp(a.x, b.x, c.x), clamp(a.y, b.y, c.y));}
+        inline friend typed2vector<t> step(const typed2vector<t> &a, const typed2vector<t> &b) noexcept {return typed2vector<t>(step(a.x, b.x), step(a.y, b.y));}
+        inline friend typed2vector<t> floor(const typed2vector<t> &a) noexcept {return typed2vector<t>(std::floor(a.x), std::floor(a.y));}
+        inline friend typed2vector<t> ceil(const typed2vector<t> &a) noexcept {return typed2vector<t>(std::ceil(a.x), std::ceil(a.y));}
+        inline friend typed2vector<t> fract(const typed2vector<t> &a) noexcept {return typed2vector<t>(fract(a.x), fract(a.y));}
+        inline friend t dot(const typed2vector<t> &a, const typed2vector<t> &b) noexcept {return a.x*b.x + a.y*b.y;}
+        inline friend t length(const typed2vector<t> &a) noexcept {return std::sqrt(dot(a, a));}
+        inline friend t length2(const typed2vector<t> &a) noexcept {return dot(a, a);}
+        inline friend typed2vector<t> normalize(const typed2vector<t> &a) noexcept {t l = 1.0f/std::max(length(a), EPS); return typed2vector<t>(a.x*l, a.y*l);}
+        inline friend t minComponent(const typed2vector<t> &a) noexcept {return (a.x <= a.y ? a.x : a.y);}
+        inline friend t maxComponent(const typed2vector<t> &a) noexcept {return (a.x >= a.y ? a.x : a.y);}
+
         friend std::ostream & operator << (std::ostream &Out, const typed2vector<t> &a) {Out << "(" << a.x << ", " << a.y << ")"; return Out;};
         
         t x, y;
@@ -97,8 +127,20 @@ template <typename t> class typed3vector
         inline typed3vector & operator *= (const t &a) noexcept {x *= a; y *= a; z *= a; return *this;};
         inline typed3vector & operator /= (const t &a) noexcept {x /= a; y /= a; z /= a; return *this;};
         inline typed3vector operator - () const noexcept {return typed3vector<t>(-x, -y, -z);};
-        inline t dot(const typed3vector<t> &a) const noexcept {return x*a.x + y*a.y + z*a.z;};
         
+        inline friend typed3vector<t> operator + (typed3vector<t> a, const typed3vector<t> &b) noexcept {return a += b;}
+        inline friend typed3vector<t> operator + (typed3vector<t> a, const t &b) noexcept {return a += b;}
+        inline friend typed3vector<t> operator + (const t &b, typed3vector<t> a) noexcept {return a += b;}
+        inline friend typed3vector<t> operator - (typed3vector<t> a, const typed3vector<t> &b) noexcept {return a -= b;}
+        inline friend typed3vector<t> operator - (typed3vector<t> a, const t &b) noexcept {return a -= b;}
+        inline friend typed3vector<t> operator - (const t &b, typed3vector<t> a) noexcept {return typed3vector<t>(b - a.x, b - a.y, b - a.z);}
+        inline friend typed3vector<t> operator * (typed3vector<t> a, const typed3vector<t> &b) noexcept {return a *= b;}
+        inline friend typed3vector<t> operator * (typed3vector<t> a, const t &b) noexcept {return a *= b;}
+        inline friend typed3vector<t> operator * (const t &b, typed3vector<t> a) noexcept {return a *= b;}
+        inline friend typed3vector<t> operator / (typed3vector<t> a, const typed3vector<t> &b) noexcept {return a /= b;}
+        inline friend typed3vector<t> operator / (typed3vector<t> a, const t &b) noexcept {return a /= b;}
+        inline friend typed3vector<t> operator / (const t &b, typed3vector<t> a) noexcept {return typed3vector<t>(b/a.x, b/a.y, b/a.z);}
+
         inline typed2vector<t> xy() const noexcept {return typed2vector<t>(x, y);};
         inline typed2vector<t> xz() const noexcept {return typed2vector<t>(x, z);};
         inline typed2vector<t> yz() const noexcept {return typed2vector<t>(y, z);};
@@ -110,6 +152,22 @@ template <typename t> class typed3vector
         inline typed3vector<t> zxy() const noexcept {return typed3vector<t>(z, x, y);};
         inline typed3vector<t> zyx() const noexcept {return typed3vector<t>(z, y, x);};
         
+        inline friend typed3vector<t> min(const typed3vector<t> &a, const typed3vector<t> &b) noexcept {return typed3vector<t>(std::min(a.x, b.x), std::min(a.y, b.y), std::min(a.z, b.z));}
+        inline friend typed3vector<t> max(const typed3vector<t> &a, const typed3vector<t> &b) noexcept {return typed3vector<t>(std::max(a.x, b.x), std::max(a.y, b.y), std::max(a.z, b.z));}
+        inline friend typed3vector<t> abs(const typed3vector<t> &a) noexcept {return typed3vector<t>(t_abs(a.x), t_abs(a.y), t_abs(a.z));}
+        inline friend typed3vector<t> clamp(const typed3vector<t> &a, const typed3vector<t> &b, const typed3vector<t> &c) noexcept {return typed3vector<t>(clamp(a.x, b.x, c.x), clamp(a.y, b.y, c.y), clamp(a.z, b.z, c.z));}
+        inline friend typed3vector<t> step(const typed3vector<t> &a, const typed3vector<t> &b) noexcept {return typed3vector<t>(step(a.x, b.x), step(a.y, b.y), step(a.z, b.z));}
+        inline friend typed3vector<t> floor(const typed3vector<t> &a) noexcept {return typed3vector<t>(std::floor(a.x), std::floor(a.y), std::floor(a.z));}
+        inline friend typed3vector<t> ceil(const typed3vector<t> &a) noexcept {return typed3vector<t>(std::ceil(a.x), std::ceil(a.y), std::ceil(a.z));}
+        inline friend typed3vector<t> fract(const typed3vector<t> &a) noexcept {return typed3vector<t>(fract(a.x), fract(a.y), fract(a.z));}
+        inline friend t dot(const typed3vector<t> &a, const typed3vector<t> &b) noexcept {return a.x*b.x + a.y*b.y + a.z*b.z;}
+        inline friend typed3vector<t> cross(const typed3vector<t> &a, const typed3vector<t> &b) noexcept {return typed3vector<t>(a.y*b.z - a.z*b.y, a.z*b.x - a.x*b.z, a.x*b.y - a.y*b.x);}
+        inline friend t length(const typed3vector<t> &a) noexcept {return std::sqrt(dot(a, a));}
+        inline friend t length2(const typed3vector<t> &a) noexcept {return dot(a, a);}
+        inline friend typed3vector<t> normalize(const typed3vector<t> &a) noexcept {t l = 1.0f/std::max(length(a), EPS); return typed3vector<t>(a.x*l, a.y*l, a.z*l);}
+        inline friend t minComponent(const typed3vector<t> &a) noexcept {return (a.x <= a.y ? (a.x <= a.z ? a.x : a.z) : (a.y <= a.z ? a.y : a.z));}
+        inline friend t maxComponent(const typed3vector<t> &a) noexcept {return (a.x >= a.y ? (a.x >= a.z ? a.x : a.z) : (a.y >= a.z ? a.y : a.z));}
+
         friend std::ostream & operator << (std::ostream &Out, const typed3vector<t> &a) {Out << "(" << a.x << ", " << a.y << ", " << a.z << ")"; return Out;};
         
         t x, y, z;
@@ -140,107 +198,40 @@ template <typename t> class typed4vector
         inline typed4vector & operator *= (const t &a) noexcept {x *= a; y *= a; z *= a; w *= a; return *this;};
         inline typed4vector & operator /= (const t &a) noexcept {x /= a; y /= a; z /= a; w /= a; return *this;};
         inline typed4vector operator - () const noexcept {return typed4vector<t>(-x, -y, -z, -w);};
-        inline t dot(const typed4vector<t> &a) const noexcept {return x*a.x + y*a.y + z*a.z + w*a.w;};
+        
+        inline friend typed4vector<t> operator + (typed4vector<t> a, const typed4vector<t> &b) noexcept {return a += b;}
+        inline friend typed4vector<t> operator + (typed4vector<t> a, const t &b) noexcept {return a += b;}
+        inline friend typed4vector<t> operator + (const t &b, typed4vector<t> a) noexcept {return a += b;}
+        inline friend typed4vector<t> operator - (typed4vector<t> a, const typed4vector<t> &b) noexcept {return a -= b;}
+        inline friend typed4vector<t> operator - (typed4vector<t> a, const t &b) noexcept {return a -= b;}
+        inline friend typed4vector<t> operator - (const t &b, typed4vector<t> a) noexcept {return typed4vector<t>(b - a.x, b - a.y, b - a.z, b - a.w);}
+        inline friend typed4vector<t> operator * (typed4vector<t> a, const typed4vector<t> &b) noexcept {return a *= b;}
+        inline friend typed4vector<t> operator * (typed4vector<t> a, const t &b) noexcept {return a *= b;}
+        inline friend typed4vector<t> operator * (const t &b, typed4vector<t> a) noexcept {return a *= b;}
+        inline friend typed4vector<t> operator / (typed4vector<t> a, const typed4vector<t> &b) noexcept {return a /= b;}
+        inline friend typed4vector<t> operator / (typed4vector<t> a, const t &b) noexcept {return a /= b;}
+        inline friend typed4vector<t> operator / (const t &b, typed4vector<t> a) noexcept {return typed4vector<t>(b/a.x, b/a.y, b/a.z, b/a.w);}
         
         inline typed2vector<t> xy() const noexcept {return typed2vector<t>(x, y);};
         inline typed3vector<t> xyz() const noexcept {return typed3vector<t>(x, y, z);};
         
+        inline friend typed4vector<t> min(const typed4vector<t> &a, const typed4vector<t> &b) noexcept {return typed4vector<t>(std::min(a.x, b.x), std::min(a.y, b.y), std::min(a.z, b.z), std::min(a.w, b.w));}
+        inline friend typed4vector<t> max(const typed4vector<t> &a, const typed4vector<t> &b) noexcept {return typed4vector<t>(std::max(a.x, b.x), std::max(a.y, b.y), std::max(a.z, b.z), std::max(a.w, b.w));}
+        inline friend typed4vector<t> abs(const typed4vector<t> &a) noexcept {return typed4vector<t>(t_abs(a.x), t_abs(a.y), t_abs(a.z), t_abs(a.w));}
+        inline friend typed4vector<t> clamp(const typed4vector<t> &a, const typed4vector<t> &b, const typed4vector<t> &c) noexcept {return typed4vector<t>(clamp(a.x, b.x, c.x), clamp(a.y, b.y, c.y), clamp(a.z, b.z, c.z), clamp(a.w, b.w, c.w));}
+        inline friend typed4vector<t> step(const typed4vector<t> &a, const typed4vector<t> &b) noexcept {return typed4vector<t>(step(a.x, b.x), step(a.y, b.y), step(a.z, b.z), step(a.w, b.w));}
+        inline friend typed4vector<t> floor(const typed4vector<t> &a) noexcept {return typed4vector<t>(std::floor(a.x), std::floor(a.y), std::floor(a.z), std::floor(a.w));}
+        inline friend typed4vector<t> ceil(const typed4vector<t> &a) noexcept {return typed4vector<t>(std::ceil(a.x), std::ceil(a.y), std::ceil(a.z), std::ceil(a.w));}
+        inline friend typed4vector<t> fract(const typed4vector<t> &a) noexcept {return typed4vector<t>(fract(a.x), fract(a.y), fract(a.z), fract(a.w));}
+        inline friend t dot(const typed4vector<t> &a, const typed4vector<t> &b) noexcept {return a.x*b.x + a.y*b.y + a.z*b.z + a.w*b.w;}
+        inline friend t length(const typed4vector<t> &a) noexcept {return std::sqrt(dot(a, a));}
+        inline friend t length2(const typed4vector<t> &a) noexcept {return dot(a, a);}
+        inline friend typed4vector<t> normalize(const typed4vector<t> &a) noexcept {t l = 1.0f/std::max(length(a), EPS); return typed4vector<t>(a.x*l, a.y*l, a.z*l, a.w*l);}
+
         friend std::ostream & operator << (std::ostream &Out, const typed4vector<t> &a) {Out << "(" << a.x << ", " << a.y << ", " << a.z << ", " << a.w << ")"; return Out;};
         
         t x, y, z, w;
 };
-
-template <typename t> inline typed2vector<t> operator + (const typed2vector<t> &a, const typed2vector<t> &b) noexcept {typed2vector<t> c(a); return c += b;}
-template <typename t> inline typed2vector<t> operator + (const typed2vector<t> &a, const t &b) noexcept {typed2vector<t> c(a); return c += b;}
-template <typename t> inline typed2vector<t> operator - (const typed2vector<t> &a, const typed2vector<t> &b) noexcept {typed2vector<t> c(a); return c -= b;}
-template <typename t> inline typed2vector<t> operator - (const typed2vector<t> &a, const t &b) noexcept {typed2vector<t> c(a); return c -= b;}
-template <typename t> inline typed2vector<t> operator * (const typed2vector<t> &a, const typed2vector<t> &b) noexcept {typed2vector<t> c(a); return c *= b;}
-template <typename t> inline typed2vector<t> operator / (const typed2vector<t> &a, const typed2vector<t> &b) noexcept {typed2vector<t> c(a); return c /= b;}
-template <typename t> inline typed2vector<t> operator * (const typed2vector<t> &a, const t &b) noexcept {typed2vector<t> c(a); return c *= b;}
-template <typename t> inline typed2vector<t> operator * (const t &b, const typed2vector<t> &a) noexcept {typed2vector<t> c(a); return c *= b;}
-template <typename t> inline typed2vector<t> operator / (const typed2vector<t> &a, const t &b) noexcept {typed2vector<t> c(a); return c /= b;}
-template <typename t> inline typed2vector<t> operator / (const t &b, const typed2vector<t> &a) noexcept {return typed2vector<t>(b/a.x, b/a.y);}
-
-template <typename t> inline typed3vector<t> operator + (const typed3vector<t> &a, const typed3vector<t> &b) noexcept {typed3vector<t> c(a); return c += b;}
-template <typename t> inline typed3vector<t> operator + (const typed3vector<t> &a, const t &b) noexcept {typed3vector<t> c(a); return c += b;}
-template <typename t> inline typed3vector<t> operator - (const typed3vector<t> &a, const typed3vector<t> &b) noexcept {typed3vector<t> c(a); return c -= b;}
-template <typename t> inline typed3vector<t> operator - (const typed3vector<t> &a, const t &b) noexcept {typed3vector<t> c(a); return c -= b;}
-template <typename t> inline typed3vector<t> operator * (const typed3vector<t> &a, const typed3vector<t> &b) noexcept {typed3vector<t> c(a); return c *= b;}
-template <typename t> inline typed3vector<t> operator / (const typed3vector<t> &a, const typed3vector<t> &b) noexcept {typed3vector<t> c(a); return c /= b;}
-template <typename t> inline typed3vector<t> operator * (const typed3vector<t> &a, const t &b) noexcept {typed3vector<t> c(a); return c *= b;}
-template <typename t> inline typed3vector<t> operator * (const t &b, const typed3vector<t> &a) noexcept {typed3vector<t> c(a); return c *= b;}
-template <typename t> inline typed3vector<t> operator / (const typed3vector<t> &a, const t &b) noexcept {typed3vector<t> c(a); return c /= b;}
-template <typename t> inline typed3vector<t> operator / (const t &b, const typed3vector<t> &a) noexcept {return typed3vector<t>(b/a.x, b/a.y, b/a.z);}
-
-template <typename t> inline typed4vector<t> operator + (const typed4vector<t> &a, const typed4vector<t> &b) noexcept {typed4vector<t> c(a); return c += b;}
-template <typename t> inline typed4vector<t> operator + (const typed4vector<t> &a, const t &b) noexcept {typed4vector<t> c(a); return c += b;}
-template <typename t> inline typed4vector<t> operator - (const typed4vector<t> &a, const typed4vector<t> &b) noexcept {typed4vector<t> c(a); return c -= b;}
-template <typename t> inline typed4vector<t> operator - (const typed4vector<t> &a, const t &b) noexcept {typed4vector<t> c(a); return c -= b;}
-template <typename t> inline typed4vector<t> operator * (const typed4vector<t> &a, const typed4vector<t> &b) noexcept {typed4vector<t> c(a); return c *= b;}
-template <typename t> inline typed4vector<t> operator / (const typed4vector<t> &a, const typed4vector<t> &b) noexcept {typed4vector<t> c(a); return c /= b;}
-template <typename t> inline typed4vector<t> operator * (const typed4vector<t> &a, const t &b) noexcept {typed4vector<t> c(a); return c *= b;}
-template <typename t> inline typed4vector<t> operator * (const t &b, const typed4vector<t> &a) noexcept {typed4vector<t> c(a); return c *= b;}
-template <typename t> inline typed4vector<t> operator / (const typed4vector<t> &a, const t &b) noexcept {typed4vector<t> c(a); return c /= b;}
-template <typename t> inline typed4vector<t> operator / (const t &b, const typed4vector<t> &a) noexcept {return typed4vector<t>(b/a.x, b/a.y, b/a.z, b/a.w);}
-
-template <typename t> inline typed2vector<t> min(const typed2vector<t> &a, const typed2vector<t> &b) noexcept {return typed2vector<t>(std::min(a.x, b.x), std::min(a.y, b.y));}
-template <typename t> inline typed2vector<t> max(const typed2vector<t> &a, const typed2vector<t> &b) noexcept {return typed2vector<t>(std::max(a.x, b.x), std::max(a.y, b.y));}
-template <typename t> inline typed3vector<t> min(const typed3vector<t> &a, const typed3vector<t> &b) noexcept {return typed3vector<t>(std::min(a.x, b.x), std::min(a.y, b.y), std::min(a.z, b.z));}
-template <typename t> inline typed3vector<t> max(const typed3vector<t> &a, const typed3vector<t> &b) noexcept {return typed3vector<t>(std::max(a.x, b.x), std::max(a.y, b.y), std::max(a.z, b.z));}
-template <typename t> inline typed4vector<t> min(const typed4vector<t> &a, const typed4vector<t> &b) noexcept {return typed4vector<t>(std::min(a.x, b.x), std::min(a.y, b.y), std::min(a.z, b.z), std::min(a.w, b.w));}
-template <typename t> inline typed4vector<t> max(const typed4vector<t> &a, const typed4vector<t> &b) noexcept {return typed4vector<t>(std::max(a.x, b.x), std::max(a.y, b.y), std::max(a.z, b.z), std::max(a.w, b.w));}
-
-template <typename t> inline t minComponent(const typed2vector<t> &a) noexcept {return (a.x <= a.y ? a.x : a.y);}
-template <typename t> inline t minComponent(const typed3vector<t> &a) noexcept {return (a.x <= a.y ? (a.x <= a.z ? a.x : a.z) : (a.y <= a.z ? a.y : a.z));}
-
-template <typename t> inline t maxComponent(const typed2vector<t> &a) noexcept {return (a.x >= a.y ? a.x : a.y);}
-template <typename t> inline t maxComponent(const typed3vector<t> &a) noexcept {return (a.x >= a.y ? (a.x >= a.z ? a.x : a.z) : (a.y >= a.z ? a.y : a.z));}
-
-template <typename t> inline t t_abs(const t &a) noexcept {return (a < t(0) ? -a : a);}
-template <typename t> inline typed2vector<t> abs(const typed2vector<t> &a) noexcept {return typed2vector<t>(t_abs(a.x), t_abs(a.y));}
-template <typename t> inline typed3vector<t> abs(const typed3vector<t> &a) noexcept {return typed3vector<t>(t_abs(a.x), t_abs(a.y), t_abs(a.z));}
-template <typename t> inline typed4vector<t> abs(const typed4vector<t> &a) noexcept {return typed4vector<t>(t_abs(a.x), t_abs(a.y), t_abs(a.z), t_abs(a.w));}
-
-template <typename t> inline t clamp(const t &a, const t &b, const t &c) noexcept {return (a < b ? b : (a > c ? c : a));}
-template <typename t> inline typed2vector<t> clamp(const typed2vector<t> &a, const typed2vector<t> &b, const typed2vector<t> &c) noexcept {return typed2vector<t>(clamp(a.x, b.x, c.x), clamp(a.y, b.y, c.y));}
-template <typename t> inline typed3vector<t> clamp(const typed3vector<t> &a, const typed3vector<t> &b, const typed3vector<t> &c) noexcept {return typed3vector<t>(clamp(a.x, b.x, c.x), clamp(a.y, b.y, c.y), clamp(a.z, b.z, c.z));}
-template <typename t> inline typed4vector<t> clamp(const typed4vector<t> &a, const typed4vector<t> &b, const typed4vector<t> &c) noexcept {return typed4vector<t>(clamp(a.x, b.x, c.x), clamp(a.y, b.y, c.y), clamp(a.z, b.z, c.z), clamp(a.w, b.w, c.w));}
-
-template <typename t> inline t step(const t &a, const t &b) noexcept {return (b < a ? t(0) : t(1));}
-template <typename t> inline typed2vector<t> step(const typed2vector<t> &a, const typed2vector<t> &b) noexcept {return typed2vector<t>(step(a.x, b.x), step(a.y, b.y));}
-template <typename t> inline typed3vector<t> step(const typed3vector<t> &a, const typed3vector<t> &b) noexcept {return typed3vector<t>(step(a.x, b.x), step(a.y, b.y), step(a.z, b.z));}
-template <typename t> inline typed4vector<t> step(const typed4vector<t> &a, const typed4vector<t> &b) noexcept {return typed4vector<t>(step(a.x, b.x), step(a.y, b.y), step(a.z, b.z), step(a.w, b.w));}
-
-template <typename t> inline typed2vector<t> floor(const typed2vector<t> &a) noexcept {return typed2vector<t>(std::floor(a.x), std::floor(a.y));}
-template <typename t> inline typed3vector<t> floor(const typed3vector<t> &a) noexcept {return typed3vector<t>(std::floor(a.x), std::floor(a.y), std::floor(a.z));}
-template <typename t> inline typed4vector<t> floor(const typed4vector<t> &a) noexcept {return typed4vector<t>(std::floor(a.x), std::floor(a.y), std::floor(a.z), std::floor(a.w));}
-
-template <typename t> inline typed2vector<t> ceil(const typed2vector<t> &a) noexcept {return typed2vector<t>(std::ceil(a.x), std::ceil(a.y));}
-template <typename t> inline typed3vector<t> ceil(const typed3vector<t> &a) noexcept {return typed3vector<t>(std::ceil(a.x), std::ceil(a.y), std::ceil(a.z));}
-template <typename t> inline typed4vector<t> ceil(const typed4vector<t> &a) noexcept {return typed4vector<t>(std::ceil(a.x), std::ceil(a.y), std::ceil(a.z), std::ceil(a.w));}
-
-template <typename t> inline t fract(const t &a) noexcept {return a - std::floor(a);}
-template <typename t> inline typed2vector<t> fract(const typed2vector<t> &a) noexcept {return typed2vector<t>(fract(a.x), fract(a.y));}
-template <typename t> inline typed3vector<t> fract(const typed3vector<t> &a) noexcept {return typed3vector<t>(fract(a.x), fract(a.y), fract(a.z));}
-template <typename t> inline typed4vector<t> fract(const typed4vector<t> &a) noexcept {return typed4vector<t>(fract(a.x), fract(a.y), fract(a.z), fract(a.w));}
-
-template <typename t> inline t dot(const typed2vector<t> &a, const typed2vector<t> &b) noexcept {return a.x*b.x + a.y*b.y;}
-template <typename t> inline t dot(const typed3vector<t> &a, const typed3vector<t> &b) noexcept {return a.x*b.x + a.y*b.y + a.z*b.z;}
-template <typename t> inline t dot(const typed4vector<t> &a, const typed4vector<t> &b) noexcept {return a.x*b.x + a.y*b.y + a.z*b.z + a.w*b.w;}
-
-template <typename t> inline typed3vector<t> cross(const typed3vector<t> &a, const typed3vector<t> &b) noexcept {return typed3vector<t>(a.y*b.z - a.z*b.y, a.z*b.x - a.x*b.z, a.x*b.y - a.y*b.x);}
-
-template <typename t> inline t length(const typed2vector<t> &a) noexcept {return std::sqrt(dot(a, a));}
-template <typename t> inline t length(const typed3vector<t> &a) noexcept {return std::sqrt(dot(a, a));}
-template <typename t> inline t length(const typed4vector<t> &a) noexcept {return std::sqrt(dot(a, a));}
-
-template <typename t> inline t length2(const typed2vector<t> &a) noexcept {return dot(a, a);}
-template <typename t> inline t length2(const typed3vector<t> &a) noexcept {return dot(a, a);}
-template <typename t> inline t length2(const typed4vector<t> &a) noexcept {return dot(a, a);}
-
-template <typename t> inline typed2vector<t> normalize(const typed2vector<t> &a) noexcept {t l = 1.0f/std::max(length(a), EPS); return typed2vector<t>(a.x*l, a.y*l);}
-template <typename t> inline typed3vector<t> normalize(const typed3vector<t> &a) noexcept {t l = 1.0f/std::max(length(a), EPS); return typed3vector<t>(a.x*l, a.y*l, a.z*l);}
-template <typename t> inline typed4vector<t> normalize(const typed4vector<t> &a) noexcept {t l = 1.0f/std::max(length(a), EPS); return typed4vector<t>(a.x*l, a.y*l, a.z*l, a.w*l);}
 
 typedef typed2vector<int> ivec2;
 typedef typed2vector<float> vec2;
@@ -301,14 +292,20 @@ vec4 randomVec4(const float & = 1.0f);
 class mat2
 {
     public:
-        inline mat2() noexcept {};
-        explicit inline mat2(const float &a) noexcept :
-            v00(a), v10(a),
-            v01(a), v11(a)
-        {};
+        mat2() = default;
+        //FIXME: Causes uninitialized-variables errors (even for initialized data!).
+        //mat2(const mat2 &) = default;
         inline mat2(const mat2 &a) noexcept :
             v00(a.v00), v10(a.v10),
             v01(a.v01), v11(a.v11)
+        {};
+        mat2(mat2 &&) = default;
+        mat2 & operator = (const mat2 &) = default;
+        ~mat2() = default;
+
+        inline mat2(const float &a) noexcept :
+            v00(a), v10(a),
+            v01(a), v11(a)
         {};
         inline mat2(const float &_v00, const float &_v10,
                 const float &_v01, const float &_v11) noexcept :
@@ -321,17 +318,6 @@ class mat2
             v01(y.x), v11(y.y)
         {};
         
-        inline ~mat2() noexcept {};
-
-        inline mat2 & operator = (const mat2 &b) noexcept
-        {
-            v00 = b.v00;
-            v10 = b.v10;
-            v01 = b.v01;
-            v11 = b.v11;
-            return *this;
-        };
-
         inline mat2 & operator += (const mat2 &b) noexcept
         {
             v00 += b.v00;
@@ -350,12 +336,6 @@ class mat2
             return *this;
         };
         
-        inline mat2 operator - (const mat2 &b) const noexcept
-        {
-            return mat2(v00 - b.v00, v10 - b.v10,
-                        v01 - b.v01, v11 - b.v11);
-        };
-
         inline mat2 & operator *= (const mat2 &b) noexcept
         {
             const mat2 c(
@@ -368,16 +348,6 @@ class mat2
             return *this;
         };
         
-        inline mat2 operator * (const mat2 &b) const noexcept
-        {
-            return mat2(
-                v00*b.v00 + v01*b.v10,
-                v10*b.v00 + v11*b.v10,
-                
-                v00*b.v01 + v01*b.v11,
-                v10*b.v01 + v11*b.v11);
-        };
-
         inline mat2 & operator *= (const float &b) noexcept
         {
             v00 *= b;
@@ -387,17 +357,21 @@ class mat2
             return *this;
         };
 
-        inline mat2 operator * (const float &b) const noexcept
+        inline mat2 & operator /= (const float &b) noexcept
         {
-            return mat2(b*v00, b*v10,
-                        b*v01, b*v11);
+            v00 /= b;
+            v10 /= b;
+            v01 /= b;
+            v11 /= b;
+            return *this;
         };
 
-        inline mat2 operator / (const float &b) const noexcept
-        {
-            return mat2(v00/b, v10/b,
-                        v01/b, v11/b);
-        };
+        inline friend mat2 & operator + (mat2 a, const mat2 &b) noexcept {return a += b;}
+        inline friend mat2 & operator - (mat2 a, const mat2 &b) noexcept {return a -= b;}
+        inline friend mat2 & operator * (mat2 a, const mat2 &b) noexcept {return a *= b;}
+        inline friend mat2 & operator * (const float &b, mat2 a) noexcept {return a *= b;}
+        inline friend mat2 & operator * (mat2 a, const float &b) noexcept {return a *= b;}
+        inline friend mat2 & operator / (mat2 a, const float &b) noexcept {return a /= b;}
 
         inline vec2 operator * (const vec2 &a) const noexcept
         {
@@ -419,10 +393,10 @@ class mat2
         
         inline mat2 inverted() const noexcept
         {
-            const float t = 1.0f/(v00*v11 - v10*v01);
+            const float t = v00*v11 - v10*v01;
 
-            return mat2( t*v11, -t*v10,
-                        -t*v01,  t*v00);
+            return mat2( v11/t, -v10/t,
+                        -v01/t,  v00/t);
         };
 
         inline static mat2 identityMatrix() noexcept
@@ -445,16 +419,22 @@ class mat2
 class mat3
 {
     public:
-        inline mat3() {};
-        explicit inline mat3(const float &a) noexcept :
-            v00(a), v10(a), v20(a),
-            v01(a), v11(a), v21(a),
-            v02(a), v12(a), v22(a)
-        {};
+        mat3() = default;
+        //FIXME: Causes uninitialized-variables errors (even for initialized data!).
+        //mat3(const mat3 &) = default;
         inline mat3(const mat3 &a) noexcept :
             v00(a.v00), v10(a.v10), v20(a.v20),
             v01(a.v01), v11(a.v11), v21(a.v21),
             v02(a.v02), v12(a.v12), v22(a.v22)
+        {};
+        mat3(mat3 &&) = default;
+        mat3 & operator = (const mat3 &) = default;
+        ~mat3() = default;
+
+        inline mat3(const float &a) noexcept :
+            v00(a), v10(a), v20(a),
+            v01(a), v11(a), v21(a),
+            v02(a), v12(a), v22(a)
         {};
         inline mat3(const float &_v00, const float &_v10, const float &_v20,
                 const float &_v01, const float &_v11, const float &_v21,
@@ -469,40 +449,6 @@ class mat3
             v01(y.x), v11(y.y), v21(y.z),
             v02(z.x), v12(z.y), v22(z.z)
         {};
-
-        explicit inline mat3(const vec3 &a) noexcept :
-            v00(a.x),  v10(0.0f), v20(0.0f),
-            v01(0.0f), v11(a.y),  v21(0.0f),
-            v02(0.0f), v12(0.0f), v22(a.z)
-        {};
-        
-        explicit inline mat3(const vec4 &a) noexcept :
-            v00(1.0f - 2.0f*(a.y*a.y + a.z*a.z)),
-            v10(2.0f*(a.x*a.y - a.w*a.z)),
-            v20(2.0f*(a.x*a.z + a.w*a.y)),
-            v01(2.0f*(a.x*a.y + a.w*a.z)),
-            v11(1.0f - 2.0f*(a.x*a.x + a.z*a.z)),
-            v21(2.0f*(a.y*a.z - a.w*a.x)),
-            v02(2.0f*(a.x*a.z - a.w*a.y)),
-            v12(2.0f*(a.y*a.z + a.w*a.x)),
-            v22(1.0f - 2.0f*(a.x*a.x + a.y*a.y))
-        {};
-
-        inline ~mat3() noexcept {};
-
-        inline mat3 & operator = (const mat3 &b) noexcept
-        {
-            v00 = b.v00;
-            v10 = b.v10;
-            v20 = b.v20;
-            v01 = b.v01;
-            v11 = b.v11;
-            v21 = b.v21;
-            v02 = b.v02;
-            v12 = b.v12;
-            v22 = b.v22;
-            return *this;
-        };
 
         inline mat3 & operator += (const mat3 &b) noexcept
         {
@@ -564,19 +510,26 @@ class mat3
             return *this;
         };
 
-        inline mat3 operator * (const float &b) const noexcept
+        inline mat3 & operator /= (const float &b) noexcept
         {
-            return mat3(b*v00, b*v10, b*v20,
-                        b*v01, b*v11, b*v21,
-                        b*v02, b*v12, b*v22);
+            v00 /= b;
+            v10 /= b;
+            v20 /= b;
+            v01 /= b;
+            v11 /= b;
+            v21 /= b;
+            v02 /= b;
+            v12 /= b;
+            v22 /= b;
+            return *this;
         };
 
-        inline mat3 operator / (const float &b) const noexcept
-        {
-            return mat3(v00/b, v10/b, v20/b,
-                        v01/b, v11/b, v21/b,
-                        v02/b, v12/b, v22/b);
-        };
+        inline friend mat3 & operator + (mat3 a, const mat3 &b) noexcept {return a += b;}
+        inline friend mat3 & operator - (mat3 a, const mat3 &b) noexcept {return a -= b;}
+        inline friend mat3 & operator * (mat3 a, const mat3 &b) noexcept {return a *= b;}
+        inline friend mat3 & operator * (const float &b, mat3 a) noexcept {return a *= b;}
+        inline friend mat3 & operator * (mat3 a, const float &b) noexcept {return a *= b;}
+        inline friend mat3 & operator / (mat3 a, const float &b) noexcept {return a /= b;}
 
         inline vec3 operator * (const vec3 &a) const noexcept
         {
@@ -614,12 +567,12 @@ class mat3
         
         inline mat3 inverted() const noexcept
         {
-            const float t = 1.0f/(v00*(v11*v22 - v12*v21) - v01*(v10*v22 - v12*v20) + v02*(v10*v21 - v11*v20));
+            const float t = v00*(v11*v22 - v12*v21) - v01*(v10*v22 - v12*v20) + v02*(v10*v21 - v11*v20);
 
             return mat3(
-                    t*(v11*v22 - v12*v21), t*(v12*v20 - v10*v22), t*(v10*v21 - v11*v20),
-                    t*(v02*v21 - v01*v22), t*(v00*v22 - v02*v20), t*(v01*v20 - v00*v21),
-                    t*(v01*v12 - v02*v11), t*(v02*v10 - v00*v12), t*(v00*v11 - v01*v10));
+                    (v11*v22 - v12*v21)/t, (v12*v20 - v10*v22)/t, (v10*v21 - v11*v20)/t,
+                    (v02*v21 - v01*v22)/t, (v00*v22 - v02*v20)/t, (v01*v20 - v00*v21)/t,
+                    (v01*v12 - v02*v11)/t, (v02*v10 - v00*v12)/t, (v00*v11 - v01*v10)/t);
         };
 
         std::tuple<vec3, mat3> eigenDecompositionSym() const;
@@ -709,26 +662,27 @@ class mat3
         };
 };
 
-inline mat3 & operator + (mat3 a, const mat3 &b) noexcept {return a += b;}
-inline mat3 & operator - (mat3 a, const mat3 &b) noexcept {return a -= b;}
-inline mat3 & operator * (mat3 a, const mat3 &b) noexcept {return a *= b;}
-inline mat3 & operator * (const float &b, mat3 a) noexcept {return a *= b;}
-
 class mat4
 {
     public:
-        inline mat4() {};
-        explicit inline mat4(const float &a) noexcept :
-            v00(a), v10(a), v20(a), v30(a),
-            v01(a), v11(a), v21(a), v31(a),
-            v02(a), v12(a), v22(a), v32(a),
-            v03(a), v13(a), v23(a), v33(a)
-        {};
+        mat4() = default;
+        //FIXME: Causes uninitialized-variables errors (even for initialized data!).
+        //mat4(const mat4 &) = default;
         inline mat4(const mat4 &a) noexcept :
             v00(a.v00), v10(a.v10), v20(a.v20), v30(a.v30),
             v01(a.v01), v11(a.v11), v21(a.v21), v31(a.v31),
             v02(a.v02), v12(a.v12), v22(a.v22), v32(a.v32),
             v03(a.v03), v13(a.v13), v23(a.v23), v33(a.v33)
+        {};
+        mat4(mat4 &&) = default;
+        mat4 & operator = (const mat4 &) = default;
+        ~mat4() = default;
+
+        inline mat4(const float &a) noexcept :
+            v00(a), v10(a), v20(a), v30(a),
+            v01(a), v11(a), v21(a), v31(a),
+            v02(a), v12(a), v22(a), v32(a),
+            v03(a), v13(a), v23(a), v33(a)
         {};
         inline mat4(const float &_v00, const float &_v10, const float &_v20, const float &_v30,
                 const float &_v01, const float &_v11, const float &_v21, const float &_v31,
@@ -740,13 +694,6 @@ class mat4
             v03(_v03), v13(_v13), v23(_v23), v33(_v33)
         {};
 
-        inline mat4(const mat3 &a) noexcept :
-            v00(a.v00), v10(a.v10), v20(a.v20), v30(0.0f),
-            v01(a.v01), v11(a.v11), v21(a.v21), v31(0.0f),
-            v02(a.v02), v12(a.v12), v22(a.v22), v32(0.0f),
-            v03(0.0f),  v13(0.0f),  v23(0.0f),  v33(1.0f)
-        {};
-        
         explicit inline mat4(const vec3 &x, const vec3 &y, const vec3 &z, const vec3 &b = vec3(0.0f, 0.0f, 0.0f)) noexcept :
             v00(x.x), v10(x.y), v20(x.z), v30(0.0f),
             v01(y.x), v11(y.y), v21(y.z), v31(0.0f),
@@ -754,25 +701,6 @@ class mat4
             v03(b.x), v13(b.y), v23(b.z), v33(1.0f)
         {};
         
-        explicit inline mat4(const vec4 &a, const vec3 &b = vec3(0.0f, 0.0f, 0.0f)) noexcept :
-            v00(1.0f - 2.0f*(a.y*a.y + a.z*a.z)),
-            v10(2.0f*(a.x*a.y - a.w*a.z)),
-            v20(2.0f*(a.x*a.z + a.w*a.y)),
-            v30(0.0f),
-            v01(2.0f*(a.x*a.y + a.w*a.z)),
-            v11(1.0f - 2.0f*(a.x*a.x + a.z*a.z)),
-            v21(2.0f*(a.y*a.z - a.w*a.x)),
-            v31(0.0f),
-            v02(2.0f*(a.x*a.z - a.w*a.y)),
-            v12(2.0f*(a.y*a.z + a.w*a.x)),
-            v22(1.0f - 2.0f*(a.x*a.x + a.y*a.y)),
-            v32(0.0f),
-            v03(b.x),
-            v13(b.y),
-            v23(b.z),
-            v33(1.0f)
-        {};
-
 #ifdef ENABLE_OPENVR
         inline mat4(const vr::HmdMatrix44_t &a) noexcept :
             v00(a.m[0][0]),
@@ -812,30 +740,47 @@ class mat4
             v33(1.0f)
         {};
 #endif
-
-        inline ~mat4() noexcept {};
-        
-        inline mat4 & operator = (const mat4 &b) noexcept
+        inline mat4 & operator += (const mat4 &b) noexcept
         {
-            v00 = b.v00;
-            v10 = b.v10;
-            v20 = b.v20;
-            v30 = b.v30;
-            v01 = b.v01;
-            v11 = b.v11;
-            v21 = b.v21;
-            v31 = b.v31;
-            v02 = b.v02;
-            v12 = b.v12;
-            v22 = b.v22;
-            v32 = b.v32;
-            v03 = b.v03;
-            v13 = b.v13;
-            v23 = b.v23;
-            v33 = b.v33;
+            v00 += b.v00;
+            v10 += b.v10;
+            v20 += b.v20;
+            v30 += b.v30;
+            v01 += b.v01;
+            v11 += b.v11;
+            v21 += b.v21;
+            v31 += b.v31;
+            v02 += b.v02;
+            v12 += b.v12;
+            v22 += b.v22;
+            v32 += b.v32;
+            v03 += b.v03;
+            v13 += b.v13;
+            v23 += b.v23;
+            v33 += b.v33;
             return *this;
         };
 
+        inline mat4 & operator -= (const mat4 &b) noexcept
+        {
+            v00 -= b.v00;
+            v10 -= b.v10;
+            v20 -= b.v20;
+            v30 -= b.v30;
+            v01 -= b.v01;
+            v11 -= b.v11;
+            v21 -= b.v21;
+            v31 -= b.v31;
+            v02 -= b.v02;
+            v12 -= b.v12;
+            v22 -= b.v22;
+            v32 -= b.v32;
+            v03 -= b.v03;
+            v13 -= b.v13;
+            v23 -= b.v23;
+            v33 -= b.v33;
+            return *this;
+        };
 
         inline mat4 & operator *= (const mat4 &b) noexcept
         {
@@ -884,21 +829,33 @@ class mat4
             return *this;
         };
         
-        inline mat4 operator * (const float &b) const noexcept
+        inline mat4 & operator /= (const float &b) noexcept
         {
-            return mat4(b*v00, b*v10, b*v20, b*v30,
-                        b*v01, b*v11, b*v21, b*v31,
-                        b*v02, b*v12, b*v22, b*v32,
-                        b*v03, b*v13, b*v23, b*v33);
+            v00 /= b;
+            v10 /= b;
+            v20 /= b;
+            v30 /= b;
+            v01 /= b;
+            v11 /= b;
+            v21 /= b;
+            v31 /= b;
+            v02 /= b;
+            v12 /= b;
+            v22 /= b;
+            v32 /= b;
+            v03 /= b;
+            v13 /= b;
+            v23 /= b;
+            v33 /= b;
+            return *this;
         };
-
-        inline mat4 operator / (const float &b) const noexcept
-        {
-            return mat4(v00/b, v10/b, v20/b, v30/b,
-                        v01/b, v11/b, v21/b, v31/b,
-                        v02/b, v12/b, v22/b, v32/b,
-                        v03/b, v13/b, v23/b, v33/b);
-        };
+        
+        inline friend mat4 & operator + (mat4 a, const mat4 &b) noexcept {return a += b;}
+        inline friend mat4 & operator - (mat4 a, const mat4 &b) noexcept {return a -= b;}
+        inline friend mat4 & operator * (mat4 a, const mat4 &b) noexcept {return a *= b;}
+        inline friend mat4 & operator * (const float &b, mat4 a) noexcept {return a *= b;}
+        inline friend mat4 & operator * (mat4 a, const float &b) noexcept {return a *= b;}
+        inline friend mat4 & operator / (mat4 a, const float &b) noexcept {return a /= b;}
 
         inline vec3 operator * (const vec3 &a) const noexcept
         {
@@ -1046,6 +1003,14 @@ class mat4
                         a.x, a.y, a.z, 1.0f);
         };
         
+        inline static mat4 from3x3(const mat3 &a) noexcept
+        {
+            return mat4(a.v00, a.v10, a.v20, 0.0f,
+                        a.v01, a.v11, a.v21, 0.0f,
+                        a.v02, a.v12, a.v22, 0.0f,
+                        0.0f, 0.0f, 0.0f, 1.0f);
+        };
+
         inline static mat4 scaleMatrix(const vec3 &a) noexcept
         {
             return mat4(a.x, 0.0, 0.0, 0.0,
@@ -1072,9 +1037,27 @@ class mat4
                 0.0f, 0.0f, 0.0f, 1.0f);
         };
         
+        inline static mat4 rotationTranslationMatrix(const vec4 &a, const vec3 &b) noexcept
+        {
+            return mat4(
+                1.0f - 2.0f*(a.y*a.y + a.z*a.z),
+                2.0f*(a.x*a.y - a.w*a.z),
+                2.0f*(a.x*a.z + a.w*a.y),
+                0.0f,
+                2.0f*(a.x*a.y + a.w*a.z),
+                1.0f - 2.0f*(a.x*a.x + a.z*a.z),
+                2.0f*(a.y*a.z - a.w*a.x),
+                0.0f,
+                2.0f*(a.x*a.z - a.w*a.y),
+                2.0f*(a.y*a.z + a.w*a.x),
+                1.0f - 2.0f*(a.x*a.x + a.y*a.y),
+                0.0f,
+                b.x, b.y, b.z, 1.0f);
+        };
+
         inline static mat4 frustumMatrix(const vec3 &a, const vec3 &b) noexcept
         {
-            const vec3 c = vec3(1.0f/(b.x - a.x), 1.0f/(b.y - a.y), 1.0f/(b.z - a.z));
+            const vec3 c = 1.0f/(b - a);
             
             return mat4(2.0f*a.z*c.x,
                     0.0f,
@@ -1111,9 +1094,6 @@ class mat4
             return Out;
         };
 };
-
-inline mat4 & operator * (mat4 a, const mat4 &b) noexcept {return a *= b;}
-inline mat4 & operator * (const float &b, mat4 a) noexcept {return a *= b;}
 
 }
 

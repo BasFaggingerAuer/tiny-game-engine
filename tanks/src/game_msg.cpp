@@ -374,7 +374,7 @@ bool Game::msgPlayerShootRequest(const unsigned int &senderIndex, std::ostream &
     
     //Obtain current viewing direction and position of the soldier.
     const vec3 pos = soldierType->getCameraPosition(soldier);
-    const mat4 ori = mat4(soldierType->getCameraOrientation(soldier));
+    const mat4 ori = mat4::rotationMatrix(soldierType->getCameraOrientation(soldier));
     
     msg1 << (pos + ori*bulletTypes[bulletType]->position);
     msg1 << ((soldier.P/soldierType->mass) + ori*bulletTypes[bulletType]->velocity);

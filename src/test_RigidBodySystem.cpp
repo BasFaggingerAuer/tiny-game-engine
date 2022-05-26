@@ -58,7 +58,7 @@ void setup()
     const int nrBalls = 4;
     
     rigidBodySystem = new rigid::RigidBodySystem();
-    rigidBodySystem->addRigidBody(1.0f, {vec4(0.0f, 0.0f, 0.0f, 0.25f)}, vec3(-1.0f, 0.0f, 0.0f), vec3(1.5f, 0.0f, 0.0f));
+    rigidBodySystem->addRigidBody(1.0f, {vec4(0.0f, 0.0f, 0.0f, 0.25f)}, vec3(-1.0f, 0.0f, 0.0f), vec3(5.5f, 0.0f, 0.0f));
     
     for (int i = 0; i < nrBalls; ++i)
     {
