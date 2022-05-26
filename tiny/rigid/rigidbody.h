@@ -145,13 +145,16 @@ class RigidBodySystem
         {
             for (const auto &b : bodies)
             {
-                const mat3 R = mat3::rotationMatrix(b.q);
-                
-                for (size_t i = b.firstInternalSphere; i < b.lastInternalSphere; ++i)
+                if (b.geometry == RigidBodyGeometry::Spheres)
                 {
-                    const vec4 s = bodyInternalSpheres[i];
+                    const mat3 R = mat3::rotationMatrix(b.q);
+                    
+                    for (size_t i = b.firstInternalSphere; i < b.lastInternalSphere; ++i)
+                    {
+                        const vec4 s = bodyInternalSpheres[i];
 
-                    out.push_back(tiny::draw::StaticMeshInstance(vec4(b.x + R*s.xyz(), s.w), b.q));
+                        out.push_back(tiny::draw::StaticMeshInstance(vec4(b.x + R*s.xyz(), s.w), b.q));
+                    }
                 }
             }
         }

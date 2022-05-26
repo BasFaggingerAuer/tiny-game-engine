@@ -343,6 +343,7 @@ void RigidBodySystem::update(const float &dt)
                 const vec4 s2 = collSpheres[*bucketB2];
                 
                 if ((length(s1.xyz() - s2.xyz()) <= addMarginToRadius(dt, s1.w + s2.w)) &&
+                    (*bucketB1 != *bucketB2) &&
                     (bodies[*bucketB1].geometry == RigidBodyGeometry::Spheres) &&
                     (bodies[*bucketB2].geometry == RigidBodyGeometry::Spheres))
                 {
@@ -476,9 +477,10 @@ void RigidBodySystem::update(const float &dt)
             {
                 const float d = dot(cg.n, cg.p1 - cg.p2);
                 const float staticFrictionCoeff = std::sqrt(cg.b1->staticFriction*cg.b2->staticFriction);
+                const float softnessCoeff = 0.5f*(cg.b1->softness + cg.b2->softness)/(h*h);
                 
                 //Apply position constraint to avoid object interpenetration.
-                lambdaCollisionN[i] = applyPositionConstraint(0.0f, 0.0f, cg.b1, cg.b2, 0.5f*(cg.p1 + cg.p2), d*cg.n);
+                lambdaCollisionN[i] = applyPositionConstraint(0.0f, softnessCoeff, cg.b1, cg.b2, 0.5f*(cg.p1 + cg.p2), d*cg.n);
                 
                 //Handle static friction.
                 const float w1 = cg.b1->invM + dot(cross(cg.p1, cg.n), cg.b1->getInvI()*cross(cg.p1, cg.n));

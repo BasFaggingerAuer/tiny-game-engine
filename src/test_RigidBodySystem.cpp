@@ -44,10 +44,22 @@ class GravitySystem : public rigid::RigidBodySystem
             //Add ground plane.
             addInfinitePlaneBody(vec4(0.0f, 1.0f, 0.0f, 0.0f));
 
+            //Create a box.
+            //addInfinitePlaneBody(vec4( 1.0f, 0.0f, 0.0f, -2.0f));
+            //addInfinitePlaneBody(vec4(-1.0f, 0.0f, 0.0f, -2.0f));
+            //addInfinitePlaneBody(vec4( 0.0f, 0.0f, 1.0f, -2.0f));
+            //addInfinitePlaneBody(vec4( 0.0f, 0.0f,-1.0f, -2.0f));
+
             //Add some rigid bodies.
-            for (int i = 0; i < 4; ++i)
+            for (int i = 0; i < 1; ++i)
             {
-                addSpheresRigidBody(1.0f, {vec4(0.0f, 0.0f, 0.0f, 0.3f)}, vec3(i, 2.0f, 0.0f), vec3(0.0f, i, 0.0f));
+                addSpheresRigidBody(1.0f, {
+                    vec4(0.0f, 0.0f, 0.0f, 0.3f),
+                    vec4(0.3f, 0.0f, 0.0f, 0.3f),
+                    vec4(0.6f, 0.0f, 0.0f, 0.3f),
+                    vec4(0.0f, 0.3f, 0.0f, 0.3f),
+                    vec4(0.0f, 0.6f, 0.0f, 0.3f)
+                    }, randomVec3()*vec3(4.0f, 0.0f, 4.0f) - vec3(2.0f, -i - 3, 2.0f), randomVec3() - 0.5f, normalize(randomVec4() - 0.5f));
             }
         }
 
@@ -71,7 +83,9 @@ os::Application *application = 0;
 draw::WorldRenderer *worldRenderer = 0;
 
 std::vector<draw::StaticMeshInstance> sphereMeshInstances;
+std::vector<draw::StaticMeshInstance> planeMeshInstances;
 draw::StaticMeshHorde *sphereMeshHorde = 0;
+draw::StaticMeshHorde *planeMeshHorde = 0;
 draw::RGBATexture2D *sphereDiffuseTexture = 0;
 
 rigid::RigidBodySystem *rigidBodySystem = 0;
@@ -79,41 +93,20 @@ float lastEnergyTime = -10.0f;
 
 draw::Renderable *screenEffect = 0;
 
-vec3 cameraPosition = vec3(0.0f, 0.0f, 10.0f);
+vec3 cameraPosition = vec3(0.0f, 2.0f, 10.0f);
 vec4 cameraOrientation = vec4(0.0f, 0.0f, 0.0f, 1.0f);
 
 void setup()
 {
     //Create a rigid body scene.
     rigidBodySystem = new GravitySystem();
-
-    /*
-    const int nrBalls = 4;
     
-    rigidBodySystem->addRigidBody(1.0f, {vec4(0.0f, 0.0f, 0.0f, 0.25f)}, vec3(-1.0f, 0.0f, 0.0f), vec3(5.5f, 0.0f, 0.0f));
-    
-    for (int i = 0; i < nrBalls; ++i)
-    {
-        rigidBodySystem->addRigidBody(1.0f, {vec4(0.0f, 0.0f, 0.0f, 0.25f)}, vec3(0.55f*static_cast<float>(i), 0.0f, 0.0f));
-    }
-    
-    rigidBodySystem->addRigidBody(1.0e2f, {vec4(0.0f, 0.0f, 0.0f, 0.25f)}, vec3(0.55f*static_cast<float>(nrBalls + 1), 0.0f, 0.0f));
-    
-    rigidBodySystem->addRigidBody(7.0f, {vec4(0.0f, 0.0f, 0.0f, 0.5f),
-                                         vec4(1.0f, 0.0f, 0.0f, 0.5f),
-                                         vec4(2.0f, 0.0f, 0.0f, 0.5f),
-                                         vec4(3.0f, 0.0f, 0.0f, 0.5f),
-                                         vec4(0.0f, -1.0f, 0.0f, 0.5f),
-                                         vec4(0.0f, -2.0f, 0.0f, 0.5f),
-                                         vec4(0.0f, -3.0f, 0.0f, 0.5f),
-                                         },
-                                         vec3(-5.0f, 1.5f, 0.0f), vec3(0.0f, 0.0f, 0.0f));
-    */
-    
-    //Create a cube mesh and paint it with a texture.
+    //Create a sphere mesh and paint it with a texture.
     sphereMeshHorde = new draw::StaticMeshHorde(mesh::StaticMesh::createIcosahedronMesh(1.0f), 1024);
     sphereDiffuseTexture = new draw::RGBATexture2D(img::Image::createTestImage());
     sphereMeshHorde->setDiffuseTexture(*sphereDiffuseTexture);
+    planeMeshHorde = new draw::StaticMeshHorde(mesh::StaticMesh::createPlaneMesh(10.0f), 16);
+    planeMeshHorde->setDiffuseTexture(*sphereDiffuseTexture);
     
     //Render only diffuse colours to the screen.
     screenEffect = new draw::effects::Diffuse();
@@ -121,6 +114,7 @@ void setup()
     //Create a renderer and add the cube and the diffuse rendering effect to it.
     worldRenderer = new draw::WorldRenderer(application->getScreenWidth(), application->getScreenHeight());
     worldRenderer->addWorldRenderable(0, sphereMeshHorde);
+    worldRenderer->addWorldRenderable(1, planeMeshHorde);
     worldRenderer->addScreenRenderable(0, screenEffect, false, false);
 }
 
@@ -130,6 +124,7 @@ void cleanup()
     
     delete screenEffect;
     
+    delete planeMeshHorde;
     delete sphereMeshHorde;
     delete sphereDiffuseTexture;
     
@@ -151,6 +146,11 @@ void update(const double &dt)
     sphereMeshInstances.clear();
     rigidBodySystem->getInternalSphereStaticMeshes(sphereMeshInstances);
     sphereMeshHorde->setMeshes(sphereMeshInstances.begin(), sphereMeshInstances.end());
+
+    //TODO: Link this to the actual planes.
+    planeMeshInstances.clear();
+    planeMeshInstances.push_back({vec4(0.0f, 0.0f, 0.0f, 1.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f)});
+    planeMeshHorde->setMeshes(planeMeshInstances.begin(), planeMeshInstances.end());
     
     //Move the camera around.
     application->updateSimpleCamera(dt, cameraPosition, cameraOrientation);

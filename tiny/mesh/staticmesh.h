@@ -62,6 +62,7 @@ class StaticMesh
         StaticMesh();
         ~StaticMesh();
         
+        static StaticMesh createPlaneMesh(const float & = 1.0f);
         static StaticMesh createCubeMesh(const float & = 1.0f);
         static StaticMesh createBoxMesh(const float & = 1.0f, const float & = 1.0f, const float & = 1.0f);
         static StaticMesh createCylinderMesh(const float & = 1.0f, const float & = 1.0f, const int & = 12);

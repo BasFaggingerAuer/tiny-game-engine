@@ -34,6 +34,25 @@ StaticMesh::~StaticMesh()
 
 }
 
+StaticMesh StaticMesh::createPlaneMesh(const float &size)
+{
+    StaticMesh mesh;
+
+    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, 0.0f), vec3(1.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f), vec3(-size, 0.0f, -size)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(size, 0.0f), vec3(1.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f), vec3( size, 0.0f, -size)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(size, size), vec3(1.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f), vec3( size, 0.0f,  size)));
+    mesh.vertices.push_back(StaticMeshVertex(vec2(0.0f, size), vec3(1.0f, 0.0f, 0.0f), vec3(0.0f, 1.0f, 0.0f), vec3(-size, 0.0f,  size)));
+
+    mesh.indices.push_back(2);
+    mesh.indices.push_back(1);
+    mesh.indices.push_back(0);
+    mesh.indices.push_back(0);
+    mesh.indices.push_back(3);
+    mesh.indices.push_back(2);
+
+    return mesh;
+}
+
 StaticMesh StaticMesh::createCubeMesh(const float &size)
 {
     return StaticMesh::createBoxMesh(size, size, size);
