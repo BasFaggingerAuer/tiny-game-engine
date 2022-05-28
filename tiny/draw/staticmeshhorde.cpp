@@ -79,7 +79,7 @@ std::string StaticMeshHorde::getVertexShaderCode() const
 "\n"
 "vec3 qtransform(const vec4 q, const vec3 v)\n"
 "{\n"
-"   return (v + 2.0f*cross(cross(v, q.xyz) + q.w*v, q.xyz));\n"
+"   return v + 2.0f*cross(q.xyz, cross(q.xyz, v) + q.w*v);\n"
 "}\n"
 "\n"
 "void main(void)\n"

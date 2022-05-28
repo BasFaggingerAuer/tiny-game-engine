@@ -639,14 +639,21 @@ class mat3
         {
             return mat3(
                 1.0f - 2.0f*(a.y*a.y + a.z*a.z),
-                2.0f*(a.x*a.y - a.w*a.z),
-                2.0f*(a.x*a.z + a.w*a.y),
                 2.0f*(a.x*a.y + a.w*a.z),
-                1.0f - 2.0f*(a.x*a.x + a.z*a.z),
-                2.0f*(a.y*a.z - a.w*a.x),
                 2.0f*(a.x*a.z - a.w*a.y),
+                2.0f*(a.x*a.y - a.w*a.z),
+                1.0f - 2.0f*(a.x*a.x + a.z*a.z),
                 2.0f*(a.y*a.z + a.w*a.x),
+                2.0f*(a.x*a.z + a.w*a.y),
+                2.0f*(a.y*a.z - a.w*a.x),
                 1.0f - 2.0f*(a.x*a.x + a.y*a.y));
+        };
+
+        inline float getFrobeniusNorm() const noexcept
+        {
+            return std::sqrt(v00*v00 + v10*v10 + v20*v20 +
+                             v01*v01 + v11*v11 + v21*v21 +
+                             v02*v02 + v12*v12 + v22*v22);
         };
 
         float v00, v10, v20;

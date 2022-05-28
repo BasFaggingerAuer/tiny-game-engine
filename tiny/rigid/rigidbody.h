@@ -91,7 +91,7 @@ struct RigidBody
 
     friend std::ostream & operator << (std::ostream &Out, const RigidBody &b)
     {
-        Out << "Rigid body (m = " << 1.0f/b.invM << ", I = " << 1.0f/b.invI << ")" << std::endl
+        Out << "rigid body (m = " << 1.0f/b.invM << ", I = " << 1.0f/b.invI << ")" << std::endl
             << "    position    = " << b.x << std::endl
             << "    orientation = " << b.q << std::endl
             << "    lin. vel.   = " << b.v << std::endl
@@ -113,12 +113,10 @@ struct RigidBodyCollision
 
 struct RigidBodyCollisionGeometry
 {
-    vec3 n; //Normal at point of collision.
-    RigidBody *b1; //Pointer to first body.
-    vec3 p1, v1; //Position and velocity of collision point in world coordinates of first body.
-    RigidBody *b2; //Pointer to second body.
-    vec3 p2, v2; //Position and velocity of collision point in world coordinates of second body.
-    bool isColliding; //Are the bodies colliding?
+    RigidBody *b1, *b2; //Pointer to bodies.
+    float d; //Signed distance of b2 w.r.t. b1 along the collision normal. A collision occurs if d < 0.
+    vec3 p, n; //Point and normal of collision. Distance to move b2 w.r.t. b1 to remove the collision.
+    vec3 v1, v2; //Velocities at p of both bodies.
 };
         
 class RigidBodySystem
