@@ -249,7 +249,7 @@ void copyAiAnimation(const aiScene *scene, const aiMesh *sourceMesh, const unsig
                 
                 frames[boneIndex] = KeyFrame(vec3(scale.x, scale.y, scale.z),
                                              static_cast<float>(frame),
-                                             quatconj(vec4(rotate.x, rotate.y, rotate.z, rotate.w)),
+                                             vec4(rotate.x, rotate.y, rotate.z, rotate.w),
                                              vec4(translate.x, translate.y, translate.z, 0.0f));
             }
         }
