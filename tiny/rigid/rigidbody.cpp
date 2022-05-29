@@ -253,8 +253,6 @@ float applyPositionConstraint(const float lambda,
     const vec3 r2 = p - b2->x;
     const float w1 = b1->invM + dot(cross(r1, n), b1->getInvI()*cross(r1, n));
     const float w2 = b2->invM + dot(cross(r2, n), b2->getInvI()*cross(r2, n));
-    //Avoid numerical issues by enforcing a minimum separation after collisions.
-    //const float dlambda = -(std::max(RBEPS, RBOPEPS*length(dx)) + alpha*lambda)/(w1 + w2 + alpha);
     const float dlambda = -(length(dx) + alpha*lambda)/(w1 + w2 + alpha);
     
     /*
@@ -545,15 +543,14 @@ void RigidBodySystem::update(const float &dt)
                 lambdaCollisionN[i] = applyPositionConstraint(0.0f, softnessCoeff, cg.b1, cg.b2, cg.p, -cg.d*cg.n);
                 
                 /*
-                //Handle static friction.
-                const float w1 = cg.b1->invM + dot(cross(cg.p - cg.b1->x, cg.n), cg.b1->getInvI()*cross(cg.p - cg.b1->x, cg.n));
-                const float w2 = cg.b2->invM + dot(cross(cg.p - cg.b2->x, cg.n), cg.b2->getInvI()*cross(cg.p - cg.b2->x, cg.n));
-
-                //Get pre-states of the rigid bodies.
-                const auto precg = getCollisionGeometry(preBodies, c);
+                //TODO: Handle static friction.
+                const vec3 r1 = cg.p - cg.b1->x;
+                const vec3 r2 = cg.p - cg.b2->x;
+                const float w1 = cg.b1->invM + dot(cross(r1, cg.n), cg.b1->getInvI()*cross(r1, cg.n));
+                const float w2 = cg.b2->invM + dot(cross(r2, cg.n), cg.b2->getInvI()*cross(r2, cg.n));
                 
                 //Get tangential motion.
-                //FIXME!
+
                 vec3 dx = (cg.p1 - precg.p1) - (cg.p2 - precg.p2);
                 
                 dx -= dot(dx, cg.n)*cg.n;
@@ -581,12 +578,11 @@ void RigidBodySystem::update(const float &dt)
         }
         
         //Solve velocities.
-        /*
         for (size_t i = 0; i < collisions.size(); ++i)
         {
             const RigidBodyCollision c = collisions[i];
             auto cg = getCollisionGeometry(bodies, c);
-
+            
             //Did we have a collision?
             if (lambdaCollisionN[i] != 0.0f)
             {
@@ -599,7 +595,7 @@ void RigidBodySystem::update(const float &dt)
                 vt -= vn*cg.n;
 
                 //Apply dynamic friction.
-                applyVelocityConstraint(cg.b1, cg.b2, 0.5f*(cg.p1 + cg.p2),
+                applyVelocityConstraint(cg.b1, cg.b2, cg.p,
                                         std::min(dynamicFrictionCoeff*std::abs(lambdaCollisionN[i])/h, length(vt))*normalize(vt));
                 
                 //Get pre-state normal velocity.
@@ -612,12 +608,11 @@ void RigidBodySystem::update(const float &dt)
                 //Perform restitution in case of collisions that are not resting contacts.
                 if (std::abs(prevn) > h*minCollisionNormalVelocity)
                 {
-                    applyVelocityConstraint(cg.b1, cg.b2, 0.5f*(cg.p1 + cg.p2),
+                    applyVelocityConstraint(cg.b1, cg.b2, cg.p,
                                             (vn + std::max(0.0f, restitutionCoeff*prevn))*cg.n);
                 }
             }
         }
-        */
     }
 
     //Calculate total energy and momenta.
