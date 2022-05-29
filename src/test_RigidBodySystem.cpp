@@ -41,18 +41,17 @@ class GravitySystem : public rigid::RigidBodySystem
     public:
         GravitySystem() : RigidBodySystem()
         {
-            /*
             //Add ground plane.
             addInfinitePlaneBody(vec4(0.0f, 1.0f, 0.0f, 0.0f));
 
             //Create a box.
-            //addInfinitePlaneBody(vec4( 1.0f, 0.0f, 0.0f, -2.0f));
-            //addInfinitePlaneBody(vec4(-1.0f, 0.0f, 0.0f, -2.0f));
-            //addInfinitePlaneBody(vec4( 0.0f, 0.0f, 1.0f, -2.0f));
-            //addInfinitePlaneBody(vec4( 0.0f, 0.0f,-1.0f, -2.0f));
+            addInfinitePlaneBody(vec4( 1.0f, 0.0f, 0.0f, -4.0f));
+            addInfinitePlaneBody(vec4(-1.0f, 0.0f, 0.0f, -4.0f));
+            addInfinitePlaneBody(vec4( 0.0f, 0.0f, 1.0f, -4.0f));
+            addInfinitePlaneBody(vec4( 0.0f, 0.0f,-1.0f, -4.0f));
 
             //Add some rigid bodies.
-            for (int i = 0; i < 1; ++i)
+            for (int i = 0; i < 8; ++i)
             {
                 addSpheresRigidBody(1.0f, {
                     vec4(0.0f, 0.0f, 0.0f, 0.3f),
@@ -60,9 +59,8 @@ class GravitySystem : public rigid::RigidBodySystem
                     vec4(0.6f, 0.0f, 0.0f, 0.3f),
                     vec4(0.0f, 0.3f, 0.0f, 0.3f),
                     vec4(0.0f, 0.6f, 0.0f, 0.3f)
-                    }, randomVec3()*vec3(4.0f, 0.0f, 4.0f) - vec3(2.0f, -i - 2, 2.0f), randomVec3() - 0.5f, normalize(randomVec4() - 0.5f));
+                    }, randomVec3()*vec3(2.0f, 0.0f, 2.0f) - vec3(1.0f, -2*i - 1, 1.0f), vec3(0.0f, 0.0f, 0.0f), normalize(randomVec4() - vec4(0.5f)));
             }
-            */
             
             /*
             for (int i = 0; i < 4; ++i)
@@ -73,6 +71,7 @@ class GravitySystem : public rigid::RigidBodySystem
             addSpheresRigidBody(1.0f, {vec4(0.0f, 0.0f, 0.0f, 0.3f)}, vec3(-1.0f, 0.9f, 0.0f), vec3(1.0f, 0.0f, 0.0f));
             */
             
+            /*
             //Add some rigid bodies.
             addSpheresRigidBody(1.0f, {
                 vec4(0.0f, 0.0f, 0.0f, 0.3f),
@@ -89,6 +88,7 @@ class GravitySystem : public rigid::RigidBodySystem
                 vec4(0.0f, 0.3f, 0.0f, 0.3f),
                 vec4(0.0f, 0.6f, 0.0f, 0.3f)
                 }, vec3(-2.0f, 2.0f, 0.0f), vec3(2.0f, 0.0f, 0.0f));
+            */
         }
 
         ~GravitySystem()
@@ -101,7 +101,7 @@ class GravitySystem : public rigid::RigidBodySystem
         {
             for (auto &b : bodies)
             {
-                //b.f = vec3(0.0f, -9.81f/b.invM, 0.0f); //Gravity.
+                b.f = vec3(0.0f, -9.81f/b.invM, 0.0f); //Gravity.
             }
         }
 };
@@ -162,10 +162,10 @@ void cleanup()
 void update(const double &dt)
 {
     //Update the rigid bodies.
-    if (application->isKeyPressedOnce(' '))
-    {
+    //if (application->isKeyPressedOnce(' '))
+    //{
         rigidBodySystem->update(dt);
-    }
+    //}
 
     if (rigidBodySystem->getTime() > lastEnergyTime + 0.5f)
     {

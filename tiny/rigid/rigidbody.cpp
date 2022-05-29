@@ -81,14 +81,13 @@ const std::vector<std::list<size_t>> *SpatialSphereHasher::getBuckets() const
     return &buckets;
 }
 
-RigidBodySystem::RigidBodySystem(const size_t &nrBuckets, const float &boundingSphereBucketSize, const float &internalSphereBucketSize, const float &a_collisionSphereMargin, const int &a_nrSubSteps) :
+RigidBodySystem::RigidBodySystem(const size_t &nrBuckets, const float &boundingSphereBucketSize, const float &internalSphereBucketSize, const int &a_nrSubSteps) :
     time(0.0f),
     totalEnergy(0.0f),
     totalLinearMomentum(0.0f),
     totalAngularMomentum(0.0f),
     bodies(),
     planeBodyIndices(),
-    collisionSphereMargin(a_collisionSphereMargin),
     nrSubSteps(a_nrSubSteps),
     boundingSphereHasher(nrBuckets, boundingSphereBucketSize),
     internalSphereHasher(nrBuckets, internalSphereBucketSize)
@@ -114,7 +113,7 @@ void RigidBodySystem::addInfinitePlaneBody(const vec4 &plane,
     bodies.push_back({0.0f, vec3(0.0f),
         vec3(0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(0.0f), vec3(0.0f), vec3(0.0f), vec3(0.0f),
         false, RigidBodyGeometry::Plane,
-        0.0f, 0, 0,
+        0.0f, 0.0f, 0, 0,
         plane/length(plane.xyz()),
         a_statFric, a_dynFric, a_rest, a_soft});
     
@@ -215,7 +214,7 @@ void RigidBodySystem::addSpheresRigidBody(const float &totalMass, const std::vec
     //Add rigid body to system.
     bodies.push_back({1.0f/totalMass, 1.0f/e, x, q, v, w, vec3(0.0f), vec3(0.0f),
         true, RigidBodyGeometry::Spheres,
-        maxRadius, bodyInternalSpheres.size(), bodyInternalSpheres.size() + spheres.size(),
+        maxRadius, maxRadius, bodyInternalSpheres.size(), bodyInternalSpheres.size() + spheres.size(),
         vec4(0.0f),
         a_statFric, a_dynFric, a_rest, a_soft});
     bodyInternalSpheres.insert(bodyInternalSpheres.end(), spheres.begin(), spheres.end());
@@ -225,11 +224,13 @@ void RigidBodySystem::addSpheresRigidBody(const float &totalMass, const std::vec
 
 float RigidBodySystem::addMarginToRadius(const float dt, const float r) const
 {
-    return (RBOPEPS + dt*collisionSphereMargin)*(r + RBEPS);
+    //FIXME: To remove.
+    return (RBOPEPS + dt*2.0f)*(r + RBEPS);
 }
 
 void RigidBodySystem::calculateInternalSpheres(const RigidBody &b, const float &dt)
 {
+    //FIXME: To remove addMargin...
     const mat3 R = mat3::rotationMatrix(b.q);
 
     for (size_t i = b.firstInternalSphere; i < b.lastInternalSphere; ++i)
@@ -255,7 +256,8 @@ float applyPositionConstraint(const float lambda,
     //Avoid numerical issues by enforcing a minimum separation after collisions.
     //const float dlambda = -(std::max(RBEPS, RBOPEPS*length(dx)) + alpha*lambda)/(w1 + w2 + alpha);
     const float dlambda = -(length(dx) + alpha*lambda)/(w1 + w2 + alpha);
-
+    
+    /*
     std::cout << "COLL PRE:" << std::endl
               << "p   : " << p << std::endl
               << "n   : " << n << std::endl
@@ -263,8 +265,13 @@ float applyPositionConstraint(const float lambda,
               << "dx  : " << dx << std::endl
               << "b1.x: " << b1->x << std::endl
               << "b1.q: " << b1->q << std::endl
+              << "b1.v: " << b1->v << std::endl
+              << "b1.w: " << b1->w << std::endl
               << "b2.x: " << b2->x << std::endl
-              << "b2.q: " << b2->q << std::endl;
+              << "b2.q: " << b2->q << std::endl
+              << "b2.v: " << b2->v << std::endl
+              << "b2.w: " << b2->w << std::endl;
+    */
     
     n *= dlambda;
 
@@ -282,12 +289,14 @@ float applyPositionConstraint(const float lambda,
         b2->q = normalize(b2->q);
     }
     
+    /*
     std::cout << "COLL POST:" << std::endl
               << "n   : " << n << std::endl
               << "b1.x: " << b1->x << std::endl
               << "b1.q: " << b1->q << std::endl
               << "b2.x: " << b2->x << std::endl
               << "b2.q: " << b2->q << std::endl;
+    */
     
     return dlambda;
 }
@@ -342,13 +351,6 @@ RigidBodyCollisionGeometry RigidBodySystem::getCollisionGeometry(std::vector<Rig
         n = b1->plane.xyz();
         d = dot(s2.xyz(), n) - b1->plane.w - s2.w;
         p = s2.xyz() - (0.5f*(dot(s2.xyz(), n) + s2.w - b1->plane.w))*n;
-        
-        if (d < 0.0f)
-        {
-            std::cout << "COLLGEOM:" << std::endl
-                      << "Sphere " << c.b2SphereIndex << ": " << s2 << std::endl
-                      << "Plane " << b1->plane << std::endl;
-        }
     }
     else
     {
@@ -368,13 +370,19 @@ void RigidBodySystem::update(const float &dt)
 
     //Detect all collision pairs for the current state.
 
+    //Add margin for collision detection.
+    for (auto &b : bodies)
+    {
+        b.collisionRadius = b.radius + length(b.v)*dt + RBEPS;
+    }
+
     //This should not affect the capacity (so not cause spurious reallocations).
     collSpheres.clear();
 
     for (const auto &b : bodies)
     {
         //FIXME: Planes are also added, which is not necessary.
-        collSpheres.push_back(vec4(b.x, addMarginToRadius(dt, b.radius)));
+        collSpheres.push_back(vec4(b.x, b.collisionRadius));
     }
     
     boundingSphereHasher.hashObjects(collSpheres);
@@ -391,7 +399,7 @@ void RigidBodySystem::update(const float &dt)
                 const vec4 s1 = collSpheres[*bucketB1];
                 const vec4 s2 = collSpheres[*bucketB2];
                 
-                if ((length(s1.xyz() - s2.xyz()) <= addMarginToRadius(dt, s1.w + s2.w)) &&
+                if ((length(s1.xyz() - s2.xyz()) <= s1.w + s2.w) &&
                     (*bucketB1 != *bucketB2) &&
                     (bodies[*bucketB1].geometry == RigidBodyGeometry::Spheres) &&
                     (bodies[*bucketB2].geometry == RigidBodyGeometry::Spheres))
@@ -432,10 +440,13 @@ void RigidBodySystem::update(const float &dt)
                 for (auto bucketB2 = b2Start; bucketB2 != bucket.cend(); ++bucketB2)
                 {
                     //Do the internal spheres intersect?
-                    const vec4 s1 = collSpheres[*bucketB1];
-                    const vec4 s2 = collSpheres[*bucketB2];
+                    vec4 s1 = collSpheres[*bucketB1];
+                    vec4 s2 = collSpheres[*bucketB2];
 
-                    if (length(s1.xyz() - s2.xyz()) <= addMarginToRadius(dt, s1.w + s2.w))
+                    s1.w += dt*length(b1.v + cross(b1.w, s1.xyz() - b1.x)) + RBEPS;
+                    s2.w += dt*length(b2.v + cross(b2.w, s2.xyz() - b2.x)) + RBEPS;
+
+                    if (length(s1.xyz() - s2.xyz()) <= s1.w + s2.w)
                     {
                         //If so, add a potential collision.
                         collisions.push_back(RigidBodyCollision({intersection.first, *bucketB1,
@@ -460,7 +471,7 @@ void RigidBodySystem::update(const float &dt)
             if (b.geometry == RigidBodyGeometry::Spheres)
             {
                 //Can the body intersect with the plane?
-                if (dot(b.x, p.xyz()) <= p.w + addMarginToRadius(dt, b.radius))
+                if (dot(b.x, p.xyz()) <= p.w + b.collisionRadius)
                 {
                     collSpheres.clear();
                     calculateInternalSpheres(b, dt);
@@ -469,7 +480,7 @@ void RigidBodySystem::update(const float &dt)
                     {
                         const vec4 s = collSpheres[iS];
 
-                        if (dot(s.xyz(), p.xyz()) <= p.w + addMarginToRadius(dt, s.w))
+                        if (dot(s.xyz(), p.xyz()) <= p.w + s.w + dt*length(b.v + cross(b.w, s.xyz() - b.x)) + RBEPS)
                         {
                             collisions.push_back(RigidBodyCollision({iP, 0, iB, iS}));
                         }
@@ -494,12 +505,12 @@ void RigidBodySystem::update(const float &dt)
 
     //Apply forces.
     applyExternalForces();
-    
+
     for (int iSubStep = 0; iSubStep < nrSubSteps; ++iSubStep)
     {
         //Store pre-update positions and velocities.
         preBodies = bodies;
-        
+    
         //Apply momenta.
         for (auto &b : bodies)
         {
@@ -528,21 +539,21 @@ void RigidBodySystem::update(const float &dt)
             if (cg.d < 0.0f)
             {
                 const float staticFrictionCoeff = std::sqrt(cg.b1->staticFriction*cg.b2->staticFriction);
-                const float softnessCoeff = 0.0f; //0.5f*(cg.b1->softness + cg.b2->softness)/(h*h);
+                const float softnessCoeff = 0.5f*(cg.b1->softness + cg.b2->softness)/(h*h);
                 
                 //Apply position constraint to avoid object interpenetration.
                 lambdaCollisionN[i] = applyPositionConstraint(0.0f, softnessCoeff, cg.b1, cg.b2, cg.p, -cg.d*cg.n);
                 
                 /*
                 //Handle static friction.
-                //FIXME!
-                const float w1 = cg.b1->invM + dot(cross(cg.p1, cg.n), cg.b1->getInvI()*cross(cg.p1, cg.n));
-                const float w2 = cg.b2->invM + dot(cross(cg.p2, cg.n), cg.b2->getInvI()*cross(cg.p2, cg.n));
+                const float w1 = cg.b1->invM + dot(cross(cg.p - cg.b1->x, cg.n), cg.b1->getInvI()*cross(cg.p - cg.b1->x, cg.n));
+                const float w2 = cg.b2->invM + dot(cross(cg.p - cg.b2->x, cg.n), cg.b2->getInvI()*cross(cg.p - cg.b2->x, cg.n));
 
                 //Get pre-states of the rigid bodies.
                 const auto precg = getCollisionGeometry(preBodies, c);
                 
                 //Get tangential motion.
+                //FIXME!
                 vec3 dx = (cg.p1 - precg.p1) - (cg.p2 - precg.p2);
                 
                 dx -= dot(dx, cg.n)*cg.n;
@@ -550,7 +561,7 @@ void RigidBodySystem::update(const float &dt)
                 //Static friction, restrict tangential motion if F_tangential <= mu_static * F_normal.
                 if (length(dx)/(w1 + w2) <= staticFrictionCoeff*std::abs(lambdaCollisionN[i]))
                 {
-                    applyPositionConstraint(0.0f, 0.0f, cg.b1, cg.b2, 0.5f*(cg.p1 + cg.p2), dx);
+                    applyPositionConstraint(0.0f, softnessCoeff, cg.b1, cg.b2, cg.p, dx);
                 }
                 */
             }

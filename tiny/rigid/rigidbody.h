@@ -67,6 +67,7 @@ struct RigidBody
     
     //For Spheres geometry.
     float radius; //Size of rigid body.
+    float collisionRadius; //With margin for collision detection.
     size_t firstInternalSphere; //Index of first internal sphere.
     size_t lastInternalSphere; //Index of last internal sphere.
 
@@ -122,7 +123,7 @@ struct RigidBodyCollisionGeometry
 class RigidBodySystem
 {
     public:
-        RigidBodySystem(const size_t & = 2003, const float & = 4.0f, const float & = 0.5f, const float & = 2.0f, const int & = 16);
+        RigidBodySystem(const size_t & = 2003, const float & = 4.0f, const float & = 0.5f, const int & = 16);
         virtual ~RigidBodySystem();
         
         void addInfinitePlaneBody(const vec4 &,
@@ -183,7 +184,6 @@ class RigidBodySystem
         std::vector<RigidBody> bodies;
         std::vector<size_t> planeBodyIndices;
 
-        const float collisionSphereMargin;
         const int nrSubSteps;
         SpatialSphereHasher boundingSphereHasher;
         SpatialSphereHasher internalSphereHasher;
