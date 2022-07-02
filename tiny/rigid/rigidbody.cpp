@@ -536,13 +536,14 @@ void RigidBodySystem::update(const float &dt)
             //Check for collision for the current body states.
             if (cg.d < 0.0f)
             {
-                const float staticFrictionCoeff = std::sqrt(cg.b1->staticFriction*cg.b2->staticFriction);
                 const float softnessCoeff = 0.5f*(cg.b1->softness + cg.b2->softness)/(h*h);
                 
                 //Apply position constraint to avoid object interpenetration.
                 lambdaCollisionN[i] = applyPositionConstraint(0.0f, softnessCoeff, cg.b1, cg.b2, cg.p, -cg.d*cg.n);
                 
                 /*
+                const float staticFrictionCoeff = std::sqrt(cg.b1->staticFriction*cg.b2->staticFriction);
+
                 //TODO: Handle static friction.
                 const vec3 r1 = cg.p - cg.b1->x;
                 const vec3 r2 = cg.p - cg.b2->x;

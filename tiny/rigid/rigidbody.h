@@ -21,6 +21,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <map>
 
 #include <tiny/math/vec.h>
+#include <tiny/rigid/aabbtree.h>
 
 //TODO: Decide whether to separate this out for cleaner dependencies.
 #include <tiny/draw/staticmeshhorde.h>
