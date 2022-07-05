@@ -103,16 +103,21 @@ class genmat
             return b;
         }
 
-        //Equality.
+        //Equality/comparison.
         inline bool operator == (const genmat<t, m, n> &a) const noexcept
         {
             for (size_t i = 0; i < m*n; ++i) if (v[i] != a.v[i]) return false;
             return true;
         }
 
-        inline bool operator != (const genmat<t, m, n> &a) const noexcept
+        inline bool operator < (const genmat<t, m, n> &a) const noexcept
         {
-            for (size_t i = 0; i < m*n; ++i) if (v[i] != a.v[i]) return true;
+            for (size_t i = 0; i < m*n; ++i)
+            {
+                if (v[i] < a.v[i]) return true;
+                if (v[i] > a.v[i]) return false;
+            }
+
             return false;
         }
         
@@ -193,9 +198,174 @@ class genmat
             return c;
         }
 
+        //Integer modulo.
+        template<typename s = t>
+        std::enable_if_t<std::is_integral<s>::value, genmat<t, m, n> &>
+        inline operator %= (const genmat<t, m, n> &a) noexcept
+        {
+            for (size_t i = 0; i < m*n; ++i) v[i] %= a.v[i];
+            return *this;
+        }
+
+        template<typename s = t>
+        std::enable_if_t<std::is_integral<s>::value, genmat<t, m, n> &>
+        inline operator %= (genmat<t, m, n> &&a) noexcept
+        {
+            for (size_t i = 0; i < m*n; ++i) v[i] %= a.v[i];
+            return *this;
+        }
+
+        template<typename s = t>
+        std::enable_if_t<std::is_integral<s>::value, genmat<t, m, n>>
+        inline friend operator % (genmat<t, m, n> a, const genmat<t, m, n> &b) noexcept {return a %= b;}
+        
+        template<typename s = t>
+        std::enable_if_t<std::is_integral<s>::value, genmat<t, m, n> &>
+        inline operator %= (const t &a) noexcept
+        {
+            for (size_t i = 0; i < m*n; ++i) v[i] %= a;
+            return *this;
+        }
+        
+        template<typename s = t>
+        std::enable_if_t<std::is_integral<s>::value, genmat<t, m, n>>
+        inline friend operator % (genmat<t, m, n> a, const t &b) noexcept {return a %= b;}
+        
+        //Integer bit-wise and.
+        template<typename s = t>
+        std::enable_if_t<std::is_integral<s>::value, genmat<t, m, n> &>
+        inline operator &= (const genmat<t, m, n> &a) noexcept
+        {
+            for (size_t i = 0; i < m*n; ++i) v[i] &= a.v[i];
+            return *this;
+        }
+
+        template<typename s = t>
+        std::enable_if_t<std::is_integral<s>::value, genmat<t, m, n> &>
+        inline operator &= (genmat<t, m, n> &&a) noexcept
+        {
+            for (size_t i = 0; i < m*n; ++i) v[i] &= a.v[i];
+            return *this;
+        }
+
+        template<typename s = t>
+        std::enable_if_t<std::is_integral<s>::value, genmat<t, m, n>>
+        inline friend operator & (genmat<t, m, n> a, const genmat<t, m, n> &b) noexcept {return a &= b;}
+        
+        template<typename s = t>
+        std::enable_if_t<std::is_integral<s>::value, genmat<t, m, n> &>
+        inline operator &= (const t &a) noexcept
+        {
+            for (size_t i = 0; i < m*n; ++i) v[i] &= a;
+            return *this;
+        }
+        
+        template<typename s = t>
+        std::enable_if_t<std::is_integral<s>::value, genmat<t, m, n>>
+        inline friend operator & (genmat<t, m, n> a, const t &b) noexcept {return a &= b;}
+        
+        //Integer bit-wise or.
+        template<typename s = t>
+        std::enable_if_t<std::is_integral<s>::value, genmat<t, m, n> &>
+        inline operator |= (const genmat<t, m, n> &a) noexcept
+        {
+            for (size_t i = 0; i < m*n; ++i) v[i] |= a.v[i];
+            return *this;
+        }
+
+        template<typename s = t>
+        std::enable_if_t<std::is_integral<s>::value, genmat<t, m, n> &>
+        inline operator |= (genmat<t, m, n> &&a) noexcept
+        {
+            for (size_t i = 0; i < m*n; ++i) v[i] |= a.v[i];
+            return *this;
+        }
+
+        template<typename s = t>
+        std::enable_if_t<std::is_integral<s>::value, genmat<t, m, n>>
+        inline friend operator | (genmat<t, m, n> a, const genmat<t, m, n> &b) noexcept {return a |= b;}
+        
+        template<typename s = t>
+        std::enable_if_t<std::is_integral<s>::value, genmat<t, m, n> &>
+        inline operator |= (const t &a) noexcept
+        {
+            for (size_t i = 0; i < m*n; ++i) v[i] |= a;
+            return *this;
+        }
+        
+        template<typename s = t>
+        std::enable_if_t<std::is_integral<s>::value, genmat<t, m, n>>
+        inline friend operator | (genmat<t, m, n> a, const t &b) noexcept {return a |= b;}
+        
+        //Integer bit-wise shift right.
+        template<typename s = t>
+        std::enable_if_t<std::is_integral<s>::value, genmat<t, m, n> &>
+        inline operator >>= (const genmat<t, m, n> &a) noexcept
+        {
+            for (size_t i = 0; i < m*n; ++i) v[i] >>= a.v[i];
+            return *this;
+        }
+
+        template<typename s = t>
+        std::enable_if_t<std::is_integral<s>::value, genmat<t, m, n> &>
+        inline operator >>= (genmat<t, m, n> &&a) noexcept
+        {
+            for (size_t i = 0; i < m*n; ++i) v[i] >>= a.v[i];
+            return *this;
+        }
+
+        template<typename s = t>
+        std::enable_if_t<std::is_integral<s>::value, genmat<t, m, n>>
+        inline friend operator >> (genmat<t, m, n> a, const genmat<t, m, n> &b) noexcept {return a >>= b;}
+        
+        template<typename s = t>
+        std::enable_if_t<std::is_integral<s>::value, genmat<t, m, n> &>
+        inline operator >>= (const t &a) noexcept
+        {
+            for (size_t i = 0; i < m*n; ++i) v[i] >>= a;
+            return *this;
+        }
+        
+        template<typename s = t>
+        std::enable_if_t<std::is_integral<s>::value, genmat<t, m, n>>
+        inline friend operator >> (genmat<t, m, n> a, const t &b) noexcept {return a >>= b;}
+        
+        //Integer bit-wise shift left.
+        template<typename s = t>
+        std::enable_if_t<std::is_integral<s>::value, genmat<t, m, n> &>
+        inline operator <<= (const genmat<t, m, n> &a) noexcept
+        {
+            for (size_t i = 0; i < m*n; ++i) v[i] <<= a.v[i];
+            return *this;
+        }
+
+        template<typename s = t>
+        std::enable_if_t<std::is_integral<s>::value, genmat<t, m, n> &>
+        inline operator <<= (genmat<t, m, n> &&a) noexcept
+        {
+            for (size_t i = 0; i < m*n; ++i) v[i] <<= a.v[i];
+            return *this;
+        }
+
+        template<typename s = t>
+        std::enable_if_t<std::is_integral<s>::value, genmat<t, m, n>>
+        inline friend operator << (genmat<t, m, n> a, const genmat<t, m, n> &b) noexcept {return a <<= b;}
+        
+        template<typename s = t>
+        std::enable_if_t<std::is_integral<s>::value, genmat<t, m, n> &>
+        inline operator <<= (const t &a) noexcept
+        {
+            for (size_t i = 0; i < m*n; ++i) v[i] <<= a;
+            return *this;
+        }
+        
+        template<typename s = t>
+        std::enable_if_t<std::is_integral<s>::value, genmat<t, m, n>>
+        inline friend operator << (genmat<t, m, n> a, const t &b) noexcept {return a <<= b;}
+
         //Matrix multiplication.
         template<size_t k>
-        genmat<t, m, k> operator * (const genmat<t, n, k> &a) const noexcept
+        inline genmat<t, m, k> operator * (const genmat<t, n, k> &a) const noexcept
         {
             genmat<t, m, k> b;
             
@@ -218,7 +388,7 @@ class genmat
         }
         
         //Transposition.
-        genmat<t, n, m> transpose() const noexcept
+        inline genmat<t, n, m> transpose() const noexcept
         {
             genmat<t, n, m> a;
 
@@ -233,7 +403,7 @@ class genmat
             return a;
         }
 
-        genmat<t, (m <= n ? m : n), 1> getDiagonal() const noexcept
+        inline genmat<t, (m <= n ? m : n), 1> getDiagonal() const noexcept
         {
             genmat<t, (m <= n ? m : n), 1> a;
 
