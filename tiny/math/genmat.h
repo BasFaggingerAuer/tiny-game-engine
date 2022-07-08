@@ -531,6 +531,36 @@ class genvec : public genmat<t, m, 1>
         }
 
         inline friend genvec<t, m> operator * (genvec<t, m> a, const genvec<t, m> &b) noexcept {return a += b;}
+        
+        //Quaternion product.
+        template <size_t n = m>
+        typename std::enable_if_t<n == 4, genvec<t, m>>
+        inline friend quatmul(const genvec<t, m> &a, const genvec<t, m> &b) noexcept
+        {
+            return genvec<t, m>(a.v[3]*b.v[0] + b.v[3]*a.v[0] + a.v[1]*b.v[2] - a.v[2]*b.v[1],
+                                a.v[3]*b.v[1] + b.v[3]*a.v[1] + a.v[2]*b.v[0] - a.v[0]*b.v[2],
+                                a.v[3]*b.v[2] + b.v[3]*a.v[2] + a.v[0]*b.v[1] - a.v[1]*b.v[0],
+                                a.v[3]*b.v[3] - (a.v[0]*b.v[0] + a.v[1]*b.v[1] + a.v[2]*b.v[2]));
+        }
+        
+        //Quaternion conjugation.
+        template <size_t n = m>
+        typename std::enable_if_t<n == 4, genvec<t, m>>
+        inline friend quatconj(const genvec<t, m> &a) noexcept
+        {
+            return genvec<t, m>(-a.v[0], -a.v[1], -a.v[2], a.v[3]);
+        }
+
+        //Quaternion from axis-angle rotation.
+        template <size_t n = m>
+        typename std::enable_if_t<n == 4, genvec<t, m>>
+        inline friend quatconj(const t &alpha, const genvec<t, 3> &a) noexcept
+        {
+            const t s = std::sin(t(0.5)*alpha);
+
+            return genvec<t, m>(s*a.v[0], s*a.v[1], s*a.v[2], std::cos(t(0.5)*alpha));
+        }
+
 
         //Access coefficients and swizzle vectors.
         inline t x() const noexcept {return this->v[0];}
@@ -550,8 +580,13 @@ class genvec : public genmat<t, m, 1>
 };
 
 //Force instantiation.
+template class genmat<float, 2, 2>;
 template class genmat<float, 3, 3>;
+template class genmat<float, 4, 4>;
+
+template class genvec<float, 2>;
 template class genvec<float, 3>;
+template class genvec<float, 4>;
 
 genmat<float, 3, 3> fromFixedSizeMatrix(const mat3 &a) noexcept
 {
