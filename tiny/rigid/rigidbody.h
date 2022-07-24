@@ -120,7 +120,7 @@ struct RigidBodyCollisionGeometry
     vec3 p, n; //Point and normal of collision. Distance to move b2 w.r.t. b1 to remove the collision.
     vec3 v1, v2; //Velocities at p of both bodies.
 };
-        
+
 class RigidBodySystem
 {
     public:

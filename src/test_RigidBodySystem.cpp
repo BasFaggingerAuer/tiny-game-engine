@@ -49,7 +49,7 @@ class GravitySystem : public rigid::RigidBodySystem
             addInfinitePlaneBody(vec4(-1.0f, 0.0f, 0.0f, -4.0f));
             addInfinitePlaneBody(vec4( 0.0f, 0.0f, 1.0f, -4.0f));
             addInfinitePlaneBody(vec4( 0.0f, 0.0f,-1.0f, -4.0f));
-
+            
             //Add some rigid bodies.
             for (int i = 0; i < 32; ++i)
             {
@@ -61,6 +61,10 @@ class GravitySystem : public rigid::RigidBodySystem
                     vec4(0.0f, 0.6f, 0.0f, 0.3f)
                     }, randomVec3()*vec3(2.0f, 0.0f, 2.0f) - vec3(1.0f, -2*i - 1, 1.0f), vec3(0.0f, 0.0f, 0.0f), normalize(randomVec4() - vec4(0.5f)));
             }
+
+            /*
+            addSpheresRigidBody(1.0f, {vec4(0.0f, 0.0f, 0.0f, 1.0f)}, vec3(0.0f, 1.0f, 0.0f));
+            */
             
             /*
             for (int i = 0; i < 4; ++i)

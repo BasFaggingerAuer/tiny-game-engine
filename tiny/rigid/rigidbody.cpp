@@ -241,7 +241,7 @@ void RigidBodySystem::calculateInternalSpheres(const RigidBody &b, const float &
     }
 }
 
-float applyPositionConstraint(const float lambda,
+std::tuple<float, float, float> applyPositionConstraint(const float lambda,
                              const float alpha,
                              RigidBody *b1,
                              RigidBody *b2,
@@ -249,6 +249,10 @@ float applyPositionConstraint(const float lambda,
                              const vec3 &dx)
 {
     vec3 n = normalize(dx);
+    
+    //Do nothing if we are below numerical precision.
+    if (length(n) < 0.99f) return std::make_tuple(0.0f, 0.0f, 0.0f);
+
     const vec3 r1 = p - b1->x;
     const vec3 r2 = p - b2->x;
     const float w1 = b1->invM + dot(cross(r1, n), b1->getInvI()*cross(r1, n));
@@ -296,7 +300,7 @@ float applyPositionConstraint(const float lambda,
               << "b2.q: " << b2->q << std::endl;
     */
     
-    return dlambda;
+    return std::make_tuple(dlambda, w1, w2);
 }
 
 void applyVelocityConstraint(RigidBody *b1,
@@ -305,6 +309,10 @@ void applyVelocityConstraint(RigidBody *b1,
                              const vec3 &dv)
 {
     vec3 n = normalize(dv);
+    
+    //Do nothing if we are below numerical precision.
+    if (length(n) < 0.99f) return;
+
     const vec3 r1 = p - b1->x;
     const vec3 r2 = p - b2->x;
     const float w1 = b1->invM + dot(cross(r1, n), b1->getInvI()*cross(r1, n));
@@ -539,21 +547,23 @@ void RigidBodySystem::update(const float &dt)
                 const float softnessCoeff = 0.5f*(cg.b1->softness + cg.b2->softness)/(h*h);
                 
                 //Apply position constraint to avoid object interpenetration.
-                lambdaCollisionN[i] = applyPositionConstraint(0.0f, softnessCoeff, cg.b1, cg.b2, cg.p, -cg.d*cg.n);
+                auto [l, w1, w2] = applyPositionConstraint(0.0f, softnessCoeff, cg.b1, cg.b2, cg.p, -cg.d*cg.n);
+
+                lambdaCollisionN[i] = l;
                 
-                /*
+                //Handle static friction.
                 const float staticFrictionCoeff = std::sqrt(cg.b1->staticFriction*cg.b2->staticFriction);
-
-                //TODO: Handle static friction.
-                const vec3 r1 = cg.p - cg.b1->x;
-                const vec3 r2 = cg.p - cg.b2->x;
-                const float w1 = cg.b1->invM + dot(cross(r1, cg.n), cg.b1->getInvI()*cross(r1, cg.n));
-                const float w2 = cg.b2->invM + dot(cross(r2, cg.n), cg.b2->getInvI()*cross(r2, cg.n));
                 
-                //Get tangential motion.
+                const RigidBody *preb1 = &preBodies[c.b1Index];
+                const RigidBody *preb2 = &preBodies[c.b2Index];
 
-                vec3 dx = (cg.p1 - precg.p1) - (cg.p2 - precg.p2);
-                
+                //Figure out how the current collision point has moved w.r.t. the previous iteration on both bodies.
+                //N.B., we need to track a fixed point on the rigid body.
+                const vec3 p1 = mat3::rotationMatrix(quatmul(preb1->q, quatconj(cg.b1->q)))*(cg.p - cg.b1->x) + preb1->x;
+                const vec3 p2 = mat3::rotationMatrix(quatmul(preb2->q, quatconj(cg.b2->q)))*(cg.p - cg.b2->x) + preb2->x;
+
+                vec3 dx = p2 - p1;
+
                 dx -= dot(dx, cg.n)*cg.n;
 
                 //Static friction, restrict tangential motion if F_tangential <= mu_static * F_normal.
@@ -561,7 +571,6 @@ void RigidBodySystem::update(const float &dt)
                 {
                     applyPositionConstraint(0.0f, softnessCoeff, cg.b1, cg.b2, cg.p, dx);
                 }
-                */
             }
         }
         

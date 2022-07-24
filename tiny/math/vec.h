@@ -29,6 +29,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #define M_PI 3.14159265358979323846f
 #endif
 
+
+#define NRM_EPS 1.0e-8f
 #define EPS 1.0e-6f
 
 namespace tiny
@@ -94,7 +96,7 @@ template <typename t> class typed2vector
         inline friend t dot(const typed2vector<t> &a, const typed2vector<t> &b) noexcept {return a.x*b.x + a.y*b.y;}
         inline friend t length(const typed2vector<t> &a) noexcept {return std::sqrt(dot(a, a));}
         inline friend t length2(const typed2vector<t> &a) noexcept {return dot(a, a);}
-        inline friend typed2vector<t> normalize(const typed2vector<t> &a) noexcept {t l = 1.0f/std::max(length(a), EPS); return typed2vector<t>(a.x*l, a.y*l);}
+        inline friend typed2vector<t> normalize(const typed2vector<t> &a) noexcept {t l = 1.0f/std::max(length(a), NRM_EPS); return typed2vector<t>(a.x*l, a.y*l);}
         inline friend t minComponent(const typed2vector<t> &a) noexcept {return (a.x <= a.y ? a.x : a.y);}
         inline friend t maxComponent(const typed2vector<t> &a) noexcept {return (a.x >= a.y ? a.x : a.y);}
 
@@ -164,7 +166,7 @@ template <typename t> class typed3vector
         inline friend typed3vector<t> cross(const typed3vector<t> &a, const typed3vector<t> &b) noexcept {return typed3vector<t>(a.y*b.z - a.z*b.y, a.z*b.x - a.x*b.z, a.x*b.y - a.y*b.x);}
         inline friend t length(const typed3vector<t> &a) noexcept {return std::sqrt(dot(a, a));}
         inline friend t length2(const typed3vector<t> &a) noexcept {return dot(a, a);}
-        inline friend typed3vector<t> normalize(const typed3vector<t> &a) noexcept {t l = 1.0f/std::max(length(a), EPS); return typed3vector<t>(a.x*l, a.y*l, a.z*l);}
+        inline friend typed3vector<t> normalize(const typed3vector<t> &a) noexcept {t l = 1.0f/std::max(length(a), NRM_EPS); return typed3vector<t>(a.x*l, a.y*l, a.z*l);}
         inline friend t minComponent(const typed3vector<t> &a) noexcept {return (a.x <= a.y ? (a.x <= a.z ? a.x : a.z) : (a.y <= a.z ? a.y : a.z));}
         inline friend t maxComponent(const typed3vector<t> &a) noexcept {return (a.x >= a.y ? (a.x >= a.z ? a.x : a.z) : (a.y >= a.z ? a.y : a.z));}
 
@@ -226,7 +228,7 @@ template <typename t> class typed4vector
         inline friend t dot(const typed4vector<t> &a, const typed4vector<t> &b) noexcept {return a.x*b.x + a.y*b.y + a.z*b.z + a.w*b.w;}
         inline friend t length(const typed4vector<t> &a) noexcept {return std::sqrt(dot(a, a));}
         inline friend t length2(const typed4vector<t> &a) noexcept {return dot(a, a);}
-        inline friend typed4vector<t> normalize(const typed4vector<t> &a) noexcept {t l = 1.0f/std::max(length(a), EPS); return typed4vector<t>(a.x*l, a.y*l, a.z*l, a.w*l);}
+        inline friend typed4vector<t> normalize(const typed4vector<t> &a) noexcept {t l = 1.0f/std::max(length(a), NRM_EPS); return typed4vector<t>(a.x*l, a.y*l, a.z*l, a.w*l);}
 
         friend std::ostream & operator << (std::ostream &Out, const typed4vector<t> &a) {Out << "(" << a.x << ", " << a.y << ", " << a.z << ", " << a.w << ")"; return Out;};
         
