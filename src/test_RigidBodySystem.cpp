@@ -83,7 +83,7 @@ class GravitySystem : public rigid::RigidBodySystem
                 vec4(0.6f, 0.0f, 0.0f, 0.3f),
                 vec4(0.0f, 0.3f, 0.0f, 0.3f),
                 vec4(0.0f, 0.6f, 0.0f, 0.3f)
-                }, vec3(0.0f, 2.2f, 0.0f));
+                }, vec3(0.0f, 3.0f, 0.0f));
 
             addSpheresRigidBody(1.0f, {
                 vec4(0.0f, 0.0f, 0.0f, 0.3f),
@@ -92,7 +92,7 @@ class GravitySystem : public rigid::RigidBodySystem
                 vec4(0.0f, 0.3f, 0.0f, 0.3f),
                 vec4(0.0f, 0.6f, 0.0f, 0.3f)
                 }, vec3(-2.0f, 2.0f, 0.0f), vec3(2.0f, 0.0f, 0.0f));
-            */
+             */
         }
 
         ~GravitySystem()
@@ -107,6 +107,21 @@ class GravitySystem : public rigid::RigidBodySystem
             {
                 b.f = vec3(0.0f, -9.81f/b.invM, 0.0f); //Gravity.
             }
+        }
+
+        float potentialEnergy() const
+        {
+            float e = 0.0f;
+
+            for (const auto &b : bodies)
+            {
+                if (b.movable)
+                {
+                    e += 9.81f*b.x.y/b.invM; //Potential energy due to gravity.
+                }
+            }
+
+            return e;
         }
 };
 

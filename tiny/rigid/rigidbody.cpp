@@ -28,6 +28,7 @@ using namespace tiny::rigid;
 //Small margin above one to remove jitter.
 #define RBEPS 0.001f
 #define RBOPEPS 1.001f
+#define RBMAXACC 10.0f
 
 SpatialSphereHasher::SpatialSphereHasher(const size_t &nrBuckets, const float &boxSize) :
     invBoxSize(1.0f/boxSize),
@@ -222,25 +223,6 @@ void RigidBodySystem::addSpheresRigidBody(const float &totalMass, const std::vec
     std::cout << "Added " << spheres.size() << " spheres " << bodies.back();
 }
 
-float RigidBodySystem::addMarginToRadius(const float dt, const float r) const
-{
-    //FIXME: To remove.
-    return (RBOPEPS + dt*2.0f)*(r + RBEPS);
-}
-
-void RigidBodySystem::calculateInternalSpheres(const RigidBody &b, const float &dt)
-{
-    //FIXME: To remove addMargin...
-    const mat3 R = mat3::rotationMatrix(b.q);
-
-    for (size_t i = b.firstInternalSphere; i < b.lastInternalSphere; ++i)
-    {
-        const vec4 s = bodyInternalSpheres[i];
-
-        collSpheres.push_back(vec4(b.x + R*s.xyz(), addMarginToRadius(dt, s.w)));
-    }
-}
-
 std::tuple<float, float, float> applyPositionConstraint(const float lambda,
                              const float alpha,
                              RigidBody *b1,
@@ -327,7 +309,7 @@ void applyVelocityConstraint(RigidBody *b1,
     b2->w -= b2->getInvI()*cross(r2, n);
 }
 
-RigidBodyCollisionGeometry RigidBodySystem::getCollisionGeometry(std::vector<RigidBody> &bds, const RigidBodyCollision &c) const
+RigidBodyCollisionGeometry RigidBodySystem::getCollisionGeometry(std::vector<RigidBody> &bds, const RigidBodyCollision &c) const noexcept
 {
     //Get pointers to bodies. (FIXME, rather inelegant.)
     RigidBody *b1 = &bds[c.b1Index];
@@ -379,7 +361,7 @@ void RigidBodySystem::update(const float &dt)
     //Add margin for collision detection.
     for (auto &b : bodies)
     {
-        b.collisionRadius = b.radius + length(b.v)*dt + RBEPS;
+        b.collisionRadius = b.radius + dt*(0.5f*dt*RBMAXACC + length(b.v)) + RBEPS;
     }
 
     //This should not affect the capacity (so not cause spurious reallocations).
@@ -387,7 +369,7 @@ void RigidBodySystem::update(const float &dt)
 
     for (const auto &b : bodies)
     {
-        //FIXME: Planes are also added, which is not necessary.
+        //TODO: Restrict to spheres only.
         collSpheres.push_back(vec4(b.x, b.collisionRadius));
     }
     
@@ -418,46 +400,39 @@ void RigidBodySystem::update(const float &dt)
     }
 
     //Find all collision points between potentially intersecting Spheres objects.
+    //Use simple n^2 comparison (assume small number of internal spheres per object).
     std::vector<RigidBodyCollision> collisions;
 
     for (const auto &intersection : intersectingObjects)
     {
         const RigidBody &b1 = bodies[intersection.first];
         const RigidBody &b2 = bodies[intersection.second];
-        const size_t nrB1Spheres = b1.lastInternalSphere - b1.firstInternalSphere;
 
         assert(b1.geometry == RigidBodyGeometry::Spheres);
         assert(b2.geometry == RigidBodyGeometry::Spheres);
-        
-        collSpheres.clear();
-        calculateInternalSpheres(b1, dt);
-        calculateInternalSpheres(b2, dt);
-        internalSphereHasher.hashObjects(collSpheres);
-        
-        for (const auto &bucket : *internalSphereHasher.getBuckets())
+
+        //TODO: Use that we could be testing 1 body vs. many other bodies to optimize.
+        const mat3 R1 = mat3::rotationMatrix(b1.q);
+        const mat3 R2 = mat3::rotationMatrix(b2.q);
+
+        for (auto iS1 = b1.firstInternalSphere; iS1 < b1.lastInternalSphere; ++iS1)
         {
-            //By construction, we know that spheres inside the buckets are sorted by object (i.e., internal spheres of b1 always precede internal spheres of b2 in each bucket).
-            auto b2Start = bucket.cbegin();
+            //Get potential collisions taking the object's velocity (linear and angular) into account.
+            vec4 s1 = vec4(b1.x + R1*bodyInternalSpheres[iS1].xyz(), bodyInternalSpheres[iS1].w);
+
+            s1.w += dt*(0.5f*dt*RBMAXACC + length(b1.v + cross(b1.w, s1.xyz() - b1.x))) + RBEPS;
             
-            while (b2Start != bucket.cend() && *b2Start < nrB1Spheres) ++b2Start;
-            
-            for (auto bucketB1 = bucket.cbegin(); bucketB1 != b2Start; ++bucketB1)
+            for (auto iS2 = b2.firstInternalSphere; iS2 < b2.lastInternalSphere; ++iS2)
             {
-                for (auto bucketB2 = b2Start; bucketB2 != bucket.cend(); ++bucketB2)
+                vec4 s2 = vec4(b2.x + R2*bodyInternalSpheres[iS2].xyz(), bodyInternalSpheres[iS2].w);
+
+                s2.w += dt*(0.5f*dt*RBMAXACC + length(b2.v + cross(b2.w, s2.xyz() - b2.x))) + RBEPS;
+                
+                if (length(s1.xyz() - s2.xyz()) <= s1.w + s2.w)
                 {
-                    //Do the internal spheres intersect?
-                    vec4 s1 = collSpheres[*bucketB1];
-                    vec4 s2 = collSpheres[*bucketB2];
-
-                    s1.w += dt*length(b1.v + cross(b1.w, s1.xyz() - b1.x)) + RBEPS;
-                    s2.w += dt*length(b2.v + cross(b2.w, s2.xyz() - b2.x)) + RBEPS;
-
-                    if (length(s1.xyz() - s2.xyz()) <= s1.w + s2.w)
-                    {
-                        //If so, add a potential collision.
-                        collisions.push_back(RigidBodyCollision({intersection.first, *bucketB1,
-                                                                 intersection.second, *bucketB2 - nrB1Spheres}));
-                    }
+                    //If so, add a potential collision.
+                    collisions.push_back(RigidBodyCollision({intersection.first, iS1 - b1.firstInternalSphere,
+                                                             intersection.second, iS2 - b2.firstInternalSphere}));
                 }
             }
         }
@@ -479,16 +454,18 @@ void RigidBodySystem::update(const float &dt)
                 //Can the body intersect with the plane?
                 if (dot(b.x, p.xyz()) <= p.w + b.collisionRadius)
                 {
-                    collSpheres.clear();
-                    calculateInternalSpheres(b, dt);
-                    
-                    for (size_t iS = 0; iS < collSpheres.size(); ++iS)
-                    {
-                        const vec4 s = collSpheres[iS];
+                    const mat3 R = mat3::rotationMatrix(b.q);
 
-                        if (dot(s.xyz(), p.xyz()) <= p.w + s.w + dt*length(b.v + cross(b.w, s.xyz() - b.x)) + RBEPS)
+                    for (auto iS = b.firstInternalSphere; iS < b.lastInternalSphere; ++iS)
+                    {
+                        //Get potential collisions taking the object's velocity (linear and angular) into account.
+                        vec4 s = vec4(b.x + R*bodyInternalSpheres[iS].xyz(), bodyInternalSpheres[iS].w);
+
+                        s.w += dt*(0.5f*dt*RBMAXACC + length(b.v + cross(b.w, s.xyz() - b.x))) + RBEPS;
+                        
+                        if (dot(s.xyz(), p.xyz()) <= p.w + s.w)
                         {
-                            collisions.push_back(RigidBodyCollision({iP, 0, iB, iS}));
+                            collisions.push_back(RigidBodyCollision({iP, 0, iB, iS - b.firstInternalSphere}));
                         }
                     }
                 }
@@ -639,6 +616,8 @@ void RigidBodySystem::update(const float &dt)
             totalAngularMomentum += (1.0f/b.invM)*cross(b.x, b.v) + b.getI()*b.w;
         }
     }
+
+    totalEnergy += potentialEnergy();
     
     //Increment global time.
     time += dt;
@@ -648,5 +627,11 @@ void RigidBodySystem::applyExternalForces()
 {
     //To be implemented by the user (e.g., gravity).
     //b.f = vec3(0.0f, -9.81f/b.invM, 0.0f);
+}
+
+float RigidBodySystem::potentialEnergy() const
+{
+    //To be implemented by the user in accordance with applyExternalForces().
+    return 0.0f;
 }
 

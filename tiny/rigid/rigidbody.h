@@ -176,6 +176,7 @@ class RigidBodySystem
 
     protected:
         virtual void applyExternalForces();
+        virtual float potentialEnergy() const;
     
         float time;
         float totalEnergy;
@@ -195,7 +196,7 @@ class RigidBodySystem
         std::vector<vec4> collSpheres;
 
         void calculateInternalSpheres(const RigidBody &, const float &);
-        RigidBodyCollisionGeometry getCollisionGeometry(std::vector<RigidBody> &, const RigidBodyCollision &) const;
+        RigidBodyCollisionGeometry getCollisionGeometry(std::vector<RigidBody> &, const RigidBodyCollision &) const noexcept;
         float addMarginToRadius(const float, const float) const;
 };
 
