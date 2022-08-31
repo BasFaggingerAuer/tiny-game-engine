@@ -32,20 +32,6 @@ namespace tiny
 namespace rigid
 {
 
-class SpatialSphereHasher
-{
-    public:
-        SpatialSphereHasher(const size_t &, const float &);
-        ~SpatialSphereHasher();
-        
-        void hashObjects(const std::vector<vec4> &);
-        const std::vector<std::list<size_t>> *getBuckets() const;
-        
-    private:
-        const float invBoxSize;
-        std::vector<std::list<size_t>> buckets;
-};
-
 enum class RigidBodyGeometry
 {
     Spheres,
@@ -69,8 +55,8 @@ struct RigidBody
     //For Spheres geometry.
     float radius; //Size of rigid body.
     float collisionRadius; //With margin for collision detection.
-    size_t firstInternalSphere; //Index of first internal sphere.
-    size_t lastInternalSphere; //Index of last internal sphere.
+    int firstInternalSphere; //Index of first internal sphere.
+    int lastInternalSphere; //Index of last internal sphere.
 
     //For Plane geometry.
     vec4 plane;
@@ -81,15 +67,17 @@ struct RigidBody
     float restitution; //Restitution coefficient for collisions.
     float softness; //Inverse material hardness.
     
-    mat3 getI() const
+    mat3 getI() const noexcept
     {
         return mat3::rotationMatrix(q)*mat3::scaleMatrix(1.0f/invI)*mat3::rotationMatrix(quatconj(q));
     }
 
-    mat3 getInvI() const
+    mat3 getInvI() const noexcept
     {
         return mat3::rotationMatrix(q)*mat3::scaleMatrix(invI)*mat3::rotationMatrix(quatconj(q));
     }
+
+    aabb::aabb getAABB(const float &) const noexcept;
 
     friend std::ostream & operator << (std::ostream &Out, const RigidBody &b)
     {
@@ -107,10 +95,10 @@ struct RigidBody
 
 struct RigidBodyCollision
 {
-    size_t b1Index; //Index of the first rigid body.
-    size_t b1SphereIndex; //Index of the first body's internal sphere.
-    size_t b2Index; //Index of the second rigid body.
-    size_t b2SphereIndex; //Index of the second body's internal sphere.
+    int b1Index; //Index of the first rigid body.
+    int b1SphereIndex; //Index of the first body's internal sphere.
+    int b2Index; //Index of the second rigid body.
+    int b2SphereIndex; //Index of the second body's internal sphere.
 };
 
 struct RigidBodyCollisionGeometry
@@ -124,7 +112,7 @@ struct RigidBodyCollisionGeometry
 class RigidBodySystem
 {
     public:
-        RigidBodySystem(const size_t & = 2003, const float & = 4.0f, const float & = 0.5f, const int & = 16);
+        RigidBodySystem(const int & = 16);
         virtual ~RigidBodySystem();
         
         void addInfinitePlaneBody(const vec4 &,
@@ -149,7 +137,7 @@ class RigidBodySystem
                 {
                     const mat3 R = mat3::rotationMatrix(b.q);
                     
-                    for (size_t i = b.firstInternalSphere; i < b.lastInternalSphere; ++i)
+                    for (int i = b.firstInternalSphere; i < b.lastInternalSphere; ++i)
                     {
                         const vec4 s = bodyInternalSpheres[i];
 
@@ -184,14 +172,13 @@ class RigidBodySystem
         vec3 totalAngularMomentum;
 
         std::vector<RigidBody> bodies;
-        std::vector<size_t> planeBodyIndices;
+        std::vector<int> planeBodyIndices;
 
         const int nrSubSteps;
-        SpatialSphereHasher boundingSphereHasher;
-        SpatialSphereHasher internalSphereHasher;
 
     private:
         std::vector<RigidBody> preBodies;
+        aabb::Tree tree;
         std::vector<vec4> bodyInternalSpheres;
         std::vector<vec4> collSpheres;
 

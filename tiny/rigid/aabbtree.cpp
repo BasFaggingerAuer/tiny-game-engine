@@ -16,6 +16,8 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 */
 #include <cassert>
 #include <queue>
+#include <stack>
+#include <algorithm>
 
 #include <tiny/rigid/aabbtree.h>
 
@@ -63,7 +65,6 @@ int Tree::insertNode(const Node &n)
 void Tree::eraseNode(const int &i)
 {
     //The user is responsible for disconnecting this node from the tree.
-    nodes[i].box = {vec3(0.0f), vec3(0.0f)};
     freeNodes.push_back(i);
 }
 
@@ -79,9 +80,167 @@ float Tree::getCost() const
     return area;
 }
 
+aabb Tree::getNodeBox(const int &contents) const noexcept
+{
+    //Get bounding box of an existing node.
+    auto ptr = contentsToLeaf.find(contents);
+
+    assert(ptr != contentsToLeaf.end());
+
+    return nodes[ptr->second].box;
+}
+
+std::set<std::pair<int, int>> Tree::getOverlappingContents() const noexcept
+{
+    //Get all pairs of overlapping leaf AABBs, indexed by their contents.
+    std::set<std::pair<int, int>> pairs;
+
+    for (const auto & [c, i] : contentsToLeaf)
+    {
+        const aabb b = nodes[i].box;
+
+        std::stack<int> s;
+
+        s.push(root);
+
+        while (!s.empty())
+        {
+            const auto n = nodes[s.top()];
+            s.pop();
+
+            if (n.isLeaf())
+            {
+                //By earlier checks we should overlap with this node.
+                assert(overlapping(b, n.box));
+                pairs.insert(std::minmax(c, n.contents));
+            }
+            else
+            {
+                //Does it make sense to recurse further?
+                if (overlapping(b, nodes[n.child1].box)) s.push(n.child1);
+                if (overlapping(b, nodes[n.child2].box)) s.push(n.child2);
+            }
+        }
+    }
+
+    return pairs;
+}
+
+void Tree::check() const
+{
+    //Check whether the tree is OK.
+    //std::cout << "CHECKING TREE WITH " << size() << " NODES AND ROOT (" << root << "):" << std::endl;
+    
+    if (root < 0)
+    {
+        assert(size() == 0);
+        assert(contentsToLeaf.empty());
+        assert(nodes.size() == freeNodes.size());
+        return;
+    }
+
+    std::queue<int> q;
+    
+    /*
+    q.push(root);
+
+    while (!q.empty())
+    {
+        //Get tree node.
+        const auto i = q.front();
+        const auto n = nodes[i];
+        q.pop();
+
+        std::cout << i << " (cont. " << n.contents << ", par. " << n.parent << ")";
+
+        if (!n.isLeaf())
+        {
+            std::cout << " --> " << n.child1 << ", " << n.child2;
+            q.push(n.child1);
+            q.push(n.child2);
+        }
+
+        std::cout << std::endl;
+    }
+    */
+
+    assert(static_cast<size_t>(root) < nodes.size());
+    assert(nodes[root].parent == -1);
+    
+    //Leaves should exactly be the content nodes.
+    for (const auto & [c, i] : contentsToLeaf)
+    {
+        assert(i >= 0 && static_cast<size_t>(i) < nodes.size());
+        assert(nodes[i].isLeaf());
+    }
+
+    //Check tree structure.
+    std::vector<bool> used(nodes.size(), false);
+    
+    q = std::queue<int>();
+    q.push(root);
+
+    while (!q.empty())
+    {
+        //Get tree node.
+        const auto i = q.front();
+        assert(i >= 0);
+        const auto n = nodes[i];
+
+        q.pop();
+
+        //Should not be a free node.
+        used[i] = true;
+        
+        //Either be the root node or have a parent.
+        assert((i == root) != (n.parent >= 0));
+        
+        //Check leaves.
+        if (n.isLeaf())
+        {
+            assert(contentsToLeaf.at(n.contents) == i);
+            assert(n.child1 < 0 && n.child2 < 0);
+        }
+
+        //Check non-leaves.
+        if (n.child1 >= 0)
+        {
+            assert(n.child2 >= 0);
+            assert(nodes[n.child1].parent == i);
+            assert(!n.isLeaf());
+            q.push(n.child1);
+        }
+        if (n.child2 >= 0)
+        {
+            assert(n.child1 >= 0);
+            assert(nodes[n.child2].parent == i);
+            assert(!n.isLeaf());
+            q.push(n.child2);
+        }
+    }
+    
+    //Check that we properly keep track of the unused nodes.
+    std::vector<bool> unused(nodes.size(), false);
+    
+    for (const auto &i : freeNodes)
+    {
+        assert(i >= 0 && static_cast<size_t>(i) < nodes.size());
+        assert(!used[i]);
+        unused[i] = true;
+    }
+
+    for (size_t i = 0; i < nodes.size(); ++i)
+    {
+        assert(used[i] == !unused[i]);
+    }
+}
+
 bool Tree::insert(const aabb &box, const int &contents)
 {
     //Insert a node into the AABB tree.
+    //std::cout << "INSERT " << contents << std::endl;
+
+    check();
     
     //Do we already have this node?
     if (contentsToLeaf.find(contents) != contentsToLeaf.end())
@@ -198,6 +357,10 @@ void Tree::rebalance(const int &a)
     const int b = nodes[a].child1;
     const int c = nodes[a].child2;
 
+    //std::cout << "REBALANCE " << a << " (" << nodes[a].parent << ") --> "
+    //                          << b << " (" << nodes[b].parent << "), "
+    //                          << c << " (" << nodes[c].parent << ")" << std::endl;
+
     if (!nodes[b].isLeaf())
     {
         const int d = nodes[b].child1;
@@ -297,6 +460,7 @@ void Tree::rebalance(const int &a)
 
 bool Tree::erase(const int &contents)
 {
+    //std::cout << "ERASE " << contents << std::endl;
     //Remove a leaf node from the AABB tree.
     
     //We should already have this node.
@@ -322,6 +486,7 @@ bool Tree::erase(const int &contents)
     if (a == root)
     {
         //We are removing the root node.
+        assert(size() == 1);
         clear();
         return true;
     }
@@ -349,6 +514,11 @@ bool Tree::erase(const int &contents)
             assert(nodes[d].child2 == c);
             nodes[d].child2 = b;
         }
+    }
+    else
+    {
+        //C is the root node, so replace by B.
+        root = b;
     }
     
     eraseNode(c);

@@ -25,73 +25,23 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 using namespace tiny;
 using namespace tiny::rigid;
 
+//TODO: Replace these defines by class properties.
+
 //Small margin above one to remove jitter.
 #define RBEPS 0.001f
 #define RBOPEPS 1.001f
 #define RBMAXACC 10.0f
+#define RBAABBSCALE 1.05f
+#define RBAABBDT 0.5f
 
-SpatialSphereHasher::SpatialSphereHasher(const size_t &nrBuckets, const float &boxSize) :
-    invBoxSize(1.0f/boxSize),
-    buckets(nrBuckets, std::list<size_t>())
-{
-
-}
-
-SpatialSphereHasher::~SpatialSphereHasher()
-{
-
-}
-
-void SpatialSphereHasher::hashObjects(const std::vector<vec4> &objects)
-{
-    //Clear current buckets.
-    for (std::vector<std::list<size_t>>::iterator i = buckets.begin(); i != buckets.end(); ++i)
-    {
-        i->clear();
-    }
-
-    //Sort spheres into buckets.
-    size_t count = 0;
-    
-    for (std::vector<vec4>::const_iterator i = objects.begin(); i != objects.end(); ++i)
-    {
-        //Find range of boxes covered by this sphere.
-        const ivec3 lo = to_int(floor(invBoxSize*(i->xyz() - i->w)));
-        const ivec3 hi = to_int( ceil(invBoxSize*(i->xyz() + i->w)));
-        
-        for (int z = lo.z; z <= hi.z; ++z)
-        {
-            for (int y = lo.y; y <= hi.y; ++y)
-            {
-                for (int x = lo.x; x <= hi.x; ++x)
-                {
-                    //Chose three prime numbers for spatial hashing.
-                    buckets[modnonneg(389*x + 1061*y + 599*z, static_cast<int>(buckets.size()))].push_back(count);
-                }
-            }
-        }
-        
-        ++count;
-    }
-    
-    assert(count == objects.size());
-}
-
-const std::vector<std::list<size_t>> *SpatialSphereHasher::getBuckets() const
-{
-    return &buckets;
-}
-
-RigidBodySystem::RigidBodySystem(const size_t &nrBuckets, const float &boundingSphereBucketSize, const float &internalSphereBucketSize, const int &a_nrSubSteps) :
+RigidBodySystem::RigidBodySystem(const int &a_nrSubSteps) :
     time(0.0f),
     totalEnergy(0.0f),
     totalLinearMomentum(0.0f),
     totalAngularMomentum(0.0f),
     bodies(),
     planeBodyIndices(),
-    nrSubSteps(a_nrSubSteps),
-    boundingSphereHasher(nrBuckets, boundingSphereBucketSize),
-    internalSphereHasher(nrBuckets, internalSphereBucketSize)
+    nrSubSteps(a_nrSubSteps)
 {
 
 }
@@ -117,6 +67,8 @@ void RigidBodySystem::addInfinitePlaneBody(const vec4 &plane,
         0.0f, 0.0f, 0, 0,
         plane/length(plane.xyz()),
         a_statFric, a_dynFric, a_rest, a_soft});
+
+    //Infinite planes are not added to the AABB tree.
     
     std::cout << "Added plane " << bodies.back().plane << " " << bodies.back();
 }
@@ -215,10 +167,13 @@ void RigidBodySystem::addSpheresRigidBody(const float &totalMass, const std::vec
     //Add rigid body to system.
     bodies.push_back({1.0f/totalMass, 1.0f/e, x, q, v, w, vec3(0.0f), vec3(0.0f),
         true, RigidBodyGeometry::Spheres,
-        maxRadius, maxRadius, bodyInternalSpheres.size(), bodyInternalSpheres.size() + spheres.size(),
+        maxRadius, maxRadius, static_cast<int>(bodyInternalSpheres.size()), static_cast<int>(bodyInternalSpheres.size() + spheres.size()),
         vec4(0.0f),
         a_statFric, a_dynFric, a_rest, a_soft});
     bodyInternalSpheres.insert(bodyInternalSpheres.end(), spheres.begin(), spheres.end());
+
+    //Add rigid body to the AABB tree.
+    tree.insert(bodies.back().getAABB(RBAABBDT).scale(RBAABBSCALE), bodies.size() - 1);
 
     std::cout << "Added " << spheres.size() << " spheres " << bodies.back();
 }
@@ -352,53 +307,42 @@ RigidBodyCollisionGeometry RigidBodySystem::getCollisionGeometry(std::vector<Rig
                                        b2->v + cross(b2->w, p - b2->x)});
 }
 
+aabb::aabb RigidBody::getAABB(const float &dt) const noexcept
+{
+    //Determine AABB with margin.
+    const float r = radius + 0.5f*dt*dt*RBMAXACC + RBEPS;
+    
+    return aabb::aabb{x - vec3(r) + min(vec3(0.0f), dt*v), x + vec3(r) + max(vec3(0.0f), dt*v)};
+}
+
 void RigidBodySystem::update(const float &dt)
 {
     //Per Detailed Rigid Body Simulation with Extended Position Based Dynamics by Matthias Muller et al., ACM SIGGRAPH, vol. 39, nr. 8, 2020.
 
     //Detect all collision pairs for the current state.
 
-    //Add margin for collision detection.
-    for (auto &b : bodies)
+    //Check whether bounding boxes still contain objects in their current state and update AABB tree if not.
+    for (size_t i = 0; i < bodies.size(); ++i)
     {
-        b.collisionRadius = b.radius + dt*(0.5f*dt*RBMAXACC + length(b.v)) + RBEPS;
-    }
+        const RigidBody &b = bodies[i];
 
-    //This should not affect the capacity (so not cause spurious reallocations).
-    collSpheres.clear();
-
-    for (const auto &b : bodies)
-    {
-        //TODO: Restrict to spheres only.
-        collSpheres.push_back(vec4(b.x, b.collisionRadius));
-    }
-    
-    boundingSphereHasher.hashObjects(collSpheres);
-
-    //Check which objects can potentially intersect.
-    std::set<std::pair<size_t, size_t>> intersectingObjects;
-    
-    for (const auto &bucket : *boundingSphereHasher.getBuckets())
-    {
-        for (auto bucketB1 = bucket.cbegin(); bucketB1 != bucket.cend(); ++bucketB1)
+        if (b.geometry == RigidBodyGeometry::Spheres)
         {
-            for (auto bucketB2 = std::next(bucketB1); bucketB2 != bucket.cend(); ++bucketB2)
+            if (!b.getAABB(dt).isSubsetOf(tree.getNodeBox(i)))
             {
-                const vec4 s1 = collSpheres[*bucketB1];
-                const vec4 s2 = collSpheres[*bucketB2];
-                
-                if ((length(s1.xyz() - s2.xyz()) <= s1.w + s2.w) &&
-                    (*bucketB1 != *bucketB2) &&
-                    (bodies[*bucketB1].geometry == RigidBodyGeometry::Spheres) &&
-                    (bodies[*bucketB2].geometry == RigidBodyGeometry::Spheres))
-                {
-                    //Avoid storing both (A, B) and (B, A).
-                    intersectingObjects.insert(std::minmax(*bucketB1, *bucketB2));
-                }
+                tree.erase(i);
+                tree.insert(b.getAABB(RBAABBDT).scale(RBAABBSCALE), i);
             }
         }
     }
 
+#ifndef NDEBUG
+    tree.check();
+#endif
+
+    //Check which objects can potentially intersect.
+    const auto intersectingObjects = tree.getOverlappingContents();
+    
     //Find all collision points between potentially intersecting Spheres objects.
     //Use simple n^2 comparison (assume small number of internal spheres per object).
     std::vector<RigidBodyCollision> collisions;
@@ -412,6 +356,7 @@ void RigidBodySystem::update(const float &dt)
         assert(b2.geometry == RigidBodyGeometry::Spheres);
 
         //TODO: Use that we could be testing 1 body vs. many other bodies to optimize.
+        //TODO: Consider enforcing a fixed number of internal spheres per object to parallellize these checks effectively.
         const mat3 R1 = mat3::rotationMatrix(b1.q);
         const mat3 R2 = mat3::rotationMatrix(b2.q);
 
@@ -445,7 +390,7 @@ void RigidBodySystem::update(const float &dt)
 
         assert(bodies[iP].geometry == RigidBodyGeometry::Plane);
 
-        for (size_t iB = 0; iB < bodies.size(); ++iB)
+        for (int iB = 0; iB < static_cast<int>(bodies.size()); ++iB)
         {
             const RigidBody &b = bodies[iB];
 

@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 #include <list>
 #include <map>
+#include <set>
 
 #include <tiny/math/vec.h>
 
@@ -41,9 +42,31 @@ struct aabb
         return 2.0f*(d.x + d.y + d.z);
     }
 
+    inline bool isSubsetOf(const aabb &b) const noexcept
+    {
+        return (lb.x >= b.lb.x) && (ub.x <= b.ub.x) &&
+               (lb.y >= b.lb.y) && (ub.y <= b.ub.y) &&
+               (lb.z >= b.lb.z) && (ub.z <= b.ub.z);
+    }
+
+    inline aabb scale(const float &s) const noexcept
+    {
+        const vec3 d = 0.5f*(ub - lb);
+        const vec3 m = 0.5f*(ub + lb);
+
+        return aabb{m - s*d, m + s*d};
+    }
+
     inline friend aabb cup(const aabb &a, const aabb &b) noexcept
     {
         return aabb{min(a.lb, b.lb), max(a.ub, b.ub)};
+    }
+
+    inline friend bool overlapping(const aabb &a, const aabb &b) noexcept
+    {
+        return (a.ub.x >= b.lb.x) && (b.ub.x >= a.lb.x) &&
+               (a.ub.y >= b.lb.y) && (b.ub.y >= a.lb.y) &&
+               (a.ub.z >= b.lb.z) && (b.ub.z >= a.lb.z);
     }
 };
 
@@ -55,7 +78,7 @@ struct Node
 
     inline bool isLeaf() const noexcept
     {
-        return child1 >= 0;
+        return child1 < 0;
     }
 };
 
@@ -68,7 +91,15 @@ class Tree
         void clear();
         bool insert(const aabb &, const int &);
         bool erase(const int &);
+        aabb getNodeBox(const int &) const noexcept;
         float getCost() const;
+        void check() const;
+        std::set<std::pair<int, int>> getOverlappingContents() const noexcept;
+
+        inline size_t size() const noexcept
+        {
+            return contentsToLeaf.size();
+        }
         
     private:
         int insertNode(const Node &);
