@@ -295,7 +295,8 @@ std::tuple<float, float, float> applyPositionConstraint(const float lambda,
 
 void applyVelocityConstraint(RigidBody *b1,
                              RigidBody *b2,
-                             const vec3 &p,
+                             const vec3 &r1,
+                             const vec3 &r2,
                              const vec3 &dv) noexcept
 {
     vec3 n = normalize(dv);
@@ -303,17 +304,12 @@ void applyVelocityConstraint(RigidBody *b1,
     //Do nothing if we are below numerical precision.
     if (length(n) < 0.99f) return;
 
-    const vec3 r1 = p - b1->x;
-    const vec3 r2 = p - b2->x;
+    //FIXME: For proper momentum conservation we should have this:
+    //const vec3 r1 = p - b1->x;
+    //const vec3 r2 = p - b2->x;
     const float w1 = b1->invM + dot(cross(r1, n), b1->getInvI()*cross(r1, n));
     const float w2 = b2->invM + dot(cross(r2, n), b2->getInvI()*cross(r2, n));
 
-    std::cout << "AVC N " << n << std::endl;
-    std::cout << "AVC R1 PRE " << r1 << std::endl;
-    std::cout << "AVC R2 PRE " << r2 << std::endl;
-    std::cout << "AVC V1 PRE " << b1->v << std::endl;
-    std::cout << "AVC V2 PRE " << b2->v << std::endl;
-    
     n *= -length(dv)/(w1 + w2);
 
     b1->v += b1->invM*n;
@@ -321,9 +317,6 @@ void applyVelocityConstraint(RigidBody *b1,
     
     b2->v -= b2->invM*n;
     b2->w -= b2->getInvI()*cross(r2, n);
-    
-    std::cout << "AVC V1 POST " << b1->v << std::endl;
-    std::cout << "AVC V2 POST " << b2->v << std::endl;
 }
 
 RigidBodyCollision RigidBodySystem::initializeCollision(RigidBodyCollision c) const noexcept
@@ -364,7 +357,7 @@ RigidBodyCollision RigidBodySystem::initializeCollision(RigidBodyCollision c) co
         std::cerr << "Unknown combination of body geometries!" << std::endl;
         assert(false);
     }
-    
+
     c.b1.r = mat3::rotationMatrix(quatconj(b1->q))*(p1 - b1->x);
     c.b2.r = mat3::rotationMatrix(quatconj(b2->q))*(p2 - b2->x);
     c.d = d;
@@ -559,32 +552,21 @@ void RigidBodySystem::update(const float &dt)
                 
                 c.lambda = l;
                 
-                /*
                 //Handle static friction.
-                const float staticFrictionCoeff = std::sqrt(cg.b1->staticFriction*cg.b2->staticFriction);
+                const float staticFrictionCoeff = std::sqrt(b1->staticFriction*b2->staticFriction);
+                const auto precg = c.getWorldGeometry(preBodies);
                 
-                const RigidBody *preb1 = &preBodies[c.b1Index];
-                const RigidBody *preb2 = &preBodies[c.b2Index];
-
                 //Figure out how the current collision point has moved w.r.t. the previous iteration on both bodies.
                 //N.B., we need to track a fixed point on the rigid body.
-                //FIXME: Calculate positions for *current* cg.
-                const vec3 p1 = mat3::rotationMatrix(quatmul(preb1->q, quatconj(cg.b1->q)))*(cg.p - cg.b1->x) + preb1->x;
-                const vec3 p2 = mat3::rotationMatrix(quatmul(preb2->q, quatconj(cg.b2->q)))*(cg.p - cg.b2->x) + preb2->x;
+                vec3 dx = (precg.p2 - cg.p2) - (precg.p1 - cg.p1);
 
-                vec3 dx = p2 - p1;
-
-                dx -= dot(dx, cg.n)*cg.n;
+                dx -= dot(dx, c.n)*c.n;
 
                 //Static friction, restrict tangential motion if F_tangential <= mu_static * F_normal.
-                if (length(dx)/(w1 + w2) <= staticFrictionCoeff*std::abs(lambdaCollisionN[i]))
+                if (length(dx)/(w1 + w2) <= staticFrictionCoeff*std::abs(c.lambda))
                 {
-                    applyPositionConstraint(0.0f, softnessCoeff, cg.b1, cg.b2, cg.p, dx);
+                    applyPositionConstraint(0.0f, softnessCoeff, b1, b2, 0.5f*(cg.p1 + cg.p2), dx);
                 }
-                
-                std::cout << "COLL POST SF X1 " << cg.b1->x << std::endl;
-                std::cout << "COLL POST SF X2 " << cg.b2->x << std::endl;
-                */
             }
             
             collisions[i] = c;
@@ -621,39 +603,51 @@ void RigidBodySystem::update(const float &dt)
                 
                 vt -= vn*c.n;
 
-                /*
                 //Apply dynamic friction.
-                const float dynamicFrictionCoeff = std::sqrt(cg.b1->dynamicFriction*cg.b2->dynamicFriction);
+                //FIXME: Seems to add energy?
+                const float dynamicFrictionCoeff = std::sqrt(b1->dynamicFriction*b2->dynamicFriction);
 
-                applyVelocityConstraint(cg.b1, cg.b2, cg.p,
-                                        std::min(dynamicFrictionCoeff*std::abs(lambdaCollisionN[i])/h, length(vt))*normalize(vt));
-                */
+                applyVelocityConstraint(b1, b2, cg.p1 - b1->x, cg.p2 - b2->x,
+                                        std::min(dynamicFrictionCoeff*std::abs(c.lambda)/h, length(vt))*normalize(vt));
                 
+                /*
+                const auto postcg = c.getWorldGeometry(bodies);
+                
+                std::cout << "VN = " << vn << std::endl;
+                std::cout << "VT = " << vt << std::endl;
+                std::cout << "POSTVN = " << dot(postcg.v1 - postcg.v2, c.n) << std::endl;
+                std::cout << "POSTVT = " << postcg.v1 - postcg.v2 - dot(postcg.v1 - postcg.v2, c.n)*c.n << std::endl;
+                */
+
                 //Perform restitution in case of collisions that are not resting contacts.
+                //FIXME: Seems to not remove energy properly?
 
                 //Get pre-state normal velocity.
                 const auto precg = c.getWorldGeometry(preBodies);
-
-                //Determine normal and tangential relative velocities.
-                //FIXME: Calculate velocities for *current* cg.
                 const float prevn = dot(precg.v1 - precg.v2, c.n);
 
-                const float restitutionCoeff = 0.0f*(std::abs(prevn) > h*RBMAXACC ? 
+                /*
+                std::cout << "N = " << c.n << std::endl;
+                std::cout << "PREVN = " << prevn << std::endl;
+                std::cout << "VN = " << vn << std::endl;
+                std::cout << "V1, W1 = " << b1->v << " -- " << b1->w << std::endl;
+                std::cout << "V2, W2 = " << b2->v << " -- " << b2->w << std::endl;
+                */
+
+                const float restitutionCoeff = (std::abs(prevn) > h*RBMAXACC ? 
                                 std::sqrt(b1->restitution*b2->restitution) :
                                 0.0f);
-                
-                std::cout << "VN = " << vn << std::endl;
-                std::cout << "N = " << c.n << std::endl;
-                std::cout << "V1_PRE = " << b1->v << std::endl;
-                std::cout << "V2_PRE = " << b2->v << std::endl;
-                std::cout << "PREVN = " << prevn << std::endl;
-                std::cout << "COR = " << restitutionCoeff << std::endl;
 
-                applyVelocityConstraint(b1, b2, 0.5f*(cg.p1 + cg.p2),
+                applyVelocityConstraint(b1, b2, cg.p1 - b1->x, cg.p2 - b2->x,
                                         (vn + std::max(0.0f, restitutionCoeff*prevn))*c.n);
 
-                std::cout << "V1_POST = " << b1->v << std::endl;
-                std::cout << "V2_POST = " << b2->v << std::endl;
+                /*
+                const auto postcg = c.getWorldGeometry(bodies);
+
+                std::cout << "POSTVN = " << dot(postcg.v1 - postcg.v2, c.n) << std::endl;
+                std::cout << "POSTV1, W1 = " << b1->v << " -- " << b1->w << std::endl;
+                std::cout << "POSTV2, W2 = " << b2->v << " -- " << b2->w << std::endl;
+                */
             }
         }
     }

@@ -50,6 +50,7 @@ class GravitySystem : public rigid::RigidBodySystem
             addInfinitePlaneBody(vec4( 0.0f, 0.0f, 1.0f, -4.0f));
             addInfinitePlaneBody(vec4( 0.0f, 0.0f,-1.0f, -4.0f));
             
+            /*
             //Create wheel geometry.
             std::vector<vec4> wheelGeometry;
             const float wheelRadius = 0.5f;
@@ -67,8 +68,8 @@ class GravitySystem : public rigid::RigidBodySystem
             
             //Add wheels.
             addSpheresRigidBody(40.0f, wheelGeometry, vec3(2.0f, wheelRadius, -1.0f), vec3(0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f), wheelStaticFriction, wheelDynamicFriction, wheelCOR);
+            */
             
-            /*
             //Add some rigid bodies.
             for (int i = 0; i < 64; ++i)
             {
@@ -80,11 +81,8 @@ class GravitySystem : public rigid::RigidBodySystem
                     vec4(0.0f, 0.6f, 0.0f, 0.3f)
                     }, randomVec3()*vec3(2.0f, 0.0f, 2.0f) - vec3(1.0f, -2*i - 1, 1.0f), vec3(0.0f, 0.0f, 0.0f), normalize(randomVec4() - vec4(0.5f)));
             }
-            */
             
-            /*
-            addSpheresRigidBody(1.0f, {vec4(0.0f, 0.0f, 0.0f, 1.0f)}, vec3(0.0f, 0.5f, 0.0f));
-            */
+            //addSpheresRigidBody(1.0f, {vec4(0.0f, 0.0f, 0.0f, 1.0f)}, vec3(0.0f, 0.5f, 0.0f), vec3(1.0f, 0.0f, 0.0f));
             
             /*
             for (int i = 0; i < 4; ++i)
@@ -201,10 +199,10 @@ void cleanup()
 void update(const double &dt)
 {
     //Update the rigid bodies.
-    if (application->isKeyPressedOnce(' '))
-    {
+    //if (application->isKeyPressedOnce(' '))
+    //{
         rigidBodySystem->update(dt);
-    }
+    //}
 
     if (rigidBodySystem->getTime() > lastEnergyTime + 0.5f)
     {
