@@ -56,7 +56,7 @@ float RigidBodySystem::getTime() const
     return time;
 }
 
-void RigidBodySystem::addInfinitePlaneBody(const vec4 &plane,
+int RigidBodySystem::addInfinitePlaneBody(const vec4 &plane,
     const float &a_statFric, const float &a_dynFric, const float &a_rest, const float &a_soft)
 {
     //Add an immovable infinite plane.
@@ -71,9 +71,11 @@ void RigidBodySystem::addInfinitePlaneBody(const vec4 &plane,
     //Infinite planes are not added to the AABB tree.
     
     std::cout << "Added plane " << bodies.back().plane << " " << bodies.back();
+
+    return bodies.size() - 1;
 }
 
-void RigidBodySystem::addSpheresRigidBody(const float &totalMass, const std::vector<vec4> &a_spheres,
+int RigidBodySystem::addSpheresRigidBody(const float &totalMass, const std::vector<vec4> &a_spheres,
     const vec3 &a_x, const vec3 &v, const vec4 &a_q, const vec3 & a_w,
     const float &a_statFric, const float &a_dynFric, const float &a_rest, const float &a_soft)
 {
@@ -176,6 +178,55 @@ void RigidBodySystem::addSpheresRigidBody(const float &totalMass, const std::vec
     tree.insert(bodies.back().getAABB(RBAABBDT).scale(RBAABBSCALE), bodies.size() - 1);
 
     std::cout << "Added " << spheres.size() << " spheres " << bodies.back();
+
+    return bodies.size() - 1;
+}
+
+void RigidBodySystem::addNonCollidingPair(const int &i1, const int &i2)
+{
+    if (i1 >= 0 && i2 >= 0 && i1 < static_cast<int>(bodies.size()) && i2 < static_cast<int>(bodies.size()))
+    {
+        nonCollidingBodies.insert(std::minmax(i1, i2));
+    }
+    else
+    {
+        std::cerr << "Invalid pair of non-colliding bodies specified!" << std::endl;
+        assert(false);
+    }
+}
+
+float applyAngularConstraint(const float lambda,
+                             const float alpha,
+                             RigidBody *b1,
+                             RigidBody *b2,
+                             const vec3 &dq) noexcept
+{
+    vec3 n = normalize(dq);
+    
+    //Do nothing if we are below numerical precision.
+    if (length(n) < 0.99f) return 0.0f;
+    
+    const mat3 invI1 = b1->getInvI();
+    const mat3 invI2 = b2->getInvI();
+    const float w1 = dot(n, invI1*n);
+    const float w2 = dot(n, invI2*n);
+    const float dlambda = -(length(dq) + alpha*lambda)/(w1 + w2 + alpha);
+    
+    n *= dlambda;
+
+    if (b1->movable)
+    {
+        b1->q += 0.5f*quatmul(vec4(invI1*n, 0.0f), b1->q);
+        b1->q = normalize(b1->q);
+    }
+    
+    if (b2->movable)
+    {
+        b2->q += 0.5f*quatmul(vec4(invI2*n, 0.0f), b2->q);
+        b2->q = normalize(b2->q);
+    }
+
+    return dlambda;
 }
 
 std::tuple<float, float, float> applyPositionConstraint(const float lambda,
@@ -183,7 +234,7 @@ std::tuple<float, float, float> applyPositionConstraint(const float lambda,
                              RigidBody *b1,
                              RigidBody *b2,
                              const vec3 &p,
-                             const vec3 &dx)
+                             const vec3 &dx) noexcept
 {
     vec3 n = normalize(dx);
     
@@ -192,8 +243,10 @@ std::tuple<float, float, float> applyPositionConstraint(const float lambda,
 
     const vec3 r1 = p - b1->x;
     const vec3 r2 = p - b2->x;
-    const float w1 = b1->invM + dot(cross(r1, n), b1->getInvI()*cross(r1, n));
-    const float w2 = b2->invM + dot(cross(r2, n), b2->getInvI()*cross(r2, n));
+    const mat3 invI1 = b1->getInvI();
+    const mat3 invI2 = b2->getInvI();
+    const float w1 = b1->invM + dot(cross(r1, n), invI1*cross(r1, n));
+    const float w2 = b2->invM + dot(cross(r2, n), invI2*cross(r2, n));
     const float dlambda = -(length(dx) + alpha*lambda)/(w1 + w2 + alpha);
     
     /*
@@ -217,14 +270,14 @@ std::tuple<float, float, float> applyPositionConstraint(const float lambda,
     if (b1->movable)
     {
         b1->x += b1->invM*n;
-        b1->q += 0.5f*quatmul(vec4(b1->getInvI()*cross(r1, n), 0.0f), b1->q);
+        b1->q += 0.5f*quatmul(vec4(invI1*cross(r1, n), 0.0f), b1->q);
         b1->q = normalize(b1->q);
     }
     
     if (b2->movable)
     {
         b2->x -= b2->invM*n;
-        b2->q -= 0.5f*quatmul(vec4(b2->getInvI()*cross(r2, n), 0.0f), b2->q);
+        b2->q -= 0.5f*quatmul(vec4(invI2*cross(r2, n), 0.0f), b2->q);
         b2->q = normalize(b2->q);
     }
     
@@ -243,7 +296,7 @@ std::tuple<float, float, float> applyPositionConstraint(const float lambda,
 void applyVelocityConstraint(RigidBody *b1,
                              RigidBody *b2,
                              const vec3 &p,
-                             const vec3 &dv)
+                             const vec3 &dv) noexcept
 {
     vec3 n = normalize(dv);
     
@@ -254,6 +307,12 @@ void applyVelocityConstraint(RigidBody *b1,
     const vec3 r2 = p - b2->x;
     const float w1 = b1->invM + dot(cross(r1, n), b1->getInvI()*cross(r1, n));
     const float w2 = b2->invM + dot(cross(r2, n), b2->getInvI()*cross(r2, n));
+
+    std::cout << "AVC N " << n << std::endl;
+    std::cout << "AVC R1 PRE " << r1 << std::endl;
+    std::cout << "AVC R2 PRE " << r2 << std::endl;
+    std::cout << "AVC V1 PRE " << b1->v << std::endl;
+    std::cout << "AVC V2 PRE " << b2->v << std::endl;
     
     n *= -length(dv)/(w1 + w2);
 
@@ -262,6 +321,9 @@ void applyVelocityConstraint(RigidBody *b1,
     
     b2->v -= b2->invM*n;
     b2->w -= b2->getInvI()*cross(r2, n);
+    
+    std::cout << "AVC V1 POST " << b1->v << std::endl;
+    std::cout << "AVC V2 POST " << b2->v << std::endl;
 }
 
 RigidBodyCollisionGeometry RigidBodySystem::getCollisionGeometry(std::vector<RigidBody> &bds, const RigidBodyCollision &c) const noexcept
@@ -349,35 +411,39 @@ void RigidBodySystem::update(const float &dt)
 
     for (const auto &intersection : intersectingObjects)
     {
-        const RigidBody &b1 = bodies[intersection.first];
-        const RigidBody &b2 = bodies[intersection.second];
-
-        assert(b1.geometry == RigidBodyGeometry::Spheres);
-        assert(b2.geometry == RigidBodyGeometry::Spheres);
-
-        //TODO: Use that we could be testing 1 body vs. many other bodies to optimize.
-        //TODO: Consider enforcing a fixed number of internal spheres per object to parallellize these checks effectively.
-        const mat3 R1 = mat3::rotationMatrix(b1.q);
-        const mat3 R2 = mat3::rotationMatrix(b2.q);
-
-        for (auto iS1 = b1.firstInternalSphere; iS1 < b1.lastInternalSphere; ++iS1)
+        //Are collisions allowed between these bodies?
+        if (nonCollidingBodies.find(intersection) == nonCollidingBodies.end())
         {
-            //Get potential collisions taking the object's velocity (linear and angular) into account.
-            vec4 s1 = vec4(b1.x + R1*bodyInternalSpheres[iS1].xyz(), bodyInternalSpheres[iS1].w);
+            const RigidBody &b1 = bodies[intersection.first];
+            const RigidBody &b2 = bodies[intersection.second];
 
-            s1.w += dt*(0.5f*dt*RBMAXACC + length(b1.v + cross(b1.w, s1.xyz() - b1.x))) + RBEPS;
-            
-            for (auto iS2 = b2.firstInternalSphere; iS2 < b2.lastInternalSphere; ++iS2)
+            assert(b1.geometry == RigidBodyGeometry::Spheres);
+            assert(b2.geometry == RigidBodyGeometry::Spheres);
+
+            //TODO: Use that we could be testing 1 body vs. many other bodies to optimize.
+            //TODO: Consider enforcing a fixed number of internal spheres per object to parallellize these checks effectively.
+            const mat3 R1 = mat3::rotationMatrix(b1.q);
+            const mat3 R2 = mat3::rotationMatrix(b2.q);
+
+            for (auto iS1 = b1.firstInternalSphere; iS1 < b1.lastInternalSphere; ++iS1)
             {
-                vec4 s2 = vec4(b2.x + R2*bodyInternalSpheres[iS2].xyz(), bodyInternalSpheres[iS2].w);
+                //Get potential collisions taking the object's velocity (linear and angular) into account.
+                vec4 s1 = vec4(b1.x + R1*bodyInternalSpheres[iS1].xyz(), bodyInternalSpheres[iS1].w);
 
-                s2.w += dt*(0.5f*dt*RBMAXACC + length(b2.v + cross(b2.w, s2.xyz() - b2.x))) + RBEPS;
+                s1.w += dt*(0.5f*dt*RBMAXACC + length(b1.v + cross(b1.w, s1.xyz() - b1.x))) + RBEPS;
                 
-                if (length(s1.xyz() - s2.xyz()) <= s1.w + s2.w)
+                for (auto iS2 = b2.firstInternalSphere; iS2 < b2.lastInternalSphere; ++iS2)
                 {
-                    //If so, add a potential collision.
-                    collisions.push_back(RigidBodyCollision({intersection.first, iS1 - b1.firstInternalSphere,
-                                                             intersection.second, iS2 - b2.firstInternalSphere}));
+                    vec4 s2 = vec4(b2.x + R2*bodyInternalSpheres[iS2].xyz(), bodyInternalSpheres[iS2].w);
+
+                    s2.w += dt*(0.5f*dt*RBMAXACC + length(b2.v + cross(b2.w, s2.xyz() - b2.x))) + RBEPS;
+                    
+                    if (length(s1.xyz() - s2.xyz()) <= s1.w + s2.w)
+                    {
+                        //If so, add a potential collision.
+                        collisions.push_back(RigidBodyCollision({intersection.first, iS1 - b1.firstInternalSphere,
+                                                                 intersection.second, iS2 - b2.firstInternalSphere}));
+                    }
                 }
             }
         }
@@ -421,9 +487,6 @@ void RigidBodySystem::update(const float &dt)
     //Perform substeps.
     const float h = dt/static_cast<float>(nrSubSteps);
 
-    //Minimum velocity below which there is no restitution for collisions.
-    const float minCollisionNormalVelocity = 0.1f; //2.0f*9.81f;
-    
     //Zero force/torque accumulators.
     for (auto &b : bodies)
     {
@@ -468,11 +531,22 @@ void RigidBodySystem::update(const float &dt)
             {
                 const float softnessCoeff = 0.5f*(cg.b1->softness + cg.b2->softness)/(h*h);
                 
+                std::cout << "COLL " << i << ": " << c.b1Index << ", " << c.b1SphereIndex << " -- " << c.b2Index << ", " << c.b2SphereIndex << std::endl;
+                std::cout << "COLL N " << cg.n << std::endl;
+                std::cout << "COLL PRE X1 " << cg.b1->x << std::endl;
+                std::cout << "COLL PRE X2 " << cg.b2->x << std::endl;
+                std::cout << "COLL PRE V1 " << cg.b1->v << std::endl;
+                std::cout << "COLL PRE V2 " << cg.b2->v << std::endl;
+                
                 //Apply position constraint to avoid object interpenetration.
                 auto [l, w1, w2] = applyPositionConstraint(0.0f, softnessCoeff, cg.b1, cg.b2, cg.p, -cg.d*cg.n);
 
+                std::cout << "COLL POST X1 " << cg.b1->x << std::endl;
+                std::cout << "COLL POST X2 " << cg.b2->x << std::endl;
+                
                 lambdaCollisionN[i] = l;
                 
+                /*
                 //Handle static friction.
                 const float staticFrictionCoeff = std::sqrt(cg.b1->staticFriction*cg.b2->staticFriction);
                 
@@ -493,6 +567,10 @@ void RigidBodySystem::update(const float &dt)
                 {
                     applyPositionConstraint(0.0f, softnessCoeff, cg.b1, cg.b2, cg.p, dx);
                 }
+                
+                std::cout << "COLL POST SF X1 " << cg.b1->x << std::endl;
+                std::cout << "COLL POST SF X2 " << cg.b2->x << std::endl;
+                */
             }
         }
         
@@ -521,28 +599,40 @@ void RigidBodySystem::update(const float &dt)
                 //Determine normal and tangential relative velocities.
                 vec3 vt = cg.v1 - cg.v2;
                 const float vn = dot(vt, cg.n);
-                const float dynamicFrictionCoeff = std::sqrt(cg.b1->dynamicFriction*cg.b2->dynamicFriction);
-                const float restitutionCoeff = std::sqrt(cg.b1->restitution*cg.b2->restitution);
-
                 vt -= vn*cg.n;
 
                 //Apply dynamic friction.
+                /*
+                const float dynamicFrictionCoeff = std::sqrt(cg.b1->dynamicFriction*cg.b2->dynamicFriction);
+
                 applyVelocityConstraint(cg.b1, cg.b2, cg.p,
                                         std::min(dynamicFrictionCoeff*std::abs(lambdaCollisionN[i])/h, length(vt))*normalize(vt));
+                */
                 
+                //Perform restitution in case of collisions that are not resting contacts.
+
                 //Get pre-state normal velocity.
                 const auto precg = getCollisionGeometry(preBodies, c);
 
                 //Determine normal and tangential relative velocities.
-                //FIXME: Use n or previous n?
                 const float prevn = dot(precg.v1 - precg.v2, cg.n);
 
-                //Perform restitution in case of collisions that are not resting contacts.
-                if (std::abs(prevn) > h*minCollisionNormalVelocity)
-                {
-                    applyVelocityConstraint(cg.b1, cg.b2, cg.p,
-                                            (vn + std::max(0.0f, restitutionCoeff*prevn))*cg.n);
-                }
+                const float restitutionCoeff = (std::abs(prevn) > h*RBMAXACC ? 
+                                std::sqrt(cg.b1->restitution*cg.b2->restitution) :
+                                0.0f);
+                
+                std::cout << "VN = " << vn << std::endl;
+                std::cout << "N = " << cg.n << std::endl;
+                std::cout << "V1_PRE = " << cg.b1->v << std::endl;
+                std::cout << "V2_PRE = " << cg.b2->v << std::endl;
+                std::cout << "PREVN = " << prevn << std::endl;
+                std::cout << "COR = " << restitutionCoeff << std::endl;
+
+                applyVelocityConstraint(cg.b1, cg.b2, cg.p,
+                                        (vn + std::max(0.0f, restitutionCoeff*prevn))*cg.n);
+
+                std::cout << "V1_POST = " << cg.b1->v << std::endl;
+                std::cout << "V2_POST = " << cg.b2->v << std::endl;
             }
         }
     }

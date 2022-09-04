@@ -43,13 +43,32 @@ class GravitySystem : public rigid::RigidBodySystem
         {
             //Add ground plane.
             addInfinitePlaneBody(vec4(0.0f, 1.0f, 0.0f, 0.0f));
-
+            
             //Create a box.
             addInfinitePlaneBody(vec4( 1.0f, 0.0f, 0.0f, -4.0f));
             addInfinitePlaneBody(vec4(-1.0f, 0.0f, 0.0f, -4.0f));
             addInfinitePlaneBody(vec4( 0.0f, 0.0f, 1.0f, -4.0f));
             addInfinitePlaneBody(vec4( 0.0f, 0.0f,-1.0f, -4.0f));
             
+            //Create wheel geometry.
+            std::vector<vec4> wheelGeometry;
+            const float wheelRadius = 0.5f;
+            const int nrWheelSpheres = 8;
+            const float wheelStaticFriction = 1.0f; //Dry rubber on cement.
+            const float wheelDynamicFriction = 0.7f; //Dry rubber on cement.
+            const float wheelCOR = 0.95f;
+
+            for (int i = 0; i < nrWheelSpheres; ++i)
+            {
+                const float a = 2.0f*M_PI*static_cast<float>(i)/static_cast<float>(nrWheelSpheres);
+
+                wheelGeometry.push_back(vec4(wheelRadius*cos(a), wheelRadius*sin(a), 0.0f, 1.2f*M_PI*wheelRadius/static_cast<float>(nrWheelSpheres)));
+            }
+            
+            //Add wheels.
+            addSpheresRigidBody(40.0f, wheelGeometry, vec3(2.0f, wheelRadius, -1.0f), vec3(0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f), wheelStaticFriction, wheelDynamicFriction, wheelCOR);
+            
+            /*
             //Add some rigid bodies.
             for (int i = 0; i < 64; ++i)
             {
@@ -61,9 +80,10 @@ class GravitySystem : public rigid::RigidBodySystem
                     vec4(0.0f, 0.6f, 0.0f, 0.3f)
                     }, randomVec3()*vec3(2.0f, 0.0f, 2.0f) - vec3(1.0f, -2*i - 1, 1.0f), vec3(0.0f, 0.0f, 0.0f), normalize(randomVec4() - vec4(0.5f)));
             }
-
+            */
+            
             /*
-            addSpheresRigidBody(1.0f, {vec4(0.0f, 0.0f, 0.0f, 1.0f)}, vec3(0.0f, 1.0f, 0.0f));
+            addSpheresRigidBody(1.0f, {vec4(0.0f, 0.0f, 0.0f, 1.0f)}, vec3(0.0f, 0.5f, 0.0f));
             */
             
             /*
@@ -181,15 +201,15 @@ void cleanup()
 void update(const double &dt)
 {
     //Update the rigid bodies.
-    //if (application->isKeyPressedOnce(' '))
-    //{
+    if (application->isKeyPressedOnce(' '))
+    {
         rigidBodySystem->update(dt);
-    //}
+    }
 
     if (rigidBodySystem->getTime() > lastEnergyTime + 0.5f)
     {
         lastEnergyTime = rigidBodySystem->getTime();
-        std::cout << *rigidBodySystem;
+        std::cerr << *rigidBodySystem;
     }
     
     //Get rigid body positions and send them to the static mesh horde.

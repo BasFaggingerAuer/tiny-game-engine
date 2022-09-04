@@ -100,7 +100,8 @@ std::set<std::pair<int, int>> Tree::getOverlappingContents() const noexcept
         const aabb b = nodes[i].box;
 
         std::stack<int> s;
-
+        
+        assert(root >= 0);
         s.push(root);
 
         while (!s.empty())
@@ -112,11 +113,13 @@ std::set<std::pair<int, int>> Tree::getOverlappingContents() const noexcept
             {
                 //By earlier checks we should overlap with this node.
                 assert(overlapping(b, n.box));
-                pairs.insert(std::minmax(c, n.contents));
+                if (c != n.contents) pairs.insert(std::minmax(c, n.contents));
             }
             else
             {
                 //Does it make sense to recurse further?
+                assert(n.child1 >= 0);
+                assert(n.child2 >= 0);
                 if (overlapping(b, nodes[n.child1].box)) s.push(n.child1);
                 if (overlapping(b, nodes[n.child2].box)) s.push(n.child2);
             }
@@ -151,7 +154,7 @@ void Tree::check() const
         const auto n = nodes[i];
         q.pop();
 
-        std::cout << i << " (cont. " << n.contents << ", par. " << n.parent << ")";
+        std::cout << i << " (cont. " << n.contents << ", par. " << n.parent << ", ch1 " << n.child1 << ", ch2 " << n.child2 << ")";
 
         if (!n.isLeaf())
         {

@@ -19,6 +19,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <vector>
 #include <list>
 #include <map>
+#include <set>
 
 #include <tiny/math/vec.h>
 #include <tiny/rigid/aabbtree.h>
@@ -115,21 +116,23 @@ class RigidBodySystem
         RigidBodySystem(const int & = 16);
         virtual ~RigidBodySystem();
         
-        void addInfinitePlaneBody(const vec4 &,
+        int addInfinitePlaneBody(const vec4 &,
             const float & = 0.6f, const float & = 0.5f, const float & = 0.7f, const float & = 0.0f); //Friction/restitution ~steel/aluminum.
 
-        void addSpheresRigidBody(const float &, const std::vector<vec4> &,
+        int addSpheresRigidBody(const float &, const std::vector<vec4> &,
             const vec3 &, const vec3 & = vec3(0.0f, 0.0f, 0.0f),
             const vec4 & = vec4(0.0f, 0.0f, 0.0f, 1.0f), const vec3 & = vec3(0.0f, 0.0f, 0.0f),
             const float & = 0.6f, const float & = 0.5f, const float & = 0.7f, const float & = 0.0f); //Friction/restitution ~steel/aluminum.
         //TODO: Ability to remove rigid bodies.
+
+        void addNonCollidingPair(const int &, const int &);
         
         void update(const float &);
         
         //Ability to export all internal spheres for rendering in a static mesh horde.
         //Container should contain a StaticMeshInstance-compatible type.
         template <typename Container>
-        void getInternalSphereStaticMeshes(Container &out) const
+        void getInternalSphereStaticMeshes(Container &out) const noexcept
         {
             for (const auto &b : bodies)
             {
@@ -181,6 +184,7 @@ class RigidBodySystem
         aabb::Tree tree;
         std::vector<vec4> bodyInternalSpheres;
         std::vector<vec4> collSpheres;
+        std::set<std::pair<int, int>> nonCollidingBodies;
 
         void calculateInternalSpheres(const RigidBody &, const float &);
         RigidBodyCollisionGeometry getCollisionGeometry(std::vector<RigidBody> &, const RigidBodyCollision &) const noexcept;
