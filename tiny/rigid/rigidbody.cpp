@@ -326,47 +326,65 @@ void applyVelocityConstraint(RigidBody *b1,
     std::cout << "AVC V2 POST " << b2->v << std::endl;
 }
 
-RigidBodyCollisionGeometry RigidBodySystem::getCollisionGeometry(std::vector<RigidBody> &bds, const RigidBodyCollision &c) const noexcept
+RigidBodyCollision RigidBodySystem::initializeCollision(RigidBodyCollision c) const noexcept
 {
-    //Get pointers to bodies. (FIXME, rather inelegant.)
-    RigidBody *b1 = &bds[c.b1Index];
-    RigidBody *b2 = &bds[c.b2Index];
+    //Evaluate for currently active body states.
+    const RigidBody *b1 = &bodies[c.b1.i];
+    const RigidBody *b2 = &bodies[c.b2.i];
 
-    vec3 p, n;
-    float d; //Signed distance along n. Should be >= for no collision.
+    vec3 n, p1, p2;
+    float d;
     
     if (b1->geometry == RigidBodyGeometry::Spheres && b2->geometry == RigidBodyGeometry::Spheres)
     {
         //Get potentially colliding internal spheres.
-        vec4 is = bodyInternalSpheres[b1->firstInternalSphere + c.b1SphereIndex];
+        vec4 is = bodyInternalSpheres[b1->firstInternalSphere + c.b1.sphere];
         const vec4 s1 = vec4(b1->x + mat3::rotationMatrix(b1->q)*is.xyz(), is.w);
-        is = bodyInternalSpheres[b2->firstInternalSphere + c.b2SphereIndex];
+        is = bodyInternalSpheres[b2->firstInternalSphere + c.b2.sphere];
         const vec4 s2 = vec4(b2->x + mat3::rotationMatrix(b2->q)*is.xyz(), is.w);
 
         n = normalize(s2.xyz() - s1.xyz());
-        p = 0.5f*(s1.xyz() + s2.xyz()) + (0.5f*(s1.w - s2.w))*n;
+        p1 = s1.xyz() + s1.w*n;
+        p2 = s2.xyz() - s2.w*n;
         d = dot(s2.xyz() - s1.xyz(), n) - s1.w - s2.w;
     }
     else if (b1->geometry == RigidBodyGeometry::Plane && b2->geometry == RigidBodyGeometry::Spheres)
     {
         //Collide sphere with infinite plane.
-        vec4 s2 = bodyInternalSpheres[b2->firstInternalSphere + c.b2SphereIndex];
+        vec4 s2 = bodyInternalSpheres[b2->firstInternalSphere + c.b2.sphere];
         s2 = vec4(b2->x + mat3::rotationMatrix(b2->q)*s2.xyz(), s2.w);
         
         n = b1->plane.xyz();
         d = dot(s2.xyz(), n) - b1->plane.w - s2.w;
-        p = s2.xyz() - (0.5f*(dot(s2.xyz(), n) + s2.w - b1->plane.w))*n;
+        p1 = s2.xyz() + (b1->plane.w - dot(s2.xyz(), n))*n;
+        p2 = s2.xyz() - s2.w*n;
     }
     else
     {
         std::cerr << "Unknown combination of body geometries!" << std::endl;
         assert(false);
     }
+    
+    c.b1.r = mat3::rotationMatrix(quatconj(b1->q))*(p1 - b1->x);
+    c.b2.r = mat3::rotationMatrix(quatconj(b2->q))*(p2 - b2->x);
+    c.d = d;
+    c.lambda = 0.0f;
+    c.n = n;
 
-    return RigidBodyCollisionGeometry({b1, b2, d,
-                                       p, n,
-                                       b1->v + cross(b1->w, p - b1->x),
-                                       b2->v + cross(b2->w, p - b2->x)});
+    return c;
+}
+
+RigidBodyCollisionGeometry RigidBodyCollision::getWorldGeometry(const std::vector<RigidBody> &bodies) const noexcept
+{
+    const RigidBody *pb1 = &bodies[b1.i];
+    const RigidBody *pb2 = &bodies[b2.i];
+    const vec3 r1 = mat3::rotationMatrix(pb1->q)*b1.r;
+    const vec3 r2 = mat3::rotationMatrix(pb2->q)*b2.r;
+
+    return RigidBodyCollisionGeometry({pb1->x + r1,
+                                       pb2->x + r2,
+                                       pb1->v + cross(pb1->w, r1),
+                                       pb2->v + cross(pb2->w, r2)});
 }
 
 aabb::aabb RigidBody::getAABB(const float &dt) const noexcept
@@ -404,11 +422,10 @@ void RigidBodySystem::update(const float &dt)
 
     //Check which objects can potentially intersect.
     const auto intersectingObjects = tree.getOverlappingContents();
-    
-    //Find all collision points between potentially intersecting Spheres objects.
-    //Use simple n^2 comparison (assume small number of internal spheres per object).
     std::vector<RigidBodyCollision> collisions;
 
+    //Find all collision points between potentially intersecting Spheres objects.
+    //Use simple n^2 comparison (assume small number of internal spheres per object).
     for (const auto &intersection : intersectingObjects)
     {
         //Are collisions allowed between these bodies?
@@ -441,8 +458,9 @@ void RigidBodySystem::update(const float &dt)
                     if (length(s1.xyz() - s2.xyz()) <= s1.w + s2.w)
                     {
                         //If so, add a potential collision.
-                        collisions.push_back(RigidBodyCollision({intersection.first, iS1 - b1.firstInternalSphere,
-                                                                 intersection.second, iS2 - b2.firstInternalSphere}));
+                        collisions.push_back(RigidBodyCollision({{intersection.first, iS1 - b1.firstInternalSphere, vec3(0.0f)},
+                                                                 {intersection.second, iS2 - b2.firstInternalSphere, vec3(0.0f)},
+                                                                 0.0f, 0.0f, vec3(0.0f)}));
                     }
                 }
             }
@@ -476,7 +494,9 @@ void RigidBodySystem::update(const float &dt)
                         
                         if (dot(s.xyz(), p.xyz()) <= p.w + s.w)
                         {
-                            collisions.push_back(RigidBodyCollision({iP, 0, iB, iS - b.firstInternalSphere}));
+                            collisions.push_back(RigidBodyCollision({{iP, 0, vec3(0.0f)},
+                                                                     {iB, iS - b.firstInternalSphere, vec3(0.0f)},
+                                                                     0.0f, 0.0f, vec3(0.0f)}));
                         }
                     }
                 }
@@ -519,32 +539,25 @@ void RigidBodySystem::update(const float &dt)
         //Solve positions.
         
         //Collisions.
-        std::vector<float> lambdaCollisionN(collisions.size(), 0.0f);
         
         for (size_t i = 0; i < collisions.size(); ++i)
         {
-            const RigidBodyCollision c = collisions[i];
-            auto cg = getCollisionGeometry(bodies, c);
+            //Check whether we have a collision for the current rigid body state.
+            auto c = initializeCollision(collisions[i]);
 
             //Check for collision for the current body states.
-            if (cg.d < 0.0f)
+            if (c.d <= 0.0f)
             {
-                const float softnessCoeff = 0.5f*(cg.b1->softness + cg.b2->softness)/(h*h);
-                
-                std::cout << "COLL " << i << ": " << c.b1Index << ", " << c.b1SphereIndex << " -- " << c.b2Index << ", " << c.b2SphereIndex << std::endl;
-                std::cout << "COLL N " << cg.n << std::endl;
-                std::cout << "COLL PRE X1 " << cg.b1->x << std::endl;
-                std::cout << "COLL PRE X2 " << cg.b2->x << std::endl;
-                std::cout << "COLL PRE V1 " << cg.b1->v << std::endl;
-                std::cout << "COLL PRE V2 " << cg.b2->v << std::endl;
+                const auto cg = c.getWorldGeometry(bodies);
+                RigidBody *b1 = &bodies[c.b1.i];
+                RigidBody *b2 = &bodies[c.b2.i];
+
+                const float softnessCoeff = 0.5f*(b1->softness + b2->softness)/(h*h);
                 
                 //Apply position constraint to avoid object interpenetration.
-                auto [l, w1, w2] = applyPositionConstraint(0.0f, softnessCoeff, cg.b1, cg.b2, cg.p, -cg.d*cg.n);
-
-                std::cout << "COLL POST X1 " << cg.b1->x << std::endl;
-                std::cout << "COLL POST X2 " << cg.b2->x << std::endl;
+                auto [l, w1, w2] = applyPositionConstraint(0.0f, softnessCoeff, b1, b2, 0.5f*(cg.p1 + cg.p2), -c.d*c.n);
                 
-                lambdaCollisionN[i] = l;
+                c.lambda = l;
                 
                 /*
                 //Handle static friction.
@@ -555,6 +568,7 @@ void RigidBodySystem::update(const float &dt)
 
                 //Figure out how the current collision point has moved w.r.t. the previous iteration on both bodies.
                 //N.B., we need to track a fixed point on the rigid body.
+                //FIXME: Calculate positions for *current* cg.
                 const vec3 p1 = mat3::rotationMatrix(quatmul(preb1->q, quatconj(cg.b1->q)))*(cg.p - cg.b1->x) + preb1->x;
                 const vec3 p2 = mat3::rotationMatrix(quatmul(preb2->q, quatconj(cg.b2->q)))*(cg.p - cg.b2->x) + preb2->x;
 
@@ -572,6 +586,8 @@ void RigidBodySystem::update(const float &dt)
                 std::cout << "COLL POST SF X2 " << cg.b2->x << std::endl;
                 */
             }
+            
+            collisions[i] = c;
         }
         
         //Update velocities.
@@ -590,19 +606,23 @@ void RigidBodySystem::update(const float &dt)
         //Solve velocities.
         for (size_t i = 0; i < collisions.size(); ++i)
         {
-            const RigidBodyCollision c = collisions[i];
-            auto cg = getCollisionGeometry(bodies, c);
+            const auto c = collisions[i];
             
             //Did we have a collision?
-            if (lambdaCollisionN[i] != 0.0f)
+            if (c.lambda != 0.0f)
             {
+                const auto cg = c.getWorldGeometry(bodies);
+                RigidBody *b1 = &bodies[c.b1.i];
+                RigidBody *b2 = &bodies[c.b2.i];
+
                 //Determine normal and tangential relative velocities.
                 vec3 vt = cg.v1 - cg.v2;
-                const float vn = dot(vt, cg.n);
-                vt -= vn*cg.n;
+                const float vn = dot(vt, c.n);
+                
+                vt -= vn*c.n;
 
-                //Apply dynamic friction.
                 /*
+                //Apply dynamic friction.
                 const float dynamicFrictionCoeff = std::sqrt(cg.b1->dynamicFriction*cg.b2->dynamicFriction);
 
                 applyVelocityConstraint(cg.b1, cg.b2, cg.p,
@@ -612,27 +632,28 @@ void RigidBodySystem::update(const float &dt)
                 //Perform restitution in case of collisions that are not resting contacts.
 
                 //Get pre-state normal velocity.
-                const auto precg = getCollisionGeometry(preBodies, c);
+                const auto precg = c.getWorldGeometry(preBodies);
 
                 //Determine normal and tangential relative velocities.
-                const float prevn = dot(precg.v1 - precg.v2, cg.n);
+                //FIXME: Calculate velocities for *current* cg.
+                const float prevn = dot(precg.v1 - precg.v2, c.n);
 
-                const float restitutionCoeff = (std::abs(prevn) > h*RBMAXACC ? 
-                                std::sqrt(cg.b1->restitution*cg.b2->restitution) :
+                const float restitutionCoeff = 0.0f*(std::abs(prevn) > h*RBMAXACC ? 
+                                std::sqrt(b1->restitution*b2->restitution) :
                                 0.0f);
                 
                 std::cout << "VN = " << vn << std::endl;
-                std::cout << "N = " << cg.n << std::endl;
-                std::cout << "V1_PRE = " << cg.b1->v << std::endl;
-                std::cout << "V2_PRE = " << cg.b2->v << std::endl;
+                std::cout << "N = " << c.n << std::endl;
+                std::cout << "V1_PRE = " << b1->v << std::endl;
+                std::cout << "V2_PRE = " << b2->v << std::endl;
                 std::cout << "PREVN = " << prevn << std::endl;
                 std::cout << "COR = " << restitutionCoeff << std::endl;
 
-                applyVelocityConstraint(cg.b1, cg.b2, cg.p,
-                                        (vn + std::max(0.0f, restitutionCoeff*prevn))*cg.n);
+                applyVelocityConstraint(b1, b2, 0.5f*(cg.p1 + cg.p2),
+                                        (vn + std::max(0.0f, restitutionCoeff*prevn))*c.n);
 
-                std::cout << "V1_POST = " << cg.b1->v << std::endl;
-                std::cout << "V2_POST = " << cg.b2->v << std::endl;
+                std::cout << "V1_POST = " << b1->v << std::endl;
+                std::cout << "V2_POST = " << b2->v << std::endl;
             }
         }
     }

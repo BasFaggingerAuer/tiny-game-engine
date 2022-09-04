@@ -94,20 +94,27 @@ struct RigidBody
     }
 };
 
-struct RigidBodyCollision
+struct RigidBodyCollisionEntry
 {
-    int b1Index; //Index of the first rigid body.
-    int b1SphereIndex; //Index of the first body's internal sphere.
-    int b2Index; //Index of the second rigid body.
-    int b2SphereIndex; //Index of the second body's internal sphere.
+    int i; //Index of rigid body.
+    int sphere; //Index of internal sphere.
+    vec3 r; //Collision point in body's local coordinates.
 };
 
 struct RigidBodyCollisionGeometry
 {
-    RigidBody *b1, *b2; //Pointer to bodies.
-    float d; //Signed distance of b2 w.r.t. b1 along the collision normal. A collision occurs if d < 0.
-    vec3 p, n; //Point and normal of collision. Distance to move b2 w.r.t. b1 to remove the collision.
-    vec3 v1, v2; //Velocities at p of both bodies.
+    vec3 p1, p2; //Positions of colliding points in world coordinate system.
+    vec3 v1, v2; //Velocities of colliding points in world coorindate system.
+};
+
+struct RigidBodyCollision
+{
+    RigidBodyCollisionEntry b1, b2;
+    float d; //Signed distance of b2 w.r.t. b1 along the collision normal. A collision occurs if d <= 0.
+    float lambda; //Constraint multiplier.
+    vec3 n; //Normal of collision surface.
+
+    RigidBodyCollisionGeometry getWorldGeometry(const std::vector<RigidBody> &) const noexcept;
 };
 
 class RigidBodySystem
@@ -187,7 +194,7 @@ class RigidBodySystem
         std::set<std::pair<int, int>> nonCollidingBodies;
 
         void calculateInternalSpheres(const RigidBody &, const float &);
-        RigidBodyCollisionGeometry getCollisionGeometry(std::vector<RigidBody> &, const RigidBodyCollision &) const noexcept;
+        RigidBodyCollision initializeCollision(RigidBodyCollision) const noexcept;
         float addMarginToRadius(const float, const float) const;
 };
 
