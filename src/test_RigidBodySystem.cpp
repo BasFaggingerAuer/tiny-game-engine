@@ -41,19 +41,22 @@ class GravitySystem : public rigid::RigidBodySystem
     public:
         GravitySystem() : RigidBodySystem()
         {
+            moveForward = false;
+
             //Add ground plane.
             addInfinitePlaneBody(vec4(0.0f, 1.0f, 0.0f, 0.0f));
             
             //Create a box.
+            /*
             addInfinitePlaneBody(vec4( 1.0f, 0.0f, 0.0f, -4.0f));
             addInfinitePlaneBody(vec4(-1.0f, 0.0f, 0.0f, -4.0f));
             addInfinitePlaneBody(vec4( 0.0f, 0.0f, 1.0f, -4.0f));
             addInfinitePlaneBody(vec4( 0.0f, 0.0f,-1.0f, -4.0f));
+            */
             
-            /*
             //Create wheel geometry.
             std::vector<vec4> wheelGeometry;
-            const float wheelRadius = 0.5f;
+            const float wheelRadius = 0.6f;
             const int nrWheelSpheres = 8;
             const float wheelStaticFriction = 1.0f; //Dry rubber on cement.
             const float wheelDynamicFriction = 0.7f; //Dry rubber on cement.
@@ -67,9 +70,36 @@ class GravitySystem : public rigid::RigidBodySystem
             }
             
             //Add wheels.
-            addSpheresRigidBody(40.0f, wheelGeometry, vec3(2.0f, wheelRadius, -1.0f), vec3(0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f), wheelStaticFriction, wheelDynamicFriction, wheelCOR);
-            */
+            wheel1 = addSpheresRigidBody(40.0f, wheelGeometry, vec3(-1.6f, wheelRadius, -1.0f), vec3(0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f), wheelStaticFriction, wheelDynamicFriction, wheelCOR);
+            wheel2 = addSpheresRigidBody(40.0f, wheelGeometry, vec3(-1.6f, wheelRadius,  1.0f), vec3(0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f), wheelStaticFriction, wheelDynamicFriction, wheelCOR);
+            wheel3 = addSpheresRigidBody(40.0f, wheelGeometry, vec3( 1.6f, wheelRadius, -1.0f), vec3(0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f), wheelStaticFriction, wheelDynamicFriction, wheelCOR);
+            wheel4 = addSpheresRigidBody(40.0f, wheelGeometry, vec3( 1.6f, wheelRadius,  1.0f), vec3(0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f), wheelStaticFriction, wheelDynamicFriction, wheelCOR);
             
+            //Add body.
+            const float bodySphereRadius = 1.0f;
+
+            body = addSpheresRigidBody(3000.0f,
+                                {vec4(-2.0f, 0.0f, 0.0f, bodySphereRadius),
+                                 vec4( 0.0f, 0.0f, 0.0f, bodySphereRadius),
+                                 vec4( 2.0f, 0.0f, 0.0f, bodySphereRadius)},
+                                vec3(0.0f, bodySphereRadius + 0.5f*wheelRadius, 0.0f), vec3(0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f),
+                                0.61f, 0.47f, 0.70f);
+
+            //Add constraints.
+            addNonCollidingPair(body, wheel1);
+            addNonCollidingPair(body, wheel2);
+            addNonCollidingPair(body, wheel3);
+            addNonCollidingPair(body, wheel4);
+            addPositionConstraint(body, vec3(-1.6f, -0.5f*wheelRadius, -1.0f), wheel1, vec3(0.0f, 0.0f, 0.0f));
+            addPositionConstraint(body, vec3(-1.6f, -0.5f*wheelRadius,  1.0f), wheel2, vec3(0.0f, 0.0f, 0.0f));
+            addPositionConstraint(body, vec3( 1.6f, -0.5f*wheelRadius, -1.0f), wheel3, vec3(0.0f, 0.0f, 0.0f));
+            addPositionConstraint(body, vec3( 1.6f, -0.5f*wheelRadius,  1.0f), wheel4, vec3(0.0f, 0.0f, 0.0f));
+            addAngularConstraint(body, vec3(0.0f, 0.0f, -1.0f), wheel1, vec3(0.0f, 0.0f, 1.0f));
+            addAngularConstraint(body, vec3(0.0f, 0.0f,  1.0f), wheel2, vec3(0.0f, 0.0f, 1.0f));
+            addAngularConstraint(body, vec3(0.0f, 0.0f, -1.0f), wheel3, vec3(0.0f, 0.0f, 1.0f));
+            addAngularConstraint(body, vec3(0.0f, 0.0f,  1.0f), wheel4, vec3(0.0f, 0.0f, 1.0f));
+            
+            /*
             //Add some rigid bodies.
             for (int i = 0; i < 64; ++i)
             {
@@ -81,6 +111,7 @@ class GravitySystem : public rigid::RigidBodySystem
                     vec4(0.0f, 0.6f, 0.0f, 0.3f)
                     }, randomVec3()*vec3(2.0f, 0.0f, 2.0f) - vec3(1.0f, -2*i - 1, 1.0f), vec3(0.0f, 0.0f, 0.0f), normalize(randomVec4() - vec4(0.5f)));
             }
+            */
             
             //addSpheresRigidBody(1.0f, {vec4(0.0f, 0.0f, 0.0f, 1.0f)}, vec3(0.0f, 0.5f, 0.0f), vec3(1.0f, 0.0f, 0.0f));
             
@@ -117,6 +148,10 @@ class GravitySystem : public rigid::RigidBodySystem
         {
 
         }
+
+        bool moveForward;
+        int wheel1, wheel2, wheel3, wheel4;
+        int body;
     
     protected:
         void applyExternalForces()
@@ -124,6 +159,15 @@ class GravitySystem : public rigid::RigidBodySystem
             for (auto &b : bodies)
             {
                 b.f = vec3(0.0f, -9.81f/b.invM, 0.0f); //Gravity.
+            }
+
+            if (moveForward)
+            {
+                bodies[wheel1].t = vec3(0.0f, 0.0f, 1.0e4f);
+                bodies[wheel2].t = vec3(0.0f, 0.0f, 1.0e4f);
+                bodies[wheel3].t = vec3(0.0f, 0.0f, 1.0e4f);
+                bodies[wheel4].t = vec3(0.0f, 0.0f, 1.0e4f);
+                //bodies[body].f = vec3(1.0e5f, 0.0f, 0.0f);
             }
         }
 
@@ -153,7 +197,7 @@ draw::StaticMeshHorde *sphereMeshHorde = 0;
 draw::StaticMeshHorde *planeMeshHorde = 0;
 draw::RGBATexture2D *sphereDiffuseTexture = 0;
 
-rigid::RigidBodySystem *rigidBodySystem = 0;
+GravitySystem *rigidBodySystem = 0;
 float lastEnergyTime = -10.0f;
 
 draw::Renderable *screenEffect = 0;
@@ -198,6 +242,8 @@ void cleanup()
 
 void update(const double &dt)
 {
+    rigidBodySystem->moveForward = application->isKeyPressed('m');
+
     //Update the rigid bodies.
     //if (application->isKeyPressedOnce(' '))
     //{

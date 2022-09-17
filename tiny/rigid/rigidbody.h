@@ -117,6 +117,26 @@ struct RigidBodyCollision
     RigidBodyCollisionGeometry getWorldGeometry(const std::vector<RigidBody> &) const noexcept;
 };
 
+struct ConstraintEntry
+{
+    int i; //Index of rigid body.
+    vec3 r; //Constraint point or direction in body's local coordinates.
+};
+
+struct PositionConstraint
+{
+    ConstraintEntry b1, b2;
+    float d; //Maximum allowed distance until constraint is enforced.
+    float softness; //Constraint inverse stiffness.
+};
+
+struct AngularConstraint
+{
+    ConstraintEntry b1, b2;
+    float d; //Maximum allowed angle until constraint is enforced.
+    float softness; //Constraint inverse stiffness.
+};
+
 class RigidBodySystem
 {
     public:
@@ -133,6 +153,8 @@ class RigidBodySystem
         //TODO: Ability to remove rigid bodies.
 
         void addNonCollidingPair(const int &, const int &);
+        void addPositionConstraint(const int &, const vec3 &, const int &, const vec3 &, const float & = 0.0f, const float & = 0.0f);
+        void addAngularConstraint(const int &, const vec3 &, const int &, const vec3 &, const float & = 0.0f, const float & = 0.0f);
         
         void update(const float &);
         
@@ -192,6 +214,8 @@ class RigidBodySystem
         std::vector<vec4> bodyInternalSpheres;
         std::vector<vec4> collSpheres;
         std::set<std::pair<int, int>> nonCollidingBodies;
+        std::vector<PositionConstraint> positionConstraints;
+        std::vector<AngularConstraint> angularConstraints;
 
         void calculateInternalSpheres(const RigidBody &, const float &);
         RigidBodyCollision initializeCollision(RigidBodyCollision) const noexcept;

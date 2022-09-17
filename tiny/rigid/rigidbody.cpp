@@ -195,7 +195,31 @@ void RigidBodySystem::addNonCollidingPair(const int &i1, const int &i2)
     }
 }
 
-float applyAngularConstraint(const float lambda,
+void RigidBodySystem::addPositionConstraint(const int &i1, const vec3 &r1, const int &i2, const vec3 &r2, const float &d, const float &alpha)
+{
+    if (i1 < 0 || i2 < 0 || i1 >= static_cast<int>(bodies.size()) || i2 >= static_cast<int>(bodies.size()) || i1 == i2)
+    {
+        std::cerr << "Invalid pair of bodies for applying a position constraint!" << std::endl;
+        assert(false);
+        return;
+    }
+    
+    positionConstraints.push_back(PositionConstraint{{i1, r1}, {i2, r2}, d, alpha});
+}
+
+void RigidBodySystem::addAngularConstraint(const int &i1, const vec3 &r1, const int &i2, const vec3 &r2, const float &d, const float &alpha)
+{
+    if (i1 < 0 || i2 < 0 || i1 >= static_cast<int>(bodies.size()) || i2 >= static_cast<int>(bodies.size()) || i1 == i2)
+    {
+        std::cerr << "Invalid pair of bodies for applying a position constraint!" << std::endl;
+        assert(false);
+        return;
+    }
+    
+    angularConstraints.push_back(AngularConstraint{{i1, normalize(r1)}, {i2, normalize(r2)}, d, alpha});
+}
+
+std::tuple<float, float, float> applyAngularConstraint(const float lambda,
                              const float alpha,
                              RigidBody *b1,
                              RigidBody *b2,
@@ -204,8 +228,8 @@ float applyAngularConstraint(const float lambda,
     vec3 n = normalize(dq);
     
     //Do nothing if we are below numerical precision.
-    if (length(n) < 0.99f) return 0.0f;
-    
+    if (length(n) < 0.99f) return std::make_tuple(0.0f, 0.0f, 0.0f);
+
     const mat3 invI1 = b1->getInvI();
     const mat3 invI2 = b2->getInvI();
     const float w1 = dot(n, invI1*n);
@@ -222,11 +246,11 @@ float applyAngularConstraint(const float lambda,
     
     if (b2->movable)
     {
-        b2->q += 0.5f*quatmul(vec4(invI2*n, 0.0f), b2->q);
+        b2->q -= 0.5f*quatmul(vec4(invI2*n, 0.0f), b2->q);
         b2->q = normalize(b2->q);
     }
-
-    return dlambda;
+    
+    return std::make_tuple(dlambda, w1, w2);
 }
 
 std::tuple<float, float, float> applyPositionConstraint(const float lambda,
@@ -515,7 +539,7 @@ void RigidBodySystem::update(const float &dt)
         //Store pre-update positions and velocities.
         preBodies = bodies;
     
-        //Apply momenta.
+        //Apply forces and velocities.
         for (auto &b : bodies)
         {
             if (b.movable)
@@ -528,11 +552,10 @@ void RigidBodySystem::update(const float &dt)
                 b.q = normalize(b.q);
             }
         }
+
+        //TODO: Determine pre-solve (angular) velocities.
         
         //Solve positions.
-        
-        //Collisions.
-        
         for (size_t i = 0; i < collisions.size(); ++i)
         {
             //Check whether we have a collision for the current rigid body state.
@@ -571,17 +594,52 @@ void RigidBodySystem::update(const float &dt)
             
             collisions[i] = c;
         }
+
+        //Apply position constraints.
+        for (const auto &c : positionConstraints)
+        {
+            RigidBody *b1 = &bodies[c.b1.i];
+            RigidBody *b2 = &bodies[c.b2.i];
+            const vec3 p1 = mat3::rotationMatrix(b1->q)*c.b1.r + b1->x;
+            const vec3 p2 = mat3::rotationMatrix(b2->q)*c.b2.r + b2->x;
+            const float d = length(p2 - p1) - c.d;
+            
+            if (d > 0.0f)
+            {
+                applyPositionConstraint(0.0f, c.softness, b1, b2, 0.5f*(p1 + p2), -d*normalize(p2 - p1));
+            }
+        }
+        
+        //Apply orientation constraints.
+        for (const auto &c : angularConstraints)
+        {
+            RigidBody *b1 = &bodies[c.b1.i];
+            RigidBody *b2 = &bodies[c.b2.i];
+            const vec3 a = cross(mat3::rotationMatrix(b1->q)*c.b1.r, mat3::rotationMatrix(b2->q)*c.b2.r);
+            const float d = length(a) - c.d;
+            
+            if (d > 0.0f)
+            {
+                applyAngularConstraint(0.0f, c.softness, b1, b2, -d*normalize(a));
+            }
+        }
         
         //Update velocities.
         for (size_t i = 0; i < bodies.size(); ++i)
         {
             if (bodies[i].movable)
             {
-                bodies[i].v = (bodies[i].x - preBodies[i].x)/h;
-    
-                const vec4 dq = quatmul(bodies[i].q, quatconj(preBodies[i].q));
-    
-                bodies[i].w = (dq.w >= 0.0f ? 2.0f/h : -2.0f/h)*dq.xyz();
+                //Make it impossible to increase energy with collision resolution: you can only lose velocity along your initial velocity direction.
+                vec3 vn = normalize(bodies[i].v);
+                vec3 v = (bodies[i].x - preBodies[i].x)/h;
+                
+                bodies[i].v = std::max(0.0f, dot(v, vn))*vn;
+
+                vec4 dq = quatmul(bodies[i].q, quatconj(preBodies[i].q));
+                vec3 wn = normalize(bodies[i].w);
+                vec3 w = (dq.w >= 0.0f ? 2.0f/h : -2.0f/h)*dq.xyz();
+
+                bodies[i].w = std::max(0.0f, dot(w, wn))*wn;
             }
         }
         
@@ -604,7 +662,6 @@ void RigidBodySystem::update(const float &dt)
                 vt -= vn*c.n;
 
                 //Apply dynamic friction.
-                //FIXME: Seems to add energy?
                 const float dynamicFrictionCoeff = std::sqrt(b1->dynamicFriction*b2->dynamicFriction);
 
                 applyVelocityConstraint(b1, b2, cg.p1 - b1->x, cg.p2 - b2->x,
@@ -620,7 +677,6 @@ void RigidBodySystem::update(const float &dt)
                 */
 
                 //Perform restitution in case of collisions that are not resting contacts.
-                //FIXME: Seems to not remove energy properly?
 
                 //Get pre-state normal velocity.
                 const auto precg = c.getWorldGeometry(preBodies);
