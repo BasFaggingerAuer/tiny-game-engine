@@ -70,10 +70,10 @@ class GravitySystem : public rigid::RigidBodySystem
             }
             
             //Add wheels.
-            wheel1 = addSpheresRigidBody(40.0f, wheelGeometry, vec3(-1.6f, wheelRadius, -1.0f), vec3(0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f), wheelStaticFriction, wheelDynamicFriction, wheelCOR);
-            wheel2 = addSpheresRigidBody(40.0f, wheelGeometry, vec3(-1.6f, wheelRadius,  1.0f), vec3(0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f), wheelStaticFriction, wheelDynamicFriction, wheelCOR);
-            wheel3 = addSpheresRigidBody(40.0f, wheelGeometry, vec3( 1.6f, wheelRadius, -1.0f), vec3(0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f), wheelStaticFriction, wheelDynamicFriction, wheelCOR);
-            wheel4 = addSpheresRigidBody(40.0f, wheelGeometry, vec3( 1.6f, wheelRadius,  1.0f), vec3(0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f), wheelStaticFriction, wheelDynamicFriction, wheelCOR);
+            wheel1 = addSpheresRigidBody(40.0f, wheelGeometry, vec3(-1.6f, 2.0f*wheelRadius, -1.0f), vec3(0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f), wheelStaticFriction, wheelDynamicFriction, wheelCOR);
+            wheel2 = addSpheresRigidBody(40.0f, wheelGeometry, vec3(-1.6f, 2.0f*wheelRadius,  1.0f), vec3(0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f), wheelStaticFriction, wheelDynamicFriction, wheelCOR);
+            wheel3 = addSpheresRigidBody(40.0f, wheelGeometry, vec3( 1.6f, 2.0f*wheelRadius, -1.0f), vec3(0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f), wheelStaticFriction, wheelDynamicFriction, wheelCOR);
+            wheel4 = addSpheresRigidBody(40.0f, wheelGeometry, vec3( 1.6f, 2.0f*wheelRadius,  1.0f), vec3(0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f), wheelStaticFriction, wheelDynamicFriction, wheelCOR);
             
             //Add body.
             const float bodySphereRadius = 1.0f;
@@ -82,7 +82,7 @@ class GravitySystem : public rigid::RigidBodySystem
                                 {vec4(-2.0f, 0.0f, 0.0f, bodySphereRadius),
                                  vec4( 0.0f, 0.0f, 0.0f, bodySphereRadius),
                                  vec4( 2.0f, 0.0f, 0.0f, bodySphereRadius)},
-                                vec3(0.0f, bodySphereRadius + 0.5f*wheelRadius, 0.0f), vec3(0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f),
+                                vec3(0.0f, bodySphereRadius + 1.5f*wheelRadius, 0.0f), vec3(0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f),
                                 0.61f, 0.47f, 0.70f);
 
             //Add constraints.
@@ -163,10 +163,12 @@ class GravitySystem : public rigid::RigidBodySystem
 
             if (moveForward)
             {
-                bodies[wheel1].t = vec3(0.0f, 0.0f, 1.0e4f);
-                bodies[wheel2].t = vec3(0.0f, 0.0f, 1.0e4f);
-                bodies[wheel3].t = vec3(0.0f, 0.0f, 1.0e4f);
-                bodies[wheel4].t = vec3(0.0f, 0.0f, 1.0e4f);
+                const float t = 3000.0f;
+
+                bodies[wheel1].t = vec3(0.0f, 0.0f, t);
+                bodies[wheel2].t = vec3(0.0f, 0.0f, t);
+                bodies[wheel3].t = vec3(0.0f, 0.0f, t);
+                bodies[wheel4].t = vec3(0.0f, 0.0f, t);
                 //bodies[body].f = vec3(1.0e5f, 0.0f, 0.0f);
             }
         }
@@ -198,6 +200,7 @@ draw::StaticMeshHorde *planeMeshHorde = 0;
 draw::RGBATexture2D *sphereDiffuseTexture = 0;
 
 GravitySystem *rigidBodySystem = 0;
+bool projectVelocities = true;
 float lastEnergyTime = -10.0f;
 
 draw::Renderable *screenEffect = 0;
@@ -247,8 +250,14 @@ void update(const double &dt)
     //Update the rigid bodies.
     //if (application->isKeyPressedOnce(' '))
     //{
-        rigidBodySystem->update(dt);
+        rigidBodySystem->update(dt, projectVelocities);
     //}
+
+    if (application->isKeyPressedOnce('p'))
+    {
+        projectVelocities = !projectVelocities;
+        std::cerr << "Projecting velocities: " << projectVelocities << std::endl;
+    }
 
     if (rigidBodySystem->getTime() > lastEnergyTime + 0.5f)
     {

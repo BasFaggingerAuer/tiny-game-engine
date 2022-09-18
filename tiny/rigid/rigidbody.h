@@ -156,7 +156,7 @@ class RigidBodySystem
         void addPositionConstraint(const int &, const vec3 &, const int &, const vec3 &, const float & = 0.0f, const float & = 0.0f);
         void addAngularConstraint(const int &, const vec3 &, const int &, const vec3 &, const float & = 0.0f, const float & = 0.0f);
         
-        void update(const float &);
+        void update(const float &, const bool &);
         
         //Ability to export all internal spheres for rendering in a static mesh horde.
         //Container should contain a StaticMeshInstance-compatible type.

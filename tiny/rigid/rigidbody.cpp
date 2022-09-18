@@ -412,7 +412,7 @@ aabb::aabb RigidBody::getAABB(const float &dt) const noexcept
     return aabb::aabb{x - vec3(r) + min(vec3(0.0f), dt*v), x + vec3(r) + max(vec3(0.0f), dt*v)};
 }
 
-void RigidBodySystem::update(const float &dt)
+void RigidBodySystem::update(const float &dt, const bool &projectVelocities)
 {
     //Per Detailed Rigid Body Simulation with Extended Position Based Dynamics by Matthias Muller et al., ACM SIGGRAPH, vol. 39, nr. 8, 2020.
 
@@ -625,21 +625,38 @@ void RigidBodySystem::update(const float &dt)
         }
         
         //Update velocities.
-        for (size_t i = 0; i < bodies.size(); ++i)
+        if (projectVelocities)
         {
-            if (bodies[i].movable)
+            for (size_t i = 0; i < bodies.size(); ++i)
             {
-                //Make it impossible to increase energy with collision resolution: you can only lose velocity along your initial velocity direction.
-                vec3 vn = normalize(bodies[i].v);
-                vec3 v = (bodies[i].x - preBodies[i].x)/h;
-                
-                bodies[i].v = std::max(0.0f, dot(v, vn))*vn;
+                if (bodies[i].movable)
+                {
+                    //Make it impossible to increase energy with collision resolution: you can only lose velocity along your initial velocity direction.
+                    vec3 vn = normalize(bodies[i].v);
+                    vec3 v = (bodies[i].x - preBodies[i].x)/h;
+                    
+                    bodies[i].v = std::max(0.0f, dot(v, vn))*vn;
 
-                vec4 dq = quatmul(bodies[i].q, quatconj(preBodies[i].q));
-                vec3 wn = normalize(bodies[i].w);
-                vec3 w = (dq.w >= 0.0f ? 2.0f/h : -2.0f/h)*dq.xyz();
+                    vec4 dq = quatmul(bodies[i].q, quatconj(preBodies[i].q));
+                    vec3 wn = normalize(bodies[i].w);
+                    vec3 w = (dq.w >= 0.0f ? 2.0f/h : -2.0f/h)*dq.xyz();
 
-                bodies[i].w = std::max(0.0f, dot(w, wn))*wn;
+                    bodies[i].w = std::max(0.0f, dot(w, wn))*wn;
+                }
+            }
+        }
+        else
+        {
+            for (size_t i = 0; i < bodies.size(); ++i)
+            {
+                if (bodies[i].movable)
+                {
+                    bodies[i].v = (bodies[i].x - preBodies[i].x)/h;
+
+                    const vec4 dq = quatmul(bodies[i].q, quatconj(preBodies[i].q));
+
+                    bodies[i].w = (dq.w >= 0.0f ? 2.0f/h : -2.0f/h)*dq.xyz();
+                }
             }
         }
         
