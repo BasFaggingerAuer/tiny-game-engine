@@ -41,8 +41,8 @@ class GravitySystem : public rigid::RigidBodySystem
     public:
         GravitySystem() : RigidBodySystem()
         {
-            moveForward = false;
-
+            wheelTorques.fill(0.0f);
+            
             //Add ground plane.
             addInfinitePlaneBody(vec4(0.0f, 1.0f, 0.0f, 0.0f));
             
@@ -68,6 +68,8 @@ class GravitySystem : public rigid::RigidBodySystem
 
                 wheelGeometry.push_back(vec4(wheelRadius*cos(a), wheelRadius*sin(a), 0.0f, 1.2f*M_PI*wheelRadius/static_cast<float>(nrWheelSpheres)));
             }
+
+            wheelGeometry = std::vector<vec4>{vec4(0.0f, 0.0f, 0.0f, 1.4f*wheelRadius)};
             
             //Add wheels.
             wheel1 = addSpheresRigidBody(40.0f, wheelGeometry, vec3(-1.6f, 2.0f*wheelRadius, -1.0f), vec3(0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f), wheelStaticFriction, wheelDynamicFriction, wheelCOR);
@@ -98,6 +100,18 @@ class GravitySystem : public rigid::RigidBodySystem
             addAngularConstraint(body, vec3(0.0f, 0.0f,  1.0f), wheel2, vec3(0.0f, 0.0f, 1.0f));
             addAngularConstraint(body, vec3(0.0f, 0.0f, -1.0f), wheel3, vec3(0.0f, 0.0f, 1.0f));
             addAngularConstraint(body, vec3(0.0f, 0.0f,  1.0f), wheel4, vec3(0.0f, 0.0f, 1.0f));
+
+            //Add something to drive against.
+            addSpheresRigidBody(1.0f, {vec4(0.0f, 0.0f, 0.0f, 1.0f),
+                                       vec4(0.0f, 0.0f, 1.0f, 1.0f),
+                                       vec4(0.0f, 0.0f, 2.0f, 1.0f),
+                                       vec4(0.0f, 0.0f, 3.0f, 1.0f)},
+                                vec3(-10.0f, 2.0f, 0.0f));
+            addSpheresRigidBody(1.0f, {vec4(0.0f, 0.0f, 0.0f, 1.0f),
+                                       vec4(1.0f, 0.0f, 1.0f, 1.0f),
+                                       vec4(2.0f, 0.0f, 2.0f, 1.0f),
+                                       vec4(3.0f, 0.0f, 3.0f, 1.0f)},
+                                vec3(-10.0f, 4.0f, 0.0f));
             
             /*
             //Add some rigid bodies.
@@ -149,7 +163,7 @@ class GravitySystem : public rigid::RigidBodySystem
 
         }
 
-        bool moveForward;
+        std::array<float, 4> wheelTorques;
         int wheel1, wheel2, wheel3, wheel4;
         int body;
     
@@ -161,16 +175,11 @@ class GravitySystem : public rigid::RigidBodySystem
                 b.f = vec3(0.0f, -9.81f/b.invM, 0.0f); //Gravity.
             }
 
-            if (moveForward)
-            {
-                const float t = 3000.0f;
-
-                bodies[wheel1].t = vec3(0.0f, 0.0f, t);
-                bodies[wheel2].t = vec3(0.0f, 0.0f, t);
-                bodies[wheel3].t = vec3(0.0f, 0.0f, t);
-                bodies[wheel4].t = vec3(0.0f, 0.0f, t);
-                //bodies[body].f = vec3(1.0e5f, 0.0f, 0.0f);
-            }
+            bodies[wheel1].t = vec3(0.0f, 0.0f, wheelTorques[0]);
+            bodies[wheel2].t = vec3(0.0f, 0.0f, wheelTorques[1]);
+            bodies[wheel3].t = vec3(0.0f, 0.0f, wheelTorques[2]);
+            bodies[wheel4].t = vec3(0.0f, 0.0f, wheelTorques[3]);
+            //bodies[body].f = vec3(1.0e5f, 0.0f, 0.0f);
         }
 
         float potentialEnergy() const
@@ -245,7 +254,17 @@ void cleanup()
 
 void update(const double &dt)
 {
-    rigidBodySystem->moveForward = application->isKeyPressed('m');
+    //Control wheels.
+    const float tq = 1000.0f;
+
+    if (application->isKeyPressedOnce('1')) rigidBodySystem->wheelTorques[0] =  tq;
+    if (application->isKeyPressedOnce('2')) rigidBodySystem->wheelTorques[0] = -tq;
+    if (application->isKeyPressedOnce('3')) rigidBodySystem->wheelTorques[1] =  tq;
+    if (application->isKeyPressedOnce('4')) rigidBodySystem->wheelTorques[1] = -tq;
+    if (application->isKeyPressedOnce('5')) rigidBodySystem->wheelTorques[2] =  tq;
+    if (application->isKeyPressedOnce('6')) rigidBodySystem->wheelTorques[2] = -tq;
+    if (application->isKeyPressedOnce('7')) rigidBodySystem->wheelTorques[3] =  tq;
+    if (application->isKeyPressedOnce('8')) rigidBodySystem->wheelTorques[3] = -tq;
 
     //Update the rigid bodies.
     //if (application->isKeyPressedOnce(' '))
