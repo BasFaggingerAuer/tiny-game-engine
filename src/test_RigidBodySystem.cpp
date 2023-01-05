@@ -209,7 +209,7 @@ draw::StaticMeshHorde *planeMeshHorde = 0;
 draw::RGBATexture2D *sphereDiffuseTexture = 0;
 
 GravitySystem *rigidBodySystem = 0;
-bool projectVelocities = true;
+bool projectVelocities = false;
 float lastEnergyTime = -10.0f;
 
 draw::Renderable *screenEffect = 0;
@@ -221,6 +221,9 @@ void setup()
 {
     //Create a rigid body scene.
     rigidBodySystem = new GravitySystem();
+    
+    //Give the system one second to settle down.
+    for (int i = 0; i < 100; ++i) rigidBodySystem->update(0.01f, true);
     
     //Create a sphere mesh and paint it with a texture.
     sphereMeshHorde = new draw::StaticMeshHorde(mesh::StaticMesh::createIcosahedronMesh(1.0f), 1024);
@@ -257,20 +260,22 @@ void update(const double &dt)
     //Control wheels.
     const float tq = 1000.0f;
 
-    if (application->isKeyPressedOnce('1')) rigidBodySystem->wheelTorques[0] =  tq;
-    if (application->isKeyPressedOnce('2')) rigidBodySystem->wheelTorques[0] = -tq;
-    if (application->isKeyPressedOnce('3')) rigidBodySystem->wheelTorques[1] =  tq;
-    if (application->isKeyPressedOnce('4')) rigidBodySystem->wheelTorques[1] = -tq;
-    if (application->isKeyPressedOnce('5')) rigidBodySystem->wheelTorques[2] =  tq;
-    if (application->isKeyPressedOnce('6')) rigidBodySystem->wheelTorques[2] = -tq;
-    if (application->isKeyPressedOnce('7')) rigidBodySystem->wheelTorques[3] =  tq;
-    if (application->isKeyPressedOnce('8')) rigidBodySystem->wheelTorques[3] = -tq;
+    if (application->isKeyPressed('1')) rigidBodySystem->wheelTorques[0] =  tq;
+    if (application->isKeyPressed('2')) rigidBodySystem->wheelTorques[0] = -tq;
+    if (application->isKeyPressed('3')) rigidBodySystem->wheelTorques[1] =  tq;
+    if (application->isKeyPressed('4')) rigidBodySystem->wheelTorques[1] = -tq;
+    if (application->isKeyPressed('5')) rigidBodySystem->wheelTorques[2] =  tq;
+    if (application->isKeyPressed('6')) rigidBodySystem->wheelTorques[2] = -tq;
+    if (application->isKeyPressed('7')) rigidBodySystem->wheelTorques[3] =  tq;
+    if (application->isKeyPressed('8')) rigidBodySystem->wheelTorques[3] = -tq;
 
     //Update the rigid bodies.
     //if (application->isKeyPressedOnce(' '))
     //{
         rigidBodySystem->update(dt, projectVelocities);
     //}
+
+    for (int i = 0; i < 4; ++i) rigidBodySystem->wheelTorques[i] = 0.0f;
 
     if (application->isKeyPressedOnce('p'))
     {

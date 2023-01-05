@@ -547,7 +547,7 @@ void RigidBodySystem::update(const float &dt, const bool &projectVelocities)
                 b.v += (h*b.invM)*b.f;
                 b.x += h*b.v;
 
-                b.w += h*(b.getInvI()*b.t);
+                b.w += h*(b.getInvI()*(b.t - cross(b.w, b.getI()*b.w)));
                 b.q += (0.5f*h)*quatmul(vec4(b.w, 0.0f), b.q);
                 b.q = normalize(b.q);
             }
@@ -594,7 +594,7 @@ void RigidBodySystem::update(const float &dt, const bool &projectVelocities)
             
             collisions[i] = c;
         }
-
+        /*
         //Apply position constraints.
         for (const auto &c : positionConstraints)
         {
@@ -623,6 +623,7 @@ void RigidBodySystem::update(const float &dt, const bool &projectVelocities)
                 applyAngularConstraint(0.0f, c.softness, b1, b2, -d*normalize(a));
             }
         }
+        */
         
         //Update velocities.
         if (projectVelocities)
