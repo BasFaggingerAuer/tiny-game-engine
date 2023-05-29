@@ -188,6 +188,9 @@ target_link_libraries(test_Forest ${USED_LIBS})
 add_executable(test_RigidBodySystem src/test_RigidBodySystem.cpp)
 target_link_libraries(test_RigidBodySystem ${USED_LIBS})
 
+add_executable(test_RigidBodyPendulum src/test_RigidBodyPendulum.cpp)
+target_link_libraries(test_RigidBodyPendulum ${USED_LIBS})
+
 
 add_subdirectory(${TINY_SOURCE_DIR}/tanks/)
 

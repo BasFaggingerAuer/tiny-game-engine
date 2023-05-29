@@ -147,6 +147,9 @@ class RigidBodySystem
         int addInfinitePlaneBody(const vec4 &,
             const float & = 0.6f, const float & = 0.5f, const float & = 0.7f, const float & = 0.0f); //Friction/restitution ~steel/aluminum.
 
+        int addImmovableSpheresRigidBody(const std::vector<vec4> &, const vec3 &,
+            const float & = 0.6f, const float & = 0.5f, const float & = 0.7f, const float & = 0.0f); //Friction/restitution ~steel/aluminum.
+
         int addSpheresRigidBody(const float &, const std::vector<vec4> &,
             const vec3 &, const vec3 & = vec3(0.0f, 0.0f, 0.0f),
             const vec4 & = vec4(0.0f, 0.0f, 0.0f, 1.0f), const vec3 & = vec3(0.0f, 0.0f, 0.0f),
@@ -157,7 +160,7 @@ class RigidBodySystem
         void addPositionConstraint(const int &, const vec3 &, const int &, const vec3 &, const float & = 0.0f, const float & = 0.0f);
         void addAngularConstraint(const int &, const vec3 &, const int &, const vec3 &, const float & = 0.0f, const float & = 0.0f);
         
-        void update(const float &, const bool &);
+        void update(const float &);
         
         //Ability to export all internal spheres for rendering in a static mesh horde.
         //Container should contain a StaticMeshInstance-compatible type.

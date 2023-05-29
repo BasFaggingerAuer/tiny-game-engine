@@ -182,6 +182,21 @@ int RigidBodySystem::addSpheresRigidBody(const float &totalMass, const std::vect
     return bodies.size() - 1;
 }
 
+int RigidBodySystem::addImmovableSpheresRigidBody(const std::vector<vec4> &a_spheres, const vec3 &a_x,
+    const float &a_statFric, const float &a_dynFric, const float &a_rest, const float &a_soft)
+{
+    //Add a fixed rigid body to the system composed of spheres.
+    const int index = addSpheresRigidBody(1.0f, a_spheres, a_x, vec3(0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f), a_statFric, a_dynFric, a_rest, a_soft);
+
+    std::cout << "    immovable" << std::endl;
+
+    bodies[index].movable = false;
+    bodies[index].invM = 0.0f;
+    bodies[index].invI = vec3(0.0f, 0.0f, 0.0f);
+
+    return index;
+}
+
 void RigidBodySystem::addNonCollidingPair(const int &i1, const int &i2)
 {
     if (i1 >= 0 && i2 >= 0 && i1 < static_cast<int>(bodies.size()) && i2 < static_cast<int>(bodies.size()))
@@ -273,22 +288,6 @@ std::tuple<float, float, float> applyPositionConstraint(const float lambda,
     const float w2 = b2->invM + dot(cross(r2, n), invI2*cross(r2, n));
     const float dlambda = -(length(dx) + alpha*lambda)/(w1 + w2 + alpha);
     
-    /*
-    std::cout << "COLL PRE:" << std::endl
-              << "p   : " << p << std::endl
-              << "n   : " << n << std::endl
-              << "dl  : " << dlambda << std::endl
-              << "dx  : " << dx << std::endl
-              << "b1.x: " << b1->x << std::endl
-              << "b1.q: " << b1->q << std::endl
-              << "b1.v: " << b1->v << std::endl
-              << "b1.w: " << b1->w << std::endl
-              << "b2.x: " << b2->x << std::endl
-              << "b2.q: " << b2->q << std::endl
-              << "b2.v: " << b2->v << std::endl
-              << "b2.w: " << b2->w << std::endl;
-    */
-    
     n *= dlambda;
 
     if (b1->movable)
@@ -304,15 +303,6 @@ std::tuple<float, float, float> applyPositionConstraint(const float lambda,
         b2->q -= 0.5f*quatmul(vec4(invI2*cross(r2, n), 0.0f), b2->q);
         b2->q = normalize(b2->q);
     }
-    
-    /*
-    std::cout << "COLL POST:" << std::endl
-              << "n   : " << n << std::endl
-              << "b1.x: " << b1->x << std::endl
-              << "b1.q: " << b1->q << std::endl
-              << "b2.x: " << b2->x << std::endl
-              << "b2.q: " << b2->q << std::endl;
-    */
     
     return std::make_tuple(dlambda, w1, w2);
 }
@@ -411,7 +401,7 @@ aabb::aabb RigidBody::getAABB(const float &dt) const noexcept
     return aabb::aabb{x - vec3(r) + min(vec3(0.0f), dt*v), x + vec3(r) + max(vec3(0.0f), dt*v)};
 }
 
-void RigidBodySystem::update(const float &dt, const bool &projectVelocities)
+void RigidBodySystem::update(const float &dt)
 {
     //Per Detailed Rigid Body Simulation with Extended Position Based Dynamics by Matthias Muller et al., ACM SIGGRAPH, vol. 39, nr. 8, 2020.
 
@@ -660,12 +650,6 @@ void RigidBodySystem::update(const float &dt, const bool &projectVelocities)
             applyVelocityConstraint(b1, b2, cg.p1 - b1->x, cg.p2 - b2->x,
                                     std::min(dynamicFrictionCoeff*std::abs(c.lambda)/dt, length(vt))*normalize(vt));
             
-            //const auto postcg = c.getWorldGeometry(bodies);
-            //std::cout << "VN = " << vn << std::endl;
-            //std::cout << "VT = " << vt << std::endl;
-            //std::cout << "POSTVN = " << dot(postcg.v1 - postcg.v2, c.n) << std::endl;
-            //std::cout << "POSTVT = " << postcg.v1 - postcg.v2 - dot(postcg.v1 - postcg.v2, c.n)*c.n << std::endl;
-
             //Perform restitution in case of collisions that are not resting contacts.
 
             //Get pre-state normal velocity.
@@ -684,11 +668,6 @@ void RigidBodySystem::update(const float &dt, const bool &projectVelocities)
 
             applyVelocityConstraint(b1, b2, cg.p1 - b1->x, cg.p2 - b2->x,
                                     (vn + std::max(0.0f, restitutionCoeff*prevn))*c.n);
-
-            //const auto postcg = c.getWorldGeometry(bodies);
-            //std::cout << "POSTVN = " << dot(postcg.v1 - postcg.v2, c.n) << std::endl;
-            //std::cout << "POSTV1, W1 = " << b1->v << " -- " << b1->w << std::endl;
-            //std::cout << "POSTV2, W2 = " << b2->v << " -- " << b2->w << std::endl;
         }
     }
 

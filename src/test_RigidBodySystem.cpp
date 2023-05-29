@@ -47,12 +47,10 @@ class GravitySystem : public rigid::RigidBodySystem
             addInfinitePlaneBody(vec4(0.0f, 1.0f, 0.0f, 0.0f));
             
             //Create a box.
-            /*
             addInfinitePlaneBody(vec4( 1.0f, 0.0f, 0.0f, -4.0f));
             addInfinitePlaneBody(vec4(-1.0f, 0.0f, 0.0f, -4.0f));
             addInfinitePlaneBody(vec4( 0.0f, 0.0f, 1.0f, -4.0f));
             addInfinitePlaneBody(vec4( 0.0f, 0.0f,-1.0f, -4.0f));
-            */
             
             //Create wheel geometry.
             std::vector<vec4> wheelGeometry;
@@ -113,7 +111,6 @@ class GravitySystem : public rigid::RigidBodySystem
                                        vec4(3.0f, 0.0f, 3.0f, 1.0f)},
                                 vec3(-16.0f, 4.0f, 0.0f));
             
-            /*
             //Add some rigid bodies.
             for (int i = 0; i < 64; ++i)
             {
@@ -125,7 +122,6 @@ class GravitySystem : public rigid::RigidBodySystem
                     vec4(0.0f, 0.6f, 0.0f, 0.3f)
                     }, randomVec3()*vec3(2.0f, 0.0f, 2.0f) - vec3(1.0f, -2*i - 1, 1.0f), vec3(0.0f, 0.0f, 0.0f), normalize(randomVec4() - vec4(0.5f)));
             }
-            */
             
             //addSpheresRigidBody(1.0f, {vec4(0.0f, 0.0f, 0.0f, 1.0f)}, vec3(0.0f, 0.5f, 0.0f), vec3(1.0f, 0.0f, 0.0f));
             
@@ -209,7 +205,6 @@ draw::StaticMeshHorde *planeMeshHorde = 0;
 draw::RGBATexture2D *sphereDiffuseTexture = 0;
 
 GravitySystem *rigidBodySystem = 0;
-bool projectVelocities = false;
 float lastEnergyTime = -10.0f;
 
 draw::Renderable *screenEffect = 0;
@@ -221,9 +216,6 @@ void setup()
 {
     //Create a rigid body scene.
     rigidBodySystem = new GravitySystem();
-    
-    //Give the system one second to settle down.
-    for (int i = 0; i < 100; ++i) rigidBodySystem->update(0.01f, true);
     
     //Create a sphere mesh and paint it with a texture.
     sphereMeshHorde = new draw::StaticMeshHorde(mesh::StaticMesh::createIcosahedronMesh(1.0f), 1024);
@@ -272,16 +264,10 @@ void update(const double &dt)
     //Update the rigid bodies.
     //if (application->isKeyPressedOnce(' '))
     //{
-        rigidBodySystem->update(dt, projectVelocities);
+        rigidBodySystem->update(dt);
     //}
 
     for (int i = 0; i < 4; ++i) rigidBodySystem->wheelTorques[i] = 0.0f;
-
-    if (application->isKeyPressedOnce('p'))
-    {
-        projectVelocities = !projectVelocities;
-        std::cerr << "Projecting velocities: " << projectVelocities << std::endl;
-    }
 
     if (rigidBodySystem->getTime() > lastEnergyTime + 0.5f)
     {
