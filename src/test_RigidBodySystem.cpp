@@ -111,7 +111,7 @@ class GravitySystem : public rigid::RigidBodySystem
                                        vec4(1.0f, 0.0f, 1.0f, 1.0f),
                                        vec4(2.0f, 0.0f, 2.0f, 1.0f),
                                        vec4(3.0f, 0.0f, 3.0f, 1.0f)},
-                                vec3(-10.0f, 4.0f, 0.0f));
+                                vec3(-16.0f, 4.0f, 0.0f));
             
             /*
             //Add some rigid bodies.

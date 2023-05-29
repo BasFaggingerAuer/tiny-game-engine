@@ -113,6 +113,7 @@ struct RigidBodyCollision
     float d; //Signed distance of b2 w.r.t. b1 along the collision normal. A collision occurs if d <= 0.
     float lambda; //Constraint multiplier.
     vec3 n; //Normal of collision surface.
+    bool forceToZero; //Force constraint to equality if it has been violated at least once.
 
     RigidBodyCollisionGeometry getWorldGeometry(const std::vector<RigidBody> &) const noexcept;
 };

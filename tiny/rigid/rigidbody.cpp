@@ -385,7 +385,6 @@ RigidBodyCollision RigidBodySystem::initializeCollision(RigidBodyCollision c) co
     c.b1.r = mat3::rotationMatrix(quatconj(b1->q))*(p1 - b1->x);
     c.b2.r = mat3::rotationMatrix(quatconj(b2->q))*(p2 - b2->x);
     c.d = d;
-    c.lambda = 0.0f;
     c.n = n;
 
     return c;
@@ -477,7 +476,7 @@ void RigidBodySystem::update(const float &dt, const bool &projectVelocities)
                         //If so, add a potential collision.
                         collisions.push_back(RigidBodyCollision({{intersection.first, iS1 - b1.firstInternalSphere, vec3(0.0f)},
                                                                  {intersection.second, iS2 - b2.firstInternalSphere, vec3(0.0f)},
-                                                                 0.0f, 0.0f, vec3(0.0f)}));
+                                                                 0.0f, 0.0f, vec3(0.0f), false}));
                     }
                 }
             }
@@ -513,7 +512,7 @@ void RigidBodySystem::update(const float &dt, const bool &projectVelocities)
                         {
                             collisions.push_back(RigidBodyCollision({{iP, 0, vec3(0.0f)},
                                                                      {iB, iS - b.firstInternalSphere, vec3(0.0f)},
-                                                                     0.0f, 0.0f, vec3(0.0f)}));
+                                                                     0.0f, 0.0f, vec3(0.0f), false}));
                         }
                     }
                 }
@@ -521,9 +520,6 @@ void RigidBodySystem::update(const float &dt, const bool &projectVelocities)
         }
     }
     
-    //Perform substeps.
-    const float h = dt/static_cast<float>(nrSubSteps);
-
     //Zero force/torque accumulators.
     for (auto &b : bodies)
     {
@@ -534,27 +530,26 @@ void RigidBodySystem::update(const float &dt, const bool &projectVelocities)
     //Apply forces.
     applyExternalForces();
 
+    //Store pre-update positions and velocities.
+    preBodies = bodies;
+
+    //Apply forces and velocities.
+    for (auto &b : bodies)
+    {
+        if (b.movable)
+        {
+            b.v += (dt*b.invM)*b.f;
+            b.x += dt*b.v;
+
+            b.w += dt*(b.getInvI()*(b.t - cross(b.w, b.getI()*b.w)));
+            b.q += (0.5f*dt)*quatmul(vec4(b.w, 0.0f), b.q);
+            b.q = normalize(b.q);
+        }
+    }
+
+    //Solve positions.
     for (int iSubStep = 0; iSubStep < nrSubSteps; ++iSubStep)
     {
-        //Store pre-update positions and velocities.
-        preBodies = bodies;
-    
-        //Apply forces and velocities.
-        for (auto &b : bodies)
-        {
-            if (b.movable)
-            {
-                b.v += (h*b.invM)*b.f;
-                b.x += h*b.v;
-
-                b.w += h*(b.getInvI()*(b.t - cross(b.w, b.getI()*b.w)));
-                b.q += (0.5f*h)*quatmul(vec4(b.w, 0.0f), b.q);
-                b.q = normalize(b.q);
-            }
-        }
-
-        //TODO: Determine pre-solve (angular) velocities.
-        
         //Solve positions.
         for (size_t i = 0; i < collisions.size(); ++i)
         {
@@ -562,18 +557,21 @@ void RigidBodySystem::update(const float &dt, const bool &projectVelocities)
             auto c = initializeCollision(collisions[i]);
 
             //Check for collision for the current body states.
-            if (c.d <= 0.0f)
+            if (c.d <= 0.0f || c.forceToZero)
             {
+                //Force constraint to be satisfied exactly if it is violated at least once.
+                c.forceToZero = true;
+
                 const auto cg = c.getWorldGeometry(bodies);
                 RigidBody *b1 = &bodies[c.b1.i];
                 RigidBody *b2 = &bodies[c.b2.i];
 
-                const float softnessCoeff = 0.5f*(b1->softness + b2->softness)/(h*h);
+                const float softnessCoeff = 0.5f*(b1->softness + b2->softness)/(dt*dt);
                 
                 //Apply position constraint to avoid object interpenetration.
                 auto [l, w1, w2] = applyPositionConstraint(0.0f, softnessCoeff, b1, b2, 0.5f*(cg.p1 + cg.p2), -c.d*c.n);
                 
-                c.lambda = l;
+                c.lambda += l;
                 
                 //Handle static friction.
                 const float staticFrictionCoeff = std::sqrt(b1->staticFriction*b2->staticFriction);
@@ -594,7 +592,7 @@ void RigidBodySystem::update(const float &dt, const bool &projectVelocities)
             
             collisions[i] = c;
         }
-        /*
+        
         //Apply position constraints.
         for (const auto &c : positionConstraints)
         {
@@ -623,106 +621,74 @@ void RigidBodySystem::update(const float &dt, const bool &projectVelocities)
                 applyAngularConstraint(0.0f, c.softness, b1, b2, -d*normalize(a));
             }
         }
-        */
+    }
         
-        //Update velocities.
-        if (projectVelocities)
+    //Update velocities.
+    for (size_t i = 0; i < bodies.size(); ++i)
+    {
+        if (bodies[i].movable)
         {
-            for (size_t i = 0; i < bodies.size(); ++i)
-            {
-                if (bodies[i].movable)
-                {
-                    //Make it impossible to increase energy with collision resolution: you can only lose velocity along your initial velocity direction.
-                    vec3 vn = normalize(bodies[i].v);
-                    vec3 v = (bodies[i].x - preBodies[i].x)/h;
-                    
-                    bodies[i].v = std::max(0.0f, dot(v, vn))*vn;
+            bodies[i].v = (bodies[i].x - preBodies[i].x)/dt;
 
-                    vec4 dq = quatmul(bodies[i].q, quatconj(preBodies[i].q));
-                    vec3 wn = normalize(bodies[i].w);
-                    vec3 w = (dq.w >= 0.0f ? 2.0f/h : -2.0f/h)*dq.xyz();
+            const vec4 dq = quatmul(bodies[i].q, quatconj(preBodies[i].q));
 
-                    bodies[i].w = std::max(0.0f, dot(w, wn))*wn;
-                }
-            }
+            bodies[i].w = (dq.w >= 0.0f ? 2.0f/dt : -2.0f/dt)*dq.xyz();
         }
-        else
-        {
-            for (size_t i = 0; i < bodies.size(); ++i)
-            {
-                if (bodies[i].movable)
-                {
-                    bodies[i].v = (bodies[i].x - preBodies[i].x)/h;
+    }
 
-                    const vec4 dq = quatmul(bodies[i].q, quatconj(preBodies[i].q));
-
-                    bodies[i].w = (dq.w >= 0.0f ? 2.0f/h : -2.0f/h)*dq.xyz();
-                }
-            }
-        }
+    //Solve velocities.
+    for (size_t i = 0; i < collisions.size(); ++i)
+    {
+        const auto c = collisions[i];
         
-        //Solve velocities.
-        for (size_t i = 0; i < collisions.size(); ++i)
+        //Did we have a collision?
+        if (c.forceToZero)
         {
-            const auto c = collisions[i];
+            const auto cg = c.getWorldGeometry(bodies);
+            RigidBody *b1 = &bodies[c.b1.i];
+            RigidBody *b2 = &bodies[c.b2.i];
+
+            //Determine normal and tangential relative velocities.
+            vec3 vt = cg.v1 - cg.v2;
+            const float vn = dot(vt, c.n);
             
-            //Did we have a collision?
-            if (c.lambda != 0.0f)
-            {
-                const auto cg = c.getWorldGeometry(bodies);
-                RigidBody *b1 = &bodies[c.b1.i];
-                RigidBody *b2 = &bodies[c.b2.i];
+            vt -= vn*c.n;
+            
+            //Apply dynamic friction.
+            const float dynamicFrictionCoeff = std::sqrt(b1->dynamicFriction*b2->dynamicFriction);
 
-                //Determine normal and tangential relative velocities.
-                vec3 vt = cg.v1 - cg.v2;
-                const float vn = dot(vt, c.n);
-                
-                vt -= vn*c.n;
+            applyVelocityConstraint(b1, b2, cg.p1 - b1->x, cg.p2 - b2->x,
+                                    std::min(dynamicFrictionCoeff*std::abs(c.lambda)/dt, length(vt))*normalize(vt));
+            
+            //const auto postcg = c.getWorldGeometry(bodies);
+            //std::cout << "VN = " << vn << std::endl;
+            //std::cout << "VT = " << vt << std::endl;
+            //std::cout << "POSTVN = " << dot(postcg.v1 - postcg.v2, c.n) << std::endl;
+            //std::cout << "POSTVT = " << postcg.v1 - postcg.v2 - dot(postcg.v1 - postcg.v2, c.n)*c.n << std::endl;
 
-                //Apply dynamic friction.
-                const float dynamicFrictionCoeff = std::sqrt(b1->dynamicFriction*b2->dynamicFriction);
+            //Perform restitution in case of collisions that are not resting contacts.
 
-                applyVelocityConstraint(b1, b2, cg.p1 - b1->x, cg.p2 - b2->x,
-                                        std::min(dynamicFrictionCoeff*std::abs(c.lambda)/h, length(vt))*normalize(vt));
-                
-                /*
-                const auto postcg = c.getWorldGeometry(bodies);
-                
-                std::cout << "VN = " << vn << std::endl;
-                std::cout << "VT = " << vt << std::endl;
-                std::cout << "POSTVN = " << dot(postcg.v1 - postcg.v2, c.n) << std::endl;
-                std::cout << "POSTVT = " << postcg.v1 - postcg.v2 - dot(postcg.v1 - postcg.v2, c.n)*c.n << std::endl;
-                */
+            //Get pre-state normal velocity.
+            const auto precg = c.getWorldGeometry(preBodies);
+            const float prevn = dot(precg.v1 - precg.v2, c.n);
 
-                //Perform restitution in case of collisions that are not resting contacts.
+            //std::cout << "N = " << c.n << std::endl;
+            //std::cout << "PREVN = " << prevn << std::endl;
+            //std::cout << "VN = " << vn << std::endl;
+            //std::cout << "V1, W1 = " << b1->v << " -- " << b1->w << std::endl;
+            //std::cout << "V2, W2 = " << b2->v << " -- " << b2->w << std::endl;
+            
+            const float restitutionCoeff = (std::abs(prevn) > dt*RBMAXACC ? 
+                            std::sqrt(b1->restitution*b2->restitution) :
+                            0.0f);
 
-                //Get pre-state normal velocity.
-                const auto precg = c.getWorldGeometry(preBodies);
-                const float prevn = dot(precg.v1 - precg.v2, c.n);
+            applyVelocityConstraint(b1, b2, cg.p1 - b1->x, cg.p2 - b2->x,
+                                    (vn + std::max(0.0f, restitutionCoeff*prevn))*c.n);
 
-                /*
-                std::cout << "N = " << c.n << std::endl;
-                std::cout << "PREVN = " << prevn << std::endl;
-                std::cout << "VN = " << vn << std::endl;
-                std::cout << "V1, W1 = " << b1->v << " -- " << b1->w << std::endl;
-                std::cout << "V2, W2 = " << b2->v << " -- " << b2->w << std::endl;
-                */
-
-                const float restitutionCoeff = (std::abs(prevn) > h*RBMAXACC ? 
-                                std::sqrt(b1->restitution*b2->restitution) :
-                                0.0f);
-
-                applyVelocityConstraint(b1, b2, cg.p1 - b1->x, cg.p2 - b2->x,
-                                        (vn + std::max(0.0f, restitutionCoeff*prevn))*c.n);
-
-                /*
-                const auto postcg = c.getWorldGeometry(bodies);
-
-                std::cout << "POSTVN = " << dot(postcg.v1 - postcg.v2, c.n) << std::endl;
-                std::cout << "POSTV1, W1 = " << b1->v << " -- " << b1->w << std::endl;
-                std::cout << "POSTV2, W2 = " << b2->v << " -- " << b2->w << std::endl;
-                */
-            }
+            //const auto postcg = c.getWorldGeometry(bodies);
+            //std::cout << "POSTVN = " << dot(postcg.v1 - postcg.v2, c.n) << std::endl;
+            //std::cout << "POSTV1, W1 = " << b1->v << " -- " << b1->w << std::endl;
+            //std::cout << "POSTV2, W2 = " << b2->v << " -- " << b2->w << std::endl;
         }
     }
 
