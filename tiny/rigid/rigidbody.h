@@ -129,6 +129,7 @@ struct PositionConstraint
     ConstraintEntry b1, b2;
     float d; //Maximum allowed distance until constraint is enforced.
     float softness; //Constraint inverse stiffness.
+    bool forceToZero; //Force constraint to equality if it has been violated at least once.
 };
 
 struct AngularConstraint
@@ -136,6 +137,7 @@ struct AngularConstraint
     ConstraintEntry b1, b2;
     float d; //Maximum allowed angle until constraint is enforced.
     float softness; //Constraint inverse stiffness.
+    bool forceToZero; //Force constraint to equality if it has been violated at least once.
 };
 
 class RigidBodySystem

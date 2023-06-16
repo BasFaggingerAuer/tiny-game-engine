@@ -219,7 +219,7 @@ void RigidBodySystem::addPositionConstraint(const int &i1, const vec3 &r1, const
         return;
     }
     
-    positionConstraints.push_back(PositionConstraint{{i1, r1}, {i2, r2}, d, alpha});
+    positionConstraints.push_back(PositionConstraint{{i1, r1}, {i2, r2}, d, alpha, false});
 }
 
 void RigidBodySystem::addAngularConstraint(const int &i1, const vec3 &r1, const int &i2, const vec3 &r2, const float &d, const float &alpha)
@@ -231,7 +231,7 @@ void RigidBodySystem::addAngularConstraint(const int &i1, const vec3 &r1, const 
         return;
     }
     
-    angularConstraints.push_back(AngularConstraint{{i1, normalize(r1)}, {i2, normalize(r2)}, d, alpha});
+    angularConstraints.push_back(AngularConstraint{{i1, normalize(r1)}, {i2, normalize(r2)}, d, alpha, false});
 }
 
 std::tuple<float, float, float> applyAngularConstraint(const float lambda,
@@ -509,7 +509,18 @@ void RigidBodySystem::update(const float &dt)
             }
         }
     }
+
+    //Initialize non-collision constraints.
+    for (auto &c : positionConstraints)
+    {
+        c.forceToZero = false;
+    }
     
+    for (auto &c : angularConstraints)
+    {
+        c.forceToZero = false;
+    }
+
     //Zero force/torque accumulators.
     for (auto &b : bodies)
     {
@@ -584,7 +595,7 @@ void RigidBodySystem::update(const float &dt)
         }
         
         //Apply position constraints.
-        for (const auto &c : positionConstraints)
+        for (auto &c : positionConstraints)
         {
             RigidBody *b1 = &bodies[c.b1.i];
             RigidBody *b2 = &bodies[c.b2.i];
@@ -592,22 +603,24 @@ void RigidBodySystem::update(const float &dt)
             const vec3 p2 = mat3::rotationMatrix(b2->q)*c.b2.r + b2->x;
             const float d = length(p2 - p1) - c.d;
             
-            if (d > 0.0f)
+            if (d > 0.0f || c.forceToZero)
             {
+                c.forceToZero = true;
                 applyPositionConstraint(0.0f, c.softness, b1, b2, 0.5f*(p1 + p2), -d*normalize(p2 - p1));
             }
         }
         
         //Apply orientation constraints.
-        for (const auto &c : angularConstraints)
+        for (auto &c : angularConstraints)
         {
             RigidBody *b1 = &bodies[c.b1.i];
             RigidBody *b2 = &bodies[c.b2.i];
             const vec3 a = cross(mat3::rotationMatrix(b1->q)*c.b1.r, mat3::rotationMatrix(b2->q)*c.b2.r);
             const float d = length(a) - c.d;
             
-            if (d > 0.0f)
+            if (d > 0.0f || c.forceToZero)
             {
+                c.forceToZero = true;
                 applyAngularConstraint(0.0f, c.softness, b1, b2, -d*normalize(a));
             }
         }
