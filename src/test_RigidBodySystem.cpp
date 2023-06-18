@@ -44,13 +44,15 @@ class GravitySystem : public rigid::RigidBodySystem
             wheelTorques.fill(0.0f);
             
             //Add ground plane.
-            addInfinitePlaneBody(vec4(0.0f, 1.0f, 0.0f, 0.0f));
+            addInfinitePlaneBody(vec4(0.0f, 1.0f, 0.0f, 0.0f), 0.6f, 0.5f, 0.7f, 1.0e-7f);
             
             //Create a box.
+            /*
             addInfinitePlaneBody(vec4( 1.0f, 0.0f, 0.0f, -4.0f));
             addInfinitePlaneBody(vec4(-1.0f, 0.0f, 0.0f, -4.0f));
             addInfinitePlaneBody(vec4( 0.0f, 0.0f, 1.0f, -4.0f));
             addInfinitePlaneBody(vec4( 0.0f, 0.0f,-1.0f, -4.0f));
+            */
             
             //Create wheel geometry.
             std::vector<vec4> wheelGeometry;
@@ -59,6 +61,7 @@ class GravitySystem : public rigid::RigidBodySystem
             const float wheelStaticFriction = 1.0f; //Dry rubber on cement.
             const float wheelDynamicFriction = 0.7f; //Dry rubber on cement.
             const float wheelCOR = 0.95f;
+            const float wheelSoftness = 1.0e-7f;
 
             for (int i = 0; i < nrWheelSpheres; ++i)
             {
@@ -70,30 +73,31 @@ class GravitySystem : public rigid::RigidBodySystem
             wheelGeometry = std::vector<vec4>{vec4(0.0f, 0.0f, 0.0f, 1.4f*wheelRadius)};
             
             //Add wheels.
-            wheel1 = addSpheresRigidBody(40.0f, wheelGeometry, vec3(-1.6f, 2.0f*wheelRadius, -1.0f), vec3(0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f), wheelStaticFriction, wheelDynamicFriction, wheelCOR);
-            wheel2 = addSpheresRigidBody(40.0f, wheelGeometry, vec3(-1.6f, 2.0f*wheelRadius,  1.0f), vec3(0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f), wheelStaticFriction, wheelDynamicFriction, wheelCOR);
-            wheel3 = addSpheresRigidBody(40.0f, wheelGeometry, vec3( 1.6f, 2.0f*wheelRadius, -1.0f), vec3(0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f), wheelStaticFriction, wheelDynamicFriction, wheelCOR);
-            wheel4 = addSpheresRigidBody(40.0f, wheelGeometry, vec3( 1.6f, 2.0f*wheelRadius,  1.0f), vec3(0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f), wheelStaticFriction, wheelDynamicFriction, wheelCOR);
+            wheel1 = addSpheresRigidBody(40.0f, wheelGeometry, vec3(-1.6f, 2.0f*wheelRadius, -1.0f), vec3(0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f), wheelStaticFriction, wheelDynamicFriction, wheelCOR, wheelSoftness);
+            wheel2 = addSpheresRigidBody(40.0f, wheelGeometry, vec3(-1.6f, 2.0f*wheelRadius,  1.0f), vec3(0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f), wheelStaticFriction, wheelDynamicFriction, wheelCOR, wheelSoftness);
+            wheel3 = addSpheresRigidBody(40.0f, wheelGeometry, vec3( 1.6f, 2.0f*wheelRadius, -1.0f), vec3(0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f), wheelStaticFriction, wheelDynamicFriction, wheelCOR, wheelSoftness);
+            wheel4 = addSpheresRigidBody(40.0f, wheelGeometry, vec3( 1.6f, 2.0f*wheelRadius,  1.0f), vec3(0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f), wheelStaticFriction, wheelDynamicFriction, wheelCOR, wheelSoftness);
             
             //Add body.
             const float bodySphereRadius = 1.0f;
+            const float bodyHeight = 0.8f*wheelRadius;
 
             body = addSpheresRigidBody(3000.0f,
                                 {vec4(-2.0f, 0.0f, 0.0f, bodySphereRadius),
                                  vec4( 0.0f, 0.0f, 0.0f, bodySphereRadius),
                                  vec4( 2.0f, 0.0f, 0.0f, bodySphereRadius)},
-                                vec3(0.0f, bodySphereRadius + 1.5f*wheelRadius, 0.0f), vec3(0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f),
-                                0.61f, 0.47f, 0.70f);
+                                vec3(0.0f, bodySphereRadius + wheelRadius + bodyHeight, 0.0f), vec3(0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f),
+                                0.61f, 0.47f, 0.70f, 0.0f);
 
             //Add constraints.
             addNonCollidingPair(body, wheel1);
             addNonCollidingPair(body, wheel2);
             addNonCollidingPair(body, wheel3);
             addNonCollidingPair(body, wheel4);
-            addPositionConstraint(body, vec3(-1.6f, -0.5f*wheelRadius, -1.0f), wheel1, vec3(0.0f, 0.0f, 0.0f));
-            addPositionConstraint(body, vec3(-1.6f, -0.5f*wheelRadius,  1.0f), wheel2, vec3(0.0f, 0.0f, 0.0f));
-            addPositionConstraint(body, vec3( 1.6f, -0.5f*wheelRadius, -1.0f), wheel3, vec3(0.0f, 0.0f, 0.0f));
-            addPositionConstraint(body, vec3( 1.6f, -0.5f*wheelRadius,  1.0f), wheel4, vec3(0.0f, 0.0f, 0.0f));
+            addPositionConstraint(body, vec3(-1.6f, -bodyHeight, -1.0f), wheel1, vec3(0.0f, 0.0f, 0.0f));
+            addPositionConstraint(body, vec3(-1.6f, -bodyHeight,  1.0f), wheel2, vec3(0.0f, 0.0f, 0.0f));
+            addPositionConstraint(body, vec3( 1.6f, -bodyHeight, -1.0f), wheel3, vec3(0.0f, 0.0f, 0.0f));
+            addPositionConstraint(body, vec3( 1.6f, -bodyHeight,  1.0f), wheel4, vec3(0.0f, 0.0f, 0.0f));
             addAngularConstraint(body, vec3(0.0f, 0.0f, -1.0f), wheel1, vec3(0.0f, 0.0f, 1.0f));
             addAngularConstraint(body, vec3(0.0f, 0.0f,  1.0f), wheel2, vec3(0.0f, 0.0f, 1.0f));
             addAngularConstraint(body, vec3(0.0f, 0.0f, -1.0f), wheel3, vec3(0.0f, 0.0f, 1.0f));
@@ -250,7 +254,7 @@ void cleanup()
 void update(const double &dt)
 {
     //Control wheels.
-    const float tq = 1000.0f;
+    const float tq = 10000.0f;
 
     if (application->isKeyPressed('1')) rigidBodySystem->wheelTorques[0] =  tq;
     if (application->isKeyPressed('2')) rigidBodySystem->wheelTorques[0] = -tq;

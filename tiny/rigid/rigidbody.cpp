@@ -219,7 +219,7 @@ void RigidBodySystem::addPositionConstraint(const int &i1, const vec3 &r1, const
         return;
     }
     
-    positionConstraints.push_back(PositionConstraint{{i1, r1}, {i2, r2}, d, alpha, false});
+    positionConstraints.push_back(PositionConstraint{{i1, r1}, {i2, r2}, d, alpha, 0.0f, false});
 }
 
 void RigidBodySystem::addAngularConstraint(const int &i1, const vec3 &r1, const int &i2, const vec3 &r2, const float &d, const float &alpha)
@@ -231,7 +231,7 @@ void RigidBodySystem::addAngularConstraint(const int &i1, const vec3 &r1, const 
         return;
     }
     
-    angularConstraints.push_back(AngularConstraint{{i1, normalize(r1)}, {i2, normalize(r2)}, d, alpha, false});
+    angularConstraints.push_back(AngularConstraint{{i1, normalize(r1)}, {i2, normalize(r2)}, d, alpha, 0.0f, false});
 }
 
 std::tuple<float, float, float> applyAngularConstraint(const float lambda,
@@ -513,11 +513,13 @@ void RigidBodySystem::update(const float &dt)
     //Initialize non-collision constraints.
     for (auto &c : positionConstraints)
     {
+        c.lambda = 0.0f;
         c.forceToZero = false;
     }
     
     for (auto &c : angularConstraints)
     {
+        c.lambda = 0.0f;
         c.forceToZero = false;
     }
 
@@ -528,11 +530,11 @@ void RigidBodySystem::update(const float &dt)
         b.t = vec3(0.0f);
     }
 
-    //Apply forces.
-    applyExternalForces();
-
     //Store pre-update positions and velocities.
     preBodies = bodies;
+
+    //Apply forces.
+    applyExternalForces();
 
     //Apply forces and velocities.
     for (auto &b : bodies)
@@ -567,10 +569,10 @@ void RigidBodySystem::update(const float &dt)
                 RigidBody *b1 = &bodies[c.b1.i];
                 RigidBody *b2 = &bodies[c.b2.i];
 
-                const float softnessCoeff = 0.5f*(b1->softness + b2->softness)/(dt*dt);
+                const float softnessCoeff = 0.5f*(b1->softness + b2->softness)*static_cast<float>(nrSubSteps*nrSubSteps)/(dt*dt);
                 
                 //Apply position constraint to avoid object interpenetration.
-                auto [l, w1, w2] = applyPositionConstraint(0.0f, softnessCoeff, b1, b2, 0.5f*(cg.p1 + cg.p2), -c.d*c.n);
+                auto [l, w1, w2] = applyPositionConstraint(c.lambda, softnessCoeff, b1, b2, 0.5f*(cg.p1 + cg.p2), -c.d*c.n);
                 
                 c.lambda += l;
                 
@@ -605,8 +607,13 @@ void RigidBodySystem::update(const float &dt)
             
             if (d > 0.0f || c.forceToZero)
             {
+                const float softnessCoeff = 0.5f*c.softness*static_cast<float>(nrSubSteps*nrSubSteps)/(dt*dt);
+
                 c.forceToZero = true;
-                applyPositionConstraint(0.0f, c.softness, b1, b2, 0.5f*(p1 + p2), -d*normalize(p2 - p1));
+
+                auto [l, w1, w2] = applyPositionConstraint(c.lambda, softnessCoeff, b1, b2, 0.5f*(p1 + p2), -d*normalize(p2 - p1));
+
+                c.lambda += l;
             }
         }
         
@@ -620,8 +627,12 @@ void RigidBodySystem::update(const float &dt)
             
             if (d > 0.0f || c.forceToZero)
             {
+                const float softnessCoeff = 0.5f*c.softness*static_cast<float>(nrSubSteps*nrSubSteps)/(dt*dt);
+
                 c.forceToZero = true;
-                applyAngularConstraint(0.0f, c.softness, b1, b2, -d*normalize(a));
+                auto [l, w1, w2] = applyAngularConstraint(c.lambda, softnessCoeff, b1, b2, -d*normalize(a));
+
+                c.lambda += l;
             }
         }
     }
@@ -668,13 +679,6 @@ void RigidBodySystem::update(const float &dt)
             //Get pre-state normal velocity.
             const auto precg = c.getWorldGeometry(preBodies);
             const float prevn = dot(precg.v1 - precg.v2, c.n);
-
-            //std::cout << "N = " << c.n << std::endl;
-            //std::cout << "PREVN = " << prevn << std::endl;
-            //std::cout << "VN = " << vn << std::endl;
-            //std::cout << "V1, W1 = " << b1->v << " -- " << b1->w << std::endl;
-            //std::cout << "V2, W2 = " << b2->v << " -- " << b2->w << std::endl;
-            
             const float restitutionCoeff = (std::abs(prevn) > dt*RBMAXACC ? 
                             std::sqrt(b1->restitution*b2->restitution) :
                             0.0f);
