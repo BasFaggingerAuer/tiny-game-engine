@@ -40,25 +40,43 @@ class GravitySystem : public rigid::RigidBodySystem
 {
     public:
         bool pull;
+        float E0;
+        const float g = 9.81f;
 
         GravitySystem() : RigidBodySystem()
         {
             const int nrBodies = 8;
-            const int nrSpheresPerBody = 3;
-            const float length = 0.1f;
-            const float height = 0.5f;
+            const int nrSpheresPerBody = 20;
+            const float radius = 0.01f;
+            const float height = 0.2f;
 
             std::vector<vec4> shape;
 
-            for (int i = 0; i < nrSpheresPerBody; ++i) shape.push_back(vec4(0.0f, 0.5f*length*static_cast<float>(i), 0.0f, length/static_cast<float>(nrSpheresPerBody)));
+            for (int i = 0; i < nrSpheresPerBody; ++i) shape.push_back(vec4(0.0f, radius*static_cast<float>(i), 0.0f, radius));
 
             for (int i = 0; i < nrBodies; ++i) {
-                const float x = length*static_cast<float>(i - nrBodies/2);
+                const float x = 0.5f*height*static_cast<float>(i - nrBodies/2);
 
                 addPositionConstraint(
-                    addSpheresRigidBody(0.1f, shape, vec3(x, 0.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f), 0.1f, 0.1f, 0.95f, 0.0f), vec3(0.0f, 0.5f*length, 0.0f),
-                    addImmovableSpheresRigidBody({vec4(0.0f, 0.0f, 0.0f, 0.01f)}, vec3(x, height, 0.0f)), vec3(0.0f, 0.0f, 0.0f),
+                    addSpheresRigidBody(0.05f, shape, vec3(x, 0.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f), 0.1f, 0.1f, 0.95f, 0.0f),
+                    vec3(0.0f, 0.5f*static_cast<float>(nrSpheresPerBody)*radius, 0.0f),
+                    addImmovableSpheresRigidBody({vec4(0.0f, 0.0f, 0.0f, 0.01f)}, vec3(x, height, 0.0f)),
+                    vec3(0.0f, 0.0f, 0.0f),
                     height, 0.0f);
+            }
+
+            for (int i = 0; i < 128; ++i) {
+                update(0.01f);
+            }
+
+            E0 = 0.0f;
+
+            for (const auto &b : bodies)
+            {
+                if (b.movable)
+                {
+                    E0 += g*b.x.y/b.invM; //Potential energy due to gravity.
+                }
             }
 
             pull = false;
@@ -74,7 +92,7 @@ class GravitySystem : public rigid::RigidBodySystem
         {
             for (auto &b : bodies)
             {
-                b.f = vec3(0.0f, -9.81f/b.invM, 0.0f); //Gravity.
+                b.f = vec3(0.0f, -g/b.invM, 0.0f); //Gravity.
             }
 
             if (pull)
@@ -92,11 +110,11 @@ class GravitySystem : public rigid::RigidBodySystem
             {
                 if (b.movable)
                 {
-                    e += 9.81f*(b.x.y + 1.0f)/b.invM; //Potential energy due to gravity.
+                    e += g*b.x.y/b.invM; //Potential energy due to gravity.
                 }
             }
 
-            return e;
+            return e - E0;
         }
 };
 

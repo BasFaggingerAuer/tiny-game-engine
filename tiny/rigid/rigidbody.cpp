@@ -610,8 +610,10 @@ void RigidBodySystem::update(const float &dt)
                 const float softnessCoeff = 0.5f*c.softness*static_cast<float>(nrSubSteps*nrSubSteps)/(dt*dt);
 
                 c.forceToZero = true;
-
-                auto [l, w1, w2] = applyPositionConstraint(c.lambda, softnessCoeff, b1, b2, 0.5f*(p1 + p2), -d*normalize(p2 - p1));
+                
+                //Apply velocity changes at the location of the movable body.
+                //TODO: Understand how two movable bodies can have a constraint with > 0 distance.
+                auto [l, w1, w2] = applyPositionConstraint(c.lambda, softnessCoeff, b1, b2, (!b1->movable ? p2 : (!b2->movable ? p1 : 0.5f*(p1 + p2))), -d*normalize(p2 - p1));
 
                 c.lambda += l;
             }
