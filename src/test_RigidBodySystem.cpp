@@ -116,7 +116,7 @@ class GravitySystem : public rigid::RigidBodySystem
                                 vec3(-16.0f, 4.0f, 0.0f));
             
             //Add some rigid bodies.
-            for (int i = 0; i < 64; ++i)
+            for (int i = 0; i < 128; ++i)
             {
                 addSpheresRigidBody(1.0f, {
                     vec4(0.0f, 0.0f, 0.0f, 0.3f),

@@ -51,6 +51,7 @@ struct RigidBody
     vec3 t; //Torque accumulator.
 
     bool movable; //Is the object movable at all (default yes).
+    bool canCollide; // Can the object collide with other objects at all?
     RigidBodyGeometry geometry; //Type of object geometry.
     
     //For Spheres geometry.
@@ -94,14 +95,14 @@ struct RigidBody
     }
 };
 
-struct RigidBodyCollisionEntry
+struct PointOnRigidBody
 {
     int i; //Index of rigid body.
-    int sphere; //Index of internal sphere.
-    vec3 r; //Collision point in body's local coordinates.
+    int sphere; //Index of internal sphere (for collisions).
+    vec3 r; //Point in body's local coordinates.
 };
 
-struct RigidBodyCollisionGeometry
+struct TwoRigidBodyPointGeometry
 {
     vec3 p1, p2; //Positions of colliding points in world coordinate system.
     vec3 v1, v2; //Velocities of colliding points in world coorindate system.
@@ -109,24 +110,16 @@ struct RigidBodyCollisionGeometry
 
 struct RigidBodyCollision
 {
-    RigidBodyCollisionEntry b1, b2;
+    PointOnRigidBody b1, b2;
     float d; //Signed distance of b2 w.r.t. b1 along the collision normal. A collision occurs if d <= 0.
     float lambda; //Constraint multiplier.
     vec3 n; //Normal of collision surface.
     bool forceToZero; //Force constraint to equality if it has been violated at least once.
-
-    RigidBodyCollisionGeometry getWorldGeometry(const std::vector<RigidBody> &) const noexcept;
-};
-
-struct ConstraintEntry
-{
-    int i; //Index of rigid body.
-    vec3 r; //Constraint point or direction in body's local coordinates.
 };
 
 struct PositionConstraint
 {
-    ConstraintEntry b1, b2;
+    PointOnRigidBody b1, b2;
     float d; //Maximum allowed distance until constraint is enforced.
     float softness; //Constraint inverse stiffness.
     float lambda;
@@ -135,7 +128,7 @@ struct PositionConstraint
 
 struct AngularConstraint
 {
-    ConstraintEntry b1, b2;
+    PointOnRigidBody b1, b2;
     float d; //Maximum allowed angle until constraint is enforced.
     float softness; //Constraint inverse stiffness.
     float lambda;
@@ -145,7 +138,7 @@ struct AngularConstraint
 class RigidBodySystem
 {
     public:
-        RigidBodySystem(const int & = 16);
+        RigidBodySystem(const int & = 32);
         virtual ~RigidBodySystem();
         
         int addInfinitePlaneBody(const vec4 &,
@@ -228,6 +221,7 @@ class RigidBodySystem
         void calculateInternalSpheres(const RigidBody &, const float &);
         RigidBodyCollision initializeCollision(RigidBodyCollision) const noexcept;
         float addMarginToRadius(const float, const float) const;
+        static TwoRigidBodyPointGeometry getWorldGeometry(const std::vector<RigidBody> &, const PointOnRigidBody &, const PointOnRigidBody &) noexcept;
 };
 
 }

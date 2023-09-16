@@ -23,7 +23,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 
 #include <tiny/math/vec.h>
 
-//(Slow, should use LAPACK/Eigen/..., but this code will only be used incidentally and its fun to figure this out.)
+//(Slow, should use LAPACK/Eigen/..., but this code will only be used incidentally and it's fun to figure this out.)
 namespace tiny
 {
 
@@ -554,7 +554,7 @@ class genvec : public genmat<t, m, 1>
         //Quaternion from axis-angle rotation.
         template <size_t n = m>
         typename std::enable_if_t<n == 4, genvec<t, m>>
-        inline friend quatconj(const t &alpha, const genvec<t, 3> &a) noexcept
+        inline friend quatrot(const t &alpha, const genvec<t, 3> &a) noexcept
         {
             const t s = std::sin(t(0.5)*alpha);
 

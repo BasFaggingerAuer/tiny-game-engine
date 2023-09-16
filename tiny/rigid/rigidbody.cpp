@@ -63,7 +63,7 @@ int RigidBodySystem::addInfinitePlaneBody(const vec4 &plane,
     planeBodyIndices.push_back(bodies.size());
     bodies.push_back({0.0f, vec3(0.0f),
         vec3(0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(0.0f), vec3(0.0f), vec3(0.0f), vec3(0.0f),
-        false, RigidBodyGeometry::Plane,
+        false, true, RigidBodyGeometry::Plane,
         0.0f, 0.0f, 0, 0,
         plane/length(plane.xyz()),
         a_statFric, a_dynFric, a_rest, a_soft});
@@ -168,7 +168,7 @@ int RigidBodySystem::addSpheresRigidBody(const float &totalMass, const std::vect
 
     //Add rigid body to system.
     bodies.push_back({1.0f/totalMass, 1.0f/e, x, q, v, w, vec3(0.0f), vec3(0.0f),
-        true, RigidBodyGeometry::Spheres,
+        true, true, RigidBodyGeometry::Spheres,
         maxRadius, maxRadius, static_cast<int>(bodyInternalSpheres.size()), static_cast<int>(bodyInternalSpheres.size() + spheres.size()),
         vec4(0.0f),
         a_statFric, a_dynFric, a_rest, a_soft});
@@ -177,7 +177,7 @@ int RigidBodySystem::addSpheresRigidBody(const float &totalMass, const std::vect
     //Add rigid body to the AABB tree.
     tree.insert(bodies.back().getAABB(RBAABBDT).scale(RBAABBSCALE), bodies.size() - 1);
 
-    std::cout << "Added " << spheres.size() << " spheres " << bodies.back();
+    std::cout << "Added " << spheres.size() << " spheres, index " << bodies.size() - 1 << ", " << bodies.back();
 
     return bodies.size() - 1;
 }
@@ -212,6 +212,8 @@ void RigidBodySystem::addNonCollidingPair(const int &i1, const int &i2)
 
 void RigidBodySystem::addPositionConstraint(const int &i1, const vec3 &r1, const int &i2, const vec3 &r2, const float &d, const float &alpha)
 {
+    std::cout << "Adding position constraint between " << i1 << " " << r1 << " and " << i2 << " " << r2 << "." << std::endl;
+
     if (i1 < 0 || i2 < 0 || i1 >= static_cast<int>(bodies.size()) || i2 >= static_cast<int>(bodies.size()) || i1 == i2)
     {
         std::cerr << "Invalid pair of bodies for applying a position constraint!" << std::endl;
@@ -219,11 +221,13 @@ void RigidBodySystem::addPositionConstraint(const int &i1, const vec3 &r1, const
         return;
     }
     
-    positionConstraints.push_back(PositionConstraint{{i1, r1}, {i2, r2}, d, alpha, 0.0f, false});
+    positionConstraints.push_back(PositionConstraint{{i1, 0, r1}, {i2, 0, r2}, d, alpha, 0.0f, false});
 }
 
 void RigidBodySystem::addAngularConstraint(const int &i1, const vec3 &r1, const int &i2, const vec3 &r2, const float &d, const float &alpha)
 {
+    std::cout << "Adding angular constraint between " << i1 << " " << r1 << " and " << i2 << " " << r2 << "." << std::endl;
+
     if (i1 < 0 || i2 < 0 || i1 >= static_cast<int>(bodies.size()) || i2 >= static_cast<int>(bodies.size()) || i1 == i2)
     {
         std::cerr << "Invalid pair of bodies for applying a position constraint!" << std::endl;
@@ -231,7 +235,7 @@ void RigidBodySystem::addAngularConstraint(const int &i1, const vec3 &r1, const 
         return;
     }
     
-    angularConstraints.push_back(AngularConstraint{{i1, normalize(r1)}, {i2, normalize(r2)}, d, alpha, 0.0f, false});
+    angularConstraints.push_back(AngularConstraint{{i1, 0, normalize(r1)}, {i2, 0, normalize(r2)}, d, alpha, 0.0f, false});
 }
 
 std::tuple<float, float, float> applyAngularConstraint(const float lambda,
@@ -266,6 +270,25 @@ std::tuple<float, float, float> applyAngularConstraint(const float lambda,
     }
     
     return std::make_tuple(dlambda, w1, w2);
+}
+
+void applyAngularVelocityConstraint(RigidBody *b1,
+                             RigidBody *b2,
+                             const vec3 &dw) noexcept
+{
+    vec3 n = normalize(dw);
+    
+    //Do nothing if we are below numerical precision.
+    if (length(n) < 0.99f) return;
+
+    const mat3 invI1 = b1->getInvI();
+    const mat3 invI2 = b2->getInvI();
+    const float w1 = dot(n, invI1*n);
+    const float w2 = dot(n, invI2*n);
+    
+    n *= -length(dw)/(w1 + w2);
+    b1->w += invI1*n;
+    b2->w -= invI2*n;
 }
 
 std::tuple<float, float, float> applyPositionConstraint(const float lambda,
@@ -380,14 +403,14 @@ RigidBodyCollision RigidBodySystem::initializeCollision(RigidBodyCollision c) co
     return c;
 }
 
-RigidBodyCollisionGeometry RigidBodyCollision::getWorldGeometry(const std::vector<RigidBody> &bodies) const noexcept
+TwoRigidBodyPointGeometry RigidBodySystem::getWorldGeometry(const std::vector<RigidBody> &bodies, const PointOnRigidBody &b1, const PointOnRigidBody &b2) noexcept
 {
     const RigidBody *pb1 = &bodies[b1.i];
     const RigidBody *pb2 = &bodies[b2.i];
     const vec3 r1 = mat3::rotationMatrix(pb1->q)*b1.r;
     const vec3 r2 = mat3::rotationMatrix(pb2->q)*b2.r;
 
-    return RigidBodyCollisionGeometry({pb1->x + r1,
+    return TwoRigidBodyPointGeometry({pb1->x + r1,
                                        pb2->x + r2,
                                        pb1->v + cross(pb1->w, r1),
                                        pb2->v + cross(pb2->w, r2)});
@@ -445,28 +468,31 @@ void RigidBodySystem::update(const float &dt)
 
             //TODO: Use that we could be testing 1 body vs. many other bodies to optimize.
             //TODO: Consider enforcing a fixed number of internal spheres per object to parallellize these checks effectively.
-            const mat3 R1 = mat3::rotationMatrix(b1.q);
-            const mat3 R2 = mat3::rotationMatrix(b2.q);
+            //TODO: Objects that cannot collide should not be part of the tree in the first place.
+            if (b1.canCollide && b2.canCollide) {
+                const mat3 R1 = mat3::rotationMatrix(b1.q);
+                const mat3 R2 = mat3::rotationMatrix(b2.q);
 
-            for (auto iS1 = b1.firstInternalSphere; iS1 < b1.lastInternalSphere; ++iS1)
-            {
-                //Get potential collisions taking the object's velocity (linear and angular) into account.
-                vec4 s1 = vec4(b1.x + R1*bodyInternalSpheres[iS1].xyz(), bodyInternalSpheres[iS1].w);
-
-                s1.w += dt*(0.5f*dt*RBMAXACC + length(b1.v + cross(b1.w, s1.xyz() - b1.x))) + RBEPS;
-                
-                for (auto iS2 = b2.firstInternalSphere; iS2 < b2.lastInternalSphere; ++iS2)
+                for (auto iS1 = b1.firstInternalSphere; iS1 < b1.lastInternalSphere; ++iS1)
                 {
-                    vec4 s2 = vec4(b2.x + R2*bodyInternalSpheres[iS2].xyz(), bodyInternalSpheres[iS2].w);
+                    //Get potential collisions taking the object's velocity (linear and angular) into account.
+                    vec4 s1 = vec4(b1.x + R1*bodyInternalSpheres[iS1].xyz(), bodyInternalSpheres[iS1].w);
 
-                    s2.w += dt*(0.5f*dt*RBMAXACC + length(b2.v + cross(b2.w, s2.xyz() - b2.x))) + RBEPS;
+                    s1.w += dt*(0.5f*dt*RBMAXACC + length(b1.v + cross(b1.w, s1.xyz() - b1.x))) + RBEPS;
                     
-                    if (length(s1.xyz() - s2.xyz()) <= s1.w + s2.w)
+                    for (auto iS2 = b2.firstInternalSphere; iS2 < b2.lastInternalSphere; ++iS2)
                     {
-                        //If so, add a potential collision.
-                        collisions.push_back(RigidBodyCollision({{intersection.first, iS1 - b1.firstInternalSphere, vec3(0.0f)},
-                                                                 {intersection.second, iS2 - b2.firstInternalSphere, vec3(0.0f)},
-                                                                 0.0f, 0.0f, vec3(0.0f), false}));
+                        vec4 s2 = vec4(b2.x + R2*bodyInternalSpheres[iS2].xyz(), bodyInternalSpheres[iS2].w);
+
+                        s2.w += dt*(0.5f*dt*RBMAXACC + length(b2.v + cross(b2.w, s2.xyz() - b2.x))) + RBEPS;
+                        
+                        if (length(s1.xyz() - s2.xyz()) <= s1.w + s2.w)
+                        {
+                            //If so, add a potential collision.
+                            collisions.push_back(RigidBodyCollision({{intersection.first, iS1 - b1.firstInternalSphere, vec3(0.0f)},
+                                                                     {intersection.second, iS2 - b2.firstInternalSphere, vec3(0.0f)},
+                                                                     0.0f, 0.0f, vec3(0.0f), false}));
+                        }
                     }
                 }
             }
@@ -565,7 +591,7 @@ void RigidBodySystem::update(const float &dt)
                 //Force constraint to be satisfied exactly if it is violated at least once.
                 c.forceToZero = true;
 
-                const auto cg = c.getWorldGeometry(bodies);
+                const auto cg = getWorldGeometry(bodies, c.b1, c.b2);
                 RigidBody *b1 = &bodies[c.b1.i];
                 RigidBody *b2 = &bodies[c.b2.i];
 
@@ -578,7 +604,7 @@ void RigidBodySystem::update(const float &dt)
                 
                 //Handle static friction.
                 const float staticFrictionCoeff = std::sqrt(b1->staticFriction*b2->staticFriction);
-                const auto precg = c.getWorldGeometry(preBodies);
+                const auto precg = getWorldGeometry(preBodies, c.b1, c.b2);
                 
                 //Figure out how the current collision point has moved w.r.t. the previous iteration on both bodies.
                 //N.B., we need to track a fixed point on the rigid body.
@@ -653,6 +679,36 @@ void RigidBodySystem::update(const float &dt)
     }
 
     //Solve velocities.
+
+    //Velocity update for position constraints.
+    for (auto &c : positionConstraints)
+    {
+        if (c.forceToZero)
+        {
+            const auto cg = getWorldGeometry(bodies, c.b1, c.b2);
+            RigidBody *b1 = &bodies[c.b1.i];
+            RigidBody *b2 = &bodies[c.b2.i];
+            
+            //Should have relative velocity 0 at a position constraint.
+            applyVelocityConstraint(b1, b2, cg.p1 - b1->x, cg.p2 - b2->x, cg.v1 - cg.v2);
+        }
+    }
+    
+    //Apply orientation constraints.
+    for (auto &c : angularConstraints)
+    {
+        if (c.forceToZero)
+        {
+            const auto cg = getWorldGeometry(bodies, c.b1, c.b2);
+            RigidBody *b1 = &bodies[c.b1.i];
+            RigidBody *b2 = &bodies[c.b2.i];
+            
+            //TODO: Should have relative angular velocity 0 at orientation constraint.
+            //applyAngularVelocityConstraint(b1, b2, -d*normalize(a));
+        }
+    }
+
+    //Velocity update for collisions.
     for (size_t i = 0; i < collisions.size(); ++i)
     {
         const auto c = collisions[i];
@@ -660,7 +716,7 @@ void RigidBodySystem::update(const float &dt)
         //Did we have a collision?
         if (c.forceToZero)
         {
-            const auto cg = c.getWorldGeometry(bodies);
+            const auto cg = getWorldGeometry(bodies, c.b1, c.b2);
             RigidBody *b1 = &bodies[c.b1.i];
             RigidBody *b2 = &bodies[c.b2.i];
 
@@ -679,7 +735,7 @@ void RigidBodySystem::update(const float &dt)
             //Perform restitution in case of collisions that are not resting contacts.
 
             //Get pre-state normal velocity.
-            const auto precg = c.getWorldGeometry(preBodies);
+            const auto precg = getWorldGeometry(preBodies, c.b1, c.b2);
             const float prevn = dot(precg.v1 - precg.v2, c.n);
             const float restitutionCoeff = (std::abs(prevn) > dt*RBMAXACC ? 
                             std::sqrt(b1->restitution*b2->restitution) :

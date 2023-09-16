@@ -46,23 +46,29 @@ class GravitySystem : public rigid::RigidBodySystem
         GravitySystem() : RigidBodySystem()
         {
             const int nrBodies = 8;
-            const int nrSpheresPerBody = 20;
+            const int nrSpheresPerBody = 8;
+            const int nrSpheresPerChain = 4;
             const float radius = 0.01f;
             const float height = 0.2f;
+            const float radiusChain = 0.5f*height/static_cast<float>(nrSpheresPerChain);
 
             std::vector<vec4> shape;
 
-            for (int i = 0; i < nrSpheresPerBody; ++i) shape.push_back(vec4(0.0f, radius*static_cast<float>(i), 0.0f, radius));
+            for (int i = 0; i < nrSpheresPerBody; ++i) shape.push_back(vec4(0.0f, -2.0f*radius*(static_cast<float>(i) + 0.5f), 0.0f, radius));
 
             for (int i = 0; i < nrBodies; ++i) {
                 const float x = 0.5f*height*static_cast<float>(i - nrBodies/2);
+                std::vector<int> spheres;
 
-                addPositionConstraint(
-                    addSpheresRigidBody(0.05f, shape, vec3(x, 0.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f), 0.1f, 0.1f, 0.95f, 0.0f),
-                    vec3(0.0f, 0.5f*static_cast<float>(nrSpheresPerBody)*radius, 0.0f),
-                    addImmovableSpheresRigidBody({vec4(0.0f, 0.0f, 0.0f, 0.01f)}, vec3(x, height, 0.0f)),
-                    vec3(0.0f, 0.0f, 0.0f),
-                    height, 0.0f);
+                spheres.push_back(addSpheresRigidBody(0.05f, shape, vec3(x, 0.0f, 0.0f), vec3(0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f), 0.1f, 0.1f, 0.95f, 0.0f));
+                for (int j = 0; j < nrSpheresPerChain; ++j) spheres.push_back(addSpheresRigidBody(0.025f/static_cast<float>(nrSpheresPerChain), {vec4(0.0f, 0.0f, 0.0f, radiusChain)}, vec3(x, (2.0f*static_cast<float>(j) + 1.0f)*radiusChain, 0.0f)));
+                spheres.push_back(addImmovableSpheresRigidBody({vec4(0.0f, 0.0f, 0.0f, radius)}, vec3(x, height + radius, 0.0f)));
+
+                addPositionConstraint(spheres[0], vec3(0.0f, static_cast<float>(nrSpheresPerBody)*radius, 0.0f), spheres[1], vec3(0.0f, -radiusChain, 0.0f));
+                for (int j = 0; j < nrSpheresPerChain - 1; ++j) addPositionConstraint(spheres[j + 1], vec3(0.0f, radiusChain, 0.0f), spheres[j + 2], vec3(0.0f, -radiusChain, 0.0f));
+                addPositionConstraint(spheres[nrSpheresPerChain], vec3(0.0f, radiusChain, 0.0f), spheres[nrSpheresPerChain + 1], vec3(0.0f, -radius, 0.0f));
+
+                for (int j = 0; j <= nrSpheresPerChain; ++j) bodies[spheres[j + 1]].canCollide = false;
             }
 
             for (int i = 0; i < 128; ++i) {
