@@ -47,7 +47,7 @@ class GravitySystem : public rigid::RigidBodySystem
         {
             const int nrBodies = 8;
             const int nrSpheresPerBody = 8;
-            const int nrSpheresPerChain = 4;
+            const int nrSpheresPerChain = 8;
             const float radius = 0.01f;
             const float height = 0.2f;
             const float radiusChain = 0.5f*height/static_cast<float>(nrSpheresPerChain);

@@ -44,7 +44,7 @@ class GravitySystem : public rigid::RigidBodySystem
             wheelTorques.fill(0.0f);
             
             //Add ground plane.
-            addInfinitePlaneBody(vec4(0.0f, 1.0f, 0.0f, 0.0f), 0.6f, 0.5f, 0.7f, 1.0e-7f);
+            addInfinitePlaneBody(vec4(0.0f, 1.0f, 0.0f, 0.0f), 0.6f, 0.5f, 0.7f, 1.0e-8f);
             
             //Create a box.
             /*
@@ -61,7 +61,7 @@ class GravitySystem : public rigid::RigidBodySystem
             const float wheelStaticFriction = 1.0f; //Dry rubber on cement.
             const float wheelDynamicFriction = 0.7f; //Dry rubber on cement.
             const float wheelCOR = 0.95f;
-            const float wheelSoftness = 1.0e-7f;
+            const float wheelSoftness = 1.0e-8f;
 
             for (int i = 0; i < nrWheelSpheres; ++i)
             {
