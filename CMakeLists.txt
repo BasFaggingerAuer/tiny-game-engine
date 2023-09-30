@@ -191,6 +191,8 @@ target_link_libraries(test_RigidBodySystem ${USED_LIBS})
 add_executable(test_RigidBodyPendulum src/test_RigidBodyPendulum.cpp)
 target_link_libraries(test_RigidBodyPendulum ${USED_LIBS})
 
+add_executable(test_RigidBodyCollision src/test_RigidBodyCollision.cpp)
+target_link_libraries(test_RigidBodyCollision ${USED_LIBS})
 
 add_subdirectory(${TINY_SOURCE_DIR}/tanks/)
 
