@@ -20,6 +20,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <algorithm>
 #include <set>
 
+#include <tiny/rigid/triangle.h>
 #include <tiny/rigid/rigidbody.h>
 
 using namespace tiny;
@@ -43,7 +44,10 @@ RigidBodySystem::RigidBodySystem(const int &a_nrSubSteps) :
     planeBodyIndices(),
     nrSubSteps(a_nrSubSteps)
 {
-
+    //Add rigid body 0 to contain triangles.
+    //FIXME: This can be done more elegantly.
+    addImmovableSpheresRigidBody({vec4(0.0f, 0.0f, 0.0f, 1.0f)}, vec3(0.0f));
+    bodies[0].canCollide = false;
 }
 
 RigidBodySystem::~RigidBodySystem()
@@ -54,25 +58,6 @@ RigidBodySystem::~RigidBodySystem()
 float RigidBodySystem::getTime() const
 {
     return time;
-}
-
-int RigidBodySystem::addInfinitePlaneBody(const vec4 &plane,
-    const float &a_statFric, const float &a_dynFric, const float &a_rest, const float &a_soft)
-{
-    //Add an immovable infinite plane.
-    planeBodyIndices.push_back(bodies.size());
-    bodies.push_back({0.0f, vec3(0.0f),
-        vec3(0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(0.0f), vec3(0.0f), vec3(0.0f), vec3(0.0f),
-        false, true, RigidBodyGeometry::Plane,
-        0.0f, 0.0f, 0, 0,
-        plane/length(plane.xyz()),
-        a_statFric, a_dynFric, a_rest, a_soft});
-
-    //Infinite planes are not added to the AABB tree.
-    
-    std::cout << "Added plane " << bodies.back().plane << " " << bodies.back();
-
-    return bodies.size() - 1;
 }
 
 int RigidBodySystem::addSpheresRigidBody(const float &totalMass, const std::vector<vec4> &a_spheres,
@@ -168,9 +153,8 @@ int RigidBodySystem::addSpheresRigidBody(const float &totalMass, const std::vect
 
     //Add rigid body to system.
     bodies.push_back({1.0f/totalMass, 1.0f/e, x, q, v, w, vec3(0.0f), vec3(0.0f),
-        true, true, RigidBodyGeometry::Spheres,
+        true, true,
         maxRadius, maxRadius, static_cast<int>(bodyInternalSpheres.size()), static_cast<int>(bodyInternalSpheres.size() + spheres.size()),
-        vec4(0.0f),
         a_statFric, a_dynFric, a_rest, a_soft});
     bodyInternalSpheres.insert(bodyInternalSpheres.end(), spheres.begin(), spheres.end());
 
@@ -362,13 +346,14 @@ RigidBodyCollision RigidBodySystem::initializeCollision(RigidBodyCollision c) co
     const RigidBody *b1 = &bodies[c.b1.i];
     const RigidBody *b2 = &bodies[c.b2.i];
 
+    vec4 is;
     vec3 n, p1, p2;
     float d;
     
-    if (b1->geometry == RigidBodyGeometry::Spheres && b2->geometry == RigidBodyGeometry::Spheres)
+    if (c.b1.i > 0 && c.b2.i > 0)
     {
         //Get potentially colliding internal spheres.
-        vec4 is = bodyInternalSpheres[b1->firstInternalSphere + c.b1.sphere];
+        is = bodyInternalSpheres[b1->firstInternalSphere + c.b1.sphere];
         const vec4 s1 = vec4(b1->x + mat3::rotationMatrix(b1->q)*is.xyz(), is.w);
         is = bodyInternalSpheres[b2->firstInternalSphere + c.b2.sphere];
         const vec4 s2 = vec4(b2->x + mat3::rotationMatrix(b2->q)*is.xyz(), is.w);
@@ -378,21 +363,18 @@ RigidBodyCollision RigidBodySystem::initializeCollision(RigidBodyCollision c) co
         p2 = s2.xyz() - s2.w*n;
         d = dot(s2.xyz() - s1.xyz(), n) - s1.w - s2.w;
     }
-    else if (b1->geometry == RigidBodyGeometry::Plane && b2->geometry == RigidBodyGeometry::Spheres)
-    {
-        //Collide sphere with infinite plane.
-        vec4 s2 = bodyInternalSpheres[b2->firstInternalSphere + c.b2.sphere];
-        s2 = vec4(b2->x + mat3::rotationMatrix(b2->q)*s2.xyz(), s2.w);
-        
-        n = b1->plane.xyz();
-        d = dot(s2.xyz(), n) - b1->plane.w - s2.w;
-        p1 = s2.xyz() + (b1->plane.w - dot(s2.xyz(), n))*n;
-        p2 = s2.xyz() - s2.w*n;
-    }
     else
     {
-        std::cerr << "Unknown combination of body geometries!" << std::endl;
-        assert(false);
+        //Case where we have a rigid body colliding with the triangle mesh.
+        assert(c.b1.i > 0 && c.b2.i == 0);
+
+        is = bodyInternalSpheres[b1->firstInternalSphere + c.b1.sphere];
+        const vec4 s1 = vec4(b1->x + mat3::rotationMatrix(b1->q)*is.xyz(), is.w);
+        p2 = getClosestPointOnTriangle(s1.xyz(), c.t);
+        
+        n = normalize(p2 - s1.xyz());
+        p1 = s1.xyz() + s1.w*n;
+        d = dot(p2 - s1.xyz(), n) - s1.w;
     }
 
     c.b1.r = mat3::rotationMatrix(quatconj(b1->q))*(p1 - b1->x);
@@ -431,17 +413,14 @@ void RigidBodySystem::update(const float &dt)
     //Detect all collision pairs for the current state.
 
     //Check whether bounding boxes still contain objects in their current state and update AABB tree if not.
-    for (size_t i = 0; i < bodies.size(); ++i)
+    for (size_t i = 1; i < bodies.size(); ++i)
     {
         const RigidBody &b = bodies[i];
 
-        if (b.geometry == RigidBodyGeometry::Spheres)
+        if (!b.getAABB(dt).isSubsetOf(tree.getNodeBox(i)))
         {
-            if (!b.getAABB(dt).isSubsetOf(tree.getNodeBox(i)))
-            {
-                tree.erase(i);
-                tree.insert(b.getAABB(RBAABBDT).scale(RBAABBSCALE), i);
-            }
+            tree.erase(i);
+            tree.insert(b.getAABB(RBAABBDT).scale(RBAABBSCALE), i);
         }
     }
 
@@ -462,9 +441,6 @@ void RigidBodySystem::update(const float &dt)
         {
             const RigidBody &b1 = bodies[intersection.first];
             const RigidBody &b2 = bodies[intersection.second];
-
-            assert(b1.geometry == RigidBodyGeometry::Spheres);
-            assert(b2.geometry == RigidBodyGeometry::Spheres);
 
             //TODO: Use that we could be testing 1 body vs. many other bodies to optimize.
             //TODO: Consider enforcing a fixed number of internal spheres per object to parallellize these checks effectively.
@@ -491,7 +467,7 @@ void RigidBodySystem::update(const float &dt)
                             //If so, add a potential collision.
                             collisions.push_back(RigidBodyCollision({{intersection.first, iS1 - b1.firstInternalSphere, vec3(0.0f)},
                                                                      {intersection.second, iS2 - b2.firstInternalSphere, vec3(0.0f)},
-                                                                     0.0f, 0.0f, vec3(0.0f), false}));
+                                                                     0.0f, vec3(0.0f), {vec3(0.0f), vec3(0.0f), vec3(0.0f)}, 0.0f, false}));
                         }
                     }
                 }
@@ -499,36 +475,42 @@ void RigidBodySystem::update(const float &dt)
         }
     }
 
-    //Find all potential collisions between Spheres and Planes objects.
-    for (auto iP : planeBodyIndices)
+    if (true)
     {
-        const vec4 p = bodies[iP].plane;
-
-        assert(bodies[iP].geometry == RigidBodyGeometry::Plane);
-
+        //Find all potential collisions between Spheres and triangles.
         for (int iB = 0; iB < static_cast<int>(bodies.size()); ++iB)
         {
             const RigidBody &b = bodies[iB];
 
-            if (b.geometry == RigidBodyGeometry::Spheres)
+            if (b.canCollide)
             {
-                //Can the body intersect with the plane?
-                if (dot(b.x, p.xyz()) <= p.w + b.collisionRadius)
+                const auto triangles = getCollisionTriangles(b);
+
+                for (int i = 0; i < static_cast<int>(triangles.size()) - 2; i += 3)
                 {
-                    const mat3 R = mat3::rotationMatrix(b.q);
+                    const std::array<vec3, 3> t = {{triangles[i], triangles[i + 1], triangles[i + 2]}};
 
-                    for (auto iS = b.firstInternalSphere; iS < b.lastInternalSphere; ++iS)
+                    //Can the body intersect with the triangle?
+                    if (length(b.x - getClosestPointOnTriangle(b.x, t)) <= b.collisionRadius)
                     {
-                        //Get potential collisions taking the object's velocity (linear and angular) into account.
-                        vec4 s = vec4(b.x + R*bodyInternalSpheres[iS].xyz(), bodyInternalSpheres[iS].w);
+                        const mat3 R = mat3::rotationMatrix(b.q);
 
-                        s.w += dt*(0.5f*dt*RBMAXACC + length(b.v + cross(b.w, s.xyz() - b.x))) + RBEPS;
-                        
-                        if (dot(s.xyz(), p.xyz()) <= p.w + s.w)
+                        for (auto iS = b.firstInternalSphere; iS < b.lastInternalSphere; ++iS)
                         {
-                            collisions.push_back(RigidBodyCollision({{iP, 0, vec3(0.0f)},
-                                                                     {iB, iS - b.firstInternalSphere, vec3(0.0f)},
-                                                                     0.0f, 0.0f, vec3(0.0f), false}));
+                            //Get potential collisions taking the object's velocity (linear and angular) into account.
+                            vec4 s = vec4(b.x + R*bodyInternalSpheres[iS].xyz(), bodyInternalSpheres[iS].w);
+
+                            s.w += dt*(0.5f*dt*RBMAXACC + length(b.v + cross(b.w, s.xyz() - b.x))) + RBEPS;
+
+                            const vec3 p = getClosestPointOnTriangle(s.xyz(), t);
+                            
+                            if (length(p - s.xyz()) <= s.w)
+                            {
+                                //If so, add a potential collision.
+                                collisions.push_back(RigidBodyCollision({{iB, iS - b.firstInternalSphere, vec3(0.0f)},
+                                                                        {0, 0, vec3(0.0f)},
+                                                                        0.0f, vec3(0.0f), t, 0.0f, false}));
+                            }
                         }
                     }
                 }
@@ -536,49 +518,48 @@ void RigidBodySystem::update(const float &dt)
         }
     }
 
-    //Initialize non-collision constraints.
-    for (auto &c : positionConstraints)
-    {
-        c.lambda = 0.0f;
-        c.forceToZero = false;
-    }
-    
-    for (auto &c : angularConstraints)
-    {
-        c.lambda = 0.0f;
-        c.forceToZero = false;
-    }
-
-    //Zero force/torque accumulators.
+    //Apply forces.
     for (auto &b : bodies)
     {
         b.f = vec3(0.0f);
         b.t = vec3(0.0f);
     }
 
-    //Store pre-update positions and velocities.
-    preBodies = bodies;
-
-    //Apply forces.
     applyExternalForces();
-
-    //Apply forces and velocities.
-    for (auto &b : bodies)
-    {
-        if (b.movable)
-        {
-            b.v += (dt*b.invM)*b.f;
-            b.x += dt*b.v;
-
-            b.w += dt*(b.getInvI()*(b.t - cross(b.w, b.getI()*b.w)));
-            b.q += (0.5f*dt)*quatmul(vec4(b.w, 0.0f), b.q);
-            b.q = normalize(b.q);
-        }
-    }
-
+    
     //Solve positions.
     for (int iSubStep = 0; iSubStep < nrSubSteps; ++iSubStep)
     {
+        //Initialize non-collision constraints.
+        for (auto &c : positionConstraints)
+        {
+            c.lambda = 0.0f;
+            c.forceToZero = false;
+        }
+        
+        for (auto &c : angularConstraints)
+        {
+            c.lambda = 0.0f;
+            c.forceToZero = false;
+        }
+
+        //Store pre-update positions and velocities.
+        preBodies = bodies;
+
+        //Apply forces and velocities.
+        for (auto &b : bodies)
+        {
+            if (b.movable)
+            {
+                b.v += (dt*b.invM)*b.f;
+                b.x += dt*b.v;
+
+                b.w += dt*(b.getInvI()*(b.t - cross(b.w, b.getI()*b.w)));
+                b.q += (0.5f*dt)*quatmul(vec4(b.w, 0.0f), b.q);
+                b.q = normalize(b.q);
+            }
+        }
+
         //Solve positions.
         
         //Collisions.
@@ -625,7 +606,7 @@ void RigidBodySystem::update(const float &dt)
             
             collisions[i] = c;
         }
-        
+
         //Apply position constraints.
         std::random_shuffle(positionConstraints.begin(), positionConstraints.end());
 
@@ -773,6 +754,13 @@ void RigidBodySystem::update(const float &dt)
     
     //Increment global time.
     time += dt;
+}
+
+std::vector<vec3> RigidBodySystem::getCollisionTriangles(const RigidBody &)
+{
+    //To be implemented by the user, e.g., grab triangles close to the given rigid body and return them.
+    //Should include some margin based on the body's velocity.
+    return std::vector<vec3>();
 }
 
 void RigidBodySystem::applyExternalForces()

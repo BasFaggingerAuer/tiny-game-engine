@@ -24,7 +24,6 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/math/vec.h>
 #include <tiny/rigid/aabbtree.h>
 
-//TODO: Decide whether to separate this out for cleaner dependencies.
 #include <tiny/draw/staticmeshhorde.h>
 
 namespace tiny
@@ -33,12 +32,7 @@ namespace tiny
 namespace rigid
 {
 
-enum class RigidBodyGeometry
-{
-    Spheres,
-    Plane
-};
-
+//TODO: Structure of arrays instead of array of structures.
 struct RigidBody
 {
     float invM; //Inverse mass.
@@ -52,17 +46,13 @@ struct RigidBody
 
     bool movable; //Is the object movable at all (default yes).
     bool canCollide; // Can the object collide with other objects at all?
-    RigidBodyGeometry geometry; //Type of object geometry.
     
-    //For Spheres geometry.
+    //Body sphere geometry.
     float radius; //Size of rigid body.
     float collisionRadius; //With margin for collision detection.
     int firstInternalSphere; //Index of first internal sphere.
     int lastInternalSphere; //Index of last internal sphere.
 
-    //For Plane geometry.
-    vec4 plane;
-    
     //TODO: Move to material class.
     float staticFriction; //Static friction coefficient.
     float dynamicFriction; //Dynamic friction coefficient.
@@ -112,8 +102,9 @@ struct RigidBodyCollision
 {
     PointOnRigidBody b1, b2;
     float d; //Signed distance of b2 w.r.t. b1 along the collision normal. A collision occurs if d <= 0.
-    float lambda; //Constraint multiplier.
     vec3 n; //Normal of collision surface.
+    std::array<vec3, 3> t; //Triangle in case b2.i == 0.
+    float lambda; //Constraint multiplier.
     bool forceToZero; //Force constraint to equality if it has been violated at least once.
 };
 
@@ -138,12 +129,9 @@ struct AngularConstraint
 class RigidBodySystem
 {
     public:
-        RigidBodySystem(const int & = 32);
+        RigidBodySystem(const int & = 4);
         virtual ~RigidBodySystem();
         
-        int addInfinitePlaneBody(const vec4 &,
-            const float & = 0.6f, const float & = 0.5f, const float & = 0.7f, const float & = 0.0f); //Friction/restitution ~steel/aluminum.
-
         int addImmovableSpheresRigidBody(const std::vector<vec4> &, const vec3 &,
             const float & = 0.6f, const float & = 0.5f, const float & = 0.7f, const float & = 0.0f); //Friction/restitution ~steel/aluminum.
 
@@ -166,16 +154,13 @@ class RigidBodySystem
         {
             for (const auto &b : bodies)
             {
-                if (b.geometry == RigidBodyGeometry::Spheres)
+                const mat3 R = mat3::rotationMatrix(b.q);
+                
+                for (int i = b.firstInternalSphere; i < b.lastInternalSphere; ++i)
                 {
-                    const mat3 R = mat3::rotationMatrix(b.q);
-                    
-                    for (int i = b.firstInternalSphere; i < b.lastInternalSphere; ++i)
-                    {
-                        const vec4 s = bodyInternalSpheres[i];
+                    const vec4 s = bodyInternalSpheres[i];
 
-                        out.push_back(tiny::draw::StaticMeshInstance(vec4(b.x + R*s.xyz(), s.w), b.q));
-                    }
+                    out.push_back(tiny::draw::StaticMeshInstance(vec4(b.x + R*s.xyz(), s.w), b.q));
                 }
             }
         }
@@ -198,6 +183,7 @@ class RigidBodySystem
     protected:
         virtual void applyExternalForces();
         virtual float potentialEnergy() const;
+        virtual std::vector<vec3> getCollisionTriangles(const RigidBody &);
     
         float time;
         float totalEnergy;
@@ -206,7 +192,7 @@ class RigidBodySystem
 
         std::vector<RigidBody> bodies;
         std::vector<int> planeBodyIndices;
-
+        
         const int nrSubSteps;
 
     private:
@@ -217,7 +203,7 @@ class RigidBodySystem
         std::set<std::pair<int, int>> nonCollidingBodies;
         std::vector<PositionConstraint> positionConstraints;
         std::vector<AngularConstraint> angularConstraints;
-
+        
         void calculateInternalSpheres(const RigidBody &, const float &);
         RigidBodyCollision initializeCollision(RigidBodyCollision) const noexcept;
         float addMarginToRadius(const float, const float) const;
