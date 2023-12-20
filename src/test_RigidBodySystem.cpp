@@ -50,7 +50,7 @@ using namespace tiny;
 
 //#define SHOW_COLLISION_MESH
 
-const float heightOffset = 16.0f;
+const float heightOffset = 14.0f;
 bool runSimulation = false;
 
 class GravitySystem : public rigid::RigidBodySystem
@@ -65,19 +65,11 @@ class GravitySystem : public rigid::RigidBodySystem
             
             //Create wheel geometry.
             std::vector<vec4> wheelGeometry;
-            const float wheelRadius = 0.6f;
-            const int nrWheelSpheres = 8;
+            const float wheelRadius = 0.7f;
             const float wheelStaticFriction = 1.0f; //Dry rubber on cement.
             const float wheelDynamicFriction = 0.7f; //Dry rubber on cement.
             const float wheelCOR = 0.95f;
-            const float wheelSoftness = 1.0e-8f;
-
-            for (int i = 0; i < nrWheelSpheres; ++i)
-            {
-                const float a = 2.0f*M_PI*static_cast<float>(i)/static_cast<float>(nrWheelSpheres);
-
-                wheelGeometry.push_back(vec4(wheelRadius*cos(a), wheelRadius*sin(a), 0.0f, 1.2f*M_PI*wheelRadius/static_cast<float>(nrWheelSpheres)));
-            }
+            const float wheelSoftness = 1.0e-6f;
 
             wheelGeometry = std::vector<vec4>{vec4(0.0f, 0.0f, 0.0f, 1.4f*wheelRadius)};
             
@@ -125,7 +117,7 @@ class GravitySystem : public rigid::RigidBodySystem
                                 vec3(-16.0f, 4.0f, 0.0f));
             
             //Add some rigid bodies.
-            for (int i = 0; i < 2; ++i)
+            for (int i = 0; i < 64; ++i)
             {
                 addSpheresRigidBody(1.0f, {
                     vec4(0.0f, 0.0f, 0.0f, 0.3f),
@@ -250,6 +242,7 @@ draw::WorldRenderer *worldRenderer = 0;
 std::vector<draw::StaticMeshInstance> sphereMeshInstances;
 draw::StaticMeshHorde *sphereMeshHorde = 0;
 draw::RGBATexture2D *sphereDiffuseTexture = 0;
+draw::RGBTexture2D *sphereNormalTexture = 0;
 
 draw::StaticMesh *terrainCollisionMesh = 0;
 draw::RGBATexture2D *terrainCollisionMeshDiffuseTexture = 0;
@@ -265,18 +258,39 @@ draw::FloatTexture2D *terrainHeightTexture = 0;
 draw::RGBTexture2D *terrainTangentTexture = 0;
 draw::RGBTexture2D *terrainNormalTexture = 0;
 draw::RGBATexture2D *terrainAttributeTexture = 0;
+
+const vec2 terrainDiffuseScale = vec2(1024.0f, 1024.0f);
 draw::RGBTexture2DArray *terrainLocalDiffuseTextures = 0;
 draw::RGBTexture2DArray *terrainLocalNormalTextures = 0;
 
 vec3 cameraPosition = vec3(0.0f, heightOffset + 2.0f, 10.0f);
 vec4 cameraOrientation = vec4(0.0f, 0.0f, 0.0f, 1.0f);
 
+//A simple bilinear texture sampler, which converts world coordinates to the corresponding texture coordinates on the zoomed-in terrain.
+template<typename TextureType>
+vec4 sampleTextureBilinear(const TextureType &texture, const vec2 &scale, const vec2 &a_pos)
+{
+    //Sample texture at the four points surrounding pos.
+    const vec2 pos = vec2(a_pos.x/scale.x + 0.5f*static_cast<float>(texture.getWidth()), a_pos.y/scale.y + 0.5f*static_cast<float>(texture.getHeight()));
+    const ivec2 intPos = ivec2(static_cast<int>(floor(pos.x)), static_cast<int>(floor(pos.y)));
+    const vec4 h00 = texture(intPos.x + 0, intPos.y + 0);
+    const vec4 h01 = texture(intPos.x + 0, intPos.y + 1);
+    const vec4 h10 = texture(intPos.x + 1, intPos.y + 0);
+    const vec4 h11 = texture(intPos.x + 1, intPos.y + 1);
+    const vec2 delta = vec2(pos.x - floor(pos.x), pos.y - floor(pos.y));
+    
+    //Interpolate between these four points.
+    return delta.y*(delta.x*h11 + (1.0f - delta.x)*h01) + (1.0f - delta.y)*(delta.x*h10 + (1.0f - delta.x)*h00);
+}
+
 void setup()
 {
     //Create a sphere mesh and paint it with a texture.
     sphereMeshHorde = new draw::StaticMeshHorde(mesh::StaticMesh::createIcosahedronMesh(1.0f), 1024);
     sphereDiffuseTexture = new draw::RGBATexture2D(img::Image::createSolidImage(4, 0, 255, 255));
+    sphereNormalTexture = new draw::RGBTexture2D(img::Image::createUpNormalImage());
     sphereMeshHorde->setDiffuseTexture(*sphereDiffuseTexture);
+    sphereMeshHorde->setNormalTexture(*sphereNormalTexture);
 
     terrainCollisionMeshDiffuseTexture = new draw::RGBATexture2D(img::Image::createSolidImage(4, 255, 255, 0));
     
@@ -287,14 +301,14 @@ void setup()
     terrainNormalTexture = new draw::RGBTexture2D(terrainHeightTexture->getWidth(), terrainHeightTexture->getHeight());
     
     terrainAttributeTexture = new draw::RGBATexture2D(img::Image::createSolidImage(terrainHeightTexture->getWidth()));
-    terrainLocalDiffuseTextures = new draw::RGBTexture2DArray(img::Image::createSolidImage(4, 192, 192, 192));
-    terrainLocalNormalTextures = new draw::RGBTexture2DArray(img::Image::createUpNormalImage());
+    terrainLocalDiffuseTextures = new draw::RGBTexture2DArray(img::io::readImage(DATA_DIRECTORY + "img/terrain/dirt.jpg"));
+    terrainLocalNormalTextures = new draw::RGBTexture2DArray(img::io::readImage(DATA_DIRECTORY + "img/terrain/dirt_normal.jpg"));
     
     //Calculate normal map and paint the terrain with the textures.
     draw::computeTangentMap(*terrainHeightTexture, *terrainTangentTexture, terrainScale.x);
     draw::computeNormalMap(*terrainHeightTexture, *terrainNormalTexture, terrainScale.x);
     terrain->setHeightTextures(*terrainHeightTexture, *terrainTangentTexture, *terrainNormalTexture, terrainScale);
-    terrain->setDiffuseTextures(*terrainAttributeTexture, *terrainLocalDiffuseTextures, *terrainLocalNormalTextures, vec2(1.0f, 1.0f));
+    terrain->setDiffuseTextures(*terrainAttributeTexture, *terrainLocalDiffuseTextures, *terrainLocalNormalTextures, terrainDiffuseScale);
 
     //Create a rigid body scene.
     rigidBodySystem = new GravitySystem(terrainScale, terrainHeightTexture);
@@ -322,6 +336,7 @@ void cleanup()
     
     delete sphereMeshHorde;
     delete sphereDiffuseTexture;
+    delete sphereNormalTexture;
 
     if (terrainCollisionMesh) delete terrainCollisionMesh;
     delete terrainCollisionMeshDiffuseTexture;
@@ -374,6 +389,7 @@ void update(const double &dt)
             std::cout << rigidBodySystem->terrainCollisionMesh.indices.size()/3 << " collision triangles." << std::endl;
             terrainCollisionMesh = new draw::StaticMesh(rigidBodySystem->terrainCollisionMesh);
             terrainCollisionMesh->setDiffuseTexture(*terrainCollisionMeshDiffuseTexture);
+            terrainCollisionMesh->setNormalTexture(*sphereNormalTexture);
             worldRenderer->addWorldRenderable(2, terrainCollisionMesh);
         }
 #endif
@@ -394,6 +410,13 @@ void update(const double &dt)
 
     //Move the camera around.
     application->updateSimpleCamera(dt, cameraPosition, cameraOrientation);
+
+#ifndef SHOW_COLLISION_MESH
+    //If the camera is below the terrain, increase its height.
+    const float terrainHeight = sampleTextureBilinear(*terrainHeightTexture, terrainScale, vec2(cameraPosition.x, cameraPosition.z)).x + 1.0f;
+    
+    cameraPosition.y = std::max(cameraPosition.y, terrainHeight);
+#endif
 
     //Let the terrain follow the camera.
     terrain->setCameraPosition(cameraPosition);

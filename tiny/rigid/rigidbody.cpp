@@ -46,7 +46,8 @@ RigidBodySystem::RigidBodySystem(const int &a_nrSubSteps) :
 {
     //Add rigid body 0 to contain triangles.
     //FIXME: This can be done more elegantly.
-    addImmovableSpheresRigidBody({vec4(0.0f, 0.0f, 0.0f, 1.0f)}, vec3(0.0f));
+    //Use ~gravel material coefficients.
+    addImmovableSpheresRigidBody({vec4(0.0f, 0.0f, 0.0f, 1.0f)}, vec3(0.0f), 0.5f, 0.6f, 0.4f, 1.0e-5f);
     bodies[0].canCollide = false;
 }
 
@@ -475,49 +476,46 @@ void RigidBodySystem::update(const float &dt)
         }
     }
 
-    if (true)
+    //Find all potential collisions between Spheres and triangles.
+    for (int iB = 0; iB < static_cast<int>(bodies.size()); ++iB)
     {
-        //Find all potential collisions between Spheres and triangles.
-        for (int iB = 0; iB < static_cast<int>(bodies.size()); ++iB)
+        const RigidBody &b = bodies[iB];
+
+        if (b.canCollide)
         {
-            const RigidBody &b = bodies[iB];
+            const auto triangles = getCollisionTriangles(b);
 
-            if (b.canCollide)
+            for (int i = 0; i < static_cast<int>(triangles.size()) - 2; i += 3)
             {
-                const auto triangles = getCollisionTriangles(b);
+                const std::array<vec3, 3> t = {{triangles[i], triangles[i + 1], triangles[i + 2]}};
 
-                for (int i = 0; i < static_cast<int>(triangles.size()) - 2; i += 3)
+                //Can the body intersect with the triangle?
+                if (length(b.x - getClosestPointOnTriangle(b.x, t)) <= b.collisionRadius)
                 {
-                    const std::array<vec3, 3> t = {{triangles[i], triangles[i + 1], triangles[i + 2]}};
+                    const mat3 R = mat3::rotationMatrix(b.q);
 
-                    //Can the body intersect with the triangle?
-                    if (length(b.x - getClosestPointOnTriangle(b.x, t)) <= b.collisionRadius)
+                    for (auto iS = b.firstInternalSphere; iS < b.lastInternalSphere; ++iS)
                     {
-                        const mat3 R = mat3::rotationMatrix(b.q);
+                        //Get potential collisions taking the object's velocity (linear and angular) into account.
+                        vec4 s = vec4(b.x + R*bodyInternalSpheres[iS].xyz(), bodyInternalSpheres[iS].w);
 
-                        for (auto iS = b.firstInternalSphere; iS < b.lastInternalSphere; ++iS)
+                        s.w += dt*(0.5f*dt*RBMAXACC + length(b.v + cross(b.w, s.xyz() - b.x))) + RBEPS;
+
+                        const vec3 p = getClosestPointOnTriangle(s.xyz(), t);
+                        
+                        if (length(p - s.xyz()) <= s.w)
                         {
-                            //Get potential collisions taking the object's velocity (linear and angular) into account.
-                            vec4 s = vec4(b.x + R*bodyInternalSpheres[iS].xyz(), bodyInternalSpheres[iS].w);
-
-                            s.w += dt*(0.5f*dt*RBMAXACC + length(b.v + cross(b.w, s.xyz() - b.x))) + RBEPS;
-
-                            const vec3 p = getClosestPointOnTriangle(s.xyz(), t);
-                            
-                            if (length(p - s.xyz()) <= s.w)
-                            {
-                                //If so, add a potential collision.
-                                collisions.push_back(RigidBodyCollision({{iB, iS - b.firstInternalSphere, vec3(0.0f)},
-                                                                        {0, 0, vec3(0.0f)},
-                                                                        0.0f, vec3(0.0f), t, 0.0f, false}));
-                            }
+                            //If so, add a potential collision.
+                            collisions.push_back(RigidBodyCollision({{iB, iS - b.firstInternalSphere, vec3(0.0f)},
+                                                                    {0, 0, vec3(0.0f)},
+                                                                    0.0f, vec3(0.0f), t, 0.0f, false}));
                         }
                     }
                 }
             }
         }
     }
-
+    
     //Apply forces.
     for (auto &b : bodies)
     {
@@ -528,6 +526,8 @@ void RigidBodySystem::update(const float &dt)
     applyExternalForces();
     
     //Solve positions.
+    const float h = dt/static_cast<float>(nrSubSteps);
+
     for (int iSubStep = 0; iSubStep < nrSubSteps; ++iSubStep)
     {
         //Initialize non-collision constraints.
@@ -551,11 +551,11 @@ void RigidBodySystem::update(const float &dt)
         {
             if (b.movable)
             {
-                b.v += (dt*b.invM)*b.f;
-                b.x += dt*b.v;
+                b.v += (h*b.invM)*b.f;
+                b.x += h*b.v;
 
-                b.w += dt*(b.getInvI()*(b.t - cross(b.w, b.getI()*b.w)));
-                b.q += (0.5f*dt)*quatmul(vec4(b.w, 0.0f), b.q);
+                b.w += h*(b.getInvI()*(b.t - cross(b.w, b.getI()*b.w)));
+                b.q += (0.5f*h)*quatmul(vec4(b.w, 0.0f), b.q);
                 b.q = normalize(b.q);
             }
         }
@@ -565,10 +565,10 @@ void RigidBodySystem::update(const float &dt)
         //Collisions.
         std::random_shuffle(collisions.begin(), collisions.end());
 
-        for (size_t i = 0; i < collisions.size(); ++i)
+        for (auto &c : collisions)
         {
             //Check whether we have a collision for the current rigid body state.
-            auto c = initializeCollision(collisions[i]);
+            c = initializeCollision(c);
 
             //Check for collision for the current body states.
             if (c.d <= 0.0f || c.forceToZero)
@@ -580,7 +580,7 @@ void RigidBodySystem::update(const float &dt)
                 RigidBody *b1 = &bodies[c.b1.i];
                 RigidBody *b2 = &bodies[c.b2.i];
 
-                const float softnessCoeff = 0.5f*(b1->softness + b2->softness)*static_cast<float>(nrSubSteps*nrSubSteps)/(dt*dt);
+                const float softnessCoeff = 0.5f*(b1->softness + b2->softness)/(h*h);
                 
                 //Apply position constraint to avoid object interpenetration.
                 auto [l, w1, w2] = applyPositionConstraint(c.lambda, softnessCoeff, b1, b2, 0.5f*(cg.p1 + cg.p2), -c.d*c.n);
@@ -603,8 +603,6 @@ void RigidBodySystem::update(const float &dt)
                     applyPositionConstraint(0.0f, softnessCoeff, b1, b2, 0.5f*(cg.p1 + cg.p2), dx);
                 }
             }
-            
-            collisions[i] = c;
         }
 
         //Apply position constraints.
@@ -620,7 +618,7 @@ void RigidBodySystem::update(const float &dt)
             
             if (d > 0.0f || c.forceToZero)
             {
-                const float softnessCoeff = 0.5f*c.softness*static_cast<float>(nrSubSteps*nrSubSteps)/(dt*dt);
+                const float softnessCoeff = 0.5f*c.softness/(h*h);
 
                 c.forceToZero = true;
                 
@@ -644,7 +642,7 @@ void RigidBodySystem::update(const float &dt)
             
             if (d > 0.0f || c.forceToZero)
             {
-                const float softnessCoeff = 0.5f*c.softness*static_cast<float>(nrSubSteps*nrSubSteps)/(dt*dt);
+                const float softnessCoeff = 0.5f*c.softness/(h*h);
 
                 c.forceToZero = true;
                 auto [l, w1, w2] = applyAngularConstraint(c.lambda, softnessCoeff, b1, b2, -d*normalize(a));
@@ -658,11 +656,11 @@ void RigidBodySystem::update(const float &dt)
         {
             if (bodies[i].movable)
             {
-                bodies[i].v = (bodies[i].x - preBodies[i].x)/dt;
+                bodies[i].v = (bodies[i].x - preBodies[i].x)/h;
 
                 const vec4 dq = quatmul(bodies[i].q, quatconj(preBodies[i].q));
 
-                bodies[i].w = (dq.w >= 0.0f ? 2.0f/dt : -2.0f/dt)*dq.xyz();
+                bodies[i].w = (dq.w >= 0.0f ? 2.0f/h : -2.0f/h)*dq.xyz();
             }
         }
 
@@ -683,6 +681,7 @@ void RigidBodySystem::update(const float &dt)
         }
         
         //Apply orientation constraints.
+        /*
         for (auto &c : angularConstraints)
         {
             if (c.forceToZero)
@@ -691,10 +690,11 @@ void RigidBodySystem::update(const float &dt)
                 RigidBody *b1 = &bodies[c.b1.i];
                 RigidBody *b2 = &bodies[c.b2.i];
                 
-                //TODO: Should have relative angular velocity 0 at orientation constraint.
+                //TODO: Should have relative angular velocity 0 at orientation constraint. Needs 3x3 matrix inversion, necessary?
                 //applyAngularVelocityConstraint(b1, b2, -d*normalize(a));
             }
         }
+        */
 
         //Velocity update for collisions.
         for (size_t i = 0; i < collisions.size(); ++i)
@@ -718,14 +718,14 @@ void RigidBodySystem::update(const float &dt)
                 const float dynamicFrictionCoeff = std::sqrt(b1->dynamicFriction*b2->dynamicFriction);
 
                 applyVelocityConstraint(b1, b2, cg.p1 - b1->x, cg.p2 - b2->x,
-                                        std::min(dynamicFrictionCoeff*std::abs(c.lambda)/dt, length(vt))*normalize(vt));
+                                        std::min(dynamicFrictionCoeff*std::abs(c.lambda)/h, length(vt))*normalize(vt));
                 
                 //Perform restitution in case of collisions that are not resting contacts.
 
                 //Get pre-state normal velocity.
                 const auto precg = getWorldGeometry(preBodies, c.b1, c.b2);
                 const float prevn = dot(precg.v1 - precg.v2, c.n);
-                const float restitutionCoeff = (std::abs(prevn) > dt*RBMAXACC ? 
+                const float restitutionCoeff = (std::abs(prevn) > h*RBMAXACC ? 
                                 std::sqrt(b1->restitution*b2->restitution) :
                                 0.0f);
 
