@@ -52,6 +52,7 @@ using namespace tiny;
 
 const float heightOffset = 14.0f;
 bool runSimulation = false;
+bool followCar = false;
 
 class GravitySystem : public rigid::RigidBodySystem
 {
@@ -368,6 +369,7 @@ void update(const double &dt)
 
     //Update the rigid bodies.
     if (application->isKeyPressedOnce('r')) runSimulation = !runSimulation;
+    if (application->isKeyPressedOnce('c')) followCar = !followCar;
     if (application->isKeyPressedOnce(' ') || runSimulation)
     {
 #ifdef SHOW_COLLISION_MESH
@@ -408,19 +410,33 @@ void update(const double &dt)
     rigidBodySystem->getInternalSphereStaticMeshes(sphereMeshInstances);
     sphereMeshHorde->setMeshes(sphereMeshInstances.begin(), sphereMeshInstances.end());
 
-    //Move the camera around.
-    application->updateSimpleCamera(dt, cameraPosition, cameraOrientation);
+    if (followCar)
+    {
+        //Attach camera to the car.
+        vec3 x = cameraPosition;
+        vec4 q = quatconj(cameraOrientation);
+        
+        rigidBodySystem->getRigidBodyPositionAndOrientation(rigidBodySystem->body, x, q);
+
+        cameraPosition = x + mat3::rotationMatrix(q)*vec3(0.0f, 1.5f, 0.0f);
+        cameraOrientation = quatmul(quatrot(-M_PI/2.0f, vec3(0.0f, 1.0f, 0.0f)), quatconj(q));
+    }
+    else
+    {
+        //Move the camera around.
+        application->updateSimpleCamera(dt, cameraPosition, cameraOrientation);
 
 #ifndef SHOW_COLLISION_MESH
-    //If the camera is below the terrain, increase its height.
-    const float terrainHeight = sampleTextureBilinear(*terrainHeightTexture, terrainScale, vec2(cameraPosition.x, cameraPosition.z)).x + 1.0f;
-    
-    cameraPosition.y = std::max(cameraPosition.y, terrainHeight);
+        //If the camera is below the terrain, increase its height.
+        const float terrainHeight = sampleTextureBilinear(*terrainHeightTexture, terrainScale, vec2(cameraPosition.x, cameraPosition.z)).x + 1.0f;
+        
+        cameraPosition.y = std::max(cameraPosition.y, terrainHeight);
 #endif
+    }
 
     //Let the terrain follow the camera.
     terrain->setCameraPosition(cameraPosition);
-    
+
     //Tell the world renderer that the camera has changed.
     worldRenderer->setCamera(cameraPosition, cameraOrientation);
 }

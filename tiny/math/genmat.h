@@ -530,7 +530,7 @@ class genvec : public genmat<t, m, 1>
             return *this;
         }
 
-        inline friend genvec<t, m> operator * (genvec<t, m> a, const genvec<t, m> &b) noexcept {return a += b;}
+        inline friend genvec<t, m> operator * (genvec<t, m> a, const genvec<t, m> &b) noexcept {return a *= b;}
         
         //Quaternion product.
         template <size_t n = m>

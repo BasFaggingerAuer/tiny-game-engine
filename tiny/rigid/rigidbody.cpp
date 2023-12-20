@@ -223,6 +223,15 @@ void RigidBodySystem::addAngularConstraint(const int &i1, const vec3 &r1, const 
     angularConstraints.push_back(AngularConstraint{{i1, 0, normalize(r1)}, {i2, 0, normalize(r2)}, d, alpha, 0.0f, false});
 }
 
+void RigidBodySystem::getRigidBodyPositionAndOrientation(const int &i, vec3 &x, vec4 &q) const
+{
+    if (i >= 0 && i < static_cast<int>(bodies.size()))
+    {
+        x = bodies[i].x;
+        q = bodies[i].q;
+    }
+}
+
 std::tuple<float, float, float> applyAngularConstraint(const float lambda,
                              const float alpha,
                              RigidBody *b1,

@@ -144,6 +144,8 @@ class RigidBodySystem
         void addNonCollidingPair(const int &, const int &);
         void addPositionConstraint(const int &, const vec3 &, const int &, const vec3 &, const float & = 0.0f, const float & = 0.0f);
         void addAngularConstraint(const int &, const vec3 &, const int &, const vec3 &, const float & = 0.0f, const float & = 0.0f);
+
+        void getRigidBodyPositionAndOrientation(const int &, vec3 &, vec4 &) const;
         
         void update(const float &);
         
