@@ -108,19 +108,21 @@ struct RigidBodyCollision
     bool forceToZero; //Force constraint to equality if it has been violated at least once.
 };
 
-struct PositionConstraint
+struct Constraint
 {
     PointOnRigidBody b1, b2;
-    float d; //Maximum allowed distance until constraint is enforced.
-    float softness; //Constraint inverse stiffness.
-    float lambda;
-    bool forceToZero; //Force constraint to equality if it has been violated at least once.
-};
 
-struct AngularConstraint
-{
-    PointOnRigidBody b1, b2;
-    float d; //Maximum allowed angle until constraint is enforced.
+    enum
+    {
+        Position,
+        PositionOnLine,
+        PositionInPlane,
+        Orientation
+    } type; //Constraint type.
+
+    vec3 n; //Constraint direction (if needed, based on type).
+    float d; //Maximum allowed distance until constraint is enforced.
+    
     float softness; //Constraint inverse stiffness.
     float lambda;
     bool forceToZero; //Force constraint to equality if it has been violated at least once.
@@ -142,8 +144,9 @@ class RigidBodySystem
         //TODO: Ability to remove rigid bodies.
 
         void addNonCollidingPair(const int &, const int &);
-        void addPositionConstraint(const int &, const vec3 &, const int &, const vec3 &, const float & = 0.0f, const float & = 0.0f);
-        void addAngularConstraint(const int &, const vec3 &, const int &, const vec3 &, const float & = 0.0f, const float & = 0.0f);
+        int addPositionConstraint(const int &, const vec3 &, const int &, const vec3 &, const float & = 0.0f, const float & = 0.0f);
+        int addPositionLineConstraint(const int &, const vec3 &, const vec3 &, const int &, const vec3 &, const float & = 0.0f, const float & = 0.0f);
+        int addAngularConstraint(const int &, const vec3 &, const int &, const vec3 &, const float & = 0.0f, const float & = 0.0f);
 
         void getRigidBodyPositionAndOrientation(const int &, vec3 &, vec4 &) const;
         
@@ -193,7 +196,7 @@ class RigidBodySystem
         vec3 totalAngularMomentum;
 
         std::vector<RigidBody> bodies;
-        std::vector<int> planeBodyIndices;
+        std::vector<Constraint> constraints;        
         
         const int nrSubSteps;
 
@@ -203,8 +206,6 @@ class RigidBodySystem
         std::vector<vec4> bodyInternalSpheres;
         std::vector<vec4> collSpheres;
         std::set<std::pair<int, int>> nonCollidingBodies;
-        std::vector<PositionConstraint> positionConstraints;
-        std::vector<AngularConstraint> angularConstraints;
         
         void calculateInternalSpheres(const RigidBody &, const float &);
         RigidBodyCollision initializeCollision(RigidBodyCollision) const noexcept;

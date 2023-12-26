@@ -41,13 +41,13 @@ RigidBodySystem::RigidBodySystem(const int &a_nrSubSteps) :
     totalLinearMomentum(0.0f),
     totalAngularMomentum(0.0f),
     bodies(),
-    planeBodyIndices(),
+    constraints(),
     nrSubSteps(a_nrSubSteps)
 {
     //Add rigid body 0 to contain triangles.
     //FIXME: This can be done more elegantly.
     //Use ~gravel material coefficients.
-    addImmovableSpheresRigidBody({vec4(0.0f, 0.0f, 0.0f, 1.0f)}, vec3(0.0f), 0.5f, 0.6f, 0.4f, 1.0e-5f);
+    addImmovableSpheresRigidBody({vec4(0.0f, 0.0f, 0.0f, 1.0f)}, vec3(0.0f), 1.0f, 0.6f, 0.4f, 1.0e-5f);
     bodies[0].canCollide = false;
 }
 
@@ -195,7 +195,7 @@ void RigidBodySystem::addNonCollidingPair(const int &i1, const int &i2)
     }
 }
 
-void RigidBodySystem::addPositionConstraint(const int &i1, const vec3 &r1, const int &i2, const vec3 &r2, const float &d, const float &alpha)
+int RigidBodySystem::addPositionConstraint(const int &i1, const vec3 &r1, const int &i2, const vec3 &r2, const float &d, const float &alpha)
 {
     std::cout << "Adding position constraint between " << i1 << " " << r1 << " and " << i2 << " " << r2 << "." << std::endl;
 
@@ -203,13 +203,31 @@ void RigidBodySystem::addPositionConstraint(const int &i1, const vec3 &r1, const
     {
         std::cerr << "Invalid pair of bodies for applying a position constraint!" << std::endl;
         assert(false);
-        return;
+        return 0;
     }
     
-    positionConstraints.push_back(PositionConstraint{{i1, 0, r1}, {i2, 0, r2}, d, alpha, 0.0f, false});
+    constraints.push_back(Constraint{{i1, 0, r1}, {i2, 0, r2}, Constraint::Position, vec3(0.0f), d, alpha, 0.0f, false});
+
+    return constraints.size() - 1;
 }
 
-void RigidBodySystem::addAngularConstraint(const int &i1, const vec3 &r1, const int &i2, const vec3 &r2, const float &d, const float &alpha)
+int RigidBodySystem::addPositionLineConstraint(const int &i1, const vec3 &r1, const vec3 &n, const int &i2, const vec3 &r2, const float &d, const float &alpha)
+{
+    std::cout << "Adding position line constraint between " << i1 << " " << r1 << " and " << i2 << " " << r2 << " along direction " << n << "." << std::endl;
+
+    if (i1 < 0 || i2 < 0 || i1 >= static_cast<int>(bodies.size()) || i2 >= static_cast<int>(bodies.size()) || i1 == i2)
+    {
+        std::cerr << "Invalid pair of bodies for applying a position line constraint!" << std::endl;
+        assert(false);
+        return 0;
+    }
+    
+    constraints.push_back(Constraint{{i1, 0, r1}, {i2, 0, r2}, Constraint::PositionOnLine, n, d, alpha, 0.0f, false});
+    
+    return constraints.size() - 1;
+}
+
+int RigidBodySystem::addAngularConstraint(const int &i1, const vec3 &r1, const int &i2, const vec3 &r2, const float &d, const float &alpha)
 {
     std::cout << "Adding angular constraint between " << i1 << " " << r1 << " and " << i2 << " " << r2 << "." << std::endl;
 
@@ -217,10 +235,12 @@ void RigidBodySystem::addAngularConstraint(const int &i1, const vec3 &r1, const 
     {
         std::cerr << "Invalid pair of bodies for applying a position constraint!" << std::endl;
         assert(false);
-        return;
+        return 0;
     }
     
-    angularConstraints.push_back(AngularConstraint{{i1, 0, normalize(r1)}, {i2, 0, normalize(r2)}, d, alpha, 0.0f, false});
+    constraints.push_back(Constraint{{i1, 0, normalize(r1)}, {i2, 0, normalize(r2)}, Constraint::Orientation, vec3(0.0f), d, alpha, 0.0f, false});
+
+    return constraints.size() - 1;
 }
 
 void RigidBodySystem::getRigidBodyPositionAndOrientation(const int &i, vec3 &x, vec4 &q) const
@@ -540,13 +560,7 @@ void RigidBodySystem::update(const float &dt)
     for (int iSubStep = 0; iSubStep < nrSubSteps; ++iSubStep)
     {
         //Initialize non-collision constraints.
-        for (auto &c : positionConstraints)
-        {
-            c.lambda = 0.0f;
-            c.forceToZero = false;
-        }
-        
-        for (auto &c : angularConstraints)
+        for (auto &c : constraints)
         {
             c.lambda = 0.0f;
             c.forceToZero = false;
@@ -615,48 +629,73 @@ void RigidBodySystem::update(const float &dt)
         }
 
         //Apply position constraints.
-        std::random_shuffle(positionConstraints.begin(), positionConstraints.end());
+        //TODO: Randomly shuffle constraints.
+        //std::random_shuffle(constraints.begin(), constraints.end());
 
-        for (auto &c : positionConstraints)
+        for (auto &c : constraints)
         {
+            const float softnessCoeff = 0.5f*c.softness/(h*h);
             RigidBody *b1 = &bodies[c.b1.i];
             RigidBody *b2 = &bodies[c.b2.i];
             const vec3 p1 = mat3::rotationMatrix(b1->q)*c.b1.r + b1->x;
             const vec3 p2 = mat3::rotationMatrix(b2->q)*c.b2.r + b2->x;
-            const float d = length(p2 - p1) - c.d;
-            
-            if (d > 0.0f || c.forceToZero)
-            {
-                const float softnessCoeff = 0.5f*c.softness/(h*h);
-
-                c.forceToZero = true;
-                
-                //Apply velocity changes at the location of the movable body.
-                //TODO: Understand how two movable bodies can have a constraint with > 0 distance.
-                auto [l, w1, w2] = applyPositionConstraint(c.lambda, softnessCoeff, b1, b2, (!b1->movable ? p2 : (!b2->movable ? p1 : 0.5f*(p1 + p2))), -d*normalize(p2 - p1));
-
-                c.lambda += l;
-            }
-        }
-        
-        //Apply orientation constraints.
-        std::random_shuffle(angularConstraints.begin(), angularConstraints.end());
-
-        for (auto &c : angularConstraints)
-        {
-            RigidBody *b1 = &bodies[c.b1.i];
-            RigidBody *b2 = &bodies[c.b2.i];
+            //FIXME: How to pick a good point where to apply the constraint?
+            const vec3 p = (!b1->movable ? p2 : (!b2->movable ? p1 : 0.5f*(p1 + p2)));
+            const vec3 n = mat3::rotationMatrix(b1->q)*c.n;
             const vec3 a = cross(mat3::rotationMatrix(b1->q)*c.b1.r, mat3::rotationMatrix(b2->q)*c.b2.r);
-            const float d = length(a) - c.d;
-            
-            if (d > 0.0f || c.forceToZero)
+            float d = 0.0f;
+
+            switch (c.type)
             {
-                const float softnessCoeff = 0.5f*c.softness/(h*h);
+                case Constraint::Position:
+                    //Position constraint along all axes up to a maximum distance. (For d == 0 this is an equal-position-constraint.)
+                    d = length(p2 - p1) - c.d;
 
-                c.forceToZero = true;
-                auto [l, w1, w2] = applyAngularConstraint(c.lambda, softnessCoeff, b1, b2, -d*normalize(a));
+                    if (d > 0.0f || c.forceToZero)
+                    {
+                        auto [l, w1, w2] = applyPositionConstraint(c.lambda, softnessCoeff, b1, b2, p, -d*normalize(p2 - p1));
+                        c.forceToZero = true;
+                        c.lambda += l;
+                    }
 
-                c.lambda += l;
+                    break;
+                case Constraint::PositionOnLine:
+                    //Position along a given line up to a maximum distance.
+
+                    //First project delta on the line.
+                    if (true)
+                    {
+                        auto [l, w1, w2] = applyPositionConstraint(c.lambda, softnessCoeff, b1, b2, p, -((p2 - p1) - dot(p2 - p1, n)*n));
+                        c.lambda += l;
+                    }
+
+                    //No break on purpose.
+                case Constraint::PositionInPlane:
+                    //Then enforce the maximum extent we can move along the line / normal of the plane.
+                    d = dot(p2 - p1, n) - c.d;
+
+                    if (d > 0.0f || c.forceToZero)
+                    {
+                        auto [l, w1, w2] = applyPositionConstraint(c.lambda, softnessCoeff, b1, b2, p, -d*n);
+                        c.forceToZero = true;
+                        c.lambda += l;
+                    }
+
+                    break;
+                case Constraint::Orientation:
+                    //Constrain relative orientation up to a maximum distance.
+                    d = length(a) - c.d;
+                    
+                    if (d > 0.0f || c.forceToZero)
+                    {
+                        auto [l, w1, w2] = applyAngularConstraint(c.lambda, softnessCoeff, b1, b2, -d*normalize(a));
+                        c.forceToZero = true;
+                        c.lambda += l;
+                    }
+
+                    break;
+                default:
+                    break;
             }
         }
         
@@ -676,34 +715,31 @@ void RigidBodySystem::update(const float &dt)
         //Solve velocities.
 
         //Velocity update for position constraints.
-        for (auto &c : positionConstraints)
+        for (auto &c : constraints)
         {
             if (c.forceToZero)
             {
                 const auto cg = getWorldGeometry(bodies, c.b1, c.b2);
                 RigidBody *b1 = &bodies[c.b1.i];
                 RigidBody *b2 = &bodies[c.b2.i];
+                const vec3 n = mat3::rotationMatrix(b1->q)*c.n;
                 
-                //Should have relative velocity 0 at a position constraint.
-                applyVelocityConstraint(b1, b2, cg.p1 - b1->x, cg.p2 - b2->x, cg.v1 - cg.v2);
+                switch (c.type)
+                {
+                    case Constraint::Position:
+                        //Should have relative velocity 0 at a position constraint.
+                        applyVelocityConstraint(b1, b2, cg.p1 - b1->x, cg.p2 - b2->x, cg.v1 - cg.v2);
+                        break;
+                    case Constraint::PositionOnLine:
+                    case Constraint::PositionInPlane:
+                        applyVelocityConstraint(b1, b2, cg.p1 - b1->x, cg.p2 - b2->x, dot(cg.v1 - cg.v2, n)*n);
+                        break;
+                    case Constraint::Orientation:
+                        //TODO.
+                        break;
+                }
             }
         }
-        
-        //Apply orientation constraints.
-        /*
-        for (auto &c : angularConstraints)
-        {
-            if (c.forceToZero)
-            {
-                const auto cg = getWorldGeometry(bodies, c.b1, c.b2);
-                RigidBody *b1 = &bodies[c.b1.i];
-                RigidBody *b2 = &bodies[c.b2.i];
-                
-                //TODO: Should have relative angular velocity 0 at orientation constraint. Needs 3x3 matrix inversion, necessary?
-                //applyAngularVelocityConstraint(b1, b2, -d*normalize(a));
-            }
-        }
-        */
 
         //Velocity update for collisions.
         for (size_t i = 0; i < collisions.size(); ++i)

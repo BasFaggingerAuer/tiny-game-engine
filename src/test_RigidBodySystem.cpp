@@ -72,6 +72,7 @@ class GravitySystem : public rigid::RigidBodySystem
             const float wheelCOR = 0.95f;
             const float wheelSoftness = 1.0e-6f;
 
+            wheelAngle = 0.0f;
             wheelGeometry = std::vector<vec4>{vec4(0.0f, 0.0f, 0.0f, 1.4f*wheelRadius)};
             
             //Add wheels.
@@ -96,14 +97,15 @@ class GravitySystem : public rigid::RigidBodySystem
             addNonCollidingPair(body, wheel2);
             addNonCollidingPair(body, wheel3);
             addNonCollidingPair(body, wheel4);
-            addPositionConstraint(body, vec3(-1.6f, -bodyHeight, -1.0f), wheel1, vec3(0.0f, 0.0f, 0.0f));
-            addPositionConstraint(body, vec3(-1.6f, -bodyHeight,  1.0f), wheel2, vec3(0.0f, 0.0f, 0.0f));
-            addPositionConstraint(body, vec3( 1.6f, -bodyHeight, -1.0f), wheel3, vec3(0.0f, 0.0f, 0.0f));
-            addPositionConstraint(body, vec3( 1.6f, -bodyHeight,  1.0f), wheel4, vec3(0.0f, 0.0f, 0.0f));
-            addAngularConstraint(body, vec3(0.0f, 0.0f, -1.0f), wheel1, vec3(0.0f, 0.0f, 1.0f));
-            addAngularConstraint(body, vec3(0.0f, 0.0f,  1.0f), wheel2, vec3(0.0f, 0.0f, 1.0f));
-            addAngularConstraint(body, vec3(0.0f, 0.0f, -1.0f), wheel3, vec3(0.0f, 0.0f, 1.0f));
-            addAngularConstraint(body, vec3(0.0f, 0.0f,  1.0f), wheel4, vec3(0.0f, 0.0f, 1.0f));
+            wheel1Suspension = addPositionLineConstraint(body, vec3(-1.6f, -bodyHeight, -1.0f), vec3(0.0f, 1.0f, 0.0f), wheel1, vec3(0.0f, 0.0f, 0.0f));
+            wheel2Suspension = addPositionLineConstraint(body, vec3(-1.6f, -bodyHeight,  1.0f), vec3(0.0f, 1.0f, 0.0f), wheel2, vec3(0.0f, 0.0f, 0.0f));
+            wheel3Suspension = addPositionLineConstraint(body, vec3( 1.6f, -bodyHeight, -1.0f), vec3(0.0f, 1.0f, 0.0f), wheel3, vec3(0.0f, 0.0f, 0.0f));
+            wheel4Suspension = addPositionLineConstraint(body, vec3( 1.6f, -bodyHeight,  1.0f), vec3(0.0f, 1.0f, 0.0f), wheel4, vec3(0.0f, 0.0f, 0.0f));
+            
+            wheel1Steering = addAngularConstraint(body, vec3(0.0f, 0.0f, -1.0f), wheel1, vec3(0.0f, 0.0f, 1.0f));
+            wheel2Steering = addAngularConstraint(body, vec3(0.0f, 0.0f,  1.0f), wheel2, vec3(0.0f, 0.0f, 1.0f));
+            wheel3Steering = addAngularConstraint(body, vec3(0.0f, 0.0f, -1.0f), wheel3, vec3(0.0f, 0.0f, 1.0f));
+            wheel4Steering = addAngularConstraint(body, vec3(0.0f, 0.0f,  1.0f), wheel4, vec3(0.0f, 0.0f, 1.0f));
 
             //Add something to drive against.
             addSpheresRigidBody(1.0f, {vec4(0.0f, 0.0f, 0.0f, 1.0f),
@@ -126,7 +128,7 @@ class GravitySystem : public rigid::RigidBodySystem
                     vec4(0.6f, 0.0f, 0.0f, 0.3f),
                     vec4(0.0f, 0.3f, 0.0f, 0.3f),
                     vec4(0.0f, 0.6f, 0.0f, 0.3f)
-                    }, randomVec3()*vec3(2.0f, 0.0f, 2.0f) - vec3(1.0f, -2*i - 1, 1.0f), vec3(0.0f, 0.0f, 0.0f), normalize(randomVec4() - vec4(0.5f)));
+                    }, randomVec3()*vec3(2.0f, 0.0f, 2.0f) - vec3(1.0f, -2*i - 10, 1.0f), vec3(0.0f, 0.0f, 0.0f), normalize(randomVec4() - vec4(0.5f)));
             }
 
             for (size_t i = 1; i < bodies.size(); ++i)
@@ -141,8 +143,11 @@ class GravitySystem : public rigid::RigidBodySystem
         }
 
         std::array<float, 4> wheelTorques;
+        float wheelAngle;
         int wheel1, wheel2, wheel3, wheel4;
         int body;
+        int wheel1Suspension, wheel2Suspension, wheel3Suspension, wheel4Suspension;
+        int wheel1Steering, wheel2Steering, wheel3Steering, wheel4Steering;
 
         vec2 terrainScale;
         const draw::FloatTexture2D *terrainHeightTexture;
@@ -161,7 +166,32 @@ class GravitySystem : public rigid::RigidBodySystem
             bodies[wheel2].t = vec3(0.0f, 0.0f, wheelTorques[1]);
             bodies[wheel3].t = vec3(0.0f, 0.0f, wheelTorques[2]);
             bodies[wheel4].t = vec3(0.0f, 0.0f, wheelTorques[3]);
-            //bodies[body].f = vec3(1.0e5f, 0.0f, 0.0f);
+            
+            //Springs and damping for the wheels.
+            for (const auto &c : {constraints[wheel1Suspension],
+                                  constraints[wheel2Suspension],
+                                  constraints[wheel3Suspension],
+                                  constraints[wheel4Suspension]})
+            {
+                rigid::RigidBody *b1 = &bodies[c.b1.i];
+                rigid::RigidBody *b2 = &bodies[c.b2.i];
+                const vec3 p1 = mat3::rotationMatrix(b1->q)*c.b1.r + b1->x;
+                const vec3 v1 = b1->v + cross(b1->w, p1 - b1->x);
+                const vec3 n = mat3::rotationMatrix(b1->q)*c.n;
+                const vec3 p2 = mat3::rotationMatrix(b2->q)*c.b2.r + b2->x;
+                const vec3 v2 = b2->v + cross(b2->w, p2 - b2->x);
+                
+                const vec3 f = -10.0e3*(dot(p2 - p1, n) + 1.0f)*n - 1.0e3*dot(v2 - v1, n)*n;
+
+                b1->f -= f;
+                b1->t -= cross(p1 - b1->x, f);
+                b2->f += f;
+                b2->t += cross(p2 - b2->x, f);
+            }
+
+            //Direction of the wheels.
+            constraints[wheel1Steering].b1.r = vec3(-sin(wheelAngle), 0.0f, -cos(wheelAngle));
+            constraints[wheel2Steering].b1.r = vec3( sin(wheelAngle), 0.0f,  cos(wheelAngle));
         }
 
         float potentialEnergy() const
@@ -175,6 +205,8 @@ class GravitySystem : public rigid::RigidBodySystem
                     e += 9.81f*b.x.y/b.invM; //Potential energy due to gravity.
                 }
             }
+
+            //TODO: Incorporate springs etc.
 
             return e;
         }
@@ -356,17 +388,13 @@ void cleanup()
 void update(const double &dt)
 {
     //Control wheels.
-    const float tq = 10000.0f;
+    if (application->isKeyPressed('1')) rigidBodySystem->wheelAngle -= 0.1f*dt;
+    if (application->isKeyPressed('3')) rigidBodySystem->wheelAngle += 0.1f*dt;
 
-    if (application->isKeyPressed('1')) rigidBodySystem->wheelTorques[0] =  tq;
-    if (application->isKeyPressed('2')) rigidBodySystem->wheelTorques[0] = -tq;
-    if (application->isKeyPressed('3')) rigidBodySystem->wheelTorques[1] =  tq;
-    if (application->isKeyPressed('4')) rigidBodySystem->wheelTorques[1] = -tq;
-    if (application->isKeyPressed('5')) rigidBodySystem->wheelTorques[2] =  tq;
-    if (application->isKeyPressed('6')) rigidBodySystem->wheelTorques[2] = -tq;
-    if (application->isKeyPressed('7')) rigidBodySystem->wheelTorques[3] =  tq;
-    if (application->isKeyPressed('8')) rigidBodySystem->wheelTorques[3] = -tq;
-
+    if (application->isKeyPressed('2')) rigidBodySystem->wheelTorques.fill(1.0e4);
+    else if (application->isKeyPressed('4')) rigidBodySystem->wheelTorques.fill(-1.0e4);
+    else rigidBodySystem->wheelTorques.fill(0.0f);
+    
     //Update the rigid bodies.
     if (application->isKeyPressedOnce('r')) runSimulation = !runSimulation;
     if (application->isKeyPressedOnce('c')) followCar = !followCar;
