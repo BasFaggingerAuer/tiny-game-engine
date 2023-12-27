@@ -669,9 +669,7 @@ void RigidBodySystem::update(const float &dt)
                         c.lambda += l;
                     }
 
-                    //No break on purpose.
-                case Constraint::PositionInPlane:
-                    //Then enforce the maximum extent we can move along the line / normal of the plane.
+                    //Then enforce the maximum extent we can move along the line.
                     d = dot(p2 - p1, n) - c.d;
 
                     if (d > 0.0f || c.forceToZero)
@@ -731,7 +729,6 @@ void RigidBodySystem::update(const float &dt)
                         applyVelocityConstraint(b1, b2, cg.p1 - b1->x, cg.p2 - b2->x, cg.v1 - cg.v2);
                         break;
                     case Constraint::PositionOnLine:
-                    case Constraint::PositionInPlane:
                         applyVelocityConstraint(b1, b2, cg.p1 - b1->x, cg.p2 - b2->x, dot(cg.v1 - cg.v2, n)*n);
                         break;
                     case Constraint::Orientation:

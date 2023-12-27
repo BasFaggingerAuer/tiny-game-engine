@@ -116,7 +116,6 @@ struct Constraint
     {
         Position,
         PositionOnLine,
-        PositionInPlane,
         Orientation
     } type; //Constraint type.
 

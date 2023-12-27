@@ -62,34 +62,47 @@ class GravitySystem : public rigid::RigidBodySystem
             terrainScale(a_terrainScale),
             terrainHeightTexture(a_terrainHeightTexture)
         {
-            wheelTorques.fill(0.0f);
-            
-            //Create wheel geometry.
-            std::vector<vec4> wheelGeometry;
-            const float wheelRadius = 0.7f;
-            const float wheelStaticFriction = 1.0f; //Dry rubber on cement.
-            const float wheelDynamicFriction = 0.7f; //Dry rubber on cement.
-            const float wheelCOR = 0.95f;
-            const float wheelSoftness = 1.0e-6f;
+            //Set terrain material properties to be extremely rough.
+            bodies[0].staticFriction = 0.9f;
+            bodies[0].dynamicFriction = 0.7f;
+            bodies[0].restitution = 0.2f;
+            bodies[0].softness = 1.0e-6f;
 
             wheelAngle = 0.0f;
-            wheelGeometry = std::vector<vec4>{vec4(0.0f, 0.0f, 0.0f, 1.4f*wheelRadius)};
+            enginePowerFraction = 0.0f;
+            
+            std::vector<vec4> wheelGeometry = std::vector<vec4>{vec4(0.0f, 0.0f, 0.0f, 0.5f*wheelDiameter)};
             
             //Add wheels.
-            wheel1 = addSpheresRigidBody(40.0f, wheelGeometry, vec3(-1.6f, 2.0f*wheelRadius, -1.0f), vec3(0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f), wheelStaticFriction, wheelDynamicFriction, wheelCOR, wheelSoftness);
-            wheel2 = addSpheresRigidBody(40.0f, wheelGeometry, vec3(-1.6f, 2.0f*wheelRadius,  1.0f), vec3(0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f), wheelStaticFriction, wheelDynamicFriction, wheelCOR, wheelSoftness);
-            wheel3 = addSpheresRigidBody(40.0f, wheelGeometry, vec3( 1.6f, 2.0f*wheelRadius, -1.0f), vec3(0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f), wheelStaticFriction, wheelDynamicFriction, wheelCOR, wheelSoftness);
-            wheel4 = addSpheresRigidBody(40.0f, wheelGeometry, vec3( 1.6f, 2.0f*wheelRadius,  1.0f), vec3(0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f), wheelStaticFriction, wheelDynamicFriction, wheelCOR, wheelSoftness);
+            wheel1 = addSpheresRigidBody(wheelWeight, wheelGeometry, vec3(-0.5*wheelLocations.x, 0.5f*wheelDiameter, -0.5*wheelLocations.z), vec3(0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f), wheelStaticFriction, wheelDynamicFriction, wheelCOR, wheelSoftness);
+            wheel2 = addSpheresRigidBody(wheelWeight, wheelGeometry, vec3(-0.5*wheelLocations.x, 0.5f*wheelDiameter,  0.5*wheelLocations.z), vec3(0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f), wheelStaticFriction, wheelDynamicFriction, wheelCOR, wheelSoftness);
+            wheel3 = addSpheresRigidBody(wheelWeight, wheelGeometry, vec3( 0.5*wheelLocations.x, 0.5f*wheelDiameter, -0.5*wheelLocations.z), vec3(0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f), wheelStaticFriction, wheelDynamicFriction, wheelCOR, wheelSoftness);
+            wheel4 = addSpheresRigidBody(wheelWeight, wheelGeometry, vec3( 0.5*wheelLocations.x, 0.5f*wheelDiameter,  0.5*wheelLocations.z), vec3(0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f), wheelStaticFriction, wheelDynamicFriction, wheelCOR, wheelSoftness);
             
             //Add body.
-            const float bodySphereRadius = 1.0f;
-            const float bodyHeight = 0.8f*wheelRadius;
+            const ivec3 nrBodySpheres(4, 1, 2);
+            const float bodySphereDiameter = 0.5f*((carSize.x/static_cast<float>(nrBodySpheres.x)) +
+                                                   (carSize.z/static_cast<float>(nrBodySpheres.z)));
+            
+            std::vector<vec4> bodyGeometry;
 
-            body = addSpheresRigidBody(3000.0f,
-                                {vec4(-2.0f, 0.0f, 0.0f, bodySphereRadius),
-                                 vec4( 0.0f, 0.0f, 0.0f, bodySphereRadius),
-                                 vec4( 2.0f, 0.0f, 0.0f, bodySphereRadius)},
-                                vec3(0.0f, bodySphereRadius + wheelRadius + bodyHeight, 0.0f), vec3(0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f),
+            for (int x = 0; x < nrBodySpheres.x; ++x)
+            {
+                for (int y = 0; y < nrBodySpheres.y; ++y)
+                {
+                    for (int z = 0; z < nrBodySpheres.z; ++z)
+                    {
+                        bodyGeometry.push_back(vec4(bodySphereDiameter*(static_cast<float>(x) - 0.5*static_cast<float>(nrBodySpheres.x - 1)),
+                                                    bodySphereDiameter*(static_cast<float>(y) - 0.5*static_cast<float>(nrBodySpheres.y - 1)),
+                                                    bodySphereDiameter*(static_cast<float>(z) - 0.5*static_cast<float>(nrBodySpheres.z - 1)),
+                                                    0.5f*bodySphereDiameter));
+                    }
+                }
+            }
+
+
+            body = addSpheresRigidBody(bodyWeight, bodyGeometry,
+                                vec3(0.0f, wheelDiameter, 0.0f), vec3(0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f),
                                 0.61f, 0.47f, 0.70f, 0.0f);
 
             //Add constraints.
@@ -97,10 +110,11 @@ class GravitySystem : public rigid::RigidBodySystem
             addNonCollidingPair(body, wheel2);
             addNonCollidingPair(body, wheel3);
             addNonCollidingPair(body, wheel4);
-            wheel1Suspension = addPositionLineConstraint(body, vec3(-1.6f, -bodyHeight, -1.0f), vec3(0.0f, 1.0f, 0.0f), wheel1, vec3(0.0f, 0.0f, 0.0f));
-            wheel2Suspension = addPositionLineConstraint(body, vec3(-1.6f, -bodyHeight,  1.0f), vec3(0.0f, 1.0f, 0.0f), wheel2, vec3(0.0f, 0.0f, 0.0f));
-            wheel3Suspension = addPositionLineConstraint(body, vec3( 1.6f, -bodyHeight, -1.0f), vec3(0.0f, 1.0f, 0.0f), wheel3, vec3(0.0f, 0.0f, 0.0f));
-            wheel4Suspension = addPositionLineConstraint(body, vec3( 1.6f, -bodyHeight,  1.0f), vec3(0.0f, 1.0f, 0.0f), wheel4, vec3(0.0f, 0.0f, 0.0f));
+
+            wheel1Suspension = addPositionLineConstraint(body, vec3(-0.5*wheelLocations.x, -wheelLocations.y, -0.5*wheelLocations.z), vec3(0.0f, cos(suspensionAngle), -sin(suspensionAngle)), wheel1, vec3(0.0f, 0.0f, 0.0f));
+            wheel2Suspension = addPositionLineConstraint(body, vec3(-0.5*wheelLocations.x, -wheelLocations.y,  0.5*wheelLocations.z), vec3(0.0f, cos(suspensionAngle),  sin(suspensionAngle)), wheel2, vec3(0.0f, 0.0f, 0.0f));
+            wheel3Suspension = addPositionLineConstraint(body, vec3( 0.5*wheelLocations.x, -wheelLocations.y, -0.5*wheelLocations.z), vec3(0.0f, cos(suspensionAngle), -sin(suspensionAngle)), wheel3, vec3(0.0f, 0.0f, 0.0f));
+            wheel4Suspension = addPositionLineConstraint(body, vec3( 0.5*wheelLocations.x, -wheelLocations.y,  0.5*wheelLocations.z), vec3(0.0f, cos(suspensionAngle),  sin(suspensionAngle)), wheel4, vec3(0.0f, 0.0f, 0.0f));
             
             wheel1Steering = addAngularConstraint(body, vec3(0.0f, 0.0f, -1.0f), wheel1, vec3(0.0f, 0.0f, 1.0f));
             wheel2Steering = addAngularConstraint(body, vec3(0.0f, 0.0f,  1.0f), wheel2, vec3(0.0f, 0.0f, 1.0f));
@@ -131,6 +145,7 @@ class GravitySystem : public rigid::RigidBodySystem
                     }, randomVec3()*vec3(2.0f, 0.0f, 2.0f) - vec3(1.0f, -2*i - 10, 1.0f), vec3(0.0f, 0.0f, 0.0f), normalize(randomVec4() - vec4(0.5f)));
             }
 
+            //Move bodies above the terrain.
             for (size_t i = 1; i < bodies.size(); ++i)
             {
                 bodies[i].x.y += heightOffset;
@@ -142,8 +157,27 @@ class GravitySystem : public rigid::RigidBodySystem
 
         }
 
-        std::array<float, 4> wheelTorques;
         float wheelAngle;
+        float enginePowerFraction;
+
+        //Car geometry.
+        const float wheelWeight = 40.0f; //kg
+        const float wheelDiameter = 0.94f; //m
+        const float wheelStaticFriction = 0.9f; //Dry rubber on concrete.
+        const float wheelDynamicFriction = 0.7f; //Dry rubber on concrete.
+        const float wheelCOR = 0.95f;
+        const float wheelSoftness = 0.0f; //1.0e-6f;
+        const float suspensionAngle = 0.0f; // 0.01f; //rad, negative camber angle.
+        const float suspensionSpringFreeLength = 0.40f; //m
+        const float suspensionSpringCoefficient = 64000.0f; //N/m
+        const float suspensionDampingCoefficient = 4000.0f; //N/m/s
+        const float bodyWeight = 3000.0f; //kg
+        const float engineTorque = 700.0f; //N*m
+        const vec3 carSize = vec3(4.84, 1.83, 2.18); //m
+        const vec3 wheelLocations = vec3(3.3, 0.4f*wheelDiameter, 1.82); //m
+        
+        const float gravityAcceleration = 9.81f;
+        
         int wheel1, wheel2, wheel3, wheel4;
         int body;
         int wheel1Suspension, wheel2Suspension, wheel3Suspension, wheel4Suspension;
@@ -159,13 +193,14 @@ class GravitySystem : public rigid::RigidBodySystem
         {
             for (auto &b : bodies)
             {
-                b.f = vec3(0.0f, -9.81f/b.invM, 0.0f); //Gravity.
+                b.f = vec3(0.0f, -gravityAcceleration/b.invM, 0.0f); //Gravity.
             }
 
-            bodies[wheel1].t = vec3(0.0f, 0.0f, wheelTorques[0]);
-            bodies[wheel2].t = vec3(0.0f, 0.0f, wheelTorques[1]);
-            bodies[wheel3].t = vec3(0.0f, 0.0f, wheelTorques[2]);
-            bodies[wheel4].t = vec3(0.0f, 0.0f, wheelTorques[3]);
+            //TODO: Let engine torque depend on wheel RPM.
+            for (auto i : {wheel1, wheel2, wheel3, wheel4})
+            {
+                bodies[i].t = mat3::rotationMatrix(bodies[body].q)*vec3(0.0f, 0.0f, -enginePowerFraction*engineTorque);
+            }
             
             //Springs and damping for the wheels.
             for (const auto &c : {constraints[wheel1Suspension],
@@ -181,7 +216,7 @@ class GravitySystem : public rigid::RigidBodySystem
                 const vec3 p2 = mat3::rotationMatrix(b2->q)*c.b2.r + b2->x;
                 const vec3 v2 = b2->v + cross(b2->w, p2 - b2->x);
                 
-                const vec3 f = -10.0e3*(dot(p2 - p1, n) + 1.0f)*n - 1.0e3*dot(v2 - v1, n)*n;
+                const vec3 f = -suspensionSpringCoefficient*(dot(p2 - p1, n) + suspensionSpringFreeLength)*n - suspensionDampingCoefficient*dot(v2 - v1, n)*n;
 
                 b1->f -= f;
                 b1->t -= cross(p1 - b1->x, f);
@@ -189,9 +224,19 @@ class GravitySystem : public rigid::RigidBodySystem
                 b2->t += cross(p2 - b2->x, f);
             }
 
-            //Direction of the wheels.
-            constraints[wheel1Steering].b1.r = vec3(-sin(wheelAngle), 0.0f, -cos(wheelAngle));
-            constraints[wheel2Steering].b1.r = vec3( sin(wheelAngle), 0.0f,  cos(wheelAngle));
+            if (true)
+            {
+                //Direction of the wheels. (Ensure that both wheels are oriented correctly w.r.t. center of the circle the car is making.)
+                const float w = 0.5*wheelLocations.z/wheelLocations.x;
+                const float c = cos(wheelAngle);
+                const float s = sin(wheelAngle);
+                float d;
+
+                d = sqrtf(1.0f + 2.0f*w*s*c + w*w*s*s);
+                constraints[wheel3Steering].b1.r = vec3( s/d, 0.0f, -(c + w*s)/d);
+                d = sqrtf(1.0f - 2.0f*w*s*c + w*w*s*s);
+                constraints[wheel4Steering].b1.r = vec3(-s/d, 0.0f,  (c - w*s)/d);
+            }
         }
 
         float potentialEnergy() const
@@ -388,12 +433,13 @@ void cleanup()
 void update(const double &dt)
 {
     //Control wheels.
-    if (application->isKeyPressed('1')) rigidBodySystem->wheelAngle -= 0.1f*dt;
-    if (application->isKeyPressed('3')) rigidBodySystem->wheelAngle += 0.1f*dt;
+    rigidBodySystem->wheelAngle = 0.0f;
+    if (application->isKeyPressed('3')) rigidBodySystem->wheelAngle =  0.25f;
+    if (application->isKeyPressed('1')) rigidBodySystem->wheelAngle = -0.25f;
 
-    if (application->isKeyPressed('2')) rigidBodySystem->wheelTorques.fill(1.0e4);
-    else if (application->isKeyPressed('4')) rigidBodySystem->wheelTorques.fill(-1.0e4);
-    else rigidBodySystem->wheelTorques.fill(0.0f);
+    rigidBodySystem->enginePowerFraction = 0.0f;
+    if (application->isKeyPressed('2')) rigidBodySystem->enginePowerFraction = 1.0f;
+    if (application->isKeyPressed('4')) rigidBodySystem->enginePowerFraction = -1.0f;
     
     //Update the rigid bodies.
     if (application->isKeyPressedOnce('r')) runSimulation = !runSimulation;
@@ -425,8 +471,6 @@ void update(const double &dt)
 #endif
     }
 
-    for (int i = 0; i < 4; ++i) rigidBodySystem->wheelTorques[i] = 0.0f;
-
     if (rigidBodySystem->getTime() > lastEnergyTime + 0.5f)
     {
         lastEnergyTime = rigidBodySystem->getTime();
@@ -447,7 +491,7 @@ void update(const double &dt)
         rigidBodySystem->getRigidBodyPositionAndOrientation(rigidBodySystem->body, x, q);
 
         cameraPosition = x + mat3::rotationMatrix(q)*vec3(0.0f, 1.5f, 0.0f);
-        cameraOrientation = quatmul(quatrot(-M_PI/2.0f, vec3(0.0f, 1.0f, 0.0f)), quatconj(q));
+        cameraOrientation = quatmul(quatrot(M_PI/2.0f, vec3(0.0f, 1.0f, 0.0f)), quatconj(q));
     }
     else
     {
@@ -464,7 +508,7 @@ void update(const double &dt)
 
     //Let the terrain follow the camera.
     terrain->setCameraPosition(cameraPosition);
-
+    
     //Tell the world renderer that the camera has changed.
     worldRenderer->setCamera(cameraPosition, cameraOrientation);
 }

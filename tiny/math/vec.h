@@ -43,6 +43,7 @@ template <typename t> inline t t_abs(const t &a) noexcept {return (a < t(0) ? -a
 template <typename t> inline t clamp(const t &a, const t &b, const t &c) noexcept {return (a < b ? b : (a > c ? c : a));}
 template <typename t> inline t step(const t &a, const t &b) noexcept {return (b < a ? t(0) : t(1));}
 template <typename t> inline t fract(const t &a) noexcept {return a - std::floor(a);}
+template <typename t> inline t sgn(const t &a) noexcept {return (t(0) < a) - (a < t(0));}
 
 template <typename t> class typed2vector
 {
