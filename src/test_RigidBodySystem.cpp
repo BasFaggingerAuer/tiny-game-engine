@@ -41,6 +41,7 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/draw/staticmeshhorde.h>
 #include <tiny/draw/effects/diffuse.h>
 #include <tiny/draw/effects/lambert.h>
+#include <tiny/draw/effects/sunsky.h>
 #include <tiny/draw/worldrenderer.h>
 
 #include <tiny/rigid/rigidbody.h>
@@ -53,6 +54,7 @@ using namespace tiny;
 const float heightOffset = 14.0f;
 bool runSimulation = false;
 bool followCar = false;
+bool showCollisionSpheres = false;
 
 class GravitySystem : public rigid::RigidBodySystem
 {
@@ -84,7 +86,7 @@ class GravitySystem : public rigid::RigidBodySystem
             const float bodySphereDiameter = 0.5f*((carSize.x/static_cast<float>(nrBodySpheres.x)) +
                                                    (carSize.z/static_cast<float>(nrBodySpheres.z)));
             
-            std::vector<vec4> bodyGeometry;
+            bodyGeometry.clear();
 
             for (int x = 0; x < nrBodySpheres.x; ++x)
             {
@@ -100,6 +102,8 @@ class GravitySystem : public rigid::RigidBodySystem
                 }
             }
 
+            //FIXME: To avoid the camera clipping through the terrain.
+            bodyGeometry.push_back(vec4(0.0f, bodySphereDiameter*0.5f*static_cast<float>(nrBodySpheres.y), 0.0f, 0.5f*bodySphereDiameter));
 
             body = addSpheresRigidBody(bodyWeight, bodyGeometry,
                                 vec3(0.0f, wheelDiameter, 0.0f), vec3(0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f),
@@ -162,24 +166,25 @@ class GravitySystem : public rigid::RigidBodySystem
 
         //Car geometry.
         const float wheelWeight = 40.0f; //kg
-        const float wheelDiameter = 0.94f; //m
+        const float wheelDiameter = 1.2f; //0.94f; //m
         const float wheelStaticFriction = 0.9f; //Dry rubber on concrete.
         const float wheelDynamicFriction = 0.7f; //Dry rubber on concrete.
         const float wheelCOR = 0.95f;
         const float wheelSoftness = 0.0f; //1.0e-6f;
         const float suspensionAngle = 0.0f; // 0.01f; //rad, negative camber angle.
-        const float suspensionSpringFreeLength = 0.40f; //m
+        const float suspensionSpringFreeLength = 0.3f; //0.40f; //m
         const float suspensionSpringCoefficient = 64000.0f; //N/m
         const float suspensionDampingCoefficient = 4000.0f; //N/m/s
         const float bodyWeight = 3000.0f; //kg
         const float engineTorque = 700.0f; //N*m
-        const vec3 carSize = vec3(4.84, 1.83, 2.18); //m
-        const vec3 wheelLocations = vec3(3.3, 0.4f*wheelDiameter, 1.82); //m
+        const vec3 carSize =  vec3(4.8f, 1.6f, 2.3f); //vec3(4.84, 1.83, 2.18); //m
+        const vec3 wheelLocations = vec3(3.3f, 0.3f*wheelDiameter, 2.3f); //vec3(3.3f, 0.4f*wheelDiameter, 1.82); //m
         
         const float gravityAcceleration = 9.81f;
         
         int wheel1, wheel2, wheel3, wheel4;
         int body;
+        std::vector<vec4> bodyGeometry;
         int wheel1Suspension, wheel2Suspension, wheel3Suspension, wheel4Suspension;
         int wheel1Steering, wheel2Steering, wheel3Steering, wheel4Steering;
 
@@ -322,13 +327,31 @@ draw::StaticMeshHorde *sphereMeshHorde = 0;
 draw::RGBATexture2D *sphereDiffuseTexture = 0;
 draw::RGBTexture2D *sphereNormalTexture = 0;
 
+std::vector<draw::StaticMeshInstance> wheelMeshInstances;
+draw::StaticMeshHorde *wheelMeshHorde = 0;
+draw::RGBTexture2D *wheelDiffuseTexture = 0;
+draw::RGBTexture2D *wheelNormalTexture = 0;
+
+std::vector<draw::StaticMeshInstance> bodyMeshInstances;
+draw::StaticMeshHorde *bodyMeshHorde = 0;
+draw::RGBTexture2D *bodyDiffuseTexture = 0;
+draw::RGBTexture2D *bodyNormalTexture = 0;
+
 draw::StaticMesh *terrainCollisionMesh = 0;
 draw::RGBATexture2D *terrainCollisionMeshDiffuseTexture = 0;
+
+draw::RGBATexture2D *skyGradientTexture = 0;
 
 GravitySystem *rigidBodySystem = 0;
 float lastEnergyTime = -10.0f;
 
+#ifdef SHOW_COLLISION_MESH
 draw::Renderable *screenEffect = 0;
+#else
+draw::StaticMesh *skyBox = 0;
+draw::effects::SunSky *screenEffect = 0;
+float sunAngle = 1.0f;
+#endif
 
 const vec2 terrainScale = vec2(5.0f, 5.0f);
 draw::Terrain *terrain = 0;
@@ -370,6 +393,19 @@ void setup()
     sphereMeshHorde->setDiffuseTexture(*sphereDiffuseTexture);
     sphereMeshHorde->setNormalTexture(*sphereNormalTexture);
 
+    //Load quad meshes.
+    wheelMeshHorde = new draw::StaticMeshHorde(mesh::io::readStaticMesh(DATA_DIRECTORY + "mesh/quadwheel.dae"), 16);
+    wheelDiffuseTexture = new draw::RGBTexture2D(img::io::readImage(DATA_DIRECTORY + "img/quadwheel.png").flipUpDown());
+    wheelNormalTexture = new draw::RGBTexture2D(img::Image::createUpNormalImage());
+    wheelMeshHorde->setDiffuseTexture(*wheelDiffuseTexture);
+    wheelMeshHorde->setNormalTexture(*wheelNormalTexture);
+
+    bodyMeshHorde = new draw::StaticMeshHorde(mesh::io::readStaticMesh(DATA_DIRECTORY + "mesh/quadbody.dae"), 16);
+    bodyDiffuseTexture = new draw::RGBTexture2D(img::io::readImage(DATA_DIRECTORY + "img/quadbody.png").flipUpDown());
+    bodyNormalTexture = new draw::RGBTexture2D(img::Image::createUpNormalImage());
+    bodyMeshHorde->setDiffuseTexture(*bodyDiffuseTexture);
+    bodyMeshHorde->setNormalTexture(*bodyNormalTexture);
+
     terrainCollisionMeshDiffuseTexture = new draw::RGBATexture2D(img::Image::createSolidImage(4, 255, 255, 0));
     
     //Create simple example terrain.
@@ -379,8 +415,8 @@ void setup()
     terrainNormalTexture = new draw::RGBTexture2D(terrainHeightTexture->getWidth(), terrainHeightTexture->getHeight());
     
     terrainAttributeTexture = new draw::RGBATexture2D(img::Image::createSolidImage(terrainHeightTexture->getWidth()));
-    terrainLocalDiffuseTextures = new draw::RGBTexture2DArray(img::io::readImage(DATA_DIRECTORY + "img/terrain/dirt.jpg"));
-    terrainLocalNormalTextures = new draw::RGBTexture2DArray(img::io::readImage(DATA_DIRECTORY + "img/terrain/dirt_normal.jpg"));
+    terrainLocalDiffuseTextures = new draw::RGBTexture2DArray(img::io::readImage(DATA_DIRECTORY + "img/terrain/desert_sand_smooth_b.png"));
+    terrainLocalNormalTextures = new draw::RGBTexture2DArray(img::io::readImage(DATA_DIRECTORY + "img/terrain/desert_sand_smooth_b_norm.png"));
     
     //Calculate normal map and paint the terrain with the textures.
     draw::computeTangentMap(*terrainHeightTexture, *terrainTangentTexture, terrainScale.x);
@@ -394,15 +430,23 @@ void setup()
 #ifdef SHOW_COLLISION_MESH
     screenEffect = new draw::effects::Diffuse();
 #else
-    screenEffect = new draw::effects::Lambert();
+    //screenEffect = new draw::effects::Lambert();
+    skyBox = new draw::StaticMesh(mesh::StaticMesh::createCubeMesh(-1.0e6));
+    screenEffect = new draw::effects::SunSky();
+    skyGradientTexture = new draw::RGBATexture2D(img::io::readImage(DATA_DIRECTORY + "img/sky.png"));
+    screenEffect->setSkyTexture(*skyGradientTexture);
+    screenEffect->setSun(vec3(sin(sunAngle), cos(sunAngle), 0.5f));
 #endif
     
     //Create a renderer and add the cube and the diffuse rendering effect to it.
     worldRenderer = new draw::WorldRenderer(application->getScreenWidth(), application->getScreenHeight());
 #ifndef SHOW_COLLISION_MESH
     worldRenderer->addWorldRenderable(0, terrain);
+    worldRenderer->addWorldRenderable(1, skyBox);
 #endif
-    worldRenderer->addWorldRenderable(1, sphereMeshHorde);
+    worldRenderer->addWorldRenderable(2, sphereMeshHorde);
+    worldRenderer->addWorldRenderable(3, wheelMeshHorde);
+    worldRenderer->addWorldRenderable(4, bodyMeshHorde);
     worldRenderer->addScreenRenderable(0, screenEffect, false, false);
 }
 
@@ -411,10 +455,20 @@ void cleanup()
     delete worldRenderer;
     
     delete screenEffect;
+    if (skyGradientTexture) delete skyGradientTexture;
+    if (skyBox) delete skyBox;
     
     delete sphereMeshHorde;
     delete sphereDiffuseTexture;
     delete sphereNormalTexture;
+
+    delete wheelMeshHorde;
+    delete wheelDiffuseTexture;
+    delete wheelNormalTexture;
+
+    delete bodyMeshHorde;
+    delete bodyDiffuseTexture;
+    delete bodyNormalTexture;
 
     if (terrainCollisionMesh) delete terrainCollisionMesh;
     delete terrainCollisionMeshDiffuseTexture;
@@ -426,7 +480,7 @@ void cleanup()
     delete terrainAttributeTexture;
     delete terrainLocalDiffuseTextures;
     delete terrainLocalNormalTextures;
-    
+
     delete rigidBodySystem;
 }
 
@@ -438,11 +492,12 @@ void update(const double &dt)
     if (application->isKeyPressed('1')) rigidBodySystem->wheelAngle = -0.25f;
 
     rigidBodySystem->enginePowerFraction = 0.0f;
-    if (application->isKeyPressed('2')) rigidBodySystem->enginePowerFraction = 1.0f;
-    if (application->isKeyPressed('4')) rigidBodySystem->enginePowerFraction = -1.0f;
+    if (application->isKeyPressed('2')) rigidBodySystem->enginePowerFraction = 4.0f;
+    if (application->isKeyPressed('4')) rigidBodySystem->enginePowerFraction = -4.0f;
     
     //Update the rigid bodies.
     if (application->isKeyPressedOnce('r')) runSimulation = !runSimulation;
+    if (application->isKeyPressedOnce('t')) showCollisionSpheres = !showCollisionSpheres;
     if (application->isKeyPressedOnce('c')) followCar = !followCar;
     if (application->isKeyPressedOnce(' ') || runSimulation)
     {
@@ -477,10 +532,20 @@ void update(const double &dt)
         std::cerr << *rigidBodySystem;
     }
     
-    //Get rigid body positions and send them to the static mesh horde.
+    //Get rigid body positions and send them to the static mesh horde to show the collision spheres.
     sphereMeshInstances.clear();
-    rigidBodySystem->getInternalSphereStaticMeshes(sphereMeshInstances);
+    if (showCollisionSpheres) rigidBodySystem->getInternalSphereStaticMeshes(sphereMeshInstances);
     sphereMeshHorde->setMeshes(sphereMeshInstances.begin(), sphereMeshInstances.end());
+
+    //Get wheel rigid body positions.
+    wheelMeshInstances.clear();
+    rigidBodySystem->getStaticMeshes(wheelMeshInstances, std::array<int, 4>({rigidBodySystem->wheel1, rigidBodySystem->wheel2, rigidBodySystem->wheel3, rigidBodySystem->wheel4}));
+    wheelMeshHorde->setMeshes(wheelMeshInstances.begin(), wheelMeshInstances.end());
+
+    //Get body position.
+    bodyMeshInstances.clear();
+    rigidBodySystem->getStaticMeshes(bodyMeshInstances, std::array<int, 1>({rigidBodySystem->body}));
+    bodyMeshHorde->setMeshes(bodyMeshInstances.begin(), bodyMeshInstances.end());
 
     if (followCar)
     {
@@ -490,7 +555,7 @@ void update(const double &dt)
         
         rigidBodySystem->getRigidBodyPositionAndOrientation(rigidBodySystem->body, x, q);
 
-        cameraPosition = x + mat3::rotationMatrix(q)*vec3(0.0f, 1.5f, 0.0f);
+        cameraPosition = x + mat3::rotationMatrix(q)*rigidBodySystem->bodyGeometry.back().xyz();
         cameraOrientation = quatmul(quatrot(M_PI/2.0f, vec3(0.0f, 1.0f, 0.0f)), quatconj(q));
     }
     else

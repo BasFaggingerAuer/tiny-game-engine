@@ -169,6 +169,15 @@ class RigidBodySystem
             }
         }
 
+        template <typename Container, typename List>
+        void getStaticMeshes(Container &out, const List &in) const noexcept
+        {
+            for (const auto &i : in)
+            {
+                out.push_back(tiny::draw::StaticMeshInstance(vec4(bodies[i].x, 1.0f), bodies[i].q));
+            }
+        }
+
         float getTime() const;
         
         friend std::ostream & operator << (std::ostream &Out, const RigidBodySystem &b)

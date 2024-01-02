@@ -42,6 +42,25 @@ Image::~Image()
 
 }
 
+Image Image::flipUpDown() const
+{
+    Image img(width, height);
+    unsigned char *out = &img.data[0];
+
+    for (size_t i = 0; i < height; ++i)
+    {
+        for (size_t j = 0; j < width; ++j)
+        {
+            for (size_t c = 0; c < 4; ++c)
+            {
+                *out++ = data[4*width*(height - 1 - i) + 4*j + c];
+            }
+        }
+    }
+
+    return img;
+}
+
 Image Image::createSolidImage(const size_t &size, const unsigned char &r, const unsigned char &g, const unsigned char &b, const unsigned char &a)
 {
     Image test(size, size);
