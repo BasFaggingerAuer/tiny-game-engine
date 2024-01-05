@@ -41,20 +41,25 @@ along with this program.  If not, see <http://www.gnu.org/licenses/>.
 #include <tiny/draw/staticmeshhorde.h>
 #include <tiny/draw/effects/diffuse.h>
 #include <tiny/draw/effects/lambert.h>
-#include <tiny/draw/effects/sunsky.h>
+#include <tiny/draw/effects/sunskyega.h>
 #include <tiny/draw/worldrenderer.h>
 
 #include <tiny/rigid/rigidbody.h>
+
+#include <tiny/smp/sample.h>
+#include <tiny/snd/source.h>
+#include <tiny/snd/buffer.h>
+#include <tiny/snd/worldsounderer.h>
 
 using namespace std;
 using namespace tiny;
 
 //#define SHOW_COLLISION_MESH
 
-const float heightOffset = 14.0f;
+const float heightOffset = 15.0f;
 bool runSimulation = false;
 bool followCar = false;
-bool showCollisionSpheres = false;
+bool showCollisionSpheres = true;
 
 class GravitySystem : public rigid::RigidBodySystem
 {
@@ -105,7 +110,7 @@ class GravitySystem : public rigid::RigidBodySystem
             //FIXME: To avoid the camera clipping through the terrain.
             bodyGeometry.push_back(vec4(0.0f, bodySphereDiameter*0.5f*static_cast<float>(nrBodySpheres.y), 0.0f, 0.5f*bodySphereDiameter));
 
-            body = addSpheresRigidBody(bodyWeight, bodyGeometry,
+            body = addSpheresRigidBody(bodyMass, bodyGeometry,
                                 vec3(0.0f, wheelDiameter, 0.0f), vec3(0.0f, 0.0f, 0.0f), vec4(0.0f, 0.0f, 0.0f, 1.0f), vec3(0.0f, 0.0f, 0.0f),
                                 0.61f, 0.47f, 0.70f, 0.0f);
 
@@ -125,16 +130,18 @@ class GravitySystem : public rigid::RigidBodySystem
             wheel3Steering = addAngularConstraint(body, vec3(0.0f, 0.0f, -1.0f), wheel3, vec3(0.0f, 0.0f, 1.0f));
             wheel4Steering = addAngularConstraint(body, vec3(0.0f, 0.0f,  1.0f), wheel4, vec3(0.0f, 0.0f, 1.0f));
 
+            std::cout << "Car should be able to drive up to slopes of " << std::asin(wheelTorque/(0.5f*wheelDiameter*bodyMass*gravityAcceleration*0.25f))*180.0f/M_PI << "deg." << std::endl;
+
             //Add something to drive against.
-            addSpheresRigidBody(1.0f, {vec4(0.0f, 0.0f, 0.0f, 1.0f),
+            addSpheresRigidBody(200.0f, {vec4(0.0f, 0.0f, 0.0f, 1.0f),
                                        vec4(0.0f, 0.0f, 1.0f, 1.0f),
                                        vec4(0.0f, 0.0f, 2.0f, 1.0f),
                                        vec4(0.0f, 0.0f, 3.0f, 1.0f)},
                                 vec3(-10.0f, 2.0f, 0.0f));
-            addSpheresRigidBody(1.0f, {vec4(0.0f, 0.0f, 0.0f, 1.0f),
-                                       vec4(1.0f, 0.0f, 1.0f, 1.0f),
-                                       vec4(2.0f, 0.0f, 2.0f, 1.0f),
-                                       vec4(3.0f, 0.0f, 3.0f, 1.0f)},
+            addSpheresRigidBody(200.0f, {vec4(0.0f, 0.0f, 0.0f, 1.0f),
+                                       vec4(2.0f, 0.0f, 0.0f, 1.0f),
+                                       vec4(0.0f, 0.0f, 2.0f, 1.0f),
+                                       vec4(2.0f, 0.0f, 2.0f, 1.0f)},
                                 vec3(-16.0f, 4.0f, 0.0f));
             
             //Add some rigid bodies.
@@ -171,14 +178,15 @@ class GravitySystem : public rigid::RigidBodySystem
         const float wheelDynamicFriction = 0.7f; //Dry rubber on concrete.
         const float wheelCOR = 0.95f;
         const float wheelSoftness = 0.0f; //1.0e-6f;
-        const float suspensionAngle = 0.0f; // 0.01f; //rad, negative camber angle.
+        const float suspensionAngle = 0.01f; //rad, negative camber angle.
         const float suspensionSpringFreeLength = 0.3f; //0.40f; //m
         const float suspensionSpringCoefficient = 64000.0f; //N/m
         const float suspensionDampingCoefficient = 4000.0f; //N/m/s
-        const float bodyWeight = 3000.0f; //kg
-        const float engineTorque = 700.0f; //N*m
-        const vec3 carSize =  vec3(4.8f, 1.6f, 2.3f); //vec3(4.84, 1.83, 2.18); //m
-        const vec3 wheelLocations = vec3(3.3f, 0.3f*wheelDiameter, 2.3f); //vec3(3.3f, 0.4f*wheelDiameter, 1.82); //m
+        const float bodyMass = 3000.0f; //kg
+        //const float wheelTorque = 2.73f*2.72f*21.0f*2.48f*575.0f/4.0f; //N*m (hypoid axle, transfer case, torque converter, 1st gear, max engine torque, 4 wheels)
+        const float wheelTorque = 0.75f*(wheelDiameter/0.70f)*(bodyMass/1777.0f)*9.0f*470.0f/4.0f; //N*m
+        const vec3 carSize =  vec3(4.8f, 1.6f, 2.3f); //m
+        const vec3 wheelLocations = vec3(3.3f, 0.3f*wheelDiameter, 2.3f); //m
         
         const float gravityAcceleration = 9.81f;
         
@@ -204,7 +212,7 @@ class GravitySystem : public rigid::RigidBodySystem
             //TODO: Let engine torque depend on wheel RPM.
             for (auto i : {wheel1, wheel2, wheel3, wheel4})
             {
-                bodies[i].t = mat3::rotationMatrix(bodies[body].q)*vec3(0.0f, 0.0f, -enginePowerFraction*engineTorque);
+                bodies[i].t = mat3::rotationMatrix(bodies[body].q)*vec3(0.0f, 0.0f, -enginePowerFraction*wheelTorque);
             }
             
             //Springs and damping for the wheels.
@@ -349,7 +357,7 @@ float lastEnergyTime = -10.0f;
 draw::Renderable *screenEffect = 0;
 #else
 draw::StaticMesh *skyBox = 0;
-draw::effects::SunSky *screenEffect = 0;
+draw::effects::SunSkyEGA *screenEffect = 0;
 float sunAngle = 1.0f;
 #endif
 
@@ -366,6 +374,9 @@ draw::RGBTexture2DArray *terrainLocalNormalTextures = 0;
 
 vec3 cameraPosition = vec3(0.0f, heightOffset + 2.0f, 10.0f);
 vec4 cameraOrientation = vec4(0.0f, 0.0f, 0.0f, 1.0f);
+
+snd::Source *wheelSoundSources[4] = {0};
+snd::MonoSoundBuffer *wheelSoundBuffer = 0;
 
 //A simple bilinear texture sampler, which converts world coordinates to the corresponding texture coordinates on the zoomed-in terrain.
 template<typename TextureType>
@@ -427,15 +438,28 @@ void setup()
     //Create a rigid body scene.
     rigidBodySystem = new GravitySystem(terrainScale, terrainHeightTexture);
 
+    //Create wheel motor sounds.
+    wheelSoundBuffer = new snd::MonoSoundBuffer(smp::Sample::createBlockTone(100.0f, 44100.0f));
+    
+    for (int i = 0; i < 4; ++i)
+    {
+        wheelSoundSources[i] = new snd::Source(vec3(0.0f, 0.0f, 0.0f));
+        wheelSoundSources[i]->setGain(0.5f);
+        wheelSoundSources[i]->setPitch(0.1f);
+        wheelSoundSources[i]->playBuffer(*wheelSoundBuffer, true, static_cast<float>(rand())/static_cast<float>(RAND_MAX));
+    }
+
+    
+
 #ifdef SHOW_COLLISION_MESH
     screenEffect = new draw::effects::Diffuse();
 #else
     //screenEffect = new draw::effects::Lambert();
     skyBox = new draw::StaticMesh(mesh::StaticMesh::createCubeMesh(-1.0e6));
-    screenEffect = new draw::effects::SunSky();
+    screenEffect = new draw::effects::SunSkyEGA();
     skyGradientTexture = new draw::RGBATexture2D(img::io::readImage(DATA_DIRECTORY + "img/sky.png"));
     screenEffect->setSkyTexture(*skyGradientTexture);
-    screenEffect->setSun(vec3(sin(sunAngle), cos(sunAngle), 0.5f));
+    screenEffect->setSun(vec3(sin(sunAngle), cos(sunAngle), 0.4f));
 #endif
     
     //Create a renderer and add the cube and the diffuse rendering effect to it.
@@ -453,6 +477,9 @@ void setup()
 void cleanup()
 {
     delete worldRenderer;
+
+    for (int i = 0; i < 4; ++i) if (wheelSoundSources[i]) delete wheelSoundSources[i];
+    if (wheelSoundBuffer) delete wheelSoundBuffer;
     
     delete screenEffect;
     if (skyGradientTexture) delete skyGradientTexture;
@@ -492,8 +519,8 @@ void update(const double &dt)
     if (application->isKeyPressed('1')) rigidBodySystem->wheelAngle = -0.25f;
 
     rigidBodySystem->enginePowerFraction = 0.0f;
-    if (application->isKeyPressed('2')) rigidBodySystem->enginePowerFraction = 4.0f;
-    if (application->isKeyPressed('4')) rigidBodySystem->enginePowerFraction = -4.0f;
+    if (application->isKeyPressed('2')) rigidBodySystem->enginePowerFraction = 1.0f;
+    if (application->isKeyPressed('4')) rigidBodySystem->enginePowerFraction = -1.0f;
     
     //Update the rigid bodies.
     if (application->isKeyPressedOnce('r')) runSimulation = !runSimulation;
@@ -542,6 +569,17 @@ void update(const double &dt)
     rigidBodySystem->getStaticMeshes(wheelMeshInstances, std::array<int, 4>({rigidBodySystem->wheel1, rigidBodySystem->wheel2, rigidBodySystem->wheel3, rigidBodySystem->wheel4}));
     wheelMeshHorde->setMeshes(wheelMeshInstances.begin(), wheelMeshInstances.end());
 
+    //Put sound sources at wheel locations.
+    for (int i = 0; i < 4; ++i)
+    {
+        vec3 v(0.0f), w(0.0f);
+
+        //FIXME: Put all wheels into an array.
+        rigidBodySystem->getRigidBodyVelocityAndAngularVelocity(rigidBodySystem->wheel1 + i, v, w);
+        wheelSoundSources[i]->setPosition(wheelMeshInstances[i].positionAndSize.xyz());
+        wheelSoundSources[i]->setPitch(0.1f + 0.005f*length(w));
+    }
+
     //Get body position.
     bodyMeshInstances.clear();
     rigidBodySystem->getStaticMeshes(bodyMeshInstances, std::array<int, 1>({rigidBodySystem->body}));
@@ -576,6 +614,7 @@ void update(const double &dt)
     
     //Tell the world renderer that the camera has changed.
     worldRenderer->setCamera(cameraPosition, cameraOrientation);
+    snd::WorldSounderer::setCamera(cameraPosition, cameraOrientation);
 }
 
 void render()

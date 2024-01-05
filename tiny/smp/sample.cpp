@@ -60,3 +60,18 @@ Sample Sample::createTone(const float &toneFrequency, const float &sampleFrequen
     return sample;
 }
 
+Sample Sample::createBlockTone(const float &toneFrequency, const float &sampleFrequency)
+{
+    //Create a sine wave of the desired frequency.
+    Sample sample(static_cast<size_t>(sampleFrequency), 1);
+    
+    //Sample one entire period.
+    const size_t nrSamples = static_cast<size_t>(ceil(sampleFrequency/toneFrequency));
+    
+    sample.data.assign(nrSamples, 0);
+    
+    for (size_t i = 0; i < nrSamples/2; ++i) sample.data[i] = 32767;
+    for (size_t i = nrSamples/2; i < nrSamples; ++i) sample.data[i] = -32767;
+    
+    return sample;
+}

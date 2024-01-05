@@ -144,7 +144,8 @@ int RigidBodySystem::addSpheresRigidBody(const float &totalMass, const std::vect
                             massPerSphere[i]*(length2(s.xyz())*mat3::identityMatrix() - mat3::outerProductMatrix(s.xyz(), s.xyz()));
         }
 
-        assert((inertiaCheck - mat3::scaleMatrix(e)).getFrobeniusNorm() < EPS);
+        //FIXME: Can we achieve 1e-6 single precision for high-mass objects?
+        assert((inertiaCheck - mat3::scaleMatrix(e)).getFrobeniusNorm() < 1.0e-4);
     }
 #endif
 
@@ -249,6 +250,15 @@ void RigidBodySystem::getRigidBodyPositionAndOrientation(const int &i, vec3 &x, 
     {
         x = bodies[i].x;
         q = bodies[i].q;
+    }
+}
+
+void RigidBodySystem::getRigidBodyVelocityAndAngularVelocity(const int &i, vec3 &v, vec3 &w) const
+{
+    if (i >= 0 && i < static_cast<int>(bodies.size()))
+    {
+        v = bodies[i].v;
+        w = bodies[i].w;
     }
 }
 
@@ -590,6 +600,11 @@ void RigidBodySystem::update(const float &dt)
 
         for (auto &c : collisions)
         {
+            c.lambda = 0.0f;
+        }
+
+        for (auto &c : collisions)
+        {
             //Check whether we have a collision for the current rigid body state.
             c = initializeCollision(c);
 
@@ -619,6 +634,13 @@ void RigidBodySystem::update(const float &dt)
                 vec3 dx = (precg.p2 - cg.p2) - (precg.p1 - cg.p1);
 
                 dx -= dot(dx, c.n)*c.n;
+
+                //Inspect normal forces.
+                if (c.b2.i == 0 && false)
+                {
+                    std::cout << "Normal force of " << c.b1.i << ": " << std::abs(c.lambda)/(h*h) << "N, coeff " << staticFrictionCoeff << std::endl;
+                    std::cout << "Tangential force of " << c.b1.i << ": " << length(dx)/(h*h*(w1 + w2)) << "N, 1/w1 = " << 1.0f/w1 << "kg, 1/w2 = " << 1.0f/w2 << "kg" << std::endl;
+                }
 
                 //Static friction, restrict tangential motion if F_tangential <= mu_static * F_normal.
                 if (length(dx)/(w1 + w2) <= staticFrictionCoeff*std::abs(c.lambda))

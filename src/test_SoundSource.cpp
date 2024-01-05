@@ -50,6 +50,7 @@ draw::Renderable *screenEffect = 0;
 
 snd::Source *cubeSoundSource = 0;
 snd::MonoSoundBuffer *cubeSoundBuffer = 0;
+const size_t soundFrequency = 44100; //Hz
 
 vec3 cameraPosition = vec3(0.0f, 0.0f, 3.0f);
 vec4 cameraOrientation = vec4(0.0f, 0.0f, 0.0f, 1.0f);

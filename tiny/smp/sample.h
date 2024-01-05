@@ -33,6 +33,7 @@ class Sample
         ~Sample();
         
         static Sample createTone(const float & = 440.0, const float & = 44100.0f);
+        static Sample createBlockTone(const float & = 440.0, const float & = 44100.0f);
         
         size_t frequency;
         size_t channels;

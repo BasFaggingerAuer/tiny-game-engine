@@ -148,6 +148,7 @@ class RigidBodySystem
         int addAngularConstraint(const int &, const vec3 &, const int &, const vec3 &, const float & = 0.0f, const float & = 0.0f);
 
         void getRigidBodyPositionAndOrientation(const int &, vec3 &, vec4 &) const;
+        void getRigidBodyVelocityAndAngularVelocity(const int &, vec3 &, vec3 &) const;
         
         void update(const float &);
         
