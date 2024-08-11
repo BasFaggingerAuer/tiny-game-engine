@@ -142,8 +142,8 @@ void TextureInterface::createDeviceTexture()
     
     if (textureTarget != GL_TEXTURE_BUFFER)
     {
-        GL_CHECK(glTexParameteri(textureTarget, GL_TEXTURE_WRAP_S, (flags & tf::repeat) != 0 ? GL_REPEAT : GL_CLAMP));
-        GL_CHECK(glTexParameteri(textureTarget, GL_TEXTURE_WRAP_T, (flags & tf::repeat) != 0 ? GL_REPEAT : GL_CLAMP));
+        GL_CHECK(glTexParameteri(textureTarget, GL_TEXTURE_WRAP_S, (flags & tf::repeat) != 0 ? GL_REPEAT : GL_CLAMP_TO_EDGE));
+        GL_CHECK(glTexParameteri(textureTarget, GL_TEXTURE_WRAP_T, (flags & tf::repeat) != 0 ? GL_REPEAT : GL_CLAMP_TO_EDGE));
         
         if ((flags & tf::mipmap) != 0)
         {

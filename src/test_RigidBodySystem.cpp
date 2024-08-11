@@ -60,6 +60,7 @@ const float heightOffset = 15.0f;
 bool runSimulation = false;
 bool followCar = false;
 bool showCollisionSpheres = true;
+float simulatorTime = 0.0f;
 
 class GravitySystem : public rigid::RigidBodySystem
 {
@@ -73,7 +74,7 @@ class GravitySystem : public rigid::RigidBodySystem
             bodies[0].staticFriction = 0.9f;
             bodies[0].dynamicFriction = 0.7f;
             bodies[0].restitution = 0.2f;
-            bodies[0].softness = 1.0e-6f;
+            bodies[0].softness = 0.0e-6f;
 
             wheelAngle = 0.0f;
             enginePowerFraction = 0.0f;
@@ -186,7 +187,7 @@ class GravitySystem : public rigid::RigidBodySystem
         //const float wheelTorque = 2.73f*2.72f*21.0f*2.48f*575.0f/4.0f; //N*m (hypoid axle, transfer case, torque converter, 1st gear, max engine torque, 4 wheels)
         const float wheelTorque = 0.75f*(wheelDiameter/0.70f)*(bodyMass/1777.0f)*9.0f*470.0f/4.0f; //N*m
         const vec3 carSize =  vec3(4.8f, 1.6f, 2.3f); //m
-        const vec3 wheelLocations = vec3(3.3f, 0.3f*wheelDiameter, 2.3f); //m
+        const vec3 wheelLocations = vec3(3.3f, 0.0f*wheelDiameter, 2.3f); //m
         
         const float gravityAcceleration = 9.81f;
         
@@ -437,6 +438,7 @@ void setup()
 
     //Create a rigid body scene.
     rigidBodySystem = new GravitySystem(terrainScale, terrainHeightTexture);
+    simulatorTime = rigidBodySystem->getTime();
 
     //Create wheel motor sounds.
     wheelSoundBuffer = new snd::MonoSoundBuffer(smp::Sample::createBlockTone(100.0f, 44100.0f));
@@ -444,7 +446,7 @@ void setup()
     for (int i = 0; i < 4; ++i)
     {
         wheelSoundSources[i] = new snd::Source(vec3(0.0f, 0.0f, 0.0f));
-        wheelSoundSources[i]->setGain(0.5f);
+        wheelSoundSources[i]->setGain(0.1f);
         wheelSoundSources[i]->setPitch(0.1f);
         wheelSoundSources[i]->playBuffer(*wheelSoundBuffer, true, static_cast<float>(rand())/static_cast<float>(RAND_MAX));
     }
@@ -533,7 +535,12 @@ void update(const double &dt)
         rigidBodySystem->terrainCollisionMesh.indices.clear();
 #endif
 
-        rigidBodySystem->update(dt);
+        simulatorTime += dt;
+        while (rigidBodySystem->getTime() < simulatorTime)
+        {
+            rigidBodySystem->update(1.0f/128.0f);
+        }
+        simulatorTime = rigidBodySystem->getTime();
 
 #ifdef SHOW_COLLISION_MESH
         if (terrainCollisionMesh)

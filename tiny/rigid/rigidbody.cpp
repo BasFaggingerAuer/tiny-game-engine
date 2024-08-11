@@ -555,20 +555,20 @@ void RigidBodySystem::update(const float &dt)
         }
     }
     
-    //Apply forces.
-    for (auto &b : bodies)
-    {
-        b.f = vec3(0.0f);
-        b.t = vec3(0.0f);
-    }
-
-    applyExternalForces();
-    
     //Solve positions.
     const float h = dt/static_cast<float>(nrSubSteps);
 
     for (int iSubStep = 0; iSubStep < nrSubSteps; ++iSubStep)
     {
+        //Apply forces.
+        for (auto &b : bodies)
+        {
+            b.f = vec3(0.0f);
+            b.t = vec3(0.0f);
+        }
+
+        applyExternalForces();
+        
         //Initialize non-collision constraints.
         for (auto &c : constraints)
         {
